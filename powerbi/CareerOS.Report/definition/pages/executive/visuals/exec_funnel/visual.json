@@ -1,0 +1,144 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "exec_funnel",
+  "position": {
+    "x": 10,
+    "y": 190,
+    "z": 0,
+    "width": 620,
+    "height": 250,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "funnel",
+    "query": {
+      "queryState": {
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Jobs Discovered"
+                }
+              },
+              "queryRef": "_Measures.Jobs Discovered",
+              "nativeQueryRef": "Jobs Discovered"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Distinct Openings"
+                }
+              },
+              "queryRef": "_Measures.Distinct Openings",
+              "nativeQueryRef": "Distinct Openings"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Jobs Evaluated"
+                }
+              },
+              "queryRef": "_Measures.Jobs Evaluated",
+              "nativeQueryRef": "Jobs Evaluated"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Jobs Qualified"
+                }
+              },
+              "queryRef": "_Measures.Jobs Qualified",
+              "nativeQueryRef": "Jobs Qualified"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Jobs Recommended"
+                }
+              },
+              "queryRef": "_Measures.Jobs Recommended",
+              "nativeQueryRef": "Jobs Recommended"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Labelled Apply"
+                }
+              },
+              "queryRef": "_Measures.Labelled Apply",
+              "nativeQueryRef": "Labelled Apply"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Applied"
+                }
+              },
+              "queryRef": "_Measures.Applied",
+              "nativeQueryRef": "Applied"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'From discovery to application'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,1482 @@
+{
+ "at": "2026-10-15T04:32:21+00:00",
+ "caught": 284,
+ "total": 284,
+ "results": [
+  {
+   "mutation": "remote-state rule disabled",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "clearance rule disabled",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "hard failures ignored",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "pay floor ignored",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "scam block disabled",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "ambiguous requirements downgraded to preferred",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "projection mismatch not fail-closed",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "idempotency collision ignored",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "separation of duties disabled",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "reason requirement dropped",
+   "file": "careeros/core/transitions.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "requisition dedupe disabled",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "job-identifying URL parameters dropped",
+   "file": "careeros/normalize/posting.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "delisted jobs never closed",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "report escaping disabled",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "review token check disabled",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "test rows counted in metrics",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "remote-only rule disabled",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "training-only skills counted as full matches",
+   "file": "careeros/qualify/scores.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "AI records accepted without a verbatim quote",
+   "file": "careeros/extract/ai.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "AI may downgrade required to preferred",
+   "file": "careeros/extract/ai.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "gate-critical rules records dropped",
+   "file": "careeros/extract/ai.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "AI daily cap ignored",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "stale job family used after policy change",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "seniority gate disabled",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "user's screening years ignored",
+   "file": "careeros/qualify/profile.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "state exclusion list read as the allowed list",
+   "file": "careeros/normalize/posting.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "product/project managers treated as people managers",
+   "file": "careeros/normalize/posting.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "excluded-state rule disabled",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "stale stored fields never refreshed",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "rule-code changes not re-evaluated",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "operational settings re-evaluate every job",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "NIGHT settings re-evaluate every PRIMARY job",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "NIGHT settings changes never re-check NIGHT jobs",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "second-channel (right to represent) check disabled",
+   "file": "careeros/review/applications.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "reposts of a role you applied to not linked",
+   "file": "careeros/review/applications.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "duplicate application not detected",
+   "file": "careeros/review/applications.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "tracker may rewrite how you applied",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "form key not bound to its action and target",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "alert links on non-board sites fetched",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Gmail sign-in state not checked",
+   "file": "careeros/discovery/gmail.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Gmail scope not checked",
+   "file": "careeros/discovery/gmail.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "GitHub inbox issues re-read every run",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "GitHub inbox issues never answered or closed",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "recommended jobs CareerOS already tracks fetched again as new",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "unresolvable links leave employers behind",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "GitHub inbox repository name not validated",
+   "file": "careeros/discovery/github_inbox.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "ChatGPT Gmail-alert finds not tracked as their own source",
+   "file": "careeros/review/applications.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a failed daily run stays silent",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "material unknowns never make a job CONDITIONAL",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "D13 hold not reflected in the state",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Tier A/B ignore the state and skill minimum",
+   "file": "careeros/qualify/scores.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Tier A/B ignore the 70% skill minimum",
+   "file": "careeros/qualify/scores.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "domain relevance not counted in Career Value",
+   "file": "careeros/qualify/scores.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "domain takes the weakest matching level",
+   "file": "careeros/qualify/scores.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "aggregator pay estimates reject jobs",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "generic titles qualify on the title alone",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "stub postings rejected as generic titles",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "rejections lose their profile evidence",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "unlisted sources treated as allowed",
+   "file": "careeros/discovery/sources.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "links on non-allowed sources fetched",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "same job through another site not recognised",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "duplicate leads across sites kept",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "automatic confirmations counted as responses",
+   "file": "careeros/review/funnel.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "applications lose their source context",
+   "file": "careeros/review/applications.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "an OR-list of years judged as separate demands",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "country named in the title ignored",
+   "file": "careeros/normalize/posting.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "stored jobs keep a wrong country",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "excluded employers pass the gate",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "leads from excluded employers kept",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "required years far beyond yours never reject",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "preferred years gap ignored",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "NIGHT accepts daytime schedules",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "NIGHT accepts manager roles",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "NIGHT pay floor ignored",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "negated schedule phrases counted",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "incidental after-hours work read as night work",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "night words in the job title ignored",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "stated night hours ignored",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "business or training hours reject NIGHT jobs as daytime",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "overnight time ranges not recognised",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a negation reaches across sentences",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "every NIGHT job treated as Supplemental",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "no conflict-of-interest or workload review for Supplemental",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "conflict-of-interest review applied to Replacement too",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "unknown NIGHT hours not CONDITIONAL",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "CONDITIONAL NIGHT jobs reach Tier A/B",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "NIGHT modes share one set of weights",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "NIGHT labels counted toward PRIMARY acceptance",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "NIGHT cards label as PRIMARY",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "unknown NIGHT schedule not flagged",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "NIGHT runs while switched off",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "NIGHT re-assesses every job every run",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "NIGHT issues graded with PRIMARY rules while NIGHT is off",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "NIGHT-only jobs shown in PRIMARY rejections",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "IMAP mailbox opened writable",
+   "file": "careeros/discovery/imap.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "IMAP fetch marks emails as read",
+   "file": "careeros/discovery/imap.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "IMAP reads every email instead of the alert search",
+   "file": "careeros/discovery/imap.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "backup pruning may delete folders it did not create",
+   "file": "careeros/ops/backup.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "follow-up nudge shown immediately",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "title employment marker ignored",
+   "file": "careeros/normalize/posting.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "stored employment types never corrected",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Principal strategic/leadership scope never rejected",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "every Principal title rejected",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "VP abbreviations not rejected",
+   "file": "config/policy/defaults.yaml",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "skill coverage is a naive count, not weighted",
+   "file": "careeros/qualify/scores.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "skill coverage ignores whether evidence was found",
+   "file": "careeros/qualify/scores.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a skill named in the job title is not promoted to core",
+   "file": "careeros/qualify/scores.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "education, authorization, clearance or licences counted as skills",
+   "file": "careeros/qualify/scores.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Supplemental hours overlapping the day job accepted",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "workload caution never raised",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "same-industry overlap alone makes a NIGHT job CONDITIONAL",
+   "file": "careeros/qualify/night.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Note values not validated",
+   "file": "careeros/discovery/note.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "tracking parameters kept in the seen index",
+   "file": "careeros/discovery/seen_index.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "different requisitions merged under one title",
+   "file": "careeros/discovery/seen_index.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the same requisition on different sites not merged",
+   "file": "careeros/discovery/seen_index.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "an email address can reach the seen index",
+   "file": "careeros/discovery/seen_index.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "an unchanged index is committed again",
+   "file": "careeros/discovery/github_inbox.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a Gmail outage never widens the next lookback",
+   "file": "careeros/discovery/seen_index.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a reported Gmail outage read as ok",
+   "file": "careeros/discovery/github_inbox.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a malformed inbox line stored as a lead",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a different requisition under the same title treated as already tracked",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "negative outcomes not counted",
+   "file": "careeros/review/funnel.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "recommended / approved stages missing",
+   "file": "careeros/review/funnel.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a guessed board is trusted without identity evidence",
+   "file": "careeros/discovery/board_discovery.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "requests not counted against the budget",
+   "file": "careeros/discovery/http.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "redirects to other hosts allowed",
+   "file": "careeros/discovery/http.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a long Retry-After is slept through",
+   "file": "careeros/discovery/http.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a staffing agency's client is guessed",
+   "file": "careeros/discovery/board_discovery.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "excluded systems treated as boards to probe",
+   "file": "careeros/discovery/board_discovery.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "verified boards join the daily scan without approval",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "requisition ids ignored when matching leads",
+   "file": "careeros/discovery/board_discovery.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "one missed scan closes a posting",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a suspicious scan closes postings",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "one restricted scan disables a board",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "title rescues not capped per run",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "software QA / clinical / call monitoring titles rescued",
+   "file": "careeros/qualify/title_rescue.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "rescues spent on jobs the remote rule rejects anyway",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a company blurb rescues unrelated roles",
+   "file": "careeros/qualify/title_rescue.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a stale rescued family survives a rule change",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a rescue rule change re-checks nothing",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "skipped rescues bounce between rejected and normalized every run",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a range that straddles the minimum treated as compatible",
+   "file": "careeros/qualify/facts.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "geographic pay tiers ignored",
+   "file": "careeros/qualify/facts.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "bonus / commission counted as base pay",
+   "file": "careeros/qualify/facts.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a reappearing closed posting stays closed",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "cosmetic edits counted as meaningful changes",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "identical titles with different requisitions merged as variants",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a pasted posting is not deduplicated",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "curated suggestions can overspend their share",
+   "file": "careeros/discovery/discovery_queue.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "drafts use screening-only years",
+   "file": "careeros/review/shortlist.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "drafts made for jobs you did not choose to pursue",
+   "file": "careeros/review/shortlist.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "dismissed jobs stay on the shortlist",
+   "file": "careeros/review/shortlist.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "adaptive cadence applied while switched off",
+   "file": "careeros/discovery/source_health.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a board admitted without the official-site handshake",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "an unconfirmed official domain accepted",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Board Trust threshold lowered",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a board naming another company is not a mismatch",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "new boards skip quarantine",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a failed validation scan still promotes the board",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a board the employer's site contradicts is not rejected",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "an ATS migration leaves the old board active",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a paused board is still scanned",
+   "file": "careeros/discovery/board_registry.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "any unverified board gets the legacy grace",
+   "file": "careeros/discovery/board_registry.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "boards added after the migration treated as legacy",
+   "file": "careeros/discovery/board_registry.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a manual approval bypasses a security failure",
+   "file": "careeros/discovery/board_registry.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "manual approvals never expire",
+   "file": "careeros/discovery/board_registry.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "companies with the same name but different websites merged",
+   "file": "careeros/discovery/board_registry.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a board taken over by another company keeps being ingested",
+   "file": "careeros/discovery/board_registry.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the identity baseline never learns from fuller scans",
+   "file": "careeros/discovery/board_registry.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "private network addresses fetched",
+   "file": "careeros/discovery/safe_fetch.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "IP-address hosts fetched",
+   "file": "careeros/discovery/safe_fetch.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "plain http fetched",
+   "file": "careeros/discovery/safe_fetch.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "redirects off the employer's domain followed",
+   "file": "careeros/discovery/safe_fetch.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "robots.txt ignored",
+   "file": "careeros/discovery/safe_fetch.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "oversized pages read",
+   "file": "careeros/discovery/safe_fetch.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "non-HTML content read",
+   "file": "careeros/discovery/safe_fetch.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "connections not pinned to the checked address (DNS rebinding)",
+   "file": "careeros/discovery/safe_fetch.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "malformed board tokens accepted",
+   "file": "careeros/discovery/site_inspect.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a provider outage is blamed on every employer",
+   "file": "careeros/discovery/source_health.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "unverified boards scanned",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a vanished board keeps its place in the scan",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "employers penalised for a provider outage",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "board scans follow redirects anywhere",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "'Remote' read as nationwide",
+   "file": "careeros/normalize/posting.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "an unproven legacy board retired on a guess",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "every inconclusive legacy check becomes a review case",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "jobs parked for review are never re-checked",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "reviews parked before decisions were recorded stay parked",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a review outcome is not recorded as a decision",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a job that cannot close with its board is skipped silently",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a rejected board's jobs stay open",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "manager roles counted as relevant",
+   "file": "careeros/normalize/posting.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a pay rejection carries no quote",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a question that does not apply is left blank instead of saying why",
+   "file": "careeros/review/explain.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a spent page budget counted against the employer's website",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "an off-site careers link mislabelled and raised for a scanned legacy board",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a legacy board without a known website is sent to your review",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "an unproven legacy board is sent to your review",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "your unexpired approval is undone by a re-verification",
+   "file": "careeros/discovery/board_verifier.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "setting a domain leaves its case open",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "job sites and never-automated sites read as employer websites",
+   "file": "careeros/discovery/safe_fetch.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a company blurb ('we serve members nationwide') read as nationwide hiring",
+   "file": "careeros/normalize/posting.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "quiet boards scanned daily under adaptive scanning",
+   "file": "careeros/discovery/source_health.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "\"Who We Are Looking For\" read as the company blurb",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "\"What You Will Work On\" duties not read",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "\"About <company>\" blurbs read as requirements",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "benefits and interview sections read as requirements",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "long OR-lists of roles cut at 60 characters",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "exact role titles spill into specific titles (data analyst)",
+   "file": "careeros/qualify/profile.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "PBM product roles rejected for the degree again",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "degree stretch applied to product roles outside PBM",
+   "file": "careeros/qualify/gate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a degree stretch can reach Tier A/B",
+   "file": "careeros/qualify/scores.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "\"years of relevant experience\" left unknown",
+   "file": "careeros/qualify/profile.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "\"Analyst, X\" titles not tried as \"X Analyst\"",
+   "file": "careeros/normalize/posting.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "adjacent payer / claims-product families missing",
+   "file": "config/policy/defaults.yaml",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "individual-contributor implementation managers outside every family",
+   "file": "config/policy/defaults.yaml",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "coverage judged on generic items alone",
+   "file": "careeros/qualify/scores.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "confirmed role titles ignored for years",
+   "file": "careeros/qualify/profile.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "stale flag ignores discovery.max_posting_age_days",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "new boards named after their URL slug",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a new board's parent (held employer) not mapped",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "application mail from an alert sender read for jobs",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "correspondence check disabled",
+   "file": "careeros/discovery/alerts.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Demo Mode without a synthetic world uses the real network",
+   "file": "careeros/demo/sandbox.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the job-board client ignores Demo Mode",
+   "file": "careeros/discovery/http.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the website reader ignores Demo Mode",
+   "file": "careeros/discovery/safe_fetch.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Demo Mode resolves real names",
+   "file": "careeros/demo/sandbox.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Demo Mode reads credentials",
+   "file": "careeros/core/credentials.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Demo Mode can locate the private vault",
+   "file": "careeros/paths.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a demo vault nested with the private vault",
+   "file": "careeros/demo/sandbox.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a demo vault inside the code repository",
+   "file": "careeros/demo/sandbox.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "demo reset deletes an unmarked folder",
+   "file": "careeros/demo/runner.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "demo init takes over a folder that is not a demo vault",
+   "file": "careeros/demo/runner.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the daily run reads the GitHub inbox in Demo Mode",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the daily run reads mail in Demo Mode",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Demo Mode publishes the seen-jobs index",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Demo Mode runs the GitHub CLI",
+   "file": "careeros/discovery/github_inbox.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Demo Mode opens an IMAP connection",
+   "file": "careeros/discovery/imap.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Demo Mode builds a Gmail client",
+   "file": "careeros/discovery/gmail.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "careeros gmail runs in Demo Mode",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Demo Mode reads the clipboard",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Demo Mode reads the AI key",
+   "file": "careeros/extract/ai.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Demo Mode shows notifications",
+   "file": "careeros/ops/notify.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "commands ignore CAREEROS_DEMO_MODE",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "boards verification rejected reported as verified",
+   "file": "careeros/review/discovery_metrics.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "title-screen rejections re-sent on every run after a vocabulary change",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "dangling export references accepted",
+   "file": "careeros/analytics/export.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "duplicate export keys accepted",
+   "file": "careeros/analytics/export.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "export KPIs not reconciled with the application",
+   "file": "careeros/analytics/export.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "an export that fails its checks is written",
+   "file": "careeros/analytics/export.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "demo exports not checked for real data",
+   "file": "careeros/analytics/export.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "an export replaces a folder it did not write",
+   "file": "careeros/analytics/export.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "drill and test rows exported",
+   "file": "careeros/analytics/export.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a board read an alert triggered is credited as the discovery source",
+   "file": "careeros/analytics/export.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a private export written inside the code repository",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a demo export written outside the demo vault",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "drill rows counted as qualified openings",
+   "file": "careeros/review/discovery_metrics.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the demo's job seeker never acts",
+   "file": "careeros/demo/runner.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a rejected application counted as a rejected job in the demo summary",
+   "file": "careeros/demo/runner.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the job-level fact's link to dim_job neither checked nor modelled",
+   "file": "careeros/analytics/export.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "LinkedIn made an automatic source",
+   "file": "config/site_policy.yaml",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a misspelt source status (read as manual) goes unnoticed",
+   "file": "config/site_policy.yaml",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a dependency pinned differently from its locks",
+   "file": "pyproject.toml",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the CI job token may write",
+   "file": ".github/workflows/ci.yml",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the CI job token kept in the checkout",
+   "file": ".github/workflows/ci.yml",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "tests may resolve internet names",
+   "file": "tools/offline_tests.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "tests may connect to the internet",
+   "file": "tools/offline_tests.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "new type errors pass validation",
+   "file": "tools/validate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a lower Functional MVP grade passes validation",
+   "file": "tools/validate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "validation checks see your credentials and Demo Mode settings",
+   "file": "tools/validate.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a Demo Mode refusal ends in a traceback (G6)",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "job-board requests follow proxy variables from the environment (R1)",
+   "file": "careeros/discovery/http.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Gmail requests follow proxy variables from the environment (R1)",
+   "file": "careeros/discovery/gmail.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Gmail token revocation follows proxy variables from the environment (R1)",
+   "file": "careeros/discovery/gmail.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "GitHub tokens reach the logs (R2)",
+   "file": "careeros/core/redact.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Google client secrets reach the logs (R2)",
+   "file": "careeros/core/redact.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Demo Mode reads the private site file",
+   "file": "careeros/core/private_sites.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a private never-fetch domain read as an employer website",
+   "file": "careeros/discovery/safe_fetch.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "links to a private system lose their label",
+   "file": "careeros/discovery/alerts.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a private system no longer manual-only",
+   "file": "careeros/discovery/board_urls.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a private system unrecognised on an employer's page",
+   "file": "careeros/discovery/site_inspect.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a private staffing agency probed for a board",
+   "file": "careeros/discovery/board_discovery.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "private site statuses ignored",
+   "file": "careeros/discovery/sources.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the private agency shortcut missing from the review page",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT"
+  }
+ ],
+ "source_sha256": {
+  "careeros/qualify/gate.py": "1369992ca01a33e864a86c89609791906dd8ab2ae1cd07bd8a14ce8568983d5f",
+  "careeros/extract/rules.py": "e0fbc01a8f97efa727f0a3d23702a3bd0952670d88410161142781409fe53c33",
+  "careeros/db/store.py": "2ea73f21a54f7d36119589dc013aead24a6d9dc4995e823c36450d766d6ea296",
+  "careeros/core/transitions.py": "17521aacfa0a7ec0adb68a1192a4c911833be34a16c81cdef265065e5bf35fa0",
+  "careeros/pipeline.py": "673d0cb6aff37a5969e3b217e8376e368a52187260c3a30843a32f9d52442af3",
+  "careeros/normalize/posting.py": "fb2ad81005adce59a6a5a436f32e0af9c2b735b5e8c1a1551b4baa0e6cc12d48",
+  "careeros/review/report.py": "c88657f13478c67629920e5b5cae8a02bc564deb1aef5f24cb1ac939083865f8",
+  "careeros/review/server.py": "acfe8816756576d77af90f9e5db4785248b71469991fd712b6bb576a0cc08588",
+  "careeros/review/labels.py": "cafdae7a11489e12591fd2edcb92c2e499484355346f3637b41a77637799a031",
+  "careeros/qualify/scores.py": "6d8349920e15d914c45b654b2ccedc8176a9bc00efce83871f6a3751e132b7b2",
+  "careeros/extract/ai.py": "8dddf3824c0ae86e24db3cd04051869ec52f3901ced3734a6c95f3d6d488e32c",
+  "careeros/qualify/profile.py": "2d9da510c5b5175a3db65c0158aaf2d258ba47dfada6deee3bfc7394c49368fc",
+  "careeros/review/applications.py": "0ea0b22d23f58437a6efe4870f415b026178ed65d787aaee7619730e63b28264",
+  "careeros/cli.py": "5d43beaee8f205b28f6ab9c92f787526a78a895dcbd1d45bf6b42016700f8f36",
+  "careeros/discovery/gmail.py": "525097ff540ea3a45fab2fcc744dc58ca6e4c5f85bb090b401b03ad5f71db7b3",
+  "careeros/discovery/github_inbox.py": "217cca1a5ff08070abf9eb32d3fb3239543d1847b415e30f10bbaf3cf4334a48",
+  "careeros/discovery/sources.py": "ce3b0df5c7db6f6787c4edb7868b21bea01ce047aca6acd6674795c23d9ea150",
+  "careeros/review/funnel.py": "6e0907e2828bbc01ea09a849ee97ad6eaaf04ba98839824a4a8305b81d86f656",
+  "careeros/qualify/night.py": "5eee5f2529f748ab86826809d4f812ed7b21ce6a344d25042320d8821d4c7289",
+  "careeros/discovery/imap.py": "356beff3cd6421da3a370faa1d9c83bc8aefb5eca610f498b6ed9e3fc7b63989",
+  "careeros/ops/backup.py": "e4df03aa15863d861dda28f1359bd581a78072137184c28bb88e66c18fcc6d25",
+  "config/policy/defaults.yaml": "1691a605e684fd194504aab307d8c26e1265ee3bf4958f608ef41e52cff2c50d",
+  "careeros/discovery/note.py": "8e2f51afcf9a0b4e23ee54680efcf82fc8e684ac4ab45e8e90983ac61765c335",
+  "careeros/discovery/seen_index.py": "752282a693c64a1112c86cacc50c8dcbb4b0fe98fd80b66d4f1aad8aedac9dd4",
+  "careeros/discovery/board_discovery.py": "039da9413c1faa54aaba171923be63c6a47867541eb76eeaa4a98ce18ad36eaa",
+  "careeros/discovery/http.py": "1b8df2d85d5fd6b03705c840a7cb3c7bb7757c6f9ee870fe9acc2acc82e56cf0",
+  "careeros/discovery/board_verifier.py": "d98aed8fdef4205d82357918de6ed4c01a751bc4ea242f73e45707415b3b4cba",
+  "careeros/qualify/title_rescue.py": "6cc07c6dcc68086f4b44bbbe7d45533316eb689d905620b9ffa5fcb160bea88a",
+  "careeros/qualify/facts.py": "981eb2901f2b4a6820726e1ea4dd52cf7ea7673a86152f75212db0b883817b59",
+  "careeros/discovery/manual_intake.py": "70631127cfb121edbe4be40348278989bd2dbbd8bedc11332a97a003027b6472",
+  "careeros/discovery/discovery_queue.py": "de3712307e7a53726ed4b0ecd62043d8cf93dd3e3cc25eb2704d84fb35b96fac",
+  "careeros/review/shortlist.py": "10a477c11f6a03411ded989513697eaa60649ab9999e7ad3f7ad51b31921cf93",
+  "careeros/discovery/source_health.py": "0bc399fcd47b55805c159e8fbf727fe09ddddaa01602e6956aa7e63dcc635a14",
+  "careeros/discovery/board_registry.py": "b8de8db8d17859f6582e97e173b9dc7335ce0a6e863054e9b35caef5364905c8",
+  "careeros/discovery/safe_fetch.py": "e5eb58f9ee5310136dd0156fff036dd184846e94ddc25f58203f5f1d79d197bf",
+  "careeros/discovery/site_inspect.py": "2a869775b4db4b551e8f55e7d9a85891be662fa27039fa78099a0ad14b65d485",
+  "careeros/review/explain.py": "b026be0aa420363f0ae90d02f2591ae0e84d32634a1936edc5cfcb644d522b26",
+  "careeros/discovery/alerts.py": "6e5e874c909234b39cb747474dcbcb19733d6d85fff4d12417ce5f6d150da125",
+  "careeros/demo/sandbox.py": "a1a9a6d4d26737892c0886d0a8e34261884899217ae67e535a0dd4c24a87c6a4",
+  "careeros/core/credentials.py": "33e21d11009a918ce54aa41784fe8b41c8af1c4ac815d67e3ce4636854d5a0e2",
+  "careeros/paths.py": "2a7cae049602dd00ba7a276ea91385f32a79540238cdeddb9c41e44f130a2a5d",
+  "careeros/demo/runner.py": "3d381174eb23b733a79ada90e76e653835391f25610fafa630d7845138df57cd",
+  "careeros/ops/notify.py": "a0fced80586e75a47a16902e6764c396e7a9e22f2e70fec840dd4f6576636d36",
+  "careeros/review/discovery_metrics.py": "a8bc51a4f3a933f24f5cfcdd7450f23521c39394e7d4edd405d46d1bf7733e51",
+  "careeros/analytics/export.py": "128e3816a02e7da9d0de867cb0f2fd9b072897a734aa03e1048b8e024680dd31",
+  "config/site_policy.yaml": "1c52c1239f563cf27cd5fca77d2af7ec72a3ee1f011490f27834ddaa775a07c8",
+  "pyproject.toml": "634a615409e0b02720c9d2c550e64290971f2d1a5d567bbd212c250566fa01eb",
+  ".github/workflows/ci.yml": "8d80fac0e2a83de3ef3b674701c233e597c2793cf8bbf89fede97565c0eb4f69",
+  "tools/offline_tests.py": "bf8406ecca5988dbd07803840e33799b18a43acdc9321db1dfdef849568bcc64",
+  "tools/validate.py": "679c3526c34ad5dec50481ffc8b27fe8d14b5657cc6d2e2c56d58d2417a2b6c8",
+  "careeros/core/redact.py": "800a7b8fcb775d781346a4e746c259a0ee3fd68a94c8f352937d7f46797f1208",
+  "careeros/core/private_sites.py": "155f39e8622df740bc646fd875e1661bbb515c694dbdf6db802a5c33c1081053",
+  "careeros/discovery/board_urls.py": "e19462ef606c58f23dcefffe541fc64a3be8bce76fd0d3eb008caa8838adb41f"
+ }
+}

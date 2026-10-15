@@ -1,0 +1,99 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "role_rejections",
+  "position": {
+    "x": 10,
+    "y": 360,
+    "z": 0,
+    "width": 580,
+    "height": 350,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_role_family"
+                    }
+                  },
+                  "Property": "family_name"
+                }
+              },
+              "queryRef": "dim_role_family.family_name",
+              "nativeQueryRef": "family_name",
+              "displayName": "Family"
+            }
+          ]
+        },
+        "Columns": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_job_evaluation"
+                    }
+                  },
+                  "Property": "rejection_group"
+                }
+              },
+              "queryRef": "fact_job_evaluation.rejection_group",
+              "nativeQueryRef": "rejection_group",
+              "displayName": "Reason"
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Jobs Rejected by Reason"
+                }
+              },
+              "queryRef": "_Measures.Jobs Rejected by Reason",
+              "nativeQueryRef": "Jobs Rejected by Reason",
+              "displayName": "Rejected"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Rejection reasons by family'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

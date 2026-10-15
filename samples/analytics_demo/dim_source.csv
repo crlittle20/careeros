@@ -1,0 +1,7 @@
+﻿source_key,source_name,channel,is_automated
+alert,Alert email,email,1
+ats_scan,Job-board scan,automatic,1
+human_text,Posting you pasted,you,0
+manual_import,Saved page or file you imported,you,0
+recommendation,Recommendation inbox,recommendation,1
+(none),(unknown),none,0

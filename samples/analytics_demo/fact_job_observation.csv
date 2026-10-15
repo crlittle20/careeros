@@ -1,0 +1,51 @@
+﻿observation_key,job_key,employer_key,ats_key,source_key,evidence_level,observed_date_key,is_first_sighting,is_cross_source,has_lead
+1,(none),(none),linkedin,alert,alert,20261102,0,0,1
+2,greenhouse:meridianrx:101,meridian rx,greenhouse,ats_scan,live_ats,20261102,0,1,0
+3,greenhouse:meridianrx:101,meridian rx,greenhouse,alert,alert,20261102,1,0,1
+4,lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000202,bluepeak health plan,lever,ats_scan,live_ats,20261102,0,1,0
+5,lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000202,bluepeak health plan,lever,alert,alert,20261102,1,0,1
+6,manual:brightwater-benefits:6284edb5ff111ea8,unmatched:brightwater benefits,manual,manual_import,human,20261102,1,0,0
+7,lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000201,bluepeak health plan,lever,ats_scan,live_ats,20261102,1,0,0
+8,lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000203,bluepeak health plan,lever,ats_scan,live_ats,20261102,1,0,0
+9,lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000204,bluepeak health plan,lever,ats_scan,live_ats,20261102,1,0,0
+10,lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000205,bluepeak health plan,lever,ats_scan,live_ats,20261102,1,0,0
+11,lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000206,bluepeak health plan,lever,ats_scan,live_ats,20261102,1,0,0
+12,lever:cascadehealthdata:c3f2e5d4-0000-4000-8000-000000000401,cascade health data,lever,ats_scan,live_ats,20261102,1,0,0
+13,lever:cascadehealthdata:c3f2e5d4-0000-4000-8000-000000000402,cascade health data,lever,ats_scan,live_ats,20261102,1,0,0
+14,lever:cascadehealthdata:c3f2e5d4-0000-4000-8000-000000000403,cascade health data,lever,ats_scan,live_ats,20261102,1,0,0
+15,lever:cascadehealthdata:c3f2e5d4-0000-4000-8000-000000000404,cascade health data,lever,ats_scan,live_ats,20261102,1,0,0
+16,lever:cascadehealthdata:c3f2e5d4-0000-4000-8000-000000000405,cascade health data,lever,ats_scan,live_ats,20261102,1,0,0
+17,lever:cascadehealthdata:c3f2e5d4-0000-4000-8000-000000000406,cascade health data,lever,ats_scan,live_ats,20261102,1,0,0
+18,lever:cascadehealthdata:c3f2e5d4-0000-4000-8000-000000000407,cascade health data,lever,ats_scan,live_ats,20261102,1,0,0
+19,greenhouse:harborline:301,harborline health,greenhouse,ats_scan,live_ats,20261102,1,0,0
+20,greenhouse:harborline:302,harborline health,greenhouse,ats_scan,live_ats,20261102,1,0,0
+21,greenhouse:harborline:303,harborline health,greenhouse,ats_scan,live_ats,20261102,1,0,0
+22,greenhouse:meridianrx:102,meridian rx,greenhouse,ats_scan,live_ats,20261102,1,0,0
+23,greenhouse:meridianrx:104,meridian rx,greenhouse,ats_scan,live_ats,20261102,1,0,0
+24,greenhouse:meridianrx:105,meridian rx,greenhouse,ats_scan,live_ats,20261102,1,0,0
+25,greenhouse:meridianrx:106,meridian rx,greenhouse,ats_scan,live_ats,20261102,1,0,0
+26,greenhouse:meridianrx:107,meridian rx,greenhouse,ats_scan,live_ats,20261102,1,0,0
+27,greenhouse:meridianrx:109,meridian rx,greenhouse,ats_scan,live_ats,20261102,1,0,0
+28,greenhouse:meridianrx:103,meridian rx,greenhouse,ats_scan,live_ats,20261102,1,0,0
+29,workable:sterlingclaims:SC4001,sterling claims services,workable,ats_scan,live_ats,20261102,1,0,0
+30,workable:sterlingclaims:SC4002,sterling claims services,workable,ats_scan,live_ats,20261102,1,0,0
+31,workable:sterlingclaims:SC4003,sterling claims services,workable,ats_scan,live_ats,20261102,1,0,0
+32,workable:sterlingclaims:SC4004,sterling claims services,workable,ats_scan,live_ats,20261102,1,0,0
+33,lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000201,bluepeak health plan,lever,ats_scan,live_ats,20261103,0,0,0
+34,lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000202,bluepeak health plan,lever,ats_scan,live_ats,20261103,0,0,0
+35,lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000207,bluepeak health plan,lever,ats_scan,live_ats,20261103,1,0,0
+36,workable:cobaltclaims:CC6001,cobalt claims technology,workable,ats_scan,live_ats,20261104,1,0,0
+37,workable:cobaltclaims:CC6002,cobalt claims technology,workable,ats_scan,live_ats,20261104,1,0,0
+38,workable:cobaltclaims:CC6003,cobalt claims technology,workable,ats_scan,live_ats,20261104,1,0,0
+39,workable:cobaltclaims:CC6004,cobalt claims technology,workable,ats_scan,live_ats,20261104,1,0,0
+40,greenhouse:meridianrx:108,meridian rx,greenhouse,ats_scan,live_ats,20261104,1,0,0
+41,ashby:northwindbenefits:d4a3f6e5-0000-4000-8000-000000000501,northwind benefits,ashby,ats_scan,live_ats,20261104,1,0,0
+42,ashby:northwindbenefits:d4a3f6e5-0000-4000-8000-000000000502,northwind benefits,ashby,ats_scan,live_ats,20261104,1,0,0
+43,ashby:northwindbenefits:d4a3f6e5-0000-4000-8000-000000000503,northwind benefits,ashby,ats_scan,live_ats,20261104,1,0,0
+44,ashby:northwindbenefits:d4a3f6e5-0000-4000-8000-000000000504,northwind benefits,ashby,ats_scan,live_ats,20261104,1,0,0
+45,ashby:northwindbenefits:d4a3f6e5-0000-4000-8000-000000000505,northwind benefits,ashby,ats_scan,live_ats,20261104,1,0,0
+46,ashby:northwindbenefits:d4a3f6e5-0000-4000-8000-000000000506,northwind benefits,ashby,ats_scan,live_ats,20261104,1,0,0
+47,ashby:harborlinehealth:b2e1d4c3-0000-4000-8000-000000000311,harborline health,ashby,ats_scan,live_ats,20261105,1,0,0
+48,ashby:harborlinehealth:b2e1d4c3-0000-4000-8000-000000000312,harborline health,ashby,ats_scan,live_ats,20261105,1,0,0
+49,ashby:harborlinehealth:b2e1d4c3-0000-4000-8000-000000000313,harborline health,ashby,ats_scan,live_ats,20261105,1,0,0
+50,ashby:harborlinehealth:b2e1d4c3-0000-4000-8000-000000000314,harborline health,ashby,ats_scan,live_ats,20261105,1,0,0

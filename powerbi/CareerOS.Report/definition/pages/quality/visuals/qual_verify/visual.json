@@ -1,0 +1,98 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "qual_verify",
+  "position": {
+    "x": 10,
+    "y": 420,
+    "z": 0,
+    "width": 620,
+    "height": 290,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_verification"
+                    }
+                  },
+                  "Property": "kind"
+                }
+              },
+              "queryRef": "fact_verification.kind",
+              "nativeQueryRef": "kind",
+              "displayName": "Kind"
+            }
+          ]
+        },
+        "Columns": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_verification"
+                    }
+                  },
+                  "Property": "outcome"
+                }
+              },
+              "queryRef": "fact_verification.outcome",
+              "nativeQueryRef": "outcome",
+              "displayName": "Outcome"
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Verification Runs"
+                }
+              },
+              "queryRef": "_Measures.Verification Runs",
+              "nativeQueryRef": "Verification Runs"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Verification runs'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

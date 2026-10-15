@@ -1,0 +1,469 @@
+# CareerOS policy defaults (non-personal). Personal values (state, pay floor, cities, restricted employers)
+# live in the vault: <vault>/policy/overrides.yaml, merged over this file. Every gate/score result records the
+# merged policy fingerprint, so any change here is traceable.
+policy_version: phase1-1
+
+families:
+  # Checked in this order; first match wins (most specific first).
+  power_platform_automation:
+    label: Power Platform / automation
+    title_any: [power platform, power apps, powerapps, power automate, automation analyst, automation specialist,
+                automation developer, rpa, low-code, low code, process automation, intelligent automation,
+                workflow automation, business automation]
+  healthcare_bsa:
+    label: Business systems analyst (healthcare preferred)
+    title_any: [business systems analyst, systems analyst, business analyst, bsa, claims analyst, edi analyst,
+                configuration analyst, benefits configuration, pharmacy benefit analyst, technical business analyst,
+                business system analyst, functional analyst, application analyst, applications analyst,
+                application support analyst, uat analyst, uat, testing analyst, test analyst, requirements analyst]
+  pbm_claims_operations:
+    label: PBM / claims / benefits operations
+    # Added 2026-10-10 after a title audit found relevant remote PBM/payer roles rejected by the early screen.
+    title_any: [pbm, pharmacy benefit, pharmacy operations, pharmacy programs, pharmacy analyst, claims analyst,
+                claim analyst, claims specialist, claims operations, claims auditor, payment integrity,
+                coordination of benefits, cob specialist, benefit configuration, benefits configuration,
+                benefit plan configuration, plan build, plan configuration, benefit operations, eligibility analyst,
+                data exchange, formulary, rebate analyst, accumulations, implementation analyst,
+                implementation specialist, integration analyst, healthcare analyst, health care analyst,
+                clinical programs administration, encounter data, credentialing quality,
+                claims quality, claims audit, claims configuration, reimbursement analyst, provider operations analyst,
+                provider data analyst, network operations analyst, pharmacy network, eligibility configuration,
+                enrollment analyst,
+                # 2026-10-12 title audit (user-approved): adjacent remote roles no family covered
+                provider data operations, provider data specialist, provider operations specialist,
+                payer integration, claims product owner, product owner claims, special investigations, siu analyst,
+                siu investigator, fraud waste and abuse, fwa analyst, risk adjustment auditor]
+  data_reporting:
+    label: Data / reporting analyst
+    title_any: [reporting analyst, report analyst, data analyst, business intelligence, bi analyst, analytics analyst,
+                power bi, data quality analyst, data analytics, business insights, data operations analyst,
+                data validation analyst, data integrity analyst, data governance analyst, data reconciliation analyst,
+                quality analyst, quality assurance analyst, audit analyst]
+  process_analyst:
+    label: Business process analyst
+    title_any: [process analyst, business process, process improvement, process optimization, operations analyst,
+                process excellence, continuous improvement analyst, workflow analyst, operational excellence,
+                implementation consultant,
+                implementation manager]   # 2026-10-12: an individual-contributor role (see seniority _IC_MANAGER)
+
+# Second review of title-screen rejects (2026-10-12, Part 3). Deterministic, no model calls. A title that matched no
+# family but holds an ambiguous role word is rescued only with strong evidence from the posting itself; every decision
+# is recorded with its evidence. Rescues are capped per run so the review queue never floods.
+title_rescue:
+  enabled: true
+  max_rescues_per_run: 10
+  max_rescue_reviews_per_run: 200     # earlier rejects re-queued for a second look per run
+  ambiguous_title_terms: [operations, member, workforce, quality, specialist, coordinator, associate, analyst,
+                          representative, reviewer, auditor, administrator]
+  context_terms: [claims, claim adjudication, adjudication, pharmacy benefit, pbm, rxclaim, eligibility, enrollment,
+                  prior authorization, payer, reimbursement, benefits administration, coordination of benefits, formulary,
+                  encounter data, provider data, health plan, medicare, medicaid, payment integrity, reconciliation,
+                  claims processing, explanation of benefits, accumulator, ncpdp, "837", "835", "834"]
+  department_terms: [claims, pharmacy, pbm, operations, member, payer, benefits, eligibility, revenue cycle, quality,
+                     payment integrity, enrollment, network, provider]
+  data_terms: [reporting, dashboards, data validation, data quality, sql, analytics, metrics]
+  rescue_family: pbm_claims_operations
+  skip_title_terms: [business development, partnerships, partnership, sales, account executive, marketing]
+  reject_signals:
+    software_qa: [selenium, cypress, test automation, automated testing, unit tests, sdet, qa engineer, regression suite,
+                  playwright, appium]
+    clinical: [registered nurse, rn license, licensed practical nurse, lpn, bsn, nurse practitioner, clinical judgment,
+               direct patient care, pharmacist license, licensed clinical]
+    contact_center_quality: [call monitoring, monitor calls, call quality, call center quality, contact center quality,
+                             agent scorecards, coaching agents]
+    sales: [sales quota, quota attainment, prospecting, cold calling]
+
+# Employer name -> parent company (caps, D13 holds, familiarity). Matched case-insensitively. Families tied to the job
+# seeker's own situation are added in the vault overrides (refactor R4).
+parents:
+  CVS Health: [cvs, cvs health, caremark, cvs caremark, aetna, signify health]
+  The Cigna Group: [cigna, evernorth, express scripts, accredo]
+  Elevance Health: [elevance, anthem, carelon, carelonrx]
+  Humana: [humana, centerwell]
+  Capital Rx: [judi health, capital rx]
+
+# "principal" is NOT here (2026-10-12): it is a seniority level (below) and the gate's principal_scope rule.
+title_exclude: [director, vice president, vp, svp, evp, avp, chief, head of, intern, internship, apprentice, sales,
+                account executive, account manager, recruiter, nurse, physician, pharmacist, therapist,
+                software engineer, data engineer, machine learning, scientist, attorney, counsel, professor,
+                medical coder, coding specialist, new grad, new graduate, graduate program, campus,
+                early career program, 2027 start]
+
+seniority_terms:
+  entry: [junior, jr, entry level, associate, analyst i, apprentice]
+  mid: [analyst ii, intermediate]
+  senior: [senior, sr, analyst iii, lead, staff]
+  principal: [principal]
+  manager: [manager, supervisor]
+
+gate:
+  require_us: true
+  # Years (prompts v2.1, 2026-10-12): up to years_minor_gap short = moderate penalty; more = major penalty; more than
+  # years_major_gap short on a clearly REQUIRED number = rejected. Preferred years only ever lower the score.
+  years_minor_gap: 2
+  years_major_gap: 4
+  max_seniority_gap: 2        # levels: entry 1, mid 2, senior 3, manager 5; manager roles fail for entry/mid profiles
+  employment_types_allowed: [full_time, contract, contract_to_hire, temporary, unknown]
+  scam_block_terms: [wire transfer, gift card, check deposit, purchase equipment, send your bank,
+                     social security number, telegram, whatsapp interview, signal app, crypto payment,
+                     processing fee, training fee]
+  held_parents: []            # set in vault overrides (D13)
+  # 2026-10-12 decision: a required bachelor's degree does not reject a PBM product role; it becomes a STRETCH
+  # (kept, flagged "Stretch", never Tier A/B). PBM context = domain_levels.direct (PBM, pharmacy benefit, RxClaim).
+  degree_stretch:
+    title_terms: [product manager, product owner, product analyst, product lead, product specialist]
+    domain_levels: [direct]
+  # "Principal" titles (2026-10-12): evaluated on their actual requirements. Rejected only when the posting also asks
+  # for people leadership, or for strategic/architecture ownership (two or more distinct terms below); one strategy
+  # term is a flag for you to read. Years are judged by the normal years rule (e.g. 10+ required = far short).
+  principal_scope:
+    leadership_terms: [direct reports, manage a team, managing a team, people management, people manager, people leader,
+                       lead a team of, leading a team of, supervise a team, supervising a team, build and lead a team]
+    strategy_terms: [enterprise architecture, architecture strategy, architectural strategy, own the architecture,
+                     architectural ownership, set the strategy, define the strategy, own the strategy, strategic direction,
+                     enterprise strategy, organizational strategy, multi year roadmap, transformation strategy,
+                     executive leadership team, enterprise wide strategy]
+  excluded_employers: []      # set in vault overrides; permanent, private reasons; rejected everywhere, never recommended
+
+extraction:
+  min_confidence: 0.6
+  min_requirements: 2         # fewer than this from a long posting => needs review
+  ai:
+    enabled: true             # active only when an API key is stored (Credential Manager "CareerOS/anthropic")
+    model: claude-opus-5-5    # Claude Haiku 5.5 (claude-haiku-5-5) is much cheaper for bulk reading, if you choose it
+    effort: medium
+    max_calls_per_day: 100    # only postings that pass the early title/US/remote screen are read
+
+weights:
+  eligibility:      {skills_coverage: 30, functional_experience: 25, years_seniority: 15, education_certification: 10, location_authorization: 10, employment_schedule: 10}
+  candidate_fit:    {functional_overlap: 25, domain_overlap: 20, tools_overlap: 15, evidence_strength: 10, seniority_alignment: 10, transferable_quality: 10, employer_familiarity: 5, stakeholder_process: 5}
+  career_value:     {compensation: 25, progression: 20, stability: 15, location: 10, skill_growth: 15, domain_relevance: 15}
+  priority:         {candidate_fit: 0.65, career_value: 0.25, freshness: 0.10}
+
+tiers:                      # prompts v2.2: Tier A/B need state ELIGIBLE (and the skill minimum below)
+  A: {priority: 92}
+  B: {priority: 85}
+  conditional: {priority: 85} # CONDITIONAL jobs at or above this are listed as "Conditional priority"
+  near_miss: {priority: 78}
+  skill_coverage_min: 0.7     # 2026-10-12 decision: Tier A/B also need >= 70% of required skills (evidence-weighted)
+
+freshness:
+  - {max_days: 1, score: 100}
+  - {max_days: 3, score: 80}
+  - {max_days: 7, score: 60}
+  - {max_days: 14, score: 45}
+  - {max_days: 30, score: 30}
+  - {max_days: 100000, score: 15}
+freshness_unknown: 50
+
+# NIGHT / overnight profile (prompts v2.1): judged and ranked separately from PRIMARY; never changes PRIMARY results.
+# Off until you approve its pay settings in vault overrides (night: {enabled: true, compensation: {...}}).
+night:
+  enabled: false
+  # Prompts v2.2: every NIGHT posting gets exactly one mode (your rule, 2026-10-12): full-time / contract / contract-
+  # to-hire on a true overnight or third shift = REPLACEMENT; everything else (part-time, evening, weekend, flexible,
+  # unknown hours) = SUPPLEMENTAL. Each mode has its own pay settings, weights and leaderboard. Unset pay = flagged,
+  # never rejected. Set your values in vault overrides, then `enabled: true`.
+  modes:
+    supplemental:
+      compensation: {floor_hourly: null, target_hourly: null}
+      weights: {schedule: 30, compensation: 25, candidate_fit: 15, low_phone_stress: 15, stability: 5, freshness: 10}
+      schedule_value: {evening: 1.0, weekend: 1.0, flexible: 1.0, overnight: 0.8, unknown: 0.4, daytime_likely: 0.2}
+    replacement:
+      compensation: {floor_annual: null, target_annual: null}
+      weights: {schedule: 15, compensation: 25, candidate_fit: 25, low_phone_stress: 10, stability: 15, freshness: 10}
+      schedule_value: {overnight: 1.0, evening: 0.7, flexible: 0.6, weekend: 0.5, unknown: 0.4, daytime_likely: 0.2}
+  replacement_employment: [full_time, contract, contract_to_hire]
+  employment_types_allowed: [full_time, part_time, contract, contract_to_hire, temporary, unknown]
+  tiers: {A: 90, B: 82, conditional: 82, near_miss: 65}   # A/B need state ELIGIBLE
+  # CONDITIONAL triggers on top of the PRIMARY material unknowns: hours not stated, and a concrete reason for a
+  # conflict-of-interest review with a daytime job (Supplemental only). Same-industry overlap alone
+  # (night_industry_overlap) is informational and never makes a job CONDITIONAL. An unset NIGHT pay floor is a
+  # settings gap, not a job unknown.
+  material_unknowns_extra: [schedule_unknown, night_coi_review, daytime_hours_likely]
+  # Your daytime job's hours, for Supplemental workload sustainability and overlap (2026-10-12). Unset = workload
+  # "unknown". Set in vault overrides, e.g. day_job: {start: "08:00", end: "16:30", days: [mon, tue, wed, thu, fri]}
+  day_job: {start: null, end: null, days: [mon, tue, wed, thu, fri]}
+  # Workload (informational, never a rejection): severe = 14+ working hours a day or under 6 hours' longest rest;
+  # caution = over 12 hours or under 8 hours' rest; green otherwise. Stated hours that OVERLAP the day job make the
+  # job incompatible with Supplemental (it cannot sit alongside the day job).
+  workload: {caution_total_hours: 12, severe_total_hours: 14, caution_min_rest_hours: 8, severe_min_rest_hours: 6}
+  # Conflict-of-interest review (Supplemental). Concrete reasons make it manual_coi_review_required (CONDITIONAL):
+  # same employer family (familiar employers, held parents), the lists below (private: set them in vault overrides),
+  # an employment agreement that restricts outside work, posting text that forbids other employment, overlapping
+  # hours, or an existing application through another channel. Same industry alone = industry_overlap (informational).
+  coi:
+    clients_vendors: []
+    competitors: []
+    agreement_restricts_outside_work: false
+    posting_terms: [no outside employment, no secondary employment, no other employment, exclusive employment,
+                    moonlighting is not permitted, moonlighting is prohibited, may not hold other employment,
+                    must not hold other employment, not permitted to hold other employment, sole employment]
+  title_exclude_extra: []
+  families:   # checked in this order; first match wins
+    quality_audit: [quality analyst, quality auditor, quality assurance, quality specialist, quality monitoring,
+                    quality reviewer, qa specialist, qa analyst, audit specialist, auditor, claims quality]
+    claims_operations: [claims processor, claims examiner, claims specialist, claims analyst, claims representative,
+                        claims associate, claims coordinator, adjudicator, adjudication specialist, pharmacy claims]
+    workforce_monitoring: [workforce, wfm, real time analyst, rta, scheduling analyst, command center,
+                           operations center, monitoring analyst, monitoring specialist, incident, traffic analyst,
+                           noc technician, noc analyst, network operations center, operations monitor, systems monitor]
+    content_review: [content moderator, content moderation, content reviewer, content review, trust and safety,
+                     community moderator, data annotator, data annotation, data labeling, annotation specialist,
+                     search quality rater, ad quality rater, rater]
+    reporting_data: [reporting analyst, report analyst, data analyst, data specialist, data entry, data validation]
+    back_office_operations: [operations specialist, operations coordinator, operations associate, operations analyst,
+                             back office, processing specialist, case processor, document processing, enrollment specialist,
+                             eligibility specialist, billing specialist, payment posting, reconciliation specialist,
+                             prior authorization specialist, benefits specialist, order processing, order processor,
+                             claims entry, transcription, transcriptionist, night auditor, overnight auditor]
+    support: [customer service, member services, customer support, help desk, technical support, support specialist,
+              call center, contact center, customer care]
+  # How CareerOS reads a posting's hours (expanded 2026-10-12 at your request). Evidence is taken in this order:
+  # 1. the job TITLE: bare words count there ("Overnight Claims Processor", "3rd Shift Data Entry", "Afterhours ...");
+  # 2. schedule PHRASES in the posting ("overnight shift", "graveyard", "after-hours support"...): bare words in the body
+  #    ("change doesn't happen overnight", "asynchronous training") describe the company, not the hours, so they don't;
+  # 3. the HOURS themselves: "10:00 PM - 6:30 AM", "11p-7a", "2300-0730" = overnight; "3 PM - 11:30 PM" = evening;
+  #    "8 AM - 5 PM" = daytime.
+  # A phrase that is negated ("no nights or weekends") or incidental ("occasional after-hours work as needed") never
+  # counts. Hyphens and spaces are interchangeable ("after-hours" = "after hours"); "afterhours" is listed separately.
+  schedule:
+    title_terms:
+      overnight: [overnight, overnights, night, nights, nightshift, night shift, graveyard, third shift, 3rd shift,
+                  midnight, late night, nocturnal]
+      evening: [evening, evenings, second shift, 2nd shift, swing, swing shift, pm shift, late shift, after hours,
+                afterhours, closing shift]
+      weekend: [weekend, weekends, baylor, weekend warrior]
+      flexible: [flexible hours, flexible schedule]
+    overnight: [overnight shift, overnight shifts, overnight hours, overnight schedule, overnight role, overnight position,
+                overnight team, overnight coverage, overnight support, overnight operations, overnight availability,
+                overnight work, work overnight, working overnight, overnights, overnight only,
+                night shift, night shifts, nightshift, nights only, night hours, night schedule, night team, night crew,
+                night coverage, night role, night position, work nights, working nights, permanent nights,
+                graveyard, graveyard shift, third shift, 3rd shift, shift 3, midnight shift, midnight to, late night shift,
+                11pm to, 11 pm to, 10pm to, 10 pm to, 12am to, 12 am to, 9pm to, 9 pm to]
+    evening: [evening shift, evening shifts, evening hours, evening schedule, evening role, evening team, evening coverage,
+              work evenings, evenings only, second shift, 2nd shift, shift 2, swing shift, swing shifts, pm shift, pm shifts,
+              late shift, late shifts, closing shift, after hours shift, after hours support, after hours coverage,
+              after hours team, after hours role, after hours position, after hours schedule, afterhours,
+              outside business hours, outside normal business hours, non business hours]
+    weekend: [weekend shift, weekend shifts, weekends only, weekend schedule, weekend hours, weekend role, weekend position,
+              weekend coverage, weekend team, weekend availability required, saturday and sunday shifts, saturday and sunday,
+              friday through sunday, friday to sunday, baylor shift, baylor program, weekend option, weekend warrior]
+    flexible: [flexible schedule, flexible hours, set your own schedule, set your own hours, choose your hours,
+               choose your own hours, choose your own schedule, flexible shifts, flexible working hours, work when you want,
+               self scheduled, self scheduling, pick your shifts, pick your own shifts]
+    # Explicit day-shift wording rejects for NIGHT. Clock times are read by the hours reader instead, which tells the
+    # role's hours ("Your schedule: 8 AM - 5 PM" = daytime) from business/training hours (= daytime_likely, CONDITIONAL).
+    daytime_only: [day shift, day shifts, days only, first shift, 1st shift]
+    daytime_likely: [standard business hours, normal business hours, regular business hours, business hours only]
+    incidental: [occasional, occasionally, sometimes, periodic, periodically, as needed, if needed, when needed,
+                 on call, on an as needed basis, may be required, may require, may include, some]
+  phone_heavy: [inbound calls, outbound calls, high call volume, call center, contact center, phone based, answering calls,
+                take calls, handle calls, phone support, telephone support]
+  low_phone: [back office, non phone, no phone, chat support, email support, written communication, data entry,
+              quality review, audit, reporting, documentation]
+  stress_terms: [fast paced, high volume, quotas, quota, strict metrics, productivity targets, average handle time]
+
+# Prompts v2.2: domain relevance is a Career Value component (replacing v2.1's priority bonus, which partly
+# double-counted the old preferred-industry credit). Highest matching level wins; it can never rescue a rejection.
+domain_levels:
+  direct: {value: 1.0, terms: [pbm, pharmacy benefit, pharmacy benefits manager, rxclaim, pharmacy claim, pharmacy claims]}
+  payer: {value: 0.8, terms: [payer, health plan, managed care, medicare, medicaid, payment integrity, coordination of benefits,
+                              health insurance, claims adjudication, benefits administration, medical claims]}
+  healthcare: {value: 0.6, terms: [healthcare, health care, hospital, clinical, patient, pharmacy, health system, digital health]}
+  none: {value: 0.3}
+
+# Prompts v2.2 eligibility states. INELIGIBLE = a hard failure. HOLD = an employer-level hold (D13). CONDITIONAL = no
+# hard failure but a material fact is unknown: check it before applying. Unposted pay never makes a job CONDITIONAL.
+eligibility_states:
+  material_unknowns: [remote_unknown, home_state_unknown, commute_unknown, education_unknown, work_authorization_unknown,
+                      citizenship_check, years_unknown, low_confidence_requirement, license_check, clearance_check,
+                      certification_check, generic_title_unverified, pay_untrusted_below_floor]
+
+# Prompts v2.2: generic titles do not qualify on the title alone; the title or posting must show relevant context.
+generic_titles:
+  titles: [business analyst, data analyst, operations analyst, quality analyst, systems analyst, reporting analyst,
+           process analyst, analytics analyst, quality assurance analyst, application analyst, applications analyst,
+           functional analyst, requirements analyst, test analyst, testing analyst, audit analyst, business systems analyst,
+           business system analyst, implementation consultant]
+  context_terms: [claims, claim, pharmacy, pbm, healthcare, health care, health plan, benefits, eligibility, reimbursement,
+                  provider, payer, medicare, medicaid, member, patient, operations, validation, reconciliation, reporting,
+                  implementation, configuration, enrollment, insurance]
+
+industries:
+  preferred: [healthcare, health, pbm, pharmacy, payer, health plan, insurance, medicare, medicaid, clinical, hospital, digital health]
+  adjacent: [insurance, financial, bank, government, public sector, technology, software, saas]
+
+domain_terms:
+  healthcare: [healthcare, health care, health plan, payer, provider, patient, clinical, hipaa, medicare, medicaid, member, hedis]
+  pbm: [pbm, pharmacy benefit, pharmacy, formulary, rxclaim, ncpdp, prior authorization, specialty pharmacy]
+  claims: [claims, adjudication, "834", "835", "837", edi, enrollment, benefits configuration, benefit plan, eligibility files]
+
+stakeholder_terms: [stakeholder, requirements gathering, elicitation, user stories, acceptance criteria, uat,
+                    user acceptance, process mapping, workflow, documentation, brd, frd, agile, scrum, sdlc]
+
+growth_skills: [power platform, power apps, power automate, power bi, dataverse, ai, automation, python, sql, copilot, rpa, llm]
+
+# Weighted required-skill coverage (2026-10-12), used by the 70% Tier A/B minimum. Each REQUIRED skill (and each
+# required domain) gets an importance weight; coverage = sum(weight x evidence) / sum(weight). Evidence: direct 1.0,
+# strongly transferable 0.7, adjacent 0.4, none 0. Education, work authorization, clearance, licences and
+# certifications are never skills here (the gate judges them). Every item, its weight, the reason for the weight and
+# the evidence found are stored with the score.
+skill_importance:
+  weights: {core: 4, important: 2, supporting: 1, generic: 0.5}
+  default: important              # a listed skill not named below
+  core: [rxclaim, claims validation, reconciliation, data validation, x12 edi, ncpdp, facets, qnxt]   # central domain work
+  supporting: [jira, confluence, tableau, power bi, visio, sharepoint, servicenow, azure devops, python, zapier,
+               salesforce, power apps, power automate, power platform, dataverse, copilot, rpa]      # workflow tools
+  generic: [agile, documentation]  # generic competencies
+  required_domains: core           # a required domain (PBM, claims, healthcare) is central to the role
+  min_weight_to_judge: 2           # fewer importance points than this (e.g. only Agile + documentation) = too few to judge
+  # Promotions: named in the job title = core; also one of the role's stated duties = one level up.
+
+# Posting words that count as the same skill. Profile skills are matched through these aliases.
+skill_aliases:
+  sql: [sql, t-sql, tsql, pl/sql, ms sql, sql server, structured query language]
+  excel: [excel, microsoft excel, spreadsheets, vlookup, pivot tables]
+  power bi: [power bi, powerbi]
+  power apps: [power apps, powerapps, canvas apps, model-driven apps]
+  power automate: [power automate, microsoft flow, power automate desktop]
+  power platform: [power platform]
+  dataverse: [dataverse, common data service]
+  tableau: [tableau]
+  python: [python]
+  jira: [jira]
+  confluence: [confluence]
+  visio: [visio, lucidchart]
+  sharepoint: [sharepoint]
+  servicenow: [servicenow, service now]
+  salesforce: [salesforce]
+  azure devops: [azure devops, ado]
+  rxclaim: [rxclaim, rx claim]
+  facets: [facets]
+  qnxt: [qnxt]
+  epic: [epic systems, epic emr, epic ehr]
+  hl7: [hl7]
+  fhir: [fhir]
+  x12 edi: [x12, edi, "834", "835", "837", "270/271", "276/277"]
+  ncpdp: [ncpdp]
+  uat: [uat, user acceptance testing, user acceptance]
+  agile: [agile, scrum, kanban, safe]
+  requirements gathering: [requirements gathering, requirements elicitation, gathering requirements, elicit requirements, business requirements]
+  process mapping: [process mapping, process maps, process flows, swimlane, bpmn]
+  data validation: [data validation, data quality, reconciliation, data analysis, source of truth validation,
+                    validation against the source of truth]
+  documentation: [brd, frd, functional specifications, business requirements documents, user stories, acceptance criteria]
+  rpa: [rpa, uipath, automation anywhere, blue prism]
+  copilot: [copilot studio, copilot]
+  api: [api, rest api, apis]
+  fortra showcase: [fortra showcase, showcase query, showcase queries]
+  ibm i: [ibm i, as/400, as400, iseries]
+  db2: [db2, ibm db2]
+  zapier: [zapier]
+  claims validation: [claims validation, claim validation, test claims, claims testing]
+  reconciliation: [reconciliation, reconcile, reconciling]
+
+stability:
+  full_time: 1.0
+  contract_to_hire: 0.85
+  contract: 0.8      # D10: credible contract roles temporarily weighted up for speed
+  temporary: 0.5
+  part_time: 0.3
+  unknown: 0.6
+
+location_value:
+  remote: 1.0
+  hybrid_ok: 0.75
+  onsite_ok: 0.55
+  unknown: 0.5
+
+compensation:            # set real numbers in vault overrides
+  floor_annual: null
+  floor_hourly: null
+  target_annual: null
+  target_hourly: null
+
+location:
+  home_state: null        # vault override (D14)
+  commute_cities: []      # vault override; onsite/hybrid roles outside these cities fail the gate once set
+
+discovery:
+  max_posting_age_days: 60
+  min_interval_seconds: 0.5
+
+# Board scanning health (2026-10-12, Part 8). Never changes a decision, so it is outside the decision fingerprint.
+scanning:
+  adaptive: false                     # true = quiet boards are scanned weekly / monthly; preview: `careeros sources health`
+  close_after_missed_scans: 2         # a posting closes only after this many complete scans without it
+  suspicious_drop_ratio: 0.4          # a scan with under 40% of last time's postings (or none) is suspicious: nothing closes
+  restricted_disable_after: 3         # 401/403 this many scans in a row: the board is disabled (only then)
+  # 2026-10-13: cadence follows the employer's career fit (A/B/C/dormant), never its board trust
+  priority_cadence: {A: daily, B: every_3_days, C: weekly, dormant: weekly}
+  new_board_days: 14                  # a newly admitted board is scanned daily while CareerOS learns it
+  monthly_after_days: 120             # dormant, no relevant role ever, older than this: monthly
+  provider_degraded_min_failures: 3   # this many boards of one provider failing together (and >= the ratio below)
+  provider_degraded_ratio: 0.5        #   = a provider / adapter problem: no employer is penalised
+  failures_before_reverify: 3         # this many failed scans of one board in a row: re-check it at the employer's site
+
+# Board verification (2026-10-13): CareerOS trusts the employer's own website first and the ATS second. A board joins
+# the daily scan only when the employer's official site links to it (handshake), the board agrees about who it belongs
+# to (identity), Board Trust >= 85, and a validation scan passes. Boards scanned before this existed keep being scanned
+# while they are re-verified (legacy grace) unless a concrete failure pauses them.
+board_verification:
+  enforce: true                       # false = the old behaviour (every listed board scanned); for emergencies only
+  fetch_official_sites: false         # true = CareerOS may read employer homepages / careers pages (safe fetcher,
+                                      #   robots.txt honoured, <= daily_site_requests a day). Your decision.
+  daily_site_requests: 40
+  ats_request_budget: 40              # listing-API requests for verification and validation scans per run
+  max_pages_per_employer: 8
+  max_verifications_per_run: 5        # new candidate boards checked per daily run
+  max_reverifications_per_run: 5      # boards due for re-verification (and legacy boards) per daily run
+  max_validations_per_run: 10
+  max_boards_per_employer: 3          # boards evaluated when an employer's site links to several
+  auto_trust: 85                      # Board Trust needed for automatic scanning (plus every mandatory rule)
+  review_trust: 65                    # 65-84 = your review; below = never admitted
+  override_days: 90                   # a manual approval expires after this many days
+  reverify_days: {new: 7, stable: 45, long_term: 90}
+  candidate_retry_days: 30            # an unproven candidate is checked again after this
+  site_failures_before_review: 3      # official site unreadable this many times in a row: asks for your review
+  legacy_grace_days: null             # null = legacy boards keep being scanned until verified or failed
+
+# Verified employer-board discovery (2026-10-12, Parts 1, 2, 9). OFF in the daily run until you switch it on; the
+# `careeros sources ...` commands work on demand. Only the four allowed ATS listing APIs are ever called.
+source_discovery:
+  enabled: false                      # true = the daily run also discovers boards for new leads (within the budget)
+  auto_activate: false                # true = a verified board with relevant roles joins the daily scan by itself
+  slug_guessing: true                 # bounded: distinctive full-name variants only, never generic or shortened names
+  max_slug_variants: 2
+  daily_request_budget: 60            # every request counts: metadata, retries and redirects included
+  per_provider_budget: 20
+  curated_share: 0.2                  # at most this share of the budget for curated (independently found) employers
+  lookback_days: 90                   # historical backfill window
+  closed_after_days: 45               # an unmatched lead older than this is treated as a closed historical opening
+  retry_days: {slug_absent: 60, board_empty: 14, identity_unresolved: 30, no_qualified_roles: 30, access_restricted: 90,
+               request_failed: 1, budget_exhausted: 0}
+  staffing_agencies: [teksystems, insight global, randstad, kforce, apex systems, aerotek, adecco, manpower,
+                      kelly services, beacon hill, collabera, cybercoders, motion recruitment, actalent, judge group, vaco,
+                      addison group, experis, hays, spherion, jobot, medix, solomon page, talentburst, mindlance]
+  pilot:
+    start: null                       # set a date to start the 60-day pilot window
+    days: 60
+    targets: {new_apply_worthy_per_30_days: 5, audited_match_accuracy: 0.95, wrong_employer_admissions: 0,
+              extra_review_minutes_per_week: 15}
+
+operations:               # how CareerOS runs, never what it decides: changing these does not re-evaluate any job
+  notifications: true     # Windows notification after the daily run when there is something new worth a look
+  backup_keep: 14         # daily backups kept in vault/backups
+  # Gmail search for job-alert emails (only used once you run `careeros gmail connect`). Senders only, so recruiter
+  # and personal mail is never read; label any other alert email "CareerOS" in Gmail to include it.
+  # LinkedIn sends application updates from the same jobs-noreply address, so application/interview subjects are
+  # excluded here and again by subject after reading (careeros.discovery.alerts.is_correspondence).
+  gmail_query: "newer_than:3d {from:(jobalerts-noreply OR jobs-noreply OR indeed.com OR glassdoor.com OR ziprecruiter.com OR usajobs.gov) label:careeros} -subject:(\"your application\" OR \"application was sent\" OR \"thank you for applying\" OR \"applied to\" OR interview OR assessment OR offer)"
+  # Private GitHub repo (owner/name) where job recommendations arrive as issues, e.g. from a ChatGPT scheduled task.
+  # Set it in vault overrides; null = off.
+  github_inbox: null
+  # Prompts v2.5: after each run, publish the sanitized seen-jobs index (job facts only) and the Gmail intake status
+  # to that repo, so ChatGPT can skip jobs CareerOS already has. A local copy is kept in vault\reports\inbox-index.
+  publish_seen_index: true
+  seen_index_max_per_file: 1500   # past this many jobs the index is split into 16 shard files

@@ -1,0 +1,110 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "pipe_decisions",
+  "position": {
+    "x": 10,
+    "y": 310,
+    "z": 0,
+    "width": 420,
+    "height": 400,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_job_evaluation"
+                    }
+                  },
+                  "Property": "decision_stage"
+                }
+              },
+              "queryRef": "fact_job_evaluation.decision_stage",
+              "nativeQueryRef": "decision_stage",
+              "displayName": "Stage"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_job_evaluation"
+                    }
+                  },
+                  "Property": "gate_decision"
+                }
+              },
+              "queryRef": "fact_job_evaluation.gate_decision",
+              "nativeQueryRef": "gate_decision",
+              "displayName": "Decision"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_job_evaluation"
+                    }
+                  },
+                  "Property": "rejection_reason"
+                }
+              },
+              "queryRef": "fact_job_evaluation.rejection_reason",
+              "nativeQueryRef": "rejection_reason",
+              "displayName": "Reason"
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Jobs Discovered"
+                }
+              },
+              "queryRef": "_Measures.Jobs Discovered",
+              "nativeQueryRef": "Jobs Discovered",
+              "displayName": "Jobs"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'How decisions are made'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,57 @@
+# CareerOS engine: code and synthetic fixtures only. Private data lives in ..\vault (never here).
+.venv/
+.venv-dev/
+__pycache__/
+*.pyc
+*.db
+*.db-*
+*.sqlite*
+*.log
+/vault/
+/data/
+/snapshots/
+/reports/
+/labels/
+writer.lock
+.env
+*.pem
+*.key
+
+# Power BI Desktop's local cache and settings for an opened project
+powerbi/**/.pbi/
+
+# --- Public-release hygiene (2026-10-13, docs/public_release_checklist.md) ---
+# Secrets and local settings: never in any repository (credentials live in Windows Credential Manager)
+.env
+.env.*
+!.env.example
+secrets/
+*client_secret*.json
+*credentials*.json
+*token*.json
+# Private data belongs in the vault, never here
+*.eml
+*.msg
+*.abf
+*.bak
+*.dump
+exports/
+backups/
+release_denylist.txt
+# The job seeker's own sites, systems and agency live in the vault (refactor R4); only the test fixture is tracked
+private_sites.yaml
+!tests/fixtures/private_sites.yaml
+# Office documents (resumes, cover letters, offer letters)
+*.pdf
+*.doc
+*.docx
+*.xlsx
+# Power BI files carry data: only the synthetic demo report is tracked
+*.pbix
+!powerbi/CareerOS.pbix
+TempSaves/
+# Editors and operating systems
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

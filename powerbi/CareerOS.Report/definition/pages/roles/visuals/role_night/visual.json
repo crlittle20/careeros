@@ -1,0 +1,78 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "role_night",
+  "position": {
+    "x": 600,
+    "y": 360,
+    "z": 0,
+    "width": 170,
+    "height": 350,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "clusteredColumnChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_job_evaluation"
+                    }
+                  },
+                  "Property": "night_mode"
+                }
+              },
+              "queryRef": "fact_job_evaluation.night_mode",
+              "nativeQueryRef": "night_mode"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "NIGHT Routed"
+                }
+              },
+              "queryRef": "_Measures.NIGHT Routed",
+              "nativeQueryRef": "NIGHT Routed"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'NIGHT routing'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

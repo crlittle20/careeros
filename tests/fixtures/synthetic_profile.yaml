@@ -1,0 +1,32 @@
+# SYNTHETIC test persona. Not a real person.
+status: approved
+profile_version: 0
+state: FL
+work_authorization: {us_authorized: true, needs_sponsorship: false}
+clearance: none
+current_level: senior
+total_professional_years: 8
+education:
+  - {level: bachelor, field: information systems, completed: true}
+certifications: []
+licenses: []
+functions:
+  - {name: business systems analysis, years: 6, evidence: direct}
+  - {name: requirements gathering, years: 6, evidence: direct}
+  - {name: user acceptance testing, years: 5, evidence: direct}
+  - {name: data validation, years: 5, evidence: direct}
+skills:
+  - {name: sql, years: 4, evidence: direct}
+  - {name: excel, years: 8, evidence: direct}
+  - {name: power bi, years: 2, evidence: strongly_transferable}
+  - {name: rxclaim, years: 3, evidence: direct}
+  - {name: jira, years: 4, evidence: direct}
+  - {name: uat, years: 5, evidence: direct}
+  - {name: requirements gathering, years: 6, evidence: direct}
+domains:
+  - {name: healthcare, years: 5}
+  - {name: pbm, years: 3}
+  - {name: claims, years: 4}
+familiar_employers: [Example Health]
+equivalences:
+  - {posting_term: tableau, counts_as: power bi}

@@ -1,0 +1,46 @@
+# Site / ATS automation policy (PLAN.md v0.3 §12). Technical ability does not equal permission.
+# discovery / automated_fill / auto_submit: allowed | supervised_only | manual | unknown | blocked
+# Unknown status always means supervised/manual.
+# Machine-readable source status (prompts v2.2), checked by CareerOS before every automated fetch.
+# allowed = read and grade automatically; manual = links listed for you only; blocked = never accessed.
+# Anything not listed is manual. Review whenever a site's terms, robots.txt or API policy changes.
+# Sites tied to the job seeker's own situation are listed in the vault (policy/private_sites.yaml), never here.
+sources:
+  # 2026-10-13 board verification: an employer's OWN homepage and careers page, read only to see which job board the
+  # employer links to (never to collect jobs). robots.txt honoured, https only, public addresses only, at most
+  # board_verification.max_pages_per_employer pages per check. Used only while board_verification.fetch_official_sites
+  # is true in your policy.
+  employer_site: allowed
+  greenhouse: allowed
+  lever: allowed
+  ashby: allowed
+  workable: allowed
+  smartrecruiters: manual
+  workday: manual
+  linkedin: manual
+  indeed: manual
+  glassdoor: manual
+
+sites:
+  - site: boards-api.greenhouse.io / api.lever.co / api.ashbyhq.com
+    discovery: allowed            # public job-board APIs intended for listing jobs
+    automated_fill: unknown       # decided per lane in Phase 3
+    auto_submit: unknown
+    reviewed: 2026-10-10
+  - site: apply.workable.com (public careers-page widget API)
+    discovery: allowed            # robots.txt allows all agents (content signal: search=yes, ai-input=yes, ai-train=no)
+    notes: Rate-limited (HTTP 429 after roughly 60 requests in a few minutes on 2026-10-11); poll sparingly.
+    automated_fill: unknown
+    auto_submit: unknown
+    reviewed: 2026-10-11
+  - site: api.smartrecruiters.com / jobs.smartrecruiters.com
+    discovery: manual             # api robots.txt: "User-agent: * / Disallow: /" (only LinkedInBot allowed)
+    automated_fill: blocked
+    auto_submit: blocked
+    reviewed: 2026-10-11
+    notes: Links from alert emails are listed as leads; save the posting page into vault\inbox and run `careeros import`.
+  - site: linkedin.com / indeed.com / glassdoor.com
+    discovery: manual             # their alert emails only; no automated access
+    automated_fill: blocked
+    auto_submit: blocked
+    reviewed: 2026-10-09

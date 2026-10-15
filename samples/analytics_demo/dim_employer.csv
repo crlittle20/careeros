@@ -1,0 +1,15 @@
+﻿employer_key,employer_name,official_domain,domain_status,career_fit_score,career_priority,boards_total,boards_active,is_verified_employer,employer_origin,first_seen_date_key
+bluepeak health plan,Bluepeak Health Plan,bluepeakhealth.example.com,verified,98,A,1,1,1,board,20261101
+cascade health data,Cascade Health Data,cascadehealthdata.example.com,verified,88,A,1,1,1,board,20261101
+cobalt claims technology,Cobalt Claims Technology,cobaltclaims.example.com,verified,78,B,1,1,1,board,20261102
+evergreen health analytics,Evergreen Health Analytics,evergreenhealth.example.com,verified,0,dormant,1,1,1,board,20261101
+harborline health,Harborline Health,harborline.example.com,verified,100,A,2,1,1,board,20261101
+lakeview pharmacy solutions,Lakeview Pharmacy Solutions,lakeviewrx.example.com,unverified,,,1,0,0,board,20261102
+meridian rx,Meridian Rx,meridianrx.example.com,verified,100,A,1,1,1,board,20261101
+northwind benefits,Northwind Benefits,northwindbenefits.example.com,verified,95,A,1,1,1,board,20261102
+pinecrest care navigation,Pinecrest Care Navigation,pinecrestcare.example.com,verified,,,1,0,0,board,20261102
+quillon health,Quillon Health,quillonhealth.example.com,verified,,,1,0,0,board,20261102
+sterling claims services,Sterling Claims Services,sterlingclaims.example.com,verified,93,A,1,1,1,board,20261101
+summit payer services,Summit Payer Services,summitpayer.example.com,unverified,,,1,0,0,board,20261102
+unmatched:brightwater benefits,Brightwater Benefits,,,,,0,0,0,posting only,20261102
+(none),(no employer),,,,,0,0,0,none,

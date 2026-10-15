@@ -1,0 +1,18 @@
+# SYNTHETIC private site knowledge for tests (careeros/core/private_sites.py). Fictional employer family, system and
+# agency; the real file lives only in the vault. tests/__init__.py points CAREEROS_PRIVATE_SITES here.
+never_fetch: [northgategroup.com, nhg.com, northgate.com, northgatecare.com, harborstaffing.com]
+manual_systems:
+  northgategroup.com: nhg
+  harborstaffing.com: harborstaffing
+sources:
+  nhg: manual
+  harborstaffing: manual
+  examplejobs: blocked        # a status unlike the default, so a test can see the file applied
+staffing_agencies: [harbor staffing, bayview partners]   # the second has no generic agency word in its name
+agency_shortcut: Harbor Staffing
+sites:
+  - site: careers.northgategroup.com (Northgate, Northgatecare)
+    discovery: manual
+    automated_fill: blocked
+    auto_submit: blocked
+    reviewed: 2026-10-11

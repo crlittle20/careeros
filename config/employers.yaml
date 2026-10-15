@@ -1,0 +1,6 @@
+# Public job boards to poll. These entries are FICTIONAL examples: replace them with the employers you follow
+# (`careeros employers add`, or paste a Greenhouse, Lever or Ashby job link and the board is added for you).
+employers:
+  - {name: Example Health Plan, parent: Example Health Plan, ats: greenhouse, token: examplehealthplan, industry: health insurance}
+  - {name: Sample Claims Services, parent: Sample Claims Services, ats: lever, token: sampleclaims, industry: claims services}
+  - {name: Demo Benefits Co, parent: Demo Benefits Co, ats: ashby, token: demobenefits, industry: health benefits}

@@ -1,0 +1,3 @@
+# Generated files that tests compare byte for byte: stored and checked out exactly as written, on any OS
+samples/analytics_demo/** -text
+powerbi/** -text

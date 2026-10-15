@@ -1,0 +1,28 @@
+﻿scan_key,board_key,employer_key,ats_key,scan_date_key,outcome,is_complete,is_failure,error_code,postings,requests,jobs_closed,possibly_absent,provider_degraded
+1,lever:bluepeakhealth,bluepeak health plan,lever,20261102,complete,1,0,,6,1,0,0,0
+2,lever:cascadehealthdata,cascade health data,lever,20261102,complete,1,0,,7,1,0,0,0
+3,greenhouse:evergreenhealth,evergreen health analytics,greenhouse,20261102,complete,1,0,,0,1,0,0,0
+4,greenhouse:harborline,harborline health,greenhouse,20261102,complete,1,0,,3,1,0,0,0
+5,greenhouse:meridianrx,meridian rx,greenhouse,20261102,complete,1,0,,8,1,0,0,0
+6,workable:sterlingclaims,sterling claims services,workable,20261102,complete,1,0,,4,1,0,0,0
+7,lever:bluepeakhealth,bluepeak health plan,lever,20261103,complete,1,0,,7,1,0,0,0
+8,lever:cascadehealthdata,cascade health data,lever,20261103,complete,1,0,,7,1,0,0,0
+9,greenhouse:evergreenhealth,evergreen health analytics,greenhouse,20261103,complete,1,0,,0,1,0,0,0
+10,greenhouse:meridianrx,meridian rx,greenhouse,20261103,complete,1,0,,7,1,0,1,0
+11,workable:sterlingclaims,sterling claims services,workable,20261103,complete,1,0,,4,1,0,0,0
+12,greenhouse:harborline,harborline health,greenhouse,20261103,failed,0,1,not_found,,1,0,0,0
+13,lever:bluepeakhealth,bluepeak health plan,lever,20261104,complete,1,0,,7,1,0,0,0
+14,lever:cascadehealthdata,cascade health data,lever,20261104,complete,1,0,,7,1,0,0,0
+15,workable:cobaltclaims,cobalt claims technology,workable,20261104,complete,1,0,,4,1,0,0,0
+16,greenhouse:evergreenhealth,evergreen health analytics,greenhouse,20261104,complete,1,0,,0,1,0,0,0
+17,greenhouse:meridianrx,meridian rx,greenhouse,20261104,complete,1,0,,8,1,1,0,0
+18,ashby:northwindbenefits,northwind benefits,ashby,20261104,complete,1,0,,6,1,0,0,0
+19,workable:sterlingclaims,sterling claims services,workable,20261104,complete,1,0,,4,1,0,0,0
+20,lever:bluepeakhealth,bluepeak health plan,lever,20261105,complete,1,0,,7,1,0,0,0
+21,lever:cascadehealthdata,cascade health data,lever,20261105,complete,1,0,,7,1,0,0,0
+22,workable:cobaltclaims,cobalt claims technology,workable,20261105,complete,1,0,,4,1,0,0,0
+23,greenhouse:evergreenhealth,evergreen health analytics,greenhouse,20261105,complete,1,0,,0,1,0,0,0
+24,ashby:harborlinehealth,harborline health,ashby,20261105,complete,1,0,,4,1,0,0,0
+25,greenhouse:meridianrx,meridian rx,greenhouse,20261105,complete,1,0,,8,1,0,0,0
+26,ashby:northwindbenefits,northwind benefits,ashby,20261105,complete,1,0,,6,1,0,0,0
+27,workable:sterlingclaims,sterling claims services,workable,20261105,complete,1,0,,4,1,0,0,0

@@ -1,0 +1,5 @@
+﻿application_key,job_key,employer_key,ats_key,role_family_key,channel,applied_date_key,last_change_date_key,current_state,state_category,is_open,got_answer,reached_screening,reached_interview,reached_offer,is_hired,days_in_process
+1,lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000207,bluepeak health plan,lever,healthcare_bsa,direct,20261104,20261105,screening,active,1,1,1,0,0,0,1
+2,workable:sterlingclaims:SC4004,sterling claims services,workable,healthcare_bsa,direct,20261104,20261105,rejected,cancelled,0,1,0,0,0,0,1
+3,ashby:harborlinehealth:b2e1d4c3-0000-4000-8000-000000000314,harborline health,ashby,healthcare_bsa,referral,20261105,20261105,applied,active,1,0,0,0,0,0,0
+4,greenhouse:meridianrx:108,meridian rx,greenhouse,healthcare_bsa,direct,20261105,20261105,applied,active,1,0,0,0,0,0,0

@@ -1,0 +1,56 @@
+# CareerOS CI (Portfolio Prompt 10, 2026-10-13): runs tools/validate.py, the same command you run locally.
+#
+# No secrets and no credentials: none is referenced here, and validate.py removes ANTHROPIC_API_KEY and GitHub tokens
+# from every check. No live job boards: the tests run with outbound network refused (tools/offline_tests.py) and Demo
+# Mode is synthetic and offline. The internet is used only to install requirements-dev.lock from PyPI (hash-checked,
+# wheels only) and by pip-audit's vulnerability lookup.
+#
+# Supply chain: each action is pinned to the full commit of a release at least 14 days old; the job token can only read.
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: validate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    # CareerOS runs on Windows. The Linux job is informational until it has been seen to pass.
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            experimental: false
+          - os: ubuntu-latest
+            experimental: true
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install the hash-locked tools and dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --require-hashes --only-binary :all: --no-deps -r requirements-dev.lock
+
+      - name: Validate (lint, format, types, config, tests, Demo Mode, security)
+        run: python tools/validate.py
+        env:
+          PYTHONUTF8: "1"

@@ -1,0 +1,43 @@
+{
+  "workflow": "job",
+  "contract_version": "0.2.0",
+  "states": {
+    "discovered": "not_started",
+    "normalized": "active",
+    "extracted": "active",
+    "needs_review": "blocked",
+    "eligible": "active",
+    "scored": "completed",
+    "rejected": "cancelled",
+    "duplicate": "cancelled",
+    "closed": "cancelled"
+  },
+  "initial_state": "discovered",
+  "terminal": ["duplicate"],
+  "allowed": [
+    {"from": "discovered", "to": "normalized", "requires_reason": false},
+    {"from": "discovered", "to": "duplicate", "requires_reason": true},
+    {"from": "normalized", "to": "extracted", "requires_reason": false},
+    {"from": "normalized", "to": "needs_review", "requires_reason": true},
+    {"from": "normalized", "to": "rejected", "requires_reason": true},
+    {"from": "extracted", "to": "rejected", "requires_reason": true},
+    {"from": "extracted", "to": "eligible", "requires_reason": false},
+    {"from": "extracted", "to": "normalized", "requires_reason": true},
+    {"from": "eligible", "to": "scored", "requires_reason": false},
+    {"from": "eligible", "to": "extracted", "requires_reason": true},
+    {"from": "eligible", "to": "normalized", "requires_reason": true},
+    {"from": "needs_review", "to": "normalized", "requires_reason": true},
+    {"from": "scored", "to": "extracted", "requires_reason": true},
+    {"from": "scored", "to": "normalized", "requires_reason": true},
+    {"from": "rejected", "to": "extracted", "requires_reason": true},
+    {"from": "rejected", "to": "normalized", "requires_reason": true},
+    {"from": "normalized", "to": "closed", "requires_reason": true},
+    {"from": "extracted", "to": "closed", "requires_reason": true},
+    {"from": "needs_review", "to": "closed", "requires_reason": true},
+    {"from": "eligible", "to": "closed", "requires_reason": true},
+    {"from": "scored", "to": "closed", "requires_reason": true},
+    {"from": "rejected", "to": "closed", "requires_reason": true},
+    {"from": "closed", "to": "normalized", "requires_reason": true}
+  ],
+  "self_transitions": false
+}

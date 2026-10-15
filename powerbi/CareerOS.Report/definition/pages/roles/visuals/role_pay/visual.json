@@ -1,0 +1,78 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "role_pay",
+  "position": {
+    "x": 780,
+    "y": 360,
+    "z": 0,
+    "width": 490,
+    "height": 350,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_role_family"
+                    }
+                  },
+                  "Property": "family_name"
+                }
+              },
+              "queryRef": "dim_role_family.family_name",
+              "nativeQueryRef": "family_name"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Average Top of Pay Range (annual)"
+                }
+              },
+              "queryRef": "_Measures.Average Top of Pay Range (annual)",
+              "nativeQueryRef": "Average Top of Pay Range (annual)"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Top of pay range by family'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,199 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "emp_table",
+  "position": {
+    "x": 10,
+    "y": 10,
+    "z": 0,
+    "width": 760,
+    "height": 380,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_employer"
+                    }
+                  },
+                  "Property": "employer_name"
+                }
+              },
+              "queryRef": "dim_employer.employer_name",
+              "nativeQueryRef": "employer_name",
+              "displayName": "Employer"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Jobs Discovered"
+                }
+              },
+              "queryRef": "_Measures.Jobs Discovered",
+              "nativeQueryRef": "Jobs Discovered",
+              "displayName": "Found"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Jobs Qualified"
+                }
+              },
+              "queryRef": "_Measures.Jobs Qualified",
+              "nativeQueryRef": "Jobs Qualified",
+              "displayName": "Qualified"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Jobs Recommended"
+                }
+              },
+              "queryRef": "_Measures.Jobs Recommended",
+              "nativeQueryRef": "Jobs Recommended",
+              "displayName": "A/B"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Average Fit"
+                }
+              },
+              "queryRef": "_Measures.Average Fit",
+              "nativeQueryRef": "Average Fit",
+              "displayName": "Avg fit"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_employer"
+                    }
+                  },
+                  "Property": "career_fit_score"
+                }
+              },
+              "queryRef": "dim_employer.career_fit_score",
+              "nativeQueryRef": "career_fit_score",
+              "displayName": "Career fit"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_employer"
+                    }
+                  },
+                  "Property": "career_priority"
+                }
+              },
+              "queryRef": "dim_employer.career_priority",
+              "nativeQueryRef": "career_priority",
+              "displayName": "Priority"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_employer"
+                    }
+                  },
+                  "Property": "boards_active"
+                }
+              },
+              "queryRef": "dim_employer.boards_active",
+              "nativeQueryRef": "boards_active",
+              "displayName": "Boards"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Scan Reliability"
+                }
+              },
+              "queryRef": "_Measures.Scan Reliability",
+              "nativeQueryRef": "Scan Reliability",
+              "displayName": "Scans OK"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "_Measures"
+                  }
+                },
+                "Property": "Jobs Qualified"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": false
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Employers'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "emp_boards",
+  "position": {
+    "x": 10,
+    "y": 400,
+    "z": 0,
+    "width": 760,
+    "height": 310,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "pivotTable",
+    "query": {
+      "queryState": {
+        "Rows": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_board"
+                    }
+                  },
+                  "Property": "ats_key"
+                }
+              },
+              "queryRef": "dim_board.ats_key",
+              "nativeQueryRef": "ats_key",
+              "displayName": "Provider"
+            }
+          ]
+        },
+        "Columns": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_board"
+                    }
+                  },
+                  "Property": "verification_status"
+                }
+              },
+              "queryRef": "dim_board.verification_status",
+              "nativeQueryRef": "verification_status",
+              "displayName": "Status"
+            }
+          ]
+        },
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Boards"
+                }
+              },
+              "queryRef": "_Measures.Boards",
+              "nativeQueryRef": "Boards"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Board verification by provider'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

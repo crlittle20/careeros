@@ -1,0 +1,486 @@
+{
+ "schema_version": "analytics-1",
+ "source": "demo",
+ "generated_at": "2026-11-05T13:01:00.000Z",
+ "tables": {
+  "dim_date": {
+   "file": "dim_date.csv",
+   "rows": 9,
+   "sha256": "30ae2183b2daee2c61ef285262298c468ea84f91f3e302c70c5990731b4031a6"
+  },
+  "dim_employer": {
+   "file": "dim_employer.csv",
+   "rows": 14,
+   "sha256": "dee5af81838ea94031903f7924a1bbeaeb828c9a98792274af172ec6618c8908"
+  },
+  "dim_board": {
+   "file": "dim_board.csv",
+   "rows": 14,
+   "sha256": "d78efd20e14bb02e78c22764f744ae440a8c57bffbd3dc66c6d8c9a4c7eafc67"
+  },
+  "dim_ats": {
+   "file": "dim_ats.csv",
+   "rows": 9,
+   "sha256": "d7dd3aa23ac93d1cfd68191373ab1ac0077958380edec7d271677f19742c44f1"
+  },
+  "dim_source": {
+   "file": "dim_source.csv",
+   "rows": 6,
+   "sha256": "2c00f8b734812069c06e5482dda73cf2db993a2ed1bfcd82872fb770fda32157"
+  },
+  "dim_role_family": {
+   "file": "dim_role_family.csv",
+   "rows": 6,
+   "sha256": "b2d65d5b0d07e49324d6c99b9f5496eae21447abb641c3a6a33db16f9bf06446"
+  },
+  "dim_location": {
+   "file": "dim_location.csv",
+   "rows": 8,
+   "sha256": "f50094c9a27b81e99d24992038f1917224818ba8a073149090533cd9a0ee46f8"
+  },
+  "dim_job": {
+   "file": "dim_job.csv",
+   "rows": 46,
+   "sha256": "b2a5e6522494e4d6d13435621c1a147760bf6682be7e2e2f94df46ec8b0b9faa"
+  },
+  "fact_job_evaluation": {
+   "file": "fact_job_evaluation.csv",
+   "rows": 45,
+   "sha256": "5e97dcfe8c1e4ed4f058af0acb3d707be6b6affba8742a593ea6f7fd93fe3a83"
+  },
+  "fact_job_observation": {
+   "file": "fact_job_observation.csv",
+   "rows": 50,
+   "sha256": "434a3b88385c6435f0643cde939dd04851d0b4f1edddfa7e708a67d8e5e9c985"
+  },
+  "fact_board_scan": {
+   "file": "fact_board_scan.csv",
+   "rows": 27,
+   "sha256": "962a9212b4e56b6e2380c803565d50a726a6c2eec8325be163c64f7a7288f853"
+  },
+  "fact_verification": {
+   "file": "fact_verification.csv",
+   "rows": 14,
+   "sha256": "3943509038e9f3061cba9344b7085c97d4b28a3047d8c6ddf38841a10a4ed5ce"
+  },
+  "fact_application": {
+   "file": "fact_application.csv",
+   "rows": 4,
+   "sha256": "56e4953e317cfb67d079a4dcf0c9545ecdd3576e1c22fe09d07ea9ed8c6cbb77"
+  }
+ },
+ "kpis": {
+  "jobs_discovered": 45,
+  "distinct_openings": 44,
+  "jobs_evaluated": 40,
+  "jobs_qualified": 18,
+  "jobs_recommended": 5,
+  "jobs_rejected": 13,
+  "jobs_manual_review": 13,
+  "manual_review_rate": 0.325,
+  "duplicates_prevented": 3,
+  "cross_source_sightings": 2,
+  "verified_employers": 8,
+  "average_fit": 84.8,
+  "board_verification_rate": 0.8,
+  "new_board_verification_rate": 0.6,
+  "scan_reliability": 0.963,
+  "night_routed": 13,
+  "applications": 4,
+  "applications_open": 3,
+  "interview_rate": 0.0
+ },
+ "valid": true,
+ "checks": [
+  {
+   "check": "every table is present with its documented columns, in order",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "dim_date: the primary key date_key is present and unique",
+   "ok": true,
+   "detail": "9 rows"
+  },
+  {
+   "check": "dim_employer: the primary key employer_key is present and unique",
+   "ok": true,
+   "detail": "14 rows"
+  },
+  {
+   "check": "dim_board: the primary key board_key is present and unique",
+   "ok": true,
+   "detail": "14 rows"
+  },
+  {
+   "check": "dim_ats: the primary key ats_key is present and unique",
+   "ok": true,
+   "detail": "9 rows"
+  },
+  {
+   "check": "dim_source: the primary key source_key is present and unique",
+   "ok": true,
+   "detail": "6 rows"
+  },
+  {
+   "check": "dim_role_family: the primary key role_family_key is present and unique",
+   "ok": true,
+   "detail": "6 rows"
+  },
+  {
+   "check": "dim_location: the primary key location_key is present and unique",
+   "ok": true,
+   "detail": "8 rows"
+  },
+  {
+   "check": "dim_job: the primary key job_key is present and unique",
+   "ok": true,
+   "detail": "46 rows"
+  },
+  {
+   "check": "fact_job_evaluation: the primary key job_key is present and unique",
+   "ok": true,
+   "detail": "45 rows"
+  },
+  {
+   "check": "fact_job_observation: the primary key observation_key is present and unique",
+   "ok": true,
+   "detail": "50 rows"
+  },
+  {
+   "check": "fact_board_scan: the primary key scan_key is present and unique",
+   "ok": true,
+   "detail": "27 rows"
+  },
+  {
+   "check": "fact_verification: the primary key verification_key is present and unique",
+   "ok": true,
+   "detail": "14 rows"
+  },
+  {
+   "check": "fact_application: the primary key application_key is present and unique",
+   "ok": true,
+   "detail": "4 rows"
+  },
+  {
+   "check": "dim_employer.first_seen_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "dim_board.employer_key -> dim_employer: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "dim_board.ats_key -> dim_ats: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "dim_board.migrated_to_board_key -> dim_board: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "dim_board.created_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "dim_board.activated_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "dim_board.last_checked_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "dim_board.retired_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "dim_job.duplicate_of_job_key -> dim_job: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "dim_job.variant_of_job_key -> dim_job: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "dim_job.repost_of_job_key -> dim_job: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_evaluation.job_key -> dim_job: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_evaluation.employer_key -> dim_employer: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_evaluation.board_key -> dim_board: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_evaluation.ats_key -> dim_ats: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_evaluation.role_family_key -> dim_role_family: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_evaluation.location_key -> dim_location: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_evaluation.discovery_source_key -> dim_source: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_evaluation.first_seen_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_evaluation.posted_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_evaluation.last_seen_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_evaluation.decided_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_evaluation.closed_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_evaluation.label_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_observation.job_key -> dim_job: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_observation.employer_key -> dim_employer: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_observation.ats_key -> dim_ats: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_observation.source_key -> dim_source: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_job_observation.observed_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_board_scan.board_key -> dim_board: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_board_scan.employer_key -> dim_employer: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_board_scan.ats_key -> dim_ats: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_board_scan.scan_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_verification.board_key -> dim_board: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_verification.employer_key -> dim_employer: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_verification.ats_key -> dim_ats: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_verification.started_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_verification.finished_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_application.job_key -> dim_job: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_application.employer_key -> dim_employer: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_application.ats_key -> dim_ats: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_application.role_family_key -> dim_role_family: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_application.applied_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "fact_application.last_change_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "every value has its column's type (flags 0/1, whole numbers, decimals, ISO dates, text)",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "scores are within 0-100 and skill coverage within 0-1",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "job flags agree with the job's state (scored jobs have a tier, rejections a reason)",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "dim_date is one row per day with no gaps",
+   "ok": true,
+   "detail": "9 days"
+  },
+  {
+   "check": "fact_job_evaluation has one row per source record",
+   "ok": true,
+   "detail": "45 vs 45"
+  },
+  {
+   "check": "fact_board_scan has one row per source record",
+   "ok": true,
+   "detail": "27 vs 27"
+  },
+  {
+   "check": "fact_verification has one row per source record",
+   "ok": true,
+   "detail": "14 vs 14"
+  },
+  {
+   "check": "fact_application has one row per source record",
+   "ok": true,
+   "detail": "4 vs 4"
+  },
+  {
+   "check": "fact_job_observation has one row per source record",
+   "ok": true,
+   "detail": "50 vs 50"
+  },
+  {
+   "check": "dim_board has every board (plus the (none) member)",
+   "ok": true,
+   "detail": "14"
+  },
+  {
+   "check": "jobs by state match the application",
+   "ok": true,
+   "detail": "{'closed': 4, 'duplicate': 1, 'rejected': 13, 'scored': 27}"
+  },
+  {
+   "check": "remote classifications match the application",
+   "ok": true,
+   "detail": "{'US_nationwide': 6, 'US_restricted_states': 2, 'US_unspecified': 34, 'hybrid': 1, 'onsite': 1, 'unknown': 1}"
+  },
+  {
+   "check": "boards by verification status match the application",
+   "ok": true,
+   "detail": "{'active': 8, 'historical': 1, 'manual_only': 2, 'rejected': 1, 'review_required': 1}"
+  },
+  {
+   "check": "jobs_qualified equals the application's own figure",
+   "ok": true,
+   "detail": "export 18, application 18"
+  },
+  {
+   "check": "duplicates_prevented equals the application's own figure",
+   "ok": true,
+   "detail": "export 3, application 3"
+  },
+  {
+   "check": "verified_employers equals the application's own figure",
+   "ok": true,
+   "detail": "export 8, application 8"
+  },
+  {
+   "check": "scan_reliability equals the application's own figure",
+   "ok": true,
+   "detail": "export 0.963, application 0.96"
+  },
+  {
+   "check": "new_board_verification_rate equals the application's own figure",
+   "ok": true,
+   "detail": "export 0.6, application 0.6"
+  },
+  {
+   "check": "the only email addresses are fictional example.com ones",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "check": "every employer website is a fictional example.com site",
+   "ok": true,
+   "detail": "[]"
+  }
+ ]
+}

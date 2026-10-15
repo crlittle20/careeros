@@ -1,0 +1,169 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "role_table",
+  "position": {
+    "x": 10,
+    "y": 10,
+    "z": 0,
+    "width": 760,
+    "height": 340,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_role_family"
+                    }
+                  },
+                  "Property": "family_name"
+                }
+              },
+              "queryRef": "dim_role_family.family_name",
+              "nativeQueryRef": "family_name",
+              "displayName": "Family"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Jobs Discovered"
+                }
+              },
+              "queryRef": "_Measures.Jobs Discovered",
+              "nativeQueryRef": "Jobs Discovered",
+              "displayName": "Found"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Jobs Qualified"
+                }
+              },
+              "queryRef": "_Measures.Jobs Qualified",
+              "nativeQueryRef": "Jobs Qualified",
+              "displayName": "Qualified"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Qualified Rate"
+                }
+              },
+              "queryRef": "_Measures.Qualified Rate",
+              "nativeQueryRef": "Qualified Rate",
+              "displayName": "Qualified %"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Average Fit"
+                }
+              },
+              "queryRef": "_Measures.Average Fit",
+              "nativeQueryRef": "Average Fit",
+              "displayName": "Avg fit"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Average Top of Pay Range (annual)"
+                }
+              },
+              "queryRef": "_Measures.Average Top of Pay Range (annual)",
+              "nativeQueryRef": "Average Top of Pay Range (annual)",
+              "displayName": "Avg top pay"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Pay Stated Rate"
+                }
+              },
+              "queryRef": "_Measures.Pay Stated Rate",
+              "nativeQueryRef": "Pay Stated Rate",
+              "displayName": "Pay stated"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "_Measures"
+                  }
+                },
+                "Property": "Jobs Qualified"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": false
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Role families'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

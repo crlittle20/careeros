@@ -1,0 +1,7 @@
+﻿role_family_key,family_name,is_target,sort_order
+power_platform_automation,Power Platform / automation,1,1
+healthcare_bsa,Business systems analyst (healthcare preferred),1,2
+pbm_claims_operations,PBM / claims / benefits operations,1,3
+data_reporting,Data / reporting analyst,1,4
+process_analyst,Business process analyst,1,5
+(none),No target family,0,6

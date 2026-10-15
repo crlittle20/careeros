@@ -1,0 +1,79 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "pipe_apps",
+  "position": {
+    "x": 540,
+    "y": 10,
+    "z": 0,
+    "width": 230,
+    "height": 290,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_application"
+                    }
+                  },
+                  "Property": "current_state"
+                }
+              },
+              "queryRef": "fact_application.current_state",
+              "nativeQueryRef": "current_state",
+              "displayName": "Status"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Applications"
+                }
+              },
+              "queryRef": "_Measures.Applications",
+              "nativeQueryRef": "Applications"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Applications by status'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

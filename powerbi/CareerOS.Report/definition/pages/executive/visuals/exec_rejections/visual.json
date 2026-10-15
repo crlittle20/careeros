@@ -1,0 +1,98 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "exec_rejections",
+  "position": {
+    "x": 10,
+    "y": 450,
+    "z": 0,
+    "width": 620,
+    "height": 260,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_job_evaluation"
+                    }
+                  },
+                  "Property": "rejection_group"
+                }
+              },
+              "queryRef": "fact_job_evaluation.rejection_group",
+              "nativeQueryRef": "rejection_group",
+              "displayName": "Reason"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Jobs Rejected by Reason"
+                }
+              },
+              "queryRef": "_Measures.Jobs Rejected by Reason",
+              "nativeQueryRef": "Jobs Rejected by Reason",
+              "displayName": "Jobs rejected"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "_Measures"
+                  }
+                },
+                "Property": "Jobs Rejected by Reason"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": false
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Why jobs are rejected'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

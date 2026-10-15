@@ -1,0 +1,15 @@
+﻿verification_key,board_key,employer_key,ats_key,kind,started_date_key,finished_date_key,outcome,is_pass,failure_class,trust_score,site_requests,ats_requests,evidence_items,evidence_points
+1,greenhouse:meridianrx,meridian rx,greenhouse,reverify,20261102,20261102,verified,1,,100,3,2,9,100
+2,lever:bluepeakhealth,bluepeak health plan,lever,reverify,20261102,20261102,verified,1,,100,3,1,9,100
+3,greenhouse:harborline,harborline health,greenhouse,reverify,20261102,20261102,verified,1,,100,3,2,9,100
+4,lever:cascadehealthdata,cascade health data,lever,reverify,20261102,20261102,verified,1,,100,3,1,9,100
+5,workable:sterlingclaims,sterling claims services,workable,reverify,20261102,20261102,verified,1,,100,3,1,9,100
+6,greenhouse:evergreenhealth,evergreen health analytics,greenhouse,reverify,20261102,20261102,verified,1,,85,3,2,9,85
+7,ashby:northwindbenefits,northwind benefits,ashby,initial,20261102,20261102,verified,1,,100,3,1,9,100
+8,workable:cobaltclaims,cobalt claims technology,workable,initial,20261102,20261102,verified,1,,100,3,1,9,100
+9,ashby:pinecrest,pinecrest care navigation,ashby,initial,20261102,20261102,no_handshake,0,no_handshake,,3,0,4,5
+10,greenhouse:quillon,quillon health,greenhouse,initial,20261102,20261102,review_required,0,review_required,60,3,2,8,60
+11,greenhouse:harborline,harborline health,greenhouse,reverify,20261103,20261103,verified,1,,95,3,1,9,95
+12,ashby:northwindbenefits,northwind benefits,ashby,validation,20261103,20261103,active,1,,100,0,1,1,0
+13,workable:cobaltclaims,cobalt claims technology,workable,validation,20261103,20261103,active,1,,100,0,1,1,0
+14,ashby:harborlinehealth,harborline health,ashby,validation,20261104,20261104,active,1,,95,0,1,1,0

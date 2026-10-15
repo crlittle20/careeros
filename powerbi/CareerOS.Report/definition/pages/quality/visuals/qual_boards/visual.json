@@ -1,0 +1,151 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "qual_boards",
+  "position": {
+    "x": 640,
+    "y": 420,
+    "z": 0,
+    "width": 630,
+    "height": 290,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_board"
+                    }
+                  },
+                  "Property": "board_key"
+                }
+              },
+              "queryRef": "dim_board.board_key",
+              "nativeQueryRef": "board_key",
+              "displayName": "Board"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_board"
+                    }
+                  },
+                  "Property": "verification_status"
+                }
+              },
+              "queryRef": "dim_board.verification_status",
+              "nativeQueryRef": "verification_status",
+              "displayName": "Status"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_board"
+                    }
+                  },
+                  "Property": "board_trust_score"
+                }
+              },
+              "queryRef": "dim_board.board_trust_score",
+              "nativeQueryRef": "board_trust_score",
+              "displayName": "Trust"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_board"
+                    }
+                  },
+                  "Property": "board_health_score"
+                }
+              },
+              "queryRef": "dim_board.board_health_score",
+              "nativeQueryRef": "board_health_score",
+              "displayName": "Health"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_board"
+                    }
+                  },
+                  "Property": "board_activity"
+                }
+              },
+              "queryRef": "dim_board.board_activity",
+              "nativeQueryRef": "board_activity",
+              "displayName": "Activity"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_board"
+                    }
+                  },
+                  "Property": "paused_reason"
+                }
+              },
+              "queryRef": "dim_board.paused_reason",
+              "nativeQueryRef": "paused_reason",
+              "displayName": "Paused"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Boards"
+                }
+              },
+              "queryRef": "_Measures.Boards",
+              "nativeQueryRef": "Boards",
+              "displayName": "Count"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Board health'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

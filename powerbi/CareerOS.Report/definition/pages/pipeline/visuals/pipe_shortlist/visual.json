@@ -1,0 +1,184 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "pipe_shortlist",
+  "position": {
+    "x": 440,
+    "y": 310,
+    "z": 0,
+    "width": 830,
+    "height": 290,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_job"
+                    }
+                  },
+                  "Property": "title"
+                }
+              },
+              "queryRef": "dim_job.title",
+              "nativeQueryRef": "title",
+              "displayName": "Title"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_employer"
+                    }
+                  },
+                  "Property": "employer_name"
+                }
+              },
+              "queryRef": "dim_employer.employer_name",
+              "nativeQueryRef": "employer_name",
+              "displayName": "Employer"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_job_evaluation"
+                    }
+                  },
+                  "Property": "tier"
+                }
+              },
+              "queryRef": "fact_job_evaluation.tier",
+              "nativeQueryRef": "tier",
+              "displayName": "Tier"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_job_evaluation"
+                    }
+                  },
+                  "Property": "apply_priority"
+                }
+              },
+              "queryRef": "fact_job_evaluation.apply_priority",
+              "nativeQueryRef": "apply_priority",
+              "displayName": "Priority"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_job_evaluation"
+                    }
+                  },
+                  "Property": "candidate_fit"
+                }
+              },
+              "queryRef": "fact_job_evaluation.candidate_fit",
+              "nativeQueryRef": "candidate_fit",
+              "displayName": "Fit"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_job_evaluation"
+                    }
+                  },
+                  "Property": "decisive_unknowns"
+                }
+              },
+              "queryRef": "fact_job_evaluation.decisive_unknowns",
+              "nativeQueryRef": "decisive_unknowns",
+              "displayName": "To check"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_job_evaluation"
+                    }
+                  },
+                  "Property": "label"
+                }
+              },
+              "queryRef": "fact_job_evaluation.label",
+              "nativeQueryRef": "label",
+              "displayName": "Label"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Shortlist Jobs"
+                }
+              },
+              "queryRef": "_Measures.Shortlist Jobs",
+              "nativeQueryRef": "Shortlist Jobs",
+              "displayName": "Jobs"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_job_evaluation"
+                  }
+                },
+                "Property": "apply_priority"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": false
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Shortlist: recommended and manual review'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

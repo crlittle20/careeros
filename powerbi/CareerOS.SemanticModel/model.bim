@@ -1,0 +1,3686 @@
+{
+  "compatibilityLevel": 1567,
+  "model": {
+    "culture": "en-US",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "en-US",
+    "tables": [
+      {
+        "name": "dim_date",
+        "lineageTag": "2c4eb360-ed37-5020-8d1e-8a0e9c587b95",
+        "columns": [
+          {
+            "name": "date_key",
+            "dataType": "int64",
+            "sourceColumn": "date_key",
+            "lineageTag": "6aaa3ded-cf13-5555-a7a7-d388d52eb040",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "date",
+            "dataType": "dateTime",
+            "sourceColumn": "date",
+            "lineageTag": "da99cd80-141a-5ecf-9082-a8dd2e3d08c4",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              },
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "formatString": "yyyy-mm-dd",
+            "isKey": true
+          },
+          {
+            "name": "year",
+            "dataType": "int64",
+            "sourceColumn": "year",
+            "lineageTag": "f59b8485-7be2-5f82-aba1-3049c44a479f",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "quarter",
+            "dataType": "int64",
+            "sourceColumn": "quarter",
+            "lineageTag": "54264161-3bdd-5b13-a020-b7549da2b45f",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "month",
+            "dataType": "int64",
+            "sourceColumn": "month",
+            "lineageTag": "6e8473ef-e3ff-5e61-ae6c-f6842f9c49a7",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "month_name",
+            "dataType": "string",
+            "sourceColumn": "month_name",
+            "lineageTag": "49552054-7859-5140-8011-f25deb240f00",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "sortByColumn": "month"
+          },
+          {
+            "name": "month_start",
+            "dataType": "dateTime",
+            "sourceColumn": "month_start",
+            "lineageTag": "2045a1e4-db86-51ff-91f2-d784372519f3",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              },
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "iso_week",
+            "dataType": "int64",
+            "sourceColumn": "iso_week",
+            "lineageTag": "7141d338-f518-5460-b8ef-0f9fba404aaa",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "week_start",
+            "dataType": "dateTime",
+            "sourceColumn": "week_start",
+            "lineageTag": "7323fb5d-1b0d-57d6-a116-925850c07176",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              },
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "day_of_week",
+            "dataType": "int64",
+            "sourceColumn": "day_of_week",
+            "lineageTag": "ed2a77a8-04f4-54cb-901a-72fdbce6e4fa",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "day_name",
+            "dataType": "string",
+            "sourceColumn": "day_name",
+            "lineageTag": "431e7a6b-1e09-5fb5-a835-888f6d70a699",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "sortByColumn": "day_of_week"
+          },
+          {
+            "name": "is_weekend",
+            "dataType": "int64",
+            "sourceColumn": "is_weekend",
+            "lineageTag": "f6923383-3c93-5f34-99e2-1a851145053d",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_date",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = LoadTable(\"dim_date\"),",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"date_key\", Int64.Type}, {\"date\", type date}, {\"year\", Int64.Type}, {\"quarter\", Int64.Type}, {\"month\", Int64.Type}, {\"month_name\", type text}, {\"month_start\", type date}, {\"iso_week\", Int64.Type}, {\"week_start\", type date}, {\"day_of_week\", Int64.Type}, {\"day_name\", type text}, {\"is_weekend\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "dataCategory": "Time"
+      },
+      {
+        "name": "dim_employer",
+        "lineageTag": "42d44a3f-1008-59c1-a7de-90aa7a307778",
+        "columns": [
+          {
+            "name": "employer_key",
+            "dataType": "string",
+            "sourceColumn": "employer_key",
+            "lineageTag": "22b23af1-50a0-5d4f-adc4-fd350e310ee0",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "employer_name",
+            "dataType": "string",
+            "sourceColumn": "employer_name",
+            "lineageTag": "890e1b26-d1f3-50f1-b372-2e2630a295d2",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "official_domain",
+            "dataType": "string",
+            "sourceColumn": "official_domain",
+            "lineageTag": "2587d8d3-fad6-5250-ae48-e0f7139a27f6",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "domain_status",
+            "dataType": "string",
+            "sourceColumn": "domain_status",
+            "lineageTag": "185b08e1-6750-5da6-900e-c0b23b50022a",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "career_fit_score",
+            "dataType": "double",
+            "sourceColumn": "career_fit_score",
+            "lineageTag": "09e22dae-e80c-5253-834d-77bb8575efc8",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "career_priority",
+            "dataType": "string",
+            "sourceColumn": "career_priority",
+            "lineageTag": "aab9fce4-3ab1-5248-b256-5d653fbfad13",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "boards_total",
+            "dataType": "int64",
+            "sourceColumn": "boards_total",
+            "lineageTag": "d29e4041-a2b9-5cc1-9fcb-7755f7d1d990",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "boards_active",
+            "dataType": "int64",
+            "sourceColumn": "boards_active",
+            "lineageTag": "01e740e6-c2aa-5e92-840c-afd5dcde572f",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "is_verified_employer",
+            "dataType": "int64",
+            "sourceColumn": "is_verified_employer",
+            "lineageTag": "41e42797-5b4e-55f2-8ffc-eff984b2c71b",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "employer_origin",
+            "dataType": "string",
+            "sourceColumn": "employer_origin",
+            "lineageTag": "401937cd-cf26-5f1e-851b-8f6432c8b989",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "first_seen_date_key",
+            "dataType": "int64",
+            "sourceColumn": "first_seen_date_key",
+            "lineageTag": "1968f049-3e2e-5fb4-a468-6a9eee5003d6",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_employer",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = LoadTable(\"dim_employer\"),",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"employer_key\", type text}, {\"employer_name\", type text}, {\"official_domain\", type text}, {\"domain_status\", type text}, {\"career_fit_score\", type number}, {\"career_priority\", type text}, {\"boards_total\", Int64.Type}, {\"boards_active\", Int64.Type}, {\"is_verified_employer\", Int64.Type}, {\"employer_origin\", type text}, {\"first_seen_date_key\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "dim_board",
+        "lineageTag": "454d16d0-63e0-5cad-9a31-9ba78abec25f",
+        "columns": [
+          {
+            "name": "board_key",
+            "dataType": "string",
+            "sourceColumn": "board_key",
+            "lineageTag": "52879683-4990-5589-9ec4-723904c9c483",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "employer_key",
+            "dataType": "string",
+            "sourceColumn": "employer_key",
+            "lineageTag": "562cf7ad-ffdf-544d-8acc-8d72bb1955f0",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "ats_key",
+            "dataType": "string",
+            "sourceColumn": "ats_key",
+            "lineageTag": "cb534b04-6e16-5443-a479-65765c123195",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "board_token",
+            "dataType": "string",
+            "sourceColumn": "board_token",
+            "lineageTag": "3d04c00e-7840-53ee-8dfb-5007c37cdc11",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "collection",
+            "dataType": "string",
+            "sourceColumn": "collection",
+            "lineageTag": "d4837339-cd48-5dbf-8004-561332a7e7ae",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "verification_status",
+            "dataType": "string",
+            "sourceColumn": "verification_status",
+            "lineageTag": "d93bf25c-cc49-575b-8cfa-d173fcf00602",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "provenance",
+            "dataType": "string",
+            "sourceColumn": "provenance",
+            "lineageTag": "400489fe-be0a-5891-b185-970441cea1c8",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "is_legacy",
+            "dataType": "int64",
+            "sourceColumn": "is_legacy",
+            "lineageTag": "1a9ae36f-cd87-55ad-81af-6f631d61fec0",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "handshake_status",
+            "dataType": "string",
+            "sourceColumn": "handshake_status",
+            "lineageTag": "acce4046-7c74-5909-a571-ad8dfb52d01c",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "identity_check",
+            "dataType": "string",
+            "sourceColumn": "identity_check",
+            "lineageTag": "80836249-0b02-5a89-a911-894627f45bee",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "validation_status",
+            "dataType": "string",
+            "sourceColumn": "validation_status",
+            "lineageTag": "7cf2ed63-8e31-5664-bb39-3b5d7c17091d",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "board_trust_score",
+            "dataType": "double",
+            "sourceColumn": "board_trust_score",
+            "lineageTag": "0524f6e1-4b28-5f83-aa09-0b52de6f65d4",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "board_health_score",
+            "dataType": "double",
+            "sourceColumn": "board_health_score",
+            "lineageTag": "09505590-8254-5daf-80aa-58b5b0dd3a7a",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "board_activity",
+            "dataType": "string",
+            "sourceColumn": "board_activity",
+            "lineageTag": "6497b0fd-6917-5bb6-adfa-90a4a9de2625",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "verify_count",
+            "dataType": "int64",
+            "sourceColumn": "verify_count",
+            "lineageTag": "33e6facf-85f0-5498-91da-eb40a5f04c1a",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "is_paused",
+            "dataType": "int64",
+            "sourceColumn": "is_paused",
+            "lineageTag": "0ebc89b8-c3c7-5ecb-b77d-4a4b9f20da47",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "paused_reason",
+            "dataType": "string",
+            "sourceColumn": "paused_reason",
+            "lineageTag": "3f5fd100-346d-5488-b99f-90726fa16a94",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "migrated_to_board_key",
+            "dataType": "string",
+            "sourceColumn": "migrated_to_board_key",
+            "lineageTag": "8ce3dab0-5639-5dac-aa18-bc6b1bc0f0e4",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "created_date_key",
+            "dataType": "int64",
+            "sourceColumn": "created_date_key",
+            "lineageTag": "78f073d9-5b9a-5512-9105-f3a264aad383",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "activated_date_key",
+            "dataType": "int64",
+            "sourceColumn": "activated_date_key",
+            "lineageTag": "883c875a-d2a5-5567-bfcb-1b1efec3b858",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "last_checked_date_key",
+            "dataType": "int64",
+            "sourceColumn": "last_checked_date_key",
+            "lineageTag": "0807499c-7adf-56e1-80f0-af20c7b4099c",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "retired_date_key",
+            "dataType": "int64",
+            "sourceColumn": "retired_date_key",
+            "lineageTag": "c26b7288-69ec-5d21-9afe-3671e3604024",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_board",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = LoadTable(\"dim_board\"),",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"board_key\", type text}, {\"employer_key\", type text}, {\"ats_key\", type text}, {\"board_token\", type text}, {\"collection\", type text}, {\"verification_status\", type text}, {\"provenance\", type text}, {\"is_legacy\", Int64.Type}, {\"handshake_status\", type text}, {\"identity_check\", type text}, {\"validation_status\", type text}, {\"board_trust_score\", type number}, {\"board_health_score\", type number}, {\"board_activity\", type text}, {\"verify_count\", Int64.Type}, {\"is_paused\", Int64.Type}, {\"paused_reason\", type text}, {\"migrated_to_board_key\", type text}, {\"created_date_key\", Int64.Type}, {\"activated_date_key\", Int64.Type}, {\"last_checked_date_key\", Int64.Type}, {\"retired_date_key\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "dim_ats",
+        "lineageTag": "bc2d92c8-be01-5b29-b074-ba89fb62b612",
+        "columns": [
+          {
+            "name": "ats_key",
+            "dataType": "string",
+            "sourceColumn": "ats_key",
+            "lineageTag": "a93493af-f870-5a79-ab81-0a1324541784",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "ats_name",
+            "dataType": "string",
+            "sourceColumn": "ats_name",
+            "lineageTag": "47c3f881-5ee2-5c20-8baa-7f327abe52ef",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "collection_mode",
+            "dataType": "string",
+            "sourceColumn": "collection_mode",
+            "lineageTag": "09e8cf84-fa5e-5253-8961-7473801f3d0f",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "is_automated",
+            "dataType": "int64",
+            "sourceColumn": "is_automated",
+            "lineageTag": "3897e198-9304-5d3a-9cad-473e634149e0",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_ats",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = LoadTable(\"dim_ats\"),",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"ats_key\", type text}, {\"ats_name\", type text}, {\"collection_mode\", type text}, {\"is_automated\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "dim_source",
+        "lineageTag": "2c1c9bdc-084d-5e6f-acff-68be41382189",
+        "columns": [
+          {
+            "name": "source_key",
+            "dataType": "string",
+            "sourceColumn": "source_key",
+            "lineageTag": "a7d67adf-353b-5efb-b82f-ebe70d8cb7b8",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "source_name",
+            "dataType": "string",
+            "sourceColumn": "source_name",
+            "lineageTag": "ad12f233-e473-5342-b4ff-9514c34f681e",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "channel",
+            "dataType": "string",
+            "sourceColumn": "channel",
+            "lineageTag": "5dbb08d3-b604-5f99-a309-0be7de631e6c",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "is_automated",
+            "dataType": "int64",
+            "sourceColumn": "is_automated",
+            "lineageTag": "e72397de-964e-59c4-9f12-e07b97533be5",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_source",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = LoadTable(\"dim_source\"),",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"source_key\", type text}, {\"source_name\", type text}, {\"channel\", type text}, {\"is_automated\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "dim_role_family",
+        "lineageTag": "34d55167-3d42-5381-9fd0-f1ef4e353eee",
+        "columns": [
+          {
+            "name": "role_family_key",
+            "dataType": "string",
+            "sourceColumn": "role_family_key",
+            "lineageTag": "a72984ef-c420-573b-98d9-a5dbb7c5ee74",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "family_name",
+            "dataType": "string",
+            "sourceColumn": "family_name",
+            "lineageTag": "719e2413-c48e-547f-8854-eff15f093b5f",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "sortByColumn": "sort_order"
+          },
+          {
+            "name": "is_target",
+            "dataType": "int64",
+            "sourceColumn": "is_target",
+            "lineageTag": "a5686d15-1f3f-5106-813f-22538e76cbb2",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "sort_order",
+            "dataType": "int64",
+            "sourceColumn": "sort_order",
+            "lineageTag": "c16b9f55-f6cc-5837-b8ba-9e09fb4e8e3d",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_role_family",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = LoadTable(\"dim_role_family\"),",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"role_family_key\", type text}, {\"family_name\", type text}, {\"is_target\", Int64.Type}, {\"sort_order\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "dim_location",
+        "lineageTag": "813ed0ba-395a-5a72-bdda-d599adce8293",
+        "columns": [
+          {
+            "name": "location_key",
+            "dataType": "string",
+            "sourceColumn": "location_key",
+            "lineageTag": "cf2e6ffa-2c41-586b-8c35-6b9b1d837ec0",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "remote_scope",
+            "dataType": "string",
+            "sourceColumn": "remote_scope",
+            "lineageTag": "9f47f5f5-47f3-5b2e-9a05-126fc980e8d1",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "scope_label",
+            "dataType": "string",
+            "sourceColumn": "scope_label",
+            "lineageTag": "5af9cd53-ba12-5320-80d5-7e2bb0f45fab",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "sortByColumn": "sort_order"
+          },
+          {
+            "name": "work_arrangement",
+            "dataType": "string",
+            "sourceColumn": "work_arrangement",
+            "lineageTag": "bec8cf1d-f3a2-569e-b749-dd30c4dda243",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "is_remote",
+            "dataType": "int64",
+            "sourceColumn": "is_remote",
+            "lineageTag": "00a27e88-2555-5945-aee1-f2d5aee6a59c",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_us",
+            "dataType": "int64",
+            "sourceColumn": "is_us",
+            "lineageTag": "f2287015-21ed-5e1f-9f45-d5706bce630e",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "country",
+            "dataType": "string",
+            "sourceColumn": "country",
+            "lineageTag": "0553ec59-bfdf-56ac-81e7-c50c217cf93d",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "allowed_states",
+            "dataType": "string",
+            "sourceColumn": "allowed_states",
+            "lineageTag": "ae9ea88f-d4b7-5e93-813c-fda4bea5c83b",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "excluded_states",
+            "dataType": "string",
+            "sourceColumn": "excluded_states",
+            "lineageTag": "e57b1606-914b-5de4-883e-860804c594fd",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "sort_order",
+            "dataType": "int64",
+            "sourceColumn": "sort_order",
+            "lineageTag": "52a90823-8502-54ec-9d9f-6958ac33fbaa",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_location",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = LoadTable(\"dim_location\"),",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"location_key\", type text}, {\"remote_scope\", type text}, {\"scope_label\", type text}, {\"work_arrangement\", type text}, {\"is_remote\", Int64.Type}, {\"is_us\", Int64.Type}, {\"country\", type text}, {\"allowed_states\", type text}, {\"excluded_states\", type text}, {\"sort_order\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "dim_job",
+        "lineageTag": "94419d75-1d93-570f-a2c2-c64a6730e947",
+        "columns": [
+          {
+            "name": "job_key",
+            "dataType": "string",
+            "sourceColumn": "job_key",
+            "lineageTag": "96c8ce2a-7c22-5970-ae4e-c99a01244f02",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "title",
+            "dataType": "string",
+            "sourceColumn": "title",
+            "lineageTag": "340bb91b-c3e7-5d0e-877b-c86c4bf1ef93",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "title_norm",
+            "dataType": "string",
+            "sourceColumn": "title_norm",
+            "lineageTag": "acd0910a-97fb-5d3e-ad70-7cff007e8799",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "posted_employer_name",
+            "dataType": "string",
+            "sourceColumn": "posted_employer_name",
+            "lineageTag": "f8eba199-cf9b-5493-a887-46cbce126a6a",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "department",
+            "dataType": "string",
+            "sourceColumn": "department",
+            "lineageTag": "0a7a06d7-06c0-5d93-83d8-6c74a3a6c6a2",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "requisition_id",
+            "dataType": "string",
+            "sourceColumn": "requisition_id",
+            "lineageTag": "35b70056-c69f-5a0a-ba20-b7438b7a6c61",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "employment_type",
+            "dataType": "string",
+            "sourceColumn": "employment_type",
+            "lineageTag": "00281704-0d28-502c-b400-fc31ee261fda",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "location_raw",
+            "dataType": "string",
+            "sourceColumn": "location_raw",
+            "lineageTag": "50bba2bb-1081-567f-923f-128bdaf665f9",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "timezone_requirement",
+            "dataType": "string",
+            "sourceColumn": "timezone_requirement",
+            "lineageTag": "147d7619-52bf-579e-90cd-39c88e262905",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "pay_min",
+            "dataType": "double",
+            "sourceColumn": "pay_min",
+            "lineageTag": "cffd8b2d-26a1-5f93-a8b9-74fb7632b451",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "formatString": "#,0.##"
+          },
+          {
+            "name": "pay_max",
+            "dataType": "double",
+            "sourceColumn": "pay_max",
+            "lineageTag": "ffc6b4c4-9644-5853-9c85-b22b34aa4bbd",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "formatString": "#,0.##"
+          },
+          {
+            "name": "pay_period",
+            "dataType": "string",
+            "sourceColumn": "pay_period",
+            "lineageTag": "725e6a3f-d937-5c01-9701-293ee9065ad3",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "pay_currency",
+            "dataType": "string",
+            "sourceColumn": "pay_currency",
+            "lineageTag": "db50b44a-affc-5ac8-b67c-4af12b84df56",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "annual_pay_min",
+            "dataType": "double",
+            "sourceColumn": "annual_pay_min",
+            "lineageTag": "c5561352-6812-579c-9ee8-85b849a7d4da",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "formatString": "$#,0"
+          },
+          {
+            "name": "annual_pay_max",
+            "dataType": "double",
+            "sourceColumn": "annual_pay_max",
+            "lineageTag": "af2a6a9a-c3e7-58bf-8895-dd116db3a640",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "formatString": "$#,0"
+          },
+          {
+            "name": "is_pay_stated",
+            "dataType": "int64",
+            "sourceColumn": "is_pay_stated",
+            "lineageTag": "33f15584-7fc7-5468-8057-cf4a3596daa4",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "posted_date",
+            "dataType": "dateTime",
+            "sourceColumn": "posted_date",
+            "lineageTag": "cde764be-6781-537a-acaf-10b3e3a7789b",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              },
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "deadline_date",
+            "dataType": "dateTime",
+            "sourceColumn": "deadline_date",
+            "lineageTag": "1a524159-6c13-5cf9-9800-80bb8ffc02ab",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              },
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ]
+          },
+          {
+            "name": "url",
+            "dataType": "string",
+            "sourceColumn": "url",
+            "lineageTag": "5e90008b-294d-5c54-b355-58136997ea1b",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "duplicate_of_job_key",
+            "dataType": "string",
+            "sourceColumn": "duplicate_of_job_key",
+            "lineageTag": "5cd76639-bbdd-5564-955a-e10beced5728",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "variant_of_job_key",
+            "dataType": "string",
+            "sourceColumn": "variant_of_job_key",
+            "lineageTag": "e7fbb4fb-699c-5b48-bf09-f27b0c338703",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "repost_of_job_key",
+            "dataType": "string",
+            "sourceColumn": "repost_of_job_key",
+            "lineageTag": "212aa824-a10d-588c-b889-b3c84a24c36a",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_job",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = LoadTable(\"dim_job\"),",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"job_key\", type text}, {\"title\", type text}, {\"title_norm\", type text}, {\"posted_employer_name\", type text}, {\"department\", type text}, {\"requisition_id\", type text}, {\"employment_type\", type text}, {\"location_raw\", type text}, {\"timezone_requirement\", type text}, {\"pay_min\", type number}, {\"pay_max\", type number}, {\"pay_period\", type text}, {\"pay_currency\", type text}, {\"annual_pay_min\", type number}, {\"annual_pay_max\", type number}, {\"is_pay_stated\", Int64.Type}, {\"posted_date\", type date}, {\"deadline_date\", type date}, {\"url\", type text}, {\"duplicate_of_job_key\", type text}, {\"variant_of_job_key\", type text}, {\"repost_of_job_key\", type text}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "fact_job_evaluation",
+        "lineageTag": "b16246d0-0c97-5682-969e-84a7da0a0d87",
+        "columns": [
+          {
+            "name": "job_key",
+            "dataType": "string",
+            "sourceColumn": "job_key",
+            "lineageTag": "bf950ed2-3b7a-5dfb-b3dd-9b266d57e4cc",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "employer_key",
+            "dataType": "string",
+            "sourceColumn": "employer_key",
+            "lineageTag": "4110dfb8-57fe-53dc-8836-04e372a209fe",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "board_key",
+            "dataType": "string",
+            "sourceColumn": "board_key",
+            "lineageTag": "8b1a1310-f325-5820-895b-78b9338c1b14",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "ats_key",
+            "dataType": "string",
+            "sourceColumn": "ats_key",
+            "lineageTag": "694c7a9a-fb58-57da-9183-0940fc632a2e",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "role_family_key",
+            "dataType": "string",
+            "sourceColumn": "role_family_key",
+            "lineageTag": "fdb15139-1df8-595b-9d1e-5e438fcaabea",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "location_key",
+            "dataType": "string",
+            "sourceColumn": "location_key",
+            "lineageTag": "201668ef-223e-5363-be87-34bbb074ebf9",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "discovery_source_key",
+            "dataType": "string",
+            "sourceColumn": "discovery_source_key",
+            "lineageTag": "c548beb1-4ede-565a-a006-ec0c11df9a3c",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "first_seen_date_key",
+            "dataType": "int64",
+            "sourceColumn": "first_seen_date_key",
+            "lineageTag": "f817b482-3eb6-5a89-bcf4-617548b18df3",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "posted_date_key",
+            "dataType": "int64",
+            "sourceColumn": "posted_date_key",
+            "lineageTag": "8b346f55-d55e-513d-b817-d897444e3628",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "last_seen_date_key",
+            "dataType": "int64",
+            "sourceColumn": "last_seen_date_key",
+            "lineageTag": "6b989d8e-dc35-549f-bf97-209436d5662e",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "decided_date_key",
+            "dataType": "int64",
+            "sourceColumn": "decided_date_key",
+            "lineageTag": "d54e9a71-b524-5882-af55-0c776f0dc6c8",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "closed_date_key",
+            "dataType": "int64",
+            "sourceColumn": "closed_date_key",
+            "lineageTag": "58367f61-39d4-50d5-bc71-8b283ea870a5",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "current_state",
+            "dataType": "string",
+            "sourceColumn": "current_state",
+            "lineageTag": "bab3bbde-e149-5571-80f5-e095c999071f",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "state_reason",
+            "dataType": "string",
+            "sourceColumn": "state_reason",
+            "lineageTag": "78168785-7a87-51f3-b11f-86c0099936c9",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "rejection_reason",
+            "dataType": "string",
+            "sourceColumn": "rejection_reason",
+            "lineageTag": "bea36c39-a71f-58d7-b89f-be84c2ff9205",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "rejection_group",
+            "dataType": "string",
+            "sourceColumn": "rejection_group",
+            "lineageTag": "b871d9de-a384-5fd9-bcf3-9950e6388d85",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "decision_stage",
+            "dataType": "string",
+            "sourceColumn": "decision_stage",
+            "lineageTag": "6585dc54-afcf-599d-92d4-c2c60abc67f7",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "gate_decision",
+            "dataType": "string",
+            "sourceColumn": "gate_decision",
+            "lineageTag": "f83294f9-d046-512f-b2f9-7fa9dc1f3469",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "eligibility_state",
+            "dataType": "string",
+            "sourceColumn": "eligibility_state",
+            "lineageTag": "f3592108-96f1-52f6-9a5b-efbf9cb1acd3",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "tier",
+            "dataType": "string",
+            "sourceColumn": "tier",
+            "lineageTag": "045a5636-c17e-54c2-96f9-11b00668d456",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "is_evaluated",
+            "dataType": "int64",
+            "sourceColumn": "is_evaluated",
+            "lineageTag": "251d99e3-8759-5698-8c5b-e722609360f3",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_scored",
+            "dataType": "int64",
+            "sourceColumn": "is_scored",
+            "lineageTag": "b3e0f420-54c4-56ed-9b59-0a10c17d960c",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_qualified",
+            "dataType": "int64",
+            "sourceColumn": "is_qualified",
+            "lineageTag": "448eafe6-cf44-5608-abf7-ebf58d551e0e",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_recommended",
+            "dataType": "int64",
+            "sourceColumn": "is_recommended",
+            "lineageTag": "93f179b5-60f3-56f2-bdd5-efd411c18f6f",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_manual_review",
+            "dataType": "int64",
+            "sourceColumn": "is_manual_review",
+            "lineageTag": "3df4a612-a3c2-56b1-9915-6049e3e19d60",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_rejected",
+            "dataType": "int64",
+            "sourceColumn": "is_rejected",
+            "lineageTag": "400048d8-f419-585b-bf4e-f4ac95bcdf27",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_duplicate",
+            "dataType": "int64",
+            "sourceColumn": "is_duplicate",
+            "lineageTag": "e6f62449-c439-585b-a6fb-a3f82f4a357b",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_closed",
+            "dataType": "int64",
+            "sourceColumn": "is_closed",
+            "lineageTag": "f45beadc-1a49-5420-bb42-de0e1eb34b7c",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_variant",
+            "dataType": "int64",
+            "sourceColumn": "is_variant",
+            "lineageTag": "f821788a-63c0-5fa3-a154-991de1ab280d",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_repost",
+            "dataType": "int64",
+            "sourceColumn": "is_repost",
+            "lineageTag": "7c43d2d9-c6ef-5b53-9cea-2dd15edbd43d",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "linked_openings",
+            "dataType": "int64",
+            "sourceColumn": "linked_openings",
+            "lineageTag": "5d046b8f-e852-51a9-83e1-d8d6752136b2",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "eligibility_score",
+            "dataType": "double",
+            "sourceColumn": "eligibility_score",
+            "lineageTag": "c143452e-9fcf-5bf6-8aae-f00c36304cf8",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "formatString": "0.0"
+          },
+          {
+            "name": "candidate_fit",
+            "dataType": "double",
+            "sourceColumn": "candidate_fit",
+            "lineageTag": "d4a840b4-c8ae-525c-a7d1-260c3b78247d",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "formatString": "0.0"
+          },
+          {
+            "name": "career_value",
+            "dataType": "double",
+            "sourceColumn": "career_value",
+            "lineageTag": "9ec22539-dde5-54cd-92b2-6d274c109fb3",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "formatString": "0.0"
+          },
+          {
+            "name": "freshness",
+            "dataType": "double",
+            "sourceColumn": "freshness",
+            "lineageTag": "264b5a82-7fc8-5f09-be07-8cbe731f4fc4",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "formatString": "0.0"
+          },
+          {
+            "name": "apply_priority",
+            "dataType": "double",
+            "sourceColumn": "apply_priority",
+            "lineageTag": "4b959cca-d460-5c41-b06d-96c620395099",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "formatString": "0.0"
+          },
+          {
+            "name": "skill_coverage",
+            "dataType": "double",
+            "sourceColumn": "skill_coverage",
+            "lineageTag": "1cff4f2d-811f-5efc-99be-9336f91e69f6",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "formatString": "0%"
+          },
+          {
+            "name": "interview_band",
+            "dataType": "string",
+            "sourceColumn": "interview_band",
+            "lineageTag": "f040ded9-4b55-586f-8063-51811ff3ab06",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "decisive_unknowns",
+            "dataType": "int64",
+            "sourceColumn": "decisive_unknowns",
+            "lineageTag": "7e1e1360-19c0-5209-a5ab-8c5df5985fc6",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "night_decision",
+            "dataType": "string",
+            "sourceColumn": "night_decision",
+            "lineageTag": "11b251e7-beac-5f35-8f51-89fc30caab00",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "night_mode",
+            "dataType": "string",
+            "sourceColumn": "night_mode",
+            "lineageTag": "e384e3cf-d633-51eb-b1f3-cb8f234311b0",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "night_state",
+            "dataType": "string",
+            "sourceColumn": "night_state",
+            "lineageTag": "d915c535-11f4-5e3c-b188-72331abc7979",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "label",
+            "dataType": "string",
+            "sourceColumn": "label",
+            "lineageTag": "95271149-e814-5ed7-bed1-937e89fcefcb",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "label_date_key",
+            "dataType": "int64",
+            "sourceColumn": "label_date_key",
+            "lineageTag": "6cbd1855-cc15-5835-848f-eb1cc3b969ad",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "has_application",
+            "dataType": "int64",
+            "sourceColumn": "has_application",
+            "lineageTag": "543ed358-b613-519a-afc1-143b9debed56",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "sightings",
+            "dataType": "int64",
+            "sourceColumn": "sightings",
+            "lineageTag": "e32082f6-bf59-5a2d-9d55-51eb7968f042",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "source_count",
+            "dataType": "int64",
+            "sourceColumn": "source_count",
+            "lineageTag": "6a418688-ff43-5fff-887d-746d7c7eb447",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "meaningful_changes",
+            "dataType": "int64",
+            "sourceColumn": "meaningful_changes",
+            "lineageTag": "63ad743c-eb0b-5526-8e5e-9860f08facb6",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "evaluations",
+            "dataType": "int64",
+            "sourceColumn": "evaluations",
+            "lineageTag": "1bd66712-df24-5dc6-b95e-8985c8d777b7",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "days_to_decision",
+            "dataType": "double",
+            "sourceColumn": "days_to_decision",
+            "lineageTag": "725fe181-298c-55bb-91ff-18fb981687c4",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "formatString": "0.0"
+          },
+          {
+            "name": "days_listed",
+            "dataType": "double",
+            "sourceColumn": "days_listed",
+            "lineageTag": "16d73107-2b86-5b11-9515-107a3daa216b",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "formatString": "0.0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_job_evaluation",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = LoadTable(\"fact_job_evaluation\"),",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"job_key\", type text}, {\"employer_key\", type text}, {\"board_key\", type text}, {\"ats_key\", type text}, {\"role_family_key\", type text}, {\"location_key\", type text}, {\"discovery_source_key\", type text}, {\"first_seen_date_key\", Int64.Type}, {\"posted_date_key\", Int64.Type}, {\"last_seen_date_key\", Int64.Type}, {\"decided_date_key\", Int64.Type}, {\"closed_date_key\", Int64.Type}, {\"current_state\", type text}, {\"state_reason\", type text}, {\"rejection_reason\", type text}, {\"rejection_group\", type text}, {\"decision_stage\", type text}, {\"gate_decision\", type text}, {\"eligibility_state\", type text}, {\"tier\", type text}, {\"is_evaluated\", Int64.Type}, {\"is_scored\", Int64.Type}, {\"is_qualified\", Int64.Type}, {\"is_recommended\", Int64.Type}, {\"is_manual_review\", Int64.Type}, {\"is_rejected\", Int64.Type}, {\"is_duplicate\", Int64.Type}, {\"is_closed\", Int64.Type}, {\"is_variant\", Int64.Type}, {\"is_repost\", Int64.Type}, {\"linked_openings\", Int64.Type}, {\"eligibility_score\", type number}, {\"candidate_fit\", type number}, {\"career_value\", type number}, {\"freshness\", type number}, {\"apply_priority\", type number}, {\"skill_coverage\", type number}, {\"interview_band\", type text}, {\"decisive_unknowns\", Int64.Type}, {\"night_decision\", type text}, {\"night_mode\", type text}, {\"night_state\", type text}, {\"label\", type text}, {\"label_date_key\", Int64.Type}, {\"has_application\", Int64.Type}, {\"sightings\", Int64.Type}, {\"source_count\", Int64.Type}, {\"meaningful_changes\", Int64.Type}, {\"evaluations\", Int64.Type}, {\"days_to_decision\", type number}, {\"days_listed\", type number}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "fact_job_observation",
+        "lineageTag": "671824d0-10dd-52f9-9156-b2e85fed04bf",
+        "columns": [
+          {
+            "name": "observation_key",
+            "dataType": "int64",
+            "sourceColumn": "observation_key",
+            "lineageTag": "0883db41-3d35-5b3e-821c-fe2e8fce6614",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "job_key",
+            "dataType": "string",
+            "sourceColumn": "job_key",
+            "lineageTag": "9ec83ca1-8af1-5d33-bac7-a35dfff803b6",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "employer_key",
+            "dataType": "string",
+            "sourceColumn": "employer_key",
+            "lineageTag": "b55e3e67-57a9-5ed7-9a17-b4647564d469",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "ats_key",
+            "dataType": "string",
+            "sourceColumn": "ats_key",
+            "lineageTag": "be709e4a-38c8-5d6b-8d69-66e92c34621f",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "source_key",
+            "dataType": "string",
+            "sourceColumn": "source_key",
+            "lineageTag": "7e7f7d0e-6b75-5001-b806-68a8ec6202cb",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "evidence_level",
+            "dataType": "string",
+            "sourceColumn": "evidence_level",
+            "lineageTag": "0a2c586b-5b85-5238-97fd-ea9064bbbcee",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "observed_date_key",
+            "dataType": "int64",
+            "sourceColumn": "observed_date_key",
+            "lineageTag": "3e640e6e-ceae-56d8-bab2-37d50bdcaeba",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_first_sighting",
+            "dataType": "int64",
+            "sourceColumn": "is_first_sighting",
+            "lineageTag": "188bcc3d-4f1d-521a-b5ce-2e738205227a",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_cross_source",
+            "dataType": "int64",
+            "sourceColumn": "is_cross_source",
+            "lineageTag": "43d9c1c2-42da-5f5e-8b09-c976372b0d06",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "has_lead",
+            "dataType": "int64",
+            "sourceColumn": "has_lead",
+            "lineageTag": "147dcc89-4ac9-56ae-b65a-8d607678339f",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_job_observation",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = LoadTable(\"fact_job_observation\"),",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"observation_key\", Int64.Type}, {\"job_key\", type text}, {\"employer_key\", type text}, {\"ats_key\", type text}, {\"source_key\", type text}, {\"evidence_level\", type text}, {\"observed_date_key\", Int64.Type}, {\"is_first_sighting\", Int64.Type}, {\"is_cross_source\", Int64.Type}, {\"has_lead\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "fact_board_scan",
+        "lineageTag": "cb459989-0c0f-52b8-a511-92cec61ebd04",
+        "columns": [
+          {
+            "name": "scan_key",
+            "dataType": "int64",
+            "sourceColumn": "scan_key",
+            "lineageTag": "8f8667cc-a893-53eb-bb89-b8ca71898883",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "board_key",
+            "dataType": "string",
+            "sourceColumn": "board_key",
+            "lineageTag": "18a62e4f-4a7d-5e01-ac52-7d8c8b841645",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "employer_key",
+            "dataType": "string",
+            "sourceColumn": "employer_key",
+            "lineageTag": "18839e9e-17dc-50fb-8d26-4b6ff6bebee3",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "ats_key",
+            "dataType": "string",
+            "sourceColumn": "ats_key",
+            "lineageTag": "2f603bf7-8b61-5470-afbc-848e00ac2b24",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "scan_date_key",
+            "dataType": "int64",
+            "sourceColumn": "scan_date_key",
+            "lineageTag": "a7e0fe0c-4950-5302-ac95-d00a041a79b8",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "outcome",
+            "dataType": "string",
+            "sourceColumn": "outcome",
+            "lineageTag": "dace19d9-c108-536b-98b0-f5c7f7db30e7",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "is_complete",
+            "dataType": "int64",
+            "sourceColumn": "is_complete",
+            "lineageTag": "0365b072-c4de-5892-ba7f-113e2dd3445d",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_failure",
+            "dataType": "int64",
+            "sourceColumn": "is_failure",
+            "lineageTag": "826a2ffe-6d68-5839-a2cb-1265ce6053fa",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "error_code",
+            "dataType": "string",
+            "sourceColumn": "error_code",
+            "lineageTag": "cbce17f4-8b3e-51c5-aa0e-f406db4af393",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "postings",
+            "dataType": "int64",
+            "sourceColumn": "postings",
+            "lineageTag": "dca2b377-789c-57de-8a7d-f60237e47cdd",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "requests",
+            "dataType": "int64",
+            "sourceColumn": "requests",
+            "lineageTag": "6c7fbcb7-2049-5cde-b6e1-0ff7807a8335",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "jobs_closed",
+            "dataType": "int64",
+            "sourceColumn": "jobs_closed",
+            "lineageTag": "1427c46b-f637-5d64-9e3a-d949454912e2",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "possibly_absent",
+            "dataType": "int64",
+            "sourceColumn": "possibly_absent",
+            "lineageTag": "cfebe75a-e679-57b2-8ddd-b2dc2f037257",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "provider_degraded",
+            "dataType": "int64",
+            "sourceColumn": "provider_degraded",
+            "lineageTag": "9162bec5-a7a4-510b-8d4c-dbfe17d80f0f",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_board_scan",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = LoadTable(\"fact_board_scan\"),",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"scan_key\", Int64.Type}, {\"board_key\", type text}, {\"employer_key\", type text}, {\"ats_key\", type text}, {\"scan_date_key\", Int64.Type}, {\"outcome\", type text}, {\"is_complete\", Int64.Type}, {\"is_failure\", Int64.Type}, {\"error_code\", type text}, {\"postings\", Int64.Type}, {\"requests\", Int64.Type}, {\"jobs_closed\", Int64.Type}, {\"possibly_absent\", Int64.Type}, {\"provider_degraded\", Int64.Type}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "fact_verification",
+        "lineageTag": "07b61cc0-82a8-5d79-8c40-3e0fa6e254c8",
+        "columns": [
+          {
+            "name": "verification_key",
+            "dataType": "int64",
+            "sourceColumn": "verification_key",
+            "lineageTag": "bbac7ba2-7be1-5ea8-9a2c-12584d0f1dbd",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "board_key",
+            "dataType": "string",
+            "sourceColumn": "board_key",
+            "lineageTag": "0cc8a5a4-c954-55ea-a69a-a5231442220e",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "employer_key",
+            "dataType": "string",
+            "sourceColumn": "employer_key",
+            "lineageTag": "95451780-f6d6-53a5-bb93-a627f33fed19",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "ats_key",
+            "dataType": "string",
+            "sourceColumn": "ats_key",
+            "lineageTag": "463843d6-9295-55ae-a815-fa85a5e77a3e",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "kind",
+            "dataType": "string",
+            "sourceColumn": "kind",
+            "lineageTag": "7d6fbbb2-c576-5fee-bbc8-746a61ca3d8e",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "started_date_key",
+            "dataType": "int64",
+            "sourceColumn": "started_date_key",
+            "lineageTag": "751f9533-36f0-5888-be3b-faf57ee9b5ed",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "finished_date_key",
+            "dataType": "int64",
+            "sourceColumn": "finished_date_key",
+            "lineageTag": "ceff81ff-3e43-51ee-a833-d5feb6241b95",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "outcome",
+            "dataType": "string",
+            "sourceColumn": "outcome",
+            "lineageTag": "d3f2e2ac-fb2c-53a6-b9db-d919d80553e6",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "is_pass",
+            "dataType": "int64",
+            "sourceColumn": "is_pass",
+            "lineageTag": "b02a04ff-4db1-578b-8414-8889092a89c9",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "failure_class",
+            "dataType": "string",
+            "sourceColumn": "failure_class",
+            "lineageTag": "98f580e3-b735-5cf1-b6d7-b5c970002d32",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "trust_score",
+            "dataType": "double",
+            "sourceColumn": "trust_score",
+            "lineageTag": "c1e621e7-ac92-5381-b4da-c1cd5f6525bf",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "site_requests",
+            "dataType": "int64",
+            "sourceColumn": "site_requests",
+            "lineageTag": "475b7f06-a1b9-573d-961f-f3ed05f84b4b",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "ats_requests",
+            "dataType": "int64",
+            "sourceColumn": "ats_requests",
+            "lineageTag": "62d0bb26-22f0-5108-86c1-bb68e8cc9f55",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "evidence_items",
+            "dataType": "int64",
+            "sourceColumn": "evidence_items",
+            "lineageTag": "f7415261-38bc-5dd8-b1bc-adaad4a79200",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "evidence_points",
+            "dataType": "double",
+            "sourceColumn": "evidence_points",
+            "lineageTag": "39c3edfb-e0e4-5f14-817e-31139b54a06d",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_verification",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = LoadTable(\"fact_verification\"),",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"verification_key\", Int64.Type}, {\"board_key\", type text}, {\"employer_key\", type text}, {\"ats_key\", type text}, {\"kind\", type text}, {\"started_date_key\", Int64.Type}, {\"finished_date_key\", Int64.Type}, {\"outcome\", type text}, {\"is_pass\", Int64.Type}, {\"failure_class\", type text}, {\"trust_score\", type number}, {\"site_requests\", Int64.Type}, {\"ats_requests\", Int64.Type}, {\"evidence_items\", Int64.Type}, {\"evidence_points\", type number}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "fact_application",
+        "lineageTag": "e42083de-925d-5a7d-87e1-821d468891ca",
+        "columns": [
+          {
+            "name": "application_key",
+            "dataType": "int64",
+            "sourceColumn": "application_key",
+            "lineageTag": "8c1a51c5-6328-5254-acea-590b3587bcae",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "job_key",
+            "dataType": "string",
+            "sourceColumn": "job_key",
+            "lineageTag": "65dae9ee-2f7a-5c60-87e7-041b6fb91de9",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "employer_key",
+            "dataType": "string",
+            "sourceColumn": "employer_key",
+            "lineageTag": "7c4350d4-a815-5654-a9ac-7fd258f80248",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "ats_key",
+            "dataType": "string",
+            "sourceColumn": "ats_key",
+            "lineageTag": "08eeeb90-b5a1-5eae-ab5a-5c5ce31f26ed",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "role_family_key",
+            "dataType": "string",
+            "sourceColumn": "role_family_key",
+            "lineageTag": "90a8ace9-cd4c-5900-b29d-7fa70daaa7ab",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "channel",
+            "dataType": "string",
+            "sourceColumn": "channel",
+            "lineageTag": "0ea1e466-7736-5218-b69a-8d084691d82d",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "applied_date_key",
+            "dataType": "int64",
+            "sourceColumn": "applied_date_key",
+            "lineageTag": "18e4b83d-5f6b-5de7-9ce1-0ea50833d092",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "last_change_date_key",
+            "dataType": "int64",
+            "sourceColumn": "last_change_date_key",
+            "lineageTag": "d579eea2-a14d-5bf3-b008-dff4065705b9",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "current_state",
+            "dataType": "string",
+            "sourceColumn": "current_state",
+            "lineageTag": "a42dc627-6fb2-51c6-b1aa-049b0e80ab8c",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "state_category",
+            "dataType": "string",
+            "sourceColumn": "state_category",
+            "lineageTag": "fd1f182c-a894-571a-bb49-945a422db279",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "is_open",
+            "dataType": "int64",
+            "sourceColumn": "is_open",
+            "lineageTag": "d65e9db7-38a0-5c79-9394-ce83fe7c3411",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "got_answer",
+            "dataType": "int64",
+            "sourceColumn": "got_answer",
+            "lineageTag": "a23d5af4-0be3-5ba3-b388-300286cf6818",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "reached_screening",
+            "dataType": "int64",
+            "sourceColumn": "reached_screening",
+            "lineageTag": "d3db63e6-445e-518b-8b88-6132e7bf54f4",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "reached_interview",
+            "dataType": "int64",
+            "sourceColumn": "reached_interview",
+            "lineageTag": "5091fee7-ae61-5e87-a13b-623495f552e6",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "reached_offer",
+            "dataType": "int64",
+            "sourceColumn": "reached_offer",
+            "lineageTag": "8c1b2f6a-d5d1-5ca6-bad0-82989c23491f",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "is_hired",
+            "dataType": "int64",
+            "sourceColumn": "is_hired",
+            "lineageTag": "1cfbe249-e318-56bc-95c8-8886ecfd5ab3",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "days_in_process",
+            "dataType": "double",
+            "sourceColumn": "days_in_process",
+            "lineageTag": "6147fe54-87c8-57b8-b87d-5d47f214a9f9",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "formatString": "0.0"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_application",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = LoadTable(\"fact_application\"),",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"application_key\", Int64.Type}, {\"job_key\", type text}, {\"employer_key\", type text}, {\"ats_key\", type text}, {\"role_family_key\", type text}, {\"channel\", type text}, {\"applied_date_key\", Int64.Type}, {\"last_change_date_key\", Int64.Type}, {\"current_state\", type text}, {\"state_category\", type text}, {\"is_open\", Int64.Type}, {\"got_answer\", Int64.Type}, {\"reached_screening\", Int64.Type}, {\"reached_interview\", Int64.Type}, {\"reached_offer\", Int64.Type}, {\"is_hired\", Int64.Type}, {\"days_in_process\", type number}})",
+                "in",
+                "    Typed"
+              ]
+            }
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      },
+      {
+        "name": "_Measures",
+        "lineageTag": "467283cf-dc96-5614-a7bf-74d1a850c6c0",
+        "columns": [
+          {
+            "name": "Placeholder",
+            "dataType": "string",
+            "sourceColumn": "Placeholder",
+            "isHidden": true,
+            "lineageTag": "53d2287e-7144-54dd-b8c6-c4c70051bdf1",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "_Measures",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": [
+                "let",
+                "    Source = #table(type table [Placeholder = text], {})",
+                "in",
+                "    Source"
+              ]
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Jobs Discovered",
+            "expression": "COUNTROWS ( fact_job_evaluation )",
+            "formatString": "#,0",
+            "lineageTag": "0f50a075-c953-5925-af43-fd4850365e5d"
+          },
+          {
+            "name": "Distinct Openings",
+            "expression": "CALCULATE ( [Jobs Discovered], fact_job_evaluation[is_duplicate] = 0, fact_job_evaluation[is_variant] = 0 )",
+            "formatString": "#,0",
+            "lineageTag": "6dbb44fd-e948-5ee7-a434-2f40eace35d2"
+          },
+          {
+            "name": "Jobs Evaluated",
+            "expression": "SUM ( fact_job_evaluation[is_evaluated] )",
+            "formatString": "#,0",
+            "lineageTag": "f39b6cd3-c7bf-51f7-9b3e-ab99ea5e77ce"
+          },
+          {
+            "name": "Jobs Qualified",
+            "expression": "SUM ( fact_job_evaluation[is_qualified] )",
+            "formatString": "#,0",
+            "lineageTag": "c8cec443-5a12-5d03-ac1e-29fd4b728589"
+          },
+          {
+            "name": "Jobs Recommended",
+            "expression": "SUM ( fact_job_evaluation[is_recommended] )",
+            "formatString": "#,0",
+            "lineageTag": "90d6581a-ff99-5214-8411-6f048577ba2f"
+          },
+          {
+            "name": "Jobs Rejected",
+            "expression": "SUM ( fact_job_evaluation[is_rejected] )",
+            "formatString": "#,0",
+            "lineageTag": "5c00b2a1-979f-5f0e-8b8b-570fc08a78ee"
+          },
+          {
+            "name": "Jobs Manual Review",
+            "expression": "SUM ( fact_job_evaluation[is_manual_review] )",
+            "formatString": "#,0",
+            "lineageTag": "8b64e5b9-01d3-56c8-b4f5-c2bcf4860a25"
+          },
+          {
+            "name": "Manual Review Rate",
+            "expression": "DIVIDE ( [Jobs Manual Review], [Jobs Evaluated] )",
+            "formatString": "0.0%",
+            "lineageTag": "e9bf8bb3-786d-5661-beb7-a14238bf8ea2"
+          },
+          {
+            "name": "Duplicates Prevented",
+            "expression": "SUM ( fact_job_evaluation[is_duplicate] ) + SUM ( fact_job_evaluation[linked_openings] )",
+            "formatString": "#,0",
+            "lineageTag": "92bc2deb-76ff-595c-964b-776c5350d1eb"
+          },
+          {
+            "name": "Cross-Source Sightings",
+            "expression": "SUM ( fact_job_observation[is_cross_source] )",
+            "formatString": "#,0",
+            "lineageTag": "d2d6d231-7e56-529a-90a3-1eabd73defd2"
+          },
+          {
+            "name": "Verified Employers",
+            "expression": "CALCULATE ( COUNTROWS ( dim_employer ), dim_employer[is_verified_employer] = 1 )",
+            "formatString": "#,0",
+            "lineageTag": "edea9602-ed9c-5853-a062-5c1106c61fa1"
+          },
+          {
+            "name": "Average Fit",
+            "expression": "CALCULATE ( AVERAGE ( fact_job_evaluation[candidate_fit] ), fact_job_evaluation[is_scored] = 1 )",
+            "formatString": "0.0",
+            "lineageTag": "f4516d94-0659-529c-a0ec-9b0982ae6a96"
+          },
+          {
+            "name": "Board Verification Rate",
+            "expression": [
+              "VAR Judged =",
+              "    CALCULATETABLE (",
+              "        dim_board,",
+              "        dim_board[collection] = \"allowed\",",
+              "        NOT dim_board[verification_status] IN { \"historical\", \"retired\" }",
+              "    )",
+              "RETURN",
+              "    DIVIDE ( COUNTROWS ( FILTER ( Judged, dim_board[verification_status] = \"active\" ) ), COUNTROWS ( Judged ) )"
+            ],
+            "formatString": "0.0%",
+            "lineageTag": "81a97194-b865-5a27-af0f-6e1bbaa193b0"
+          },
+          {
+            "name": "New-Board Verification Rate",
+            "expression": [
+              "VAR NewBoards = CALCULATETABLE ( dim_board, dim_board[is_legacy] = 0, dim_board[collection] = \"allowed\" )",
+              "RETURN",
+              "    DIVIDE (",
+              "        COUNTROWS ( FILTER ( NewBoards, dim_board[verification_status] IN { \"quarantined\", \"active\" } ) ),",
+              "        COUNTROWS ( NewBoards )",
+              "    )"
+            ],
+            "formatString": "0.0%",
+            "lineageTag": "7ce194ec-fee4-51b6-9de2-a8633d904315"
+          },
+          {
+            "name": "Scan Reliability",
+            "expression": "DIVIDE ( SUM ( fact_board_scan[is_complete] ), COUNTROWS ( fact_board_scan ) )",
+            "formatString": "0.0%",
+            "lineageTag": "9df59b22-f8f1-5000-8175-fcff2c250f7e"
+          },
+          {
+            "name": "NIGHT Routed",
+            "expression": "CALCULATE ( [Jobs Discovered], fact_job_evaluation[night_decision] = \"eligible\" )",
+            "formatString": "#,0",
+            "lineageTag": "c752b158-8f51-5917-989a-8f005ceede54"
+          },
+          {
+            "name": "Applications",
+            "expression": "COUNTROWS ( fact_application )",
+            "formatString": "#,0",
+            "lineageTag": "092f49b1-130d-5169-ad07-7b848fe1d1f8"
+          },
+          {
+            "name": "Open Applications",
+            "expression": "SUM ( fact_application[is_open] )",
+            "formatString": "#,0",
+            "lineageTag": "1b77ba10-de9f-5585-8f3e-e2dd45ba36ad"
+          },
+          {
+            "name": "Interview Rate",
+            "expression": "DIVIDE ( SUM ( fact_application[reached_interview] ), [Applications] )",
+            "formatString": "0.0%",
+            "lineageTag": "7e838582-5895-593a-b2ae-679e72c4f298"
+          },
+          {
+            "name": "Qualified Rate",
+            "expression": "DIVIDE ( [Jobs Qualified], [Jobs Evaluated] )",
+            "formatString": "0.0%",
+            "lineageTag": "50040f11-7194-5696-ad87-dbf4b7fb9e0c"
+          },
+          {
+            "name": "Rejection Rate",
+            "expression": "DIVIDE ( [Jobs Rejected], [Jobs Evaluated] )",
+            "formatString": "0.0%",
+            "lineageTag": "2b3224f5-c05b-541a-8ad4-ad7b2c8e25fe"
+          },
+          {
+            "name": "Recommended Rate",
+            "expression": "DIVIDE ( [Jobs Recommended], [Jobs Evaluated] )",
+            "formatString": "0.0%",
+            "lineageTag": "24e16442-8906-51eb-a577-6b100792a3be"
+          },
+          {
+            "name": "Jobs Decided",
+            "expression": "CALCULATE ( [Jobs Evaluated], USERELATIONSHIP ( fact_job_evaluation[decided_date_key], dim_date[date_key] ) )",
+            "formatString": "#,0",
+            "lineageTag": "b172c0a0-4af7-5c4a-9bdc-edbb5aeaa7ea"
+          },
+          {
+            "name": "Jobs Closed",
+            "expression": [
+              "CALCULATE ( SUM ( fact_job_evaluation[is_closed] ),",
+              "            USERELATIONSHIP ( fact_job_evaluation[closed_date_key], dim_date[date_key] ) )"
+            ],
+            "formatString": "#,0",
+            "lineageTag": "bd0f7295-fa8e-5bc0-96c6-16e29e4a3d5f"
+          },
+          {
+            "name": "Jobs Labelled",
+            "expression": [
+              "CALCULATE ( COUNTROWS ( fact_job_evaluation ), NOT ISBLANK ( fact_job_evaluation[label] ),",
+              "            USERELATIONSHIP ( fact_job_evaluation[label_date_key], dim_date[date_key] ) )"
+            ],
+            "formatString": "#,0",
+            "lineageTag": "d6f09f51-64c2-5cc8-b3d6-dae78873df64"
+          },
+          {
+            "name": "Average Days to Decision",
+            "expression": "AVERAGE ( fact_job_evaluation[days_to_decision] )",
+            "formatString": "0.0",
+            "lineageTag": "8b249b4a-3ae1-58c1-89f7-bd7acef9c3ca"
+          },
+          {
+            "name": "Average Days Listed",
+            "expression": "AVERAGE ( fact_job_evaluation[days_listed] )",
+            "formatString": "0.0",
+            "lineageTag": "d65ee1e5-ce1a-51ad-983a-e001abc7b467"
+          },
+          {
+            "name": "Pay Stated Rate",
+            "expression": "DIVIDE ( CALCULATE ( [Jobs Discovered], dim_job[is_pay_stated] = 1 ), [Jobs Discovered] )",
+            "formatString": "0.0%",
+            "lineageTag": "824a2d1e-28c9-5c40-8d1f-f7479071fcf6"
+          },
+          {
+            "name": "Average Top of Pay Range (annual)",
+            "expression": "CALCULATE ( AVERAGEX ( fact_job_evaluation, RELATED ( dim_job[annual_pay_max] ) ), fact_job_evaluation[is_scored] = 1 )",
+            "formatString": "$#,0",
+            "lineageTag": "32cee86f-fc2e-574d-baf6-6c61b3650cb2"
+          },
+          {
+            "name": "Labelled Apply",
+            "expression": "CALCULATE ( [Jobs Discovered], fact_job_evaluation[label] = \"apply\" )",
+            "formatString": "#,0",
+            "lineageTag": "7a74f8fb-22f5-5811-9b8f-fa753c2cdd55"
+          },
+          {
+            "name": "Applied",
+            "expression": "SUM ( fact_job_evaluation[has_application] )",
+            "formatString": "#,0",
+            "lineageTag": "2c6708e7-550c-50b5-b19e-a6db7dd03dc1"
+          },
+          {
+            "name": "Recommended Then Applied",
+            "expression": "CALCULATE ( [Applied], fact_job_evaluation[is_recommended] = 1 )",
+            "formatString": "#,0",
+            "lineageTag": "defe59b5-d378-5563-b60a-4846054c7e21"
+          },
+          {
+            "name": "Response Rate",
+            "expression": "DIVIDE ( SUM ( fact_application[got_answer] ), [Applications] )",
+            "formatString": "0.0%",
+            "lineageTag": "75f5012d-4fd0-565c-baea-e1f815667405"
+          },
+          {
+            "name": "Screening Rate",
+            "expression": "DIVIDE ( SUM ( fact_application[reached_screening] ), [Applications] )",
+            "formatString": "0.0%",
+            "lineageTag": "541eb8d3-3a34-5663-906c-496d63814311"
+          },
+          {
+            "name": "Offer Rate",
+            "expression": "DIVIDE ( SUM ( fact_application[reached_offer] ), [Applications] )",
+            "formatString": "0.0%",
+            "lineageTag": "80349c7c-7312-593d-b39d-64b548872d09"
+          },
+          {
+            "name": "Average Board Trust",
+            "expression": "AVERAGE ( dim_board[board_trust_score] )",
+            "formatString": "0.0",
+            "lineageTag": "604272b2-fa97-5ef6-af2b-85fa213c3a34"
+          },
+          {
+            "name": "Scan Failures",
+            "expression": "SUM ( fact_board_scan[is_failure] )",
+            "formatString": "#,0",
+            "lineageTag": "86f7c5a2-08db-5f2e-a0a8-431bd827456d"
+          },
+          {
+            "name": "Postings Read",
+            "expression": "SUM ( fact_board_scan[postings] )",
+            "formatString": "#,0",
+            "lineageTag": "2016ce1d-5e8d-57b1-bfad-291eb1afc80c"
+          },
+          {
+            "name": "Verification Runs",
+            "expression": "COUNTROWS ( fact_verification )",
+            "formatString": "#,0",
+            "lineageTag": "fb91a860-4611-5b99-ab08-80ebdf43c999"
+          },
+          {
+            "name": "Verification Pass Rate",
+            "expression": "DIVIDE ( SUM ( fact_verification[is_pass] ), [Verification Runs] )",
+            "formatString": "0.0%",
+            "lineageTag": "d92809c5-d9c7-507c-b5bc-48aafaf7f8e7"
+          },
+          {
+            "name": "Remote Nationwide Share",
+            "expression": "DIVIDE ( CALCULATE ( [Jobs Discovered], dim_location[remote_scope] = \"US_nationwide\" ), [Jobs Discovered] )",
+            "formatString": "0.0%",
+            "lineageTag": "cf59abde-8c9a-5271-bbb9-a14a31273a30"
+          },
+          {
+            "name": "Boards",
+            "expression": "CALCULATE ( COUNTROWS ( dim_board ), dim_board[board_key] <> \"(none)\" )",
+            "formatString": "#,0",
+            "lineageTag": "2408d8c0-2ef7-5593-ac0d-09d3b5e4b20f"
+          },
+          {
+            "name": "Average Career Fit",
+            "expression": "AVERAGE ( dim_employer[career_fit_score] )",
+            "formatString": "0.0",
+            "lineageTag": "de17d381-a18c-5734-928b-82753ff18ff7"
+          },
+          {
+            "name": "Shortlist Jobs",
+            "expression": [
+              "CALCULATE ( COUNTROWS ( fact_job_evaluation ),",
+              "            fact_job_evaluation[is_recommended] = 1 || fact_job_evaluation[is_manual_review] = 1 )"
+            ],
+            "formatString": "#,0",
+            "lineageTag": "c8b25e64-0159-5dc8-a64d-1000c1ef7c15"
+          },
+          {
+            "name": "Jobs Rejected by Reason",
+            "expression": [
+              "IF ( HASONEVALUE ( fact_job_evaluation[rejection_group] ) && ISBLANK ( SELECTEDVALUE ( fact_job_evaluation[rejection_group] ) ),",
+              "     BLANK (), [Jobs Rejected] )"
+            ],
+            "formatString": "#,0",
+            "lineageTag": "dd93ac2a-0670-5447-ae00-eaa49170fb96"
+          },
+          {
+            "name": "Scan Failures by Error",
+            "expression": [
+              "IF ( HASONEVALUE ( fact_board_scan[error_code] ) && ISBLANK ( SELECTEDVALUE ( fact_board_scan[error_code] ) ),",
+              "     BLANK (), [Scan Failures] )"
+            ],
+            "formatString": "#,0",
+            "lineageTag": "b53307ce-111f-5522-b44e-fb4a5cd7851c"
+          }
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "68b15baa-2ed2-58ea-bd6c-f71da1f7aebd",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "job_key",
+        "toTable": "dim_job",
+        "toColumn": "job_key"
+      },
+      {
+        "name": "0d90954b-f417-5980-9545-853f5146bcb4",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "employer_key",
+        "toTable": "dim_employer",
+        "toColumn": "employer_key"
+      },
+      {
+        "name": "8210eea4-cde3-5d5d-befb-9807ec479dc7",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "board_key",
+        "toTable": "dim_board",
+        "toColumn": "board_key"
+      },
+      {
+        "name": "9e8bd4af-1d8a-5b4b-87b2-928eff04ee90",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "ats_key",
+        "toTable": "dim_ats",
+        "toColumn": "ats_key"
+      },
+      {
+        "name": "e2d029c9-bae6-5db5-b944-3fe19297b7c6",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "role_family_key",
+        "toTable": "dim_role_family",
+        "toColumn": "role_family_key"
+      },
+      {
+        "name": "3578b9c0-529b-580c-970d-c477a5ef54d5",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "location_key",
+        "toTable": "dim_location",
+        "toColumn": "location_key"
+      },
+      {
+        "name": "a5063fc3-0cfb-5065-9f0c-4d935ce04ac6",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "discovery_source_key",
+        "toTable": "dim_source",
+        "toColumn": "source_key"
+      },
+      {
+        "name": "82d25a22-9d89-5dd2-b7a5-3a55eb4f0387",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "first_seen_date_key",
+        "toTable": "dim_date",
+        "toColumn": "date_key"
+      },
+      {
+        "name": "8cb7e539-864b-5cf2-9592-163d7106b787",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "posted_date_key",
+        "toTable": "dim_date",
+        "toColumn": "date_key",
+        "isActive": false
+      },
+      {
+        "name": "0470ebe8-ca6d-5fec-bd41-e76b766539ce",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "last_seen_date_key",
+        "toTable": "dim_date",
+        "toColumn": "date_key",
+        "isActive": false
+      },
+      {
+        "name": "356c477e-c8cb-550b-84ec-4c5698cbc5df",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "decided_date_key",
+        "toTable": "dim_date",
+        "toColumn": "date_key",
+        "isActive": false
+      },
+      {
+        "name": "31f3e7c6-49fb-56e3-9a51-0d42dfa5db43",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "closed_date_key",
+        "toTable": "dim_date",
+        "toColumn": "date_key",
+        "isActive": false
+      },
+      {
+        "name": "12610a43-6df4-58bc-b2df-4fee22f14308",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "label_date_key",
+        "toTable": "dim_date",
+        "toColumn": "date_key",
+        "isActive": false
+      },
+      {
+        "name": "e5544a83-6fd5-5c12-859f-e830e6f51ffb",
+        "fromTable": "fact_job_observation",
+        "fromColumn": "job_key",
+        "toTable": "dim_job",
+        "toColumn": "job_key"
+      },
+      {
+        "name": "f1b55a79-7ad6-5024-a78c-ecaf90f60e0a",
+        "fromTable": "fact_job_observation",
+        "fromColumn": "employer_key",
+        "toTable": "dim_employer",
+        "toColumn": "employer_key"
+      },
+      {
+        "name": "94943e01-a70a-5dc4-95ab-707d9327e1d4",
+        "fromTable": "fact_job_observation",
+        "fromColumn": "ats_key",
+        "toTable": "dim_ats",
+        "toColumn": "ats_key"
+      },
+      {
+        "name": "a74ff511-dc39-5513-ab1b-f8f70f2fee3b",
+        "fromTable": "fact_job_observation",
+        "fromColumn": "source_key",
+        "toTable": "dim_source",
+        "toColumn": "source_key"
+      },
+      {
+        "name": "7b8ee59b-2cce-56d0-8fdf-a7a01a4d077c",
+        "fromTable": "fact_job_observation",
+        "fromColumn": "observed_date_key",
+        "toTable": "dim_date",
+        "toColumn": "date_key"
+      },
+      {
+        "name": "f30d6e77-281d-54c6-9ac0-a2042799d3da",
+        "fromTable": "fact_board_scan",
+        "fromColumn": "board_key",
+        "toTable": "dim_board",
+        "toColumn": "board_key"
+      },
+      {
+        "name": "23b529a3-bab1-57ca-8136-880a99df5316",
+        "fromTable": "fact_board_scan",
+        "fromColumn": "employer_key",
+        "toTable": "dim_employer",
+        "toColumn": "employer_key"
+      },
+      {
+        "name": "dbbaac54-a772-5cb2-b398-0d5a998fce63",
+        "fromTable": "fact_board_scan",
+        "fromColumn": "ats_key",
+        "toTable": "dim_ats",
+        "toColumn": "ats_key"
+      },
+      {
+        "name": "3fd7897f-0ff7-56e4-8f6f-5893edd53757",
+        "fromTable": "fact_board_scan",
+        "fromColumn": "scan_date_key",
+        "toTable": "dim_date",
+        "toColumn": "date_key"
+      },
+      {
+        "name": "f3d11912-ae86-5164-ab7c-5b721158b086",
+        "fromTable": "fact_verification",
+        "fromColumn": "board_key",
+        "toTable": "dim_board",
+        "toColumn": "board_key"
+      },
+      {
+        "name": "6fbe0086-ae85-5c1f-affe-9c0aac2eb91f",
+        "fromTable": "fact_verification",
+        "fromColumn": "employer_key",
+        "toTable": "dim_employer",
+        "toColumn": "employer_key"
+      },
+      {
+        "name": "c8177ab2-f568-5269-bb84-cc948efd2c18",
+        "fromTable": "fact_verification",
+        "fromColumn": "ats_key",
+        "toTable": "dim_ats",
+        "toColumn": "ats_key"
+      },
+      {
+        "name": "156cc243-c1bb-5aeb-b102-0436792e6aae",
+        "fromTable": "fact_verification",
+        "fromColumn": "started_date_key",
+        "toTable": "dim_date",
+        "toColumn": "date_key",
+        "isActive": false
+      },
+      {
+        "name": "1e6d1440-91ca-5625-be28-0dbb760672cc",
+        "fromTable": "fact_verification",
+        "fromColumn": "finished_date_key",
+        "toTable": "dim_date",
+        "toColumn": "date_key"
+      },
+      {
+        "name": "a6a0ef4d-2b54-595d-9446-1b3d3a6c8794",
+        "fromTable": "fact_application",
+        "fromColumn": "job_key",
+        "toTable": "dim_job",
+        "toColumn": "job_key"
+      },
+      {
+        "name": "19846a4f-3e8b-5cc6-a5e1-bf25665a35b1",
+        "fromTable": "fact_application",
+        "fromColumn": "employer_key",
+        "toTable": "dim_employer",
+        "toColumn": "employer_key"
+      },
+      {
+        "name": "e8e09db1-fe7b-5128-bba6-cdb4202a3957",
+        "fromTable": "fact_application",
+        "fromColumn": "ats_key",
+        "toTable": "dim_ats",
+        "toColumn": "ats_key"
+      },
+      {
+        "name": "53b9cade-2506-5389-b1f1-d64fd32997e7",
+        "fromTable": "fact_application",
+        "fromColumn": "role_family_key",
+        "toTable": "dim_role_family",
+        "toColumn": "role_family_key"
+      },
+      {
+        "name": "137d34fb-6223-58f3-9e69-655471315590",
+        "fromTable": "fact_application",
+        "fromColumn": "applied_date_key",
+        "toTable": "dim_date",
+        "toColumn": "date_key"
+      },
+      {
+        "name": "901fa8c1-d5e9-5e2d-81cb-d7f94811516c",
+        "fromTable": "fact_application",
+        "fromColumn": "last_change_date_key",
+        "toTable": "dim_date",
+        "toColumn": "date_key",
+        "isActive": false
+      }
+    ],
+    "expressions": [
+      {
+        "name": "ExportFolder",
+        "kind": "m",
+        "lineageTag": "83fd53af-a1c6-5036-ba00-3c4aa2198048",
+        "expression": "\"C:\\CareerOS\\samples\\analytics_demo\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ]
+      },
+      {
+        "name": "LoadTable",
+        "kind": "m",
+        "lineageTag": "7793c3df-da04-5c93-99ba-37eadf90d7ee",
+        "expression": [
+          "(name as text) as table =>",
+          "let",
+          "    Source = Csv.Document(File.Contents(ExportFolder & \"\\\" & name & \".csv\"),",
+          "                          [Delimiter = \",\", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),",
+          "    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),",
+          "    NoMark = Table.TransformColumnNames(Headers, each Text.Replace(_, Character.FromNumber(65279), \"\")),",
+          "    Nulls = Table.ReplaceValue(NoMark, \"\", null, Replacer.ReplaceValue, Table.ColumnNames(NoMark))",
+          "in",
+          "    Nulls"
+        ],
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Function"
+          }
+        ]
+      }
+    ],
+    "annotations": [
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      },
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"ExportFolder\", \"LoadTable\", \"dim_date\", \"dim_employer\", \"dim_board\", \"dim_ats\", \"dim_source\", \"dim_role_family\", \"dim_location\", \"dim_job\", \"fact_job_evaluation\", \"fact_job_observation\", \"fact_board_scan\", \"fact_verification\", \"fact_application\", \"_Measures\"]"
+      }
+    ]
+  }
+}

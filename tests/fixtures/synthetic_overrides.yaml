@@ -1,0 +1,13 @@
+# SYNTHETIC policy overrides for tests.
+location:
+  home_state: FL
+  commute_cities: [Austin]
+compensation:
+  floor_annual: 80000
+  target_annual: 110000
+gate:
+  held_parents: [Held Parent Co, Northgate Group]
+# A fictional employer family, merged into the engine's generic parents list (private families live in the vault).
+parents:
+  Northgate Group: [northgate, northgate rx, northgaterx, northgate health, northgate insight, northgate financial,
+                    northgatecare, northgate care, northgate group, bridgewell claims]

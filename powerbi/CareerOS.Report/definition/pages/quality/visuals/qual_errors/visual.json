@@ -1,0 +1,80 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "qual_errors",
+  "position": {
+    "x": 640,
+    "y": 110,
+    "z": 0,
+    "width": 630,
+    "height": 300,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_board_scan"
+                    }
+                  },
+                  "Property": "error_code"
+                }
+              },
+              "queryRef": "fact_board_scan.error_code",
+              "nativeQueryRef": "error_code",
+              "displayName": "Error"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Measures"
+                    }
+                  },
+                  "Property": "Scan Failures by Error"
+                }
+              },
+              "queryRef": "_Measures.Scan Failures by Error",
+              "nativeQueryRef": "Scan Failures by Error",
+              "displayName": "Failures"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Scan failures by error'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

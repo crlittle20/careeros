@@ -1,0 +1,603 @@
+{
+ "at": "2026-10-15T16:55:46+00:00",
+ "commit": "",
+ "uncommitted_changes": false,
+ "private_vault": "decoy",
+ "seconds": 16,
+ "overall": "PARTIAL",
+ "grades": {
+  "fresh demo initialization": "PASS",
+  "synthetic ingestion": "PASS",
+  "normalization": "PARTIAL",
+  "employer verification": "PARTIAL",
+  "duplicate prevention": "PASS",
+  "eligibility": "PASS",
+  "scoring": "PASS",
+  "routing": "PARTIAL",
+  "evidence generation": "PASS",
+  "output": "PASS",
+  "failure handling": "PASS",
+  "repeat processing": "PASS",
+  "privacy isolation": "PASS"
+ },
+ "checks": {
+  "fresh demo initialization": [
+   {
+    "check": "reset on a machine with no demo vault removes nothing",
+    "ok": true,
+    "core": true,
+    "evidence": "no demo vault to remove"
+   },
+   {
+    "check": "init succeeds",
+    "ok": true,
+    "core": true,
+    "evidence": "Demo vault ready at <scratch>\\demo-vault\nFictional employers and jobs only. Next: careeros demo run --all\n{\n \"vault\": \"<home>\\\\AppData\\\\Loc"
+   },
+   {
+    "check": "init writes the marker, fictional profile and policy, curated list, inbox files and database",
+    "ok": true,
+    "core": true,
+    "evidence": "all present"
+   },
+   {
+    "check": "init seeds the six pre-existing (legacy) boards and no jobs",
+    "ok": true,
+    "core": true,
+    "evidence": "legacy boards=6 jobs=0"
+   },
+   {
+    "check": "the profile is the fictional demo persona",
+    "ok": true,
+    "core": true,
+    "evidence": "# DEMO persona: fictional. Not a real person and not your pr"
+   },
+   {
+    "check": "status after init reports day 0",
+    "ok": true,
+    "core": false,
+    "evidence": "{\n \"vault\": \"<scratch>\\\\demo-vault\",\n \"day\": 0,\n \"of_days\": 4,\n"
+   },
+   {
+    "check": "a second init is refused and leaves the vault as it is",
+    "ok": true,
+    "core": true,
+    "evidence": "demo vault already exists at <scratch>\\demo-vault: run `careeros demo reset` first (or `careeros demo tour`)."
+   },
+   {
+    "check": "init and reset refuse a folder that is not a demo vault, and leave it untouched",
+    "ok": true,
+    "core": true,
+    "evidence": "('<scratch>\\\\not-a-demo exists and is not a demo vault: refusing to use it', 'fused: <scratch>\\\\not-a-demo has no demo marker: refusing to delete it')"
+   }
+  ],
+  "synthetic ingestion": [
+   {
+    "check": "`careeros demo run --all` runs the four simulated days",
+    "ok": true,
+    "core": true,
+    "evidence": "exit 0, 2.7s"
+   },
+   {
+    "check": "each day is a completed production run (`careeros run`)",
+    "ok": true,
+    "core": true,
+    "evidence": "[{'status': 'completed', 'started_at': '2026-11-02T13:00:00.000Z'}, {'status': 'completed', 'started_at': '2026-11-03T13:00:00.000Z'}, {'status': 'completed', 'started_at': '2026-11-04T13:00:00.000Z'}, {'status': 'completed', 'started_at': '2026-11-05T13:00:00.000Z'}]"
+   },
+   {
+    "check": "every posting listed by an admitted board on any day became exactly one job",
+    "ok": true,
+    "core": true,
+    "evidence": "{'missing': [], 'unexpected': []}"
+   },
+   {
+    "check": "all four supported providers were ingested",
+    "ok": true,
+    "core": true,
+    "evidence": "['ashby', 'greenhouse', 'lever', 'manual', 'workable']"
+   },
+   {
+    "check": "the alert email produced three leads: two board links graded as jobs, the LinkedIn link kept as a lead",
+    "ok": true,
+    "core": true,
+    "evidence": "[{'site': 'linkedin', 'status': 'new', 'job_id': None}, {'site': 'greenhouse', 'status': 'ingested', 'job_id': 'greenhouse:meridianrx:101'}, {'site': 'lever', 'status': 'ingested', 'job_id': 'lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000202'}]"
+   },
+   {
+    "check": "the pasted posting became one job",
+    "ok": true,
+    "core": true,
+    "evidence": "['manual:brightwater-benefits:6284edb5ff111ea8']"
+   },
+   {
+    "check": "every sighting keeps its source (board scan, alert, manual import)",
+    "ok": true,
+    "core": true,
+    "evidence": "['alert', 'ats_scan', 'manual_import']"
+   },
+   {
+    "check": "boards that were not admitted produced no jobs",
+    "ok": true,
+    "core": true,
+    "evidence": "['quillon', 'pinecrest', 'atlasclaims']"
+   },
+   {
+    "check": "the total is within the 40-60 synthetic jobs asked for",
+    "ok": true,
+    "core": false,
+    "evidence": "45"
+   }
+  ],
+  "normalization": [
+   {
+    "check": "remote scope, state limits, pay range and unit, and time zone match the posting text",
+    "ok": true,
+    "core": true,
+    "evidence": "11 postings"
+   },
+   {
+    "check": "every job has a normalised title, remote scope, country and content fingerprint",
+    "ok": true,
+    "core": true,
+    "evidence": "[]"
+   },
+   {
+    "check": "every job is placed in the US",
+    "ok": false,
+    "core": false,
+    "evidence": "{'US', 'unknown'}"
+   },
+   {
+    "check": "normalised titles are lower case and trimmed",
+    "ok": true,
+    "core": false,
+    "evidence": "[]"
+   }
+  ],
+  "employer verification": [
+   {
+    "check": "each board ends in the status its story calls for",
+    "ok": true,
+    "core": true,
+    "evidence": "13 boards as expected"
+   },
+   {
+    "check": "every active board has the official-site handshake, a confirmed identity and trust >= 85",
+    "ok": true,
+    "core": true,
+    "evidence": "{}"
+   },
+   {
+    "check": "new boards pass through quarantine and a validation scan before they are scanned",
+    "ok": true,
+    "core": true,
+    "evidence": "['ashby:northwindbenefits', 'workable:cobaltclaims', 'ashby:harborlinehealth']"
+   },
+   {
+    "check": "the board naming another company is an identity mismatch and is rejected",
+    "ok": true,
+    "core": true,
+    "evidence": "mismatch"
+   },
+   {
+    "check": "the suggested board that does not exist is recorded as absent and nothing is admitted",
+    "ok": true,
+    "core": true,
+    "evidence": "slug_absent"
+   },
+   {
+    "check": "you can see that a suggested board does not exist (report or `careeros sources list`)",
+    "ok": false,
+    "core": false,
+    "evidence": "only in the discovery_attempts table"
+   },
+   {
+    "check": "a migration that verification has completed leaves no open review case",
+    "ok": false,
+    "core": false,
+    "evidence": "[('greenhouse:harborline', 'board_not_found'), ('greenhouse:harborline', 'migration_detected')]"
+   },
+   {
+    "check": "the ATS migration keeps the old board as history and verifies the new one",
+    "ok": true,
+    "core": true,
+    "evidence": "ashby:harborlinehealth"
+   },
+   {
+    "check": "the real but empty board stays active and is recorded as empty",
+    "ok": true,
+    "core": true,
+    "evidence": "empty"
+   },
+   {
+    "check": "manual-only systems (Workday, iCIMS) are never requested",
+    "ok": true,
+    "core": true,
+    "evidence": "[]"
+   },
+   {
+    "check": "the staffing agency's client is never guessed",
+    "ok": true,
+    "core": true,
+    "evidence": "None"
+   },
+   {
+    "check": "a board contradicted by the employer's own website is shown",
+    "ok": false,
+    "core": false,
+    "evidence": "not in the demo world (covered by unit tests test_t03 / test_t06, not demonstrated)"
+   }
+  ],
+  "duplicate prevention": [
+   {
+    "check": "two postings of one requisition: the second is a duplicate of the first",
+    "ok": true,
+    "core": true,
+    "evidence": "('duplicate', 'greenhouse:meridianrx:101')"
+   },
+   {
+    "check": "the same job from an alert email and a board scan is one job (meridianrx)",
+    "ok": true,
+    "core": true,
+    "evidence": "['alert', 'ats_scan']"
+   },
+   {
+    "check": "the same job from an alert email and a board scan is one job (bluepeakhealth)",
+    "ok": true,
+    "core": true,
+    "evidence": "['alert', 'ats_scan']"
+   },
+   {
+    "check": "after the ATS migration the re-posted roles are linked to the old ones, not new openings",
+    "ok": true,
+    "core": true,
+    "evidence": "('greenhouse:harborline:301', 'greenhouse:harborline:302')"
+   },
+   {
+    "check": "the same title at two employers stays two jobs",
+    "ok": true,
+    "core": false,
+    "evidence": "['lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000202', 'workable:cobaltclaims:CC6002']"
+   },
+   {
+    "check": "one application per role: applying to its duplicate or applying twice is refused",
+    "ok": true,
+    "core": true,
+    "evidence": "('via direct; applying through a second channel can disqualify you. Add --second-channel only if you really applied twice.', 'ready_applied: you applied to this role on 2026-11-05 via direct. Add --second-channel only if you really applied twice.', 'applications 4 -> 5')"
+   }
+  ],
+  "eligibility": [
+   {
+    "check": "each planted rule violation is rejected for the right reason (13 postings)",
+    "ok": true,
+    "core": true,
+    "evidence": "all 13"
+   },
+   {
+    "check": "no scored job breaks a hard rule (remote only, CO allowed, $70,000 / $34/h floor, title exclusions, a target family)",
+    "ok": true,
+    "core": true,
+    "evidence": "27 scored jobs"
+   },
+   {
+    "check": "every rejection records a reason code and a plain-language explanation",
+    "ok": true,
+    "core": true,
+    "evidence": "[]"
+   },
+   {
+    "check": "pay-floor rejections quote the posting's pay text",
+    "ok": true,
+    "core": true,
+    "evidence": "{'pay rejections': 3, 'unquoted': []}"
+   },
+   {
+    "check": "a posting with no pay is not rejected; pay is shown as an unknown to check",
+    "ok": true,
+    "core": true,
+    "evidence": "[('pay', 'unknown')]"
+   }
+  ],
+  "scoring": [
+   {
+    "check": "every scored job has a score",
+    "ok": true,
+    "core": true,
+    "evidence": "[]"
+   },
+   {
+    "check": "all scores are within 0-100",
+    "ok": true,
+    "core": true,
+    "evidence": "[]"
+   },
+   {
+    "check": "apply priority = 0.65 fit + 0.25 career value + 0.1 freshness (recomputed)",
+    "ok": true,
+    "core": true,
+    "evidence": "27 jobs"
+   },
+   {
+    "check": "each score was made under the same policy and profile as the job's eligibility decision",
+    "ok": true,
+    "core": true,
+    "evidence": "[]"
+   },
+   {
+    "check": "every score component states its basis in words",
+    "ok": true,
+    "core": true,
+    "evidence": "[]"
+   },
+   {
+    "check": "scores separate the jobs (not all the same)",
+    "ok": true,
+    "core": false,
+    "evidence": "23"
+   }
+  ],
+  "routing": [
+   {
+    "check": "every tier matches the policy thresholds (A 92, B 85 with ELIGIBLE and 70% skills, near-miss 78)",
+    "ok": true,
+    "core": true,
+    "evidence": "{'A': 0, 'B': 5, 'near_miss': 13, 'archive': 9}"
+   },
+   {
+    "check": "every A / B / near-miss job is on the final report",
+    "ok": true,
+    "core": true,
+    "evidence": "[]"
+   },
+   {
+    "check": "NIGHT judges the full-time overnight posting as Replacement work against its own $70,000 floor, apart from PRIMARY",
+    "ok": true,
+    "core": true,
+    "evidence": "('replacement', 'overnight', 'rejected', 'below_pay_floor')"
+   },
+   {
+    "check": "NIGHT routes jobs to its own section (CONDITIONAL when the hours are not stated)",
+    "ok": true,
+    "core": true,
+    "evidence": "13 routed: ['CONDITIONAL']"
+   },
+   {
+    "check": "an overnight posting that NIGHT accepts is shown",
+    "ok": false,
+    "core": false,
+    "evidence": "no overnight posting in the demo world passes NIGHT"
+   },
+   {
+    "check": "rejected, duplicate and closed jobs are never routed to a tier",
+    "ok": true,
+    "core": false,
+    "evidence": "no tier after a rejection"
+   }
+  ],
+  "evidence generation": [
+   {
+    "check": "`careeros explain JOB --json` answers all 14 questions for every job (45)",
+    "ok": true,
+    "core": true,
+    "evidence": "45 jobs"
+   },
+   {
+    "check": "`careeros sources explain` explains every board (13)",
+    "ok": true,
+    "core": true,
+    "evidence": "[]"
+   },
+   {
+    "check": "`careeros verify`: the hash-chained audit log and every job's history are consistent",
+    "ok": true,
+    "core": true,
+    "evidence": "{'event_chain_breaks': [], 'inconsistent_jobs': {}, 'inconsistent_applications': {}}"
+   },
+   {
+    "check": "every eligibility decision records the policy, profile and extraction it was made under",
+    "ok": true,
+    "core": true,
+    "evidence": "[]"
+   }
+  ],
+  "output": [
+   {
+    "check": "a review report for each simulated day",
+    "ok": true,
+    "core": true,
+    "evidence": "[]"
+   },
+   {
+    "check": "the report has the tier, check-first, leads, NIGHT, rejected, archive and sources sections",
+    "ok": true,
+    "core": true,
+    "evidence": "[]"
+   },
+   {
+    "check": "a verified backup for each day (integrity check, SHA-256 manifest)",
+    "ok": true,
+    "core": true,
+    "evidence": "[]"
+   },
+   {
+    "check": "the report's verified-board figures agree with the board records (only admitted boards count as verified)",
+    "ok": true,
+    "core": true,
+    "evidence": "{'30-day line': '8', 'status line': '8', 'active boards': 8}"
+   },
+   {
+    "check": "`careeros metrics` counts verified and awaiting-review boards from the verification records",
+    "ok": true,
+    "core": true,
+    "evidence": "{'metrics': {'verified': 8, 'awaiting_your_verification': 1}, 'records': (8, 1)}"
+   },
+   {
+    "check": "the seen-jobs index is written locally",
+    "ok": true,
+    "core": false,
+    "evidence": "seen_jobs.json"
+   },
+   {
+    "check": "`careeros status` reports the same job counts as the database",
+    "ok": true,
+    "core": true,
+    "evidence": "({'scored': '27', 'rejected': '13', 'closed': '4', 'duplicate': '1'}, {'scored': 27, 'rejected': 13, 'closed': 4, 'duplicate': 1})"
+   },
+   {
+    "check": "`careeros demo status` summarises the demo",
+    "ok": true,
+    "core": false,
+    "evidence": "{\n \"vault\": \"<scratch>\\"
+   }
+  ],
+  "failure handling": [
+   {
+    "check": "a run with four failing boards (HTTP 503, invalid JSON, timeout, 1-hour rate limit) completes",
+    "ok": true,
+    "core": true,
+    "evidence": "exit 0, run completed, 4.2s"
+   },
+   {
+    "check": "each failure is recorded against its board with its own error code",
+    "ok": true,
+    "core": true,
+    "evidence": "{'greenhouse:meridianrx': 'http_503', 'lever:bluepeakhealth': 'invalid_json', 'lever:cascadehealthdata': 'network:ConnectTimeout', 'ashby:northwindbenefits': 'rate_limited'}"
+   },
+   {
+    "check": "the healthy boards in the same run are still scanned completely",
+    "ok": true,
+    "core": true,
+    "evidence": "{'workable:sterlingclaims': 'complete', 'workable:cobaltclaims': 'complete', 'ashby:harborlinehealth': 'complete'}"
+   },
+   {
+    "check": "a failed scan never closes or changes a job",
+    "ok": true,
+    "core": true,
+    "evidence": "{}"
+   },
+   {
+    "check": "an outage lowers board health, never trust or verification",
+    "ok": true,
+    "core": true,
+    "evidence": "{}"
+   },
+   {
+    "check": "every failure is logged as an exception for follow-up",
+    "ok": true,
+    "core": true,
+    "evidence": "4"
+   },
+   {
+    "check": "a 1-hour Retry-After is reported, not slept through",
+    "ok": true,
+    "core": false,
+    "evidence": "4.2s"
+   },
+   {
+    "check": "an unreadable email and an empty pasted file are reported and skipped",
+    "ok": true,
+    "core": true,
+    "evidence": "ext file needs 'Title:' and 'Employer:' header lines, a blank line, then the posting text\nReport: <scratch>\\demo-vault\\reports\\report-2026-11-05.html"
+   },
+   {
+    "check": "a second writer is refused while one is running",
+    "ok": true,
+    "core": true,
+    "evidence": "ata in <scratch>\\demo-vault]\nCareerOS is busy: writer_already_running"
+   },
+   {
+    "check": "a refused integration in Demo Mode ends with a one-line message",
+    "ok": true,
+    "core": false,
+    "evidence": "Refused: Gmail is not available in Demo Mode"
+   }
+  ],
+  "repeat processing": [
+   {
+    "check": "processing again changes nothing",
+    "ok": true,
+    "core": true,
+    "evidence": "{'jobs': 0, 'transitions': 0, 'gate_results': 0, 'scores': 0, 'leads': 0, 'night_results': 0, 'job_changes': 0}"
+   },
+   {
+    "check": "importing the same alert email and pasted posting again adds nothing",
+    "ok": true,
+    "core": true,
+    "evidence": "{'jobs': 0, 'transitions': 0, 'gate_results': 0, 'scores': 0, 'leads': 0, 'night_results': 0, 'job_changes': 0}"
+   },
+   {
+    "check": "a whole extra daily run over unchanged boards adds no job and changes no decision",
+    "ok": true,
+    "core": true,
+    "evidence": "{'jobs': 0, 'transitions': 0, 'gate_results': 0, 'scores': 0, 'leads': 0, 'night_results': 0, 'job_changes': 0}"
+   },
+   {
+    "check": "a second fresh demo gives the same jobs, states, tiers and priorities",
+    "ok": true,
+    "core": true,
+    "evidence": "{'only first': 0, 'only second': 0}"
+   },
+   {
+    "check": "after a rules and vocabulary change, the re-evaluation settles: a second pass changes nothing",
+    "ok": true,
+    "core": true,
+    "evidence": "{'Pharmacy Claims Analyst': 'title_excluded', 'second pass': {'jobs': 0, 'transitions': 0, 'gate_results': 0, 'scores': 0, 'leads': 0, 'night_results': 0, 'job_changes': 0}}"
+   }
+  ],
+  "privacy isolation": [
+   {
+    "check": "the GitHub inbox is refused in Demo Mode",
+    "ok": true,
+    "core": true,
+    "evidence": "Local\\Temp\\careeros-mvp-gate-3m57x48c\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
+   },
+   {
+    "check": "the clipboard is refused in Demo Mode",
+    "ok": true,
+    "core": true,
+    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-3m57x48c\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
+   },
+   {
+    "check": "Gmail is refused in Demo Mode",
+    "ok": true,
+    "core": true,
+    "evidence": "gmail status"
+   },
+   {
+    "check": "nothing tried to reach the real network, another program, a credential, a mailbox or the AI key",
+    "ok": true,
+    "core": true,
+    "evidence": "182 requests, all answered by the synthetic world"
+   },
+   {
+    "check": "every request went to one of the four job-board APIs or a fictional *.example.com site",
+    "ok": true,
+    "core": true,
+    "evidence": "['api.ashbyhq.com', 'api.lever.co', 'apply.workable.com', 'boards-api.greenhouse.io']"
+   },
+   {
+    "check": "the private vault (a decoy on a machine without one) is untouched: sizes, timestamps, hashes",
+    "ok": true,
+    "core": true,
+    "evidence": "1 files compared"
+   },
+   {
+    "check": "the demo vault is outside the private vault and the code, and carries the demo marker",
+    "ok": true,
+    "core": true,
+    "evidence": "<scratch>\\demo-vault"
+   },
+   {
+    "check": "the only email addresses anywhere in the demo are fictional example.com ones",
+    "ok": true,
+    "core": true,
+    "evidence": "['alerts@example.com', 'demo-persona@example.com']"
+   },
+   {
+    "check": "in Demo Mode the private vault cannot even be located",
+    "ok": true,
+    "core": true,
+    "evidence": "paths.vault_dir() refuses"
+   }
+  ]
+ }
+}

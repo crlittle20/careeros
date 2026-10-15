@@ -1,0 +1,15 @@
+﻿board_key,employer_key,ats_key,board_token,collection,verification_status,provenance,is_legacy,handshake_status,identity_check,validation_status,board_trust_score,board_health_score,board_activity,verify_count,is_paused,paused_reason,migrated_to_board_key,created_date_key,activated_date_key,last_checked_date_key,retired_date_key
+ashby:harborlinehealth,harborline health,ashby,harborlinehealth,allowed,active,official_site,0,confirmed,confirmed,passed,95,100,active,1,0,,,20261103,20261104,20261104,
+ashby:northwindbenefits,northwind benefits,ashby,northwindbenefits,allowed,active,discovery,0,confirmed,confirmed,passed,100,100,active,1,0,,,20261102,20261103,20261103,
+ashby:pinecrest,pinecrest care navigation,ashby,pinecrest,allowed,review_required,discovery,0,unknown,unresolved,,,,,0,0,,,20261102,,,
+greenhouse:evergreenhealth,evergreen health analytics,greenhouse,evergreenhealth,allowed,active,legacy_unknown,1,confirmed,confirmed,passed,85,100,empty,1,0,,,20261101,20261101,20261102,
+greenhouse:harborline,harborline health,greenhouse,harborline,allowed,historical,legacy_unknown,1,failed,confirmed,passed,100,50,unavailable,1,1,retired: the employer moved to ashby:harborlinehealth,ashby:harborlinehealth,20261101,20261101,20261102,20261103
+greenhouse:meridianrx,meridian rx,greenhouse,meridianrx,allowed,active,legacy_unknown,1,confirmed,confirmed,passed,100,100,active,1,0,,,20261101,20261101,20261102,
+greenhouse:quillon,quillon health,greenhouse,quillon,allowed,rejected,discovery,0,confirmed,mismatch,,60,,active,0,0,,,20261102,,20261102,
+icims:careers-lakeviewrx.icims.com,lakeview pharmacy solutions,icims,careers-lakeviewrx.icims.com,manual_only,manual_only,discovery,0,unknown,unresolved,,,,,0,0,,,20261102,,,
+lever:bluepeakhealth,bluepeak health plan,lever,bluepeakhealth,allowed,active,legacy_unknown,1,confirmed,confirmed,passed,100,100,active,1,0,,,20261101,20261101,20261102,
+lever:cascadehealthdata,cascade health data,lever,cascadehealthdata,allowed,active,legacy_unknown,1,confirmed,confirmed,passed,100,100,active,1,0,,,20261101,20261101,20261102,
+workable:cobaltclaims,cobalt claims technology,workable,cobaltclaims,allowed,active,discovery,0,confirmed,confirmed,passed,100,100,active,1,0,,,20261102,20261103,20261103,
+workable:sterlingclaims,sterling claims services,workable,sterlingclaims,allowed,active,legacy_unknown,1,confirmed,confirmed,passed,100,100,active,1,0,,,20261101,20261101,20261102,
+workday:summitpayer.wd5.myworkdayjobs.com,summit payer services,workday,summitpayer.wd5.myworkdayjobs.com,manual_only,manual_only,discovery,0,unknown,unresolved,,,,,0,0,,,20261102,,,
+(none),(none),(none),(no board),,,,0,,,,,,,,0,,,,,,

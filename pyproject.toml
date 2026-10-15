@@ -1,0 +1,53 @@
+[project]
+name = "careeros"
+version = "0.1.0"
+description = "CareerOS engine: job discovery, qualification and (later) application packaging."
+requires-python = ">=3.12"
+dependencies = [
+    "PyYAML==6.0.2",
+    "httpx==0.27.2",
+    "anthropic==1.8.0",
+]
+
+[project.scripts]
+careeros = "careeros.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["careeros*"]
+
+# --- Quality gates (Portfolio Prompt 10, 2026-10-13): tools/validate.py runs them, locally and in CI ---------------
+# The tools are pinned with hashes in requirements-dev.lock (wheels only, each release at least 14 days old when locked).
+[tool.ruff]
+target-version = "py312"
+# The code keeps its own layout (long lines, aligned comments), so `ruff format` is not adopted: it would rewrite 92
+# of 130 files. The formatting gate is the whitespace, indentation and line-length rules below. 210 is the longest
+# line today; lower it as lines are wrapped.
+line-length = 210
+extend-exclude = [".venv-dev", "powerbi", "samples", "evidence"]
+
+[tool.ruff.lint]
+select = [
+    "F",                    # pyflakes: unused imports and variables, undefined names, broken f-strings
+    "E4", "E7", "E9",       # pycodestyle errors: imports, statements, syntax
+    "B",                    # bugbear: likely bugs (loop-variable closures, mutable defaults, blind assertRaises)
+    "PLE",                  # pylint errors
+    "W", "E101", "E501",    # formatting: trailing whitespace, final newline, tabs, mixed indentation, line length
+    # Security (bandit rules, none broken today): exec/eval, pickle, unsafe YAML, shell commands, permissive files,
+    # binding every interface, disabled TLS checks, weak hashes, requests without a timeout, fixed temp paths.
+    "S102", "S103", "S104", "S108", "S113", "S301", "S307", "S310", "S312", "S323", "S324", "S501", "S502", "S503",
+    "S504", "S506", "S602", "S604", "S605", "S606", "S609", "S701", "S702",
+]
+ignore = [
+    "E731",                 # house style: small named lambdas
+    "E741",                 # house style: short names such as `l` in comprehensions
+]
+
+[tool.mypy]
+python_version = "3.12"
+platform = "win32"          # CareerOS runs on Windows; the same results on a Linux CI runner
+files = ["careeros", "tools/validate.py", "tools/offline_tests.py"]
+# Errors present on 2026-10-13 are listed in tools/mypy_baseline.txt; validate.py fails on any other error.
+
+[[tool.mypy.overrides]]
+module = ["yaml"]
+ignore_missing_imports = true   # PyYAML ships no type hints (types-PyYAML is not installed)

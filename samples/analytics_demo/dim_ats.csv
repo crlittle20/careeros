@@ -1,0 +1,10 @@
+﻿ats_key,ats_name,collection_mode,is_automated
+ashby,Ashby,allowed,1
+greenhouse,Greenhouse,allowed,1
+icims,iCIMS,manual,0
+lever,Lever,allowed,1
+linkedin,LinkedIn,manual,0
+manual,Pasted or imported,you,0
+workable,Workable,allowed,1
+workday,Workday,manual,0
+(none),(none),none,0
