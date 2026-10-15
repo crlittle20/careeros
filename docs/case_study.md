@@ -218,10 +218,8 @@ market.
 
 ## 11. Next iteration
 
-1. Generate the public snapshot with fresh history and run CI on it, on Windows and Linux. (The personal settings left
-   the code, configuration and tests on 2026-10-14.)
-2. Close the five remaining Functional MVP gaps, including a demo employer whose own website contradicts a board and an overnight
+1. Close the five remaining Functional MVP gaps, including a demo employer whose own website contradicts a board and an overnight
    role that the overnight profile accepts.
-3. Reach the Phase 1 exit test and publish the agreement measure, then measure the source-expansion pilot.
-4. Decide how to handle careers pages that build their job lists with JavaScript, after a week of verification results.
-5. Review the lead-matching path that still uses an older identity check, and reduce the type-check baseline.
+2. Reach the Phase 1 exit test and publish the agreement measure, then measure the source-expansion pilot.
+3. Decide how to handle careers pages that build their job lists with JavaScript, after a week of verification results.
+4. Review the lead-matching path that still uses an older identity check, and reduce the type-check baseline.

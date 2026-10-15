@@ -179,7 +179,8 @@ Each row reads: **business problem → requirement → system component → test
 - **Non-functional:** 5 of 8 tested.
   - NFR-001: by design.
   - NFR-004: is the test gate itself.
-  - NFR-006 (portability): untested on Linux; the Ubuntu CI job is written but has not run (no remote).
+  - NFR-006 (portability): checked by CI on Linux (an informational job, passing since 2026-10-15), not by a test of
+    its own.
 - **Measured, not tested:** PERF-001 (run duration). PERF-003 is observed.
 - **Open:**
   - demo step D4 lacks a board contradicted by the employer's own site, and D7 lacks an overnight posting that NIGHT

@@ -219,7 +219,8 @@ snapshot. The records do not show the owner inspecting the implementations thems
   recommended over cleaning up this repository (`public_release_checklist.md`).
 - **Formatting.** `ruff format` was not adopted, because it would rewrite 92 of 130 files.
 - **Type checking.** It started from a recorded baseline rather than a big-bang fix.
-- **Linux CI.** The Linux job was made informational until it has been seen to pass.
+- **Linux CI.** The Linux job was made informational until it has been seen to pass. It passed on its first run
+  (2026-10-15) and stays informational for now.
 
 **Decisions delegated to Claude.** Besides everyday technical choices, one night's sixteen design decisions were
 delegated explicitly, under the owner's instruction to approve the recommended options, and logged for review
@@ -241,8 +242,8 @@ the documents true to the code.
 - **Privacy slipped early.** During fast early iteration, personal settings entered code comments, defaults and test
   fixtures. The repository test of that time checked only email addresses and API keys. A release scan with a private
   denylist found them, and on 2026-10-14 they were moved into the vault; the tests now use fictional values.
-- **Known gaps:** a type-check baseline of 164 older errors; Linux untested; CI not yet run; three PARTIAL items in the
-  Functional MVP gate.
+- **Known gaps:** a type-check baseline of 164 older errors; three PARTIAL items in the Functional MVP gate; Linux is
+  checked only by the informational CI job.
 - **Human inspection was targeted, not line by line.** See section 3.
 - **Provenance.** Git history names Claude as co-author on every commit, but it does not record who originated each
   idea. This account rests on the session records and the owner's statement. Points those records do not settle are

@@ -279,10 +279,10 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
 
 ## Limitations
 
-- **Single user, local, Windows.** Linux and macOS are untested. The CI workflow has a Linux job, but it is marked
-  informational.
-- **CI runs only on the public repository.** The private development repository has no remote, so the workflow
-  first runs when the snapshot is published.
+- **Single user, local, Windows.** The full validation also passes on Linux in CI, where that job is informational;
+  the daily-run setup (Task Scheduler, Credential Manager, notifications) is Windows-only. macOS is untested.
+- **CI runs only on the public repository.** The private development repository has no remote. The first run
+  (2026-10-15) passed on Windows (required) and Linux (informational).
 - **Four providers.** Only Greenhouse, Lever, Ashby and Workable are read automatically. Other systems are manual
   by design, and LinkedIn, Indeed and Glassdoor are never automated.
 - **Static pages only.** A careers page that builds its job list with JavaScript cannot prove a board; such boards
@@ -300,14 +300,12 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
 ## Roadmap
 
 **Portfolio release:**
-1. Run CI on the public repository (Windows required, Linux informational) to close the last release blocker. The
-   snapshot generator is built, and the personal settings left the code, configuration and tests (2026-10-14).
-2. Close the remaining Functional MVP gaps, and hash-lock the runtime install.
+1. Close the remaining Functional MVP gaps, and hash-lock the runtime install.
 
 **Product:**
 - Reach the Phase 1 exit test and publish the agreement measure, then measure the source-expansion pilot.
 - Decide how to handle JavaScript careers pages (pending a review of a week of verification results).
-- Review the lead-matching path; reduce the type-check baseline; verify Linux.
+- Review the lead-matching path; reduce the type-check baseline; decide whether the Linux CI job becomes required.
 - Phase 2: fuller application packages prepared from the approved profile, for the person to review and submit
   themselves.
 

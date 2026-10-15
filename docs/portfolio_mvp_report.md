@@ -7,13 +7,14 @@
 - Definition: the Portfolio MVP in `portfolio_v1_plan.md` (section 8), and the 13 things Prompt 12 says a fresh reviewer
   must be able to do.
 - Companions: `functional_mvp_report.md`, `demo_walkthrough.md`, `public_release_checklist.md`.
-- Updated: 2026-10-15. B1 is resolved (refactor R4 and two later privacy passes). B2 has one step left: the first
-  green CI run on the public repository.
+- Updated: 2026-10-15. Both blockers are resolved: B1 by refactor R4 and two later privacy passes, B2 by the public
+  repository and its first CI run, green on Windows and Linux. The verdict is now PASSED.
 
 ## 1. Verdict
 
-**Verdict: NOT PASSED.** At the gate (2026-10-13) the build was ready but could not reach a reviewer. Since then B1 is
-resolved, and B2 has one step left: the gate passes with the first green CI run on the public repository.
+**Verdict: PASSED.** At the gate (2026-10-13) the verdict was NOT PASSED: the build was ready but could not reach a
+reviewer. Both blockers are now resolved. The build is public at https://github.com/crlittle20/careeros, and its first
+CI run passed all seven checks on Windows and Linux on 2026-10-15 ([run](https://github.com/crlittle20/careeros/actions/runs/38774627820)).
 
 - **What works:** a fresh reviewer can do all 13 things Prompt 12 lists. I followed the README in a clean clone, with no
   vault, no credentials and no network, and every step worked.
@@ -32,7 +33,7 @@ resolved, and B2 has one step left: the gate passes with the first green CI run 
 | Functional MVP: the demo runs on a fresh clone, offline and credential-free, deterministic, all stages, explainable, golden test | **Met.** The Functional MVP gate grades 10 PASS, 3 PARTIAL, 0 FAIL |
 | Documents present and accurate: README, requirements, architecture, data flow, security, setup, 3-minute demo, case study | **Met** after this gate added the walkthrough (`demo_walkthrough.md`) and corrected three statements |
 | Analytics: the export loads into Power BI as the data dictionary describes | **Met.** Checked in Power BI Desktop on 2026-10-13 (`powerbi_dashboard_spec.md`, section 6) |
-| CI green: tests, demo, lint, release scan | **Not met at the gate.** The workflow and its command exist and pass locally; CI first runs on the public repository (B2) |
+| CI green: tests, demo, lint, release scan | **Not met at the gate; met since 2026-10-15.** The first CI run on the public repository passed all seven checks on Windows and Linux (B2) |
 | Release safety: the scan of the snapshot finds nothing, and no private data or credentials are needed | **Not met at the gate:** no credentials were needed, but 25 shippable files held denylisted terms (B1). **Met since:** the scan of the snapshot finds only the GitHub username the owner chose for `LICENSE`, and five screenshots checked by eye. |
 | Fresh-reviewer test: setup on a clean machine in under 15 minutes | **Partly shown.** A clean clone on this computer took about 5½ minutes of machine time, from clone to a passing validation. A person on a different machine has not tried it yet. |
 
@@ -84,7 +85,7 @@ without its token is refused (HTTP 403).
 | Demo Mode | Good | Offline, deterministic, isolated under a jail; three demo scenarios still missing (G4, G5) |
 | Analytics | Good | Validated and reconciled export; five-page report checked in Desktop; cosmetic issues remain |
 | Security | Good | Threat model with tests and planted defects; R1 and R2 fixed here; personal settings still in code (B1) |
-| CI | Written; first runs on the public repository | No secrets, a read-only token, actions pinned to commits (B2) |
+| CI | Green on the public repository (Windows and Linux, 2026-10-15) | No secrets, a read-only token, actions pinned to commits (B2) |
 | Tests | Strong | Tests, planted defects, the gate, the network refused, documentation tests, fresh-clone runs |
 | Quickstart | Good | Works as written on Windows; other platforms unverified |
 | Case study | Good | Every figure labelled as engineering evidence, SYNTHETIC or observed; no outcomes claimed |
@@ -112,7 +113,7 @@ without its token is refused (HTTP 403).
 | ID | Issue | Evidence | Path to resolution | Status |
 |---|---|---|---|---|
 | B1 | Personal settings were still in code, configuration and tests | With the private denylist, 25 files the snapshot would ship held denylisted terms: 8 in `careeros/`, 2 in `config/`, 12 in `tests/`, plus `tools/mutate.py`, the mutation receipt and the Power BI model. No secret was found anywhere. | The preparatory refactor in `public_release_checklist.md`, section 1 | **Resolved 2026-10-14** (R4): the entries live in the vault (`policy/private_sites.yaml`, `overrides.yaml`) and the tests use fictional values. Since then the mutation receipt has been rebuilt without the term, and the snapshot gives the Power BI model a neutral folder. |
-| B2 | No public snapshot exists, so no reviewer can obtain the build, and CI has never run | No remote; the snapshot generator is not built; CI is meant to run first on the snapshot (the owner's decision, 2026-10-13) | After B1: build the snapshot generator, generate the snapshot, review every file, publish with the owner's approval, and see CI green on Windows and Linux | Open, one step left: the generator is built (`tools/build_snapshot.py`, 2026-10-14) and the snapshot passes its release checks. It is published only with the owner's approval, and B2 closes with its first green CI run on the public repository |
+| B2 | No public snapshot exists, so no reviewer can obtain the build, and CI has never run | No remote; the snapshot generator is not built; CI is meant to run first on the snapshot (the owner's decision, 2026-10-13) | After B1: build the snapshot generator, generate the snapshot, review every file, publish with the owner's approval, and see CI green on Windows and Linux | **Resolved 2026-10-15:** the snapshot was generated (`tools/build_snapshot.py`), passed its release checks and two AI pre-publication reviews, and was published with the owner's approval at https://github.com/crlittle20/careeros. Its first CI run passed on Windows and Linux ([run](https://github.com/crlittle20/careeros/actions/runs/38774627820)). |
 
 ### SHOULD FIX
 
@@ -140,7 +141,7 @@ without its token is refused (HTTP 403).
 - Reading careers pages that build their job list with JavaScript (a decision due at the 2026-10-20 review).
 - More ATS providers; AI requirement reading as a default.
 - Splitting `cli.py`; working down the type-check baseline (164 older errors).
-- macOS support, after Linux is verified by CI.
+- macOS support (Linux passes CI since 2026-10-15).
 - A short screen recording of the walkthrough, for reviewers who will not install anything.
 
 Deferred: automatic applications, to a later phase the owner would open (ADR 0007, amended 2026-10-14). Not planned:
@@ -169,7 +170,7 @@ passes all seven checks.
 From here, nothing is added just because it would be interesting. Before v1.0, a post-MVP item is worth adding only if
 it materially improves recruiter comprehension, demonstration quality, target-role relevance, security, credibility or
 measurable business value. Measured that way, the work in order:
-1. **B1, then B2**: nothing else matters to a reviewer until the build can be published safely.
+1. **B1, then B2**: nothing else matters to a reviewer until the build can be published safely. Done on 2026-10-15.
 2. **The Phase 1 exit test and its agreement measure** (business value, credibility): no code, just labels.
 3. **S11, S12 and S15 as one milestone** (demonstration quality): the missing demo scenarios, the stale review cases
    and the report's cosmetics, with the Power BI files re-saved once.
