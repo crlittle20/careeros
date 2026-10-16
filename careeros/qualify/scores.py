@@ -12,11 +12,13 @@ from datetime import timedelta
 from careeros.core.clock import parse_utc
 from careeros.normalize.posting import contains_term, norm, seniority
 
+from . import certifications as certification_mod
+from . import experience as experience_mod
 from .gate import GateResult, annualize, state_for
 from .profile import EVIDENCE_WEIGHT, Profile
 
 # Bump when scoring logic changes: scores recorded under an older version are recomputed automatically.
-SCORES_VERSION = "scores-2026-10-12f"
+SCORES_VERSION = "scores-2026-10-15b"  # b: certification records kept with the score; a: Experience Match (shadow mode)
 NEUTRAL = 0.5
 # "principal" (2026-10-12): a strong seniority signal, not an automatic rejection; the requirements decide.
 SENIORITY_RANK = {"entry": 1, "mid": 2, "unspecified": 2, "senior": 3, "principal": 4, "manager": 5}
@@ -318,11 +320,21 @@ def score(job: dict, requirements: list, profile: Profile, gate: GateResult, pol
     stretch = gate.has_flag("degree_stretch")
     if stretch and tier in ("A", "B"):  # a stretch is shown with the near-misses, never as a top pick
         tier = "near_miss"
+    # Experience Match (2026-10-15): measured against today's final tier. It changes the tier only when the policy's
+    # experience.enforce is true (off by default: shadow mode), and it never raises a tier.
+    experience = experience_mod.evaluate(requirements, profile, policy, gate, tier, coverage, value["domain"]["level"])
+    stretch_reason = "degree" if stretch else None
+    if experience["enforced"] and experience["hypothetical_tier"] in ("B", "near_miss") and experience["hypothetical_tier"] != tier:
+        if experience["effect"] == "stretch":
+            stretch, stretch_reason = True, stretch_reason or "experience"
+        tier = experience["hypothetical_tier"]
     from .facts import decisive_unknowns, eligibility_facts  # Part 5: eligibility evidence, kept apart from fit
     facts = eligibility_facts(job, requirements, gate, policy)
     return ScoreCard(elig["score"], fit["score"], value["score"], fresh["score"], priority, tier,
                      interview_band(elig["score"], fit["score"]),
                      {"eligibility": elig, "candidate_fit": fit, "career_value": value, "freshness": fresh,
                       "state": state, "skill_coverage": coverage, "domain": value["domain"],
-                      "profile_approved": profile.approved, "stretch": stretch, "facts": facts,
+                      "profile_approved": profile.approved, "stretch": stretch, "stretch_reason": stretch_reason,
+                      "experience": experience, "facts": facts,
+                      "certifications": certification_mod.analyse(requirements, profile, policy),   # no score effect
                       "decisive_unknowns": decisive_unknowns(facts)}, state)

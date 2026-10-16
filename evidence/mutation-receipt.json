@@ -1,7 +1,7 @@
 {
- "at": "2026-10-15T04:32:21+00:00",
- "caught": 284,
- "total": 284,
+ "at": "2026-10-16T00:42:39+00:00",
+ "caught": 305,
+ "total": 305,
  "results": [
   {
    "mutation": "remote-state rule disabled",
@@ -1422,23 +1422,128 @@
    "mutation": "the private agency shortcut missing from the review page",
    "file": "careeros/review/report.py",
    "result": "CAUGHT"
+  },
+  {
+   "mutation": "experience coverage ignored",
+   "file": "careeros/qualify/experience.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "experience shortfall ignored",
+   "file": "careeros/qualify/experience.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "adjacent experience scored as direct",
+   "file": "careeros/qualify/experience.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the experience cap at Tier B never applied",
+   "file": "careeros/qualify/experience.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "preferred and equivalency experience treated as hard",
+   "file": "careeros/qualify/experience.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "an AND-list of experience judged as an OR-list",
+   "file": "careeros/qualify/experience.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the most lenient experience line made decisive",
+   "file": "careeros/qualify/experience.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the screening value reported as factual years",
+   "file": "careeros/qualify/profile.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "the lowest years figure applied to every area on a line",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "Experience Match changes tiers in shadow mode",
+   "file": "careeros/qualify/scores.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a deadline in months read as experience",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a planned or in-progress certification counted as held",
+   "file": "careeros/qualify/certifications.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a related certification treated as the one asked for",
+   "file": "careeros/qualify/certifications.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a preferred certification treated as a requirement",
+   "file": "careeros/qualify/certifications.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "certification aliases written PL-300 not recognised",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "pay text and 'certified as' read as certification requirements",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "alternative certifications each required",
+   "file": "careeros/qualify/certifications.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "example certifications (e.g. PMP) read as hard requirements",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "a certification to earn after hire read as a requirement",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "'certification is not required' read as required",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
+  },
+  {
+   "mutation": "ambiguous short names (CSM, ITIL) read as certifications without context",
+   "file": "careeros/extract/rules.py",
+   "result": "CAUGHT"
   }
  ],
  "source_sha256": {
-  "careeros/qualify/gate.py": "1369992ca01a33e864a86c89609791906dd8ab2ae1cd07bd8a14ce8568983d5f",
-  "careeros/extract/rules.py": "e0fbc01a8f97efa727f0a3d23702a3bd0952670d88410161142781409fe53c33",
+  "careeros/qualify/gate.py": "48ccab8b092178f84a4ffff1b81c0f1e12a48a600b5ae39b654fa1b923df8b17",
+  "careeros/extract/rules.py": "1bc3ba6a3c5a2126fde61fa58b1a42b7f8d5319fefb6babef70648abe0593645",
   "careeros/db/store.py": "2ea73f21a54f7d36119589dc013aead24a6d9dc4995e823c36450d766d6ea296",
   "careeros/core/transitions.py": "17521aacfa0a7ec0adb68a1192a4c911833be34a16c81cdef265065e5bf35fa0",
-  "careeros/pipeline.py": "673d0cb6aff37a5969e3b217e8376e368a52187260c3a30843a32f9d52442af3",
+  "careeros/pipeline.py": "983ee8b0c19d8574c054d4d3638fd58c05acc29005e7c08929642673a43623eb",
   "careeros/normalize/posting.py": "fb2ad81005adce59a6a5a436f32e0af9c2b735b5e8c1a1551b4baa0e6cc12d48",
-  "careeros/review/report.py": "c88657f13478c67629920e5b5cae8a02bc564deb1aef5f24cb1ac939083865f8",
+  "careeros/review/report.py": "d39c75138d4402cb99f944d1e69c9e34a717337de7e1ab920663ede0d5511b1b",
   "careeros/review/server.py": "acfe8816756576d77af90f9e5db4785248b71469991fd712b6bb576a0cc08588",
-  "careeros/review/labels.py": "cafdae7a11489e12591fd2edcb92c2e499484355346f3637b41a77637799a031",
-  "careeros/qualify/scores.py": "6d8349920e15d914c45b654b2ccedc8176a9bc00efce83871f6a3751e132b7b2",
+  "careeros/review/labels.py": "41fe415c531e1918f8c9d7a4a2ffd4a456e178e9bacda0ace652c126c669ffad",
+  "careeros/qualify/scores.py": "6a4d3db3a792c6db6f87c2bb7ba27a874711e2ccc2fd3847c88c46fb04b1f096",
   "careeros/extract/ai.py": "8dddf3824c0ae86e24db3cd04051869ec52f3901ced3734a6c95f3d6d488e32c",
-  "careeros/qualify/profile.py": "2d9da510c5b5175a3db65c0158aaf2d258ba47dfada6deee3bfc7394c49368fc",
+  "careeros/qualify/profile.py": "d09156232f37af920f8be4e67696094ae583059c13bf791a3f983463c8187777",
   "careeros/review/applications.py": "0ea0b22d23f58437a6efe4870f415b026178ed65d787aaee7619730e63b28264",
-  "careeros/cli.py": "5d43beaee8f205b28f6ab9c92f787526a78a895dcbd1d45bf6b42016700f8f36",
+  "careeros/cli.py": "58cc3c1f09f647cc4acfedf9535ce918c839e8f4c2c8af3d82881cda1baac558",
   "careeros/discovery/gmail.py": "525097ff540ea3a45fab2fcc744dc58ca6e4c5f85bb090b401b03ad5f71db7b3",
   "careeros/discovery/github_inbox.py": "217cca1a5ff08070abf9eb32d3fb3239543d1847b415e30f10bbaf3cf4334a48",
   "careeros/discovery/sources.py": "ce3b0df5c7db6f6787c4edb7868b21bea01ce047aca6acd6674795c23d9ea150",
@@ -1446,7 +1551,7 @@
   "careeros/qualify/night.py": "5eee5f2529f748ab86826809d4f812ed7b21ce6a344d25042320d8821d4c7289",
   "careeros/discovery/imap.py": "356beff3cd6421da3a370faa1d9c83bc8aefb5eca610f498b6ed9e3fc7b63989",
   "careeros/ops/backup.py": "e4df03aa15863d861dda28f1359bd581a78072137184c28bb88e66c18fcc6d25",
-  "config/policy/defaults.yaml": "1691a605e684fd194504aab307d8c26e1265ee3bf4958f608ef41e52cff2c50d",
+  "config/policy/defaults.yaml": "192f5e221dc0d2dd1952279d9b70c1a3b5527274aff18de19646edbf55d4c604",
   "careeros/discovery/note.py": "8e2f51afcf9a0b4e23ee54680efcf82fc8e684ac4ab45e8e90983ac61765c335",
   "careeros/discovery/seen_index.py": "752282a693c64a1112c86cacc50c8dcbb4b0fe98fd80b66d4f1aad8aedac9dd4",
   "careeros/discovery/board_discovery.py": "039da9413c1faa54aaba171923be63c6a47867541eb76eeaa4a98ce18ad36eaa",
@@ -1461,7 +1566,7 @@
   "careeros/discovery/board_registry.py": "b8de8db8d17859f6582e97e173b9dc7335ce0a6e863054e9b35caef5364905c8",
   "careeros/discovery/safe_fetch.py": "e5eb58f9ee5310136dd0156fff036dd184846e94ddc25f58203f5f1d79d197bf",
   "careeros/discovery/site_inspect.py": "2a869775b4db4b551e8f55e7d9a85891be662fa27039fa78099a0ad14b65d485",
-  "careeros/review/explain.py": "b026be0aa420363f0ae90d02f2591ae0e84d32634a1936edc5cfcb644d522b26",
+  "careeros/review/explain.py": "4025d95461bccff4584215815b5eb5d1a406abca6e24a154f0d8c293151c96a7",
   "careeros/discovery/alerts.py": "6e5e874c909234b39cb747474dcbcb19733d6d85fff4d12417ce5f6d150da125",
   "careeros/demo/sandbox.py": "a1a9a6d4d26737892c0886d0a8e34261884899217ae67e535a0dd4c24a87c6a4",
   "careeros/core/credentials.py": "33e21d11009a918ce54aa41784fe8b41c8af1c4ac815d67e3ce4636854d5a0e2",
@@ -1477,6 +1582,8 @@
   "tools/validate.py": "679c3526c34ad5dec50481ffc8b27fe8d14b5657cc6d2e2c56d58d2417a2b6c8",
   "careeros/core/redact.py": "800a7b8fcb775d781346a4e746c259a0ee3fd68a94c8f352937d7f46797f1208",
   "careeros/core/private_sites.py": "155f39e8622df740bc646fd875e1661bbb515c694dbdf6db802a5c33c1081053",
-  "careeros/discovery/board_urls.py": "e19462ef606c58f23dcefffe541fc64a3be8bce76fd0d3eb008caa8838adb41f"
+  "careeros/discovery/board_urls.py": "e19462ef606c58f23dcefffe541fc64a3be8bce76fd0d3eb008caa8838adb41f",
+  "careeros/qualify/experience.py": "0380aefe02d5d8078665fa1cdaafc1dd5095d88d4f242fe5ebdab8e7dc2b71c2",
+  "careeros/qualify/certifications.py": "b5f32e5f35ba8bec79c2926292f467dd60aa2ccbce8273c93af80cb1acd3471a"
  }
 }

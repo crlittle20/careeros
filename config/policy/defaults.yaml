@@ -147,6 +147,141 @@ tiers:                      # prompts v2.2: Tier A/B need state ELIGIBLE (and th
   near_miss: {priority: 78}
   skill_coverage_min: 0.7     # 2026-10-12 decision: Tier A/B also need >= 70% of required skills (evidence-weighted)
 
+
+# Experience Match (2026-10-15; docs/experience_match.md). A 20-point score per years requirement: absolute shortfall
+# (0-10), coverage (0-6) and the relevance of the one profile item counted (0-4). SHADOW MODE: while enforce is false
+# the score, its class and the tier effect it would have are stored and shown, and no tier changes. Turning it on is
+# the owner's decision, after calibration against labels (at least the counts under `calibration`). The years
+# rejection stays the gate's rule (gate.years_major_gap): Experience Match never adds or removes a rejection.
+experience:
+  enforce: false
+  shortfall_points: [[0, 10], [6, 9], [12, 8], [24, 6], [36, 4], [48, 2]]   # [months short at most, points]; more -> 0
+  coverage_points: [[100, 6], [80, 5], [60, 4], [40, 3], [20, 2]]           # [coverage % at least, points]; less -> 0
+  coverage_classes: [[100, full_coverage], [80, high_coverage], [60, substantial_coverage], [40, moderate_coverage],
+                     [20, low_coverage]]
+  lowest_coverage_class: very_low_coverage
+  relevance_points: {direct: 4, strongly_transferable: 3, generic: 2, adjacent: 1, missing: 1}
+  classes: [[18, strong_match], [15, small_gap], [11, medium_gap], [7, large_gap]]     # [score at least, class]
+  lowest_class: severe_gap
+  effects:                   # the tier effect a class WOULD have, by requirement type; preferred lines never have one
+    hard_required: {medium_gap: cap_b, large_gap: stretch, severe_gap: stretch}
+    required_with_equivalency: {large_gap: cap_b, severe_gap: stretch}
+    ambiguous: {large_gap: cap_b, severe_gap: stretch}
+  high_potential: {gap_classes: [medium_gap, large_gap], min_skill_coverage: 0.85, domain_levels: [direct]}   # a note only
+  calibration: {min_labels: 50, min_years_labels: 20}   # EXPERIENCE_CALIBRATION_READY; never switches enforce on
+
+
+# Certifications (2026-10-15; docs/certifications.md). A deterministic catalog: each credential's canonical name, its
+# issuer (only where the credential itself fixes it; otherwise null, never guessed) and its family, with the wordings
+# that mean it. Families group credentials for matching and analytics; a family is never proof of equivalence. A
+# posting that names only a family ("Scrum certification") or an issuer ("certification through AAPC") keeps that
+# level of detail. Unknown certifications are kept as written. `equivalent` lists owner-approved equivalences only.
+certifications:
+  credentials:
+    pmp: {name: Project Management Professional (PMP), issuer: PMI, family: project_management,
+          aliases: [pmp, pmi pmp, pmi-pmp, project management professional]}
+    capm: {name: Certified Associate in Project Management (CAPM), issuer: PMI, family: project_management,
+           aliases: [capm, certified associate in project management]}
+    prince2: {name: PRINCE2, issuer: AXELOS, family: project_management, aliases: [prince2, prince 2]}
+    pmi-acp: {name: PMI Agile Certified Practitioner (PMI-ACP), issuer: PMI, family: agile,
+              aliases: [pmi-acp, pmi acp, acp certification, agile certified practitioner]}
+    csm: {name: Certified ScrumMaster (CSM), issuer: Scrum Alliance, family: scrum,
+          aliases: [csm, certified scrum master, certified scrummaster]}
+    cspo: {name: Certified Scrum Product Owner (CSPO), issuer: Scrum Alliance, family: scrum,
+           aliases: [cspo, certified scrum product owner]}
+    psm-i: {name: Professional Scrum Master I (PSM I), issuer: Scrum.org, family: scrum,
+            aliases: [psm i, psm 1, psm1, psm-i, professional scrum master i, professional scrum master 1]}
+    safe-agilist: {name: SAFe Agilist, issuer: Scaled Agile, family: safe, aliases: [safe agilist, certified safe agilist]}
+    cbap: {name: Certified Business Analysis Professional (CBAP), issuer: IIBA, family: business_analysis,
+           aliases: [cbap, certified business analysis professional]}
+    ccba: {name: Certification of Capability in Business Analysis (CCBA), issuer: IIBA, family: business_analysis,
+           aliases: [ccba]}
+    ecba: {name: Entry Certificate in Business Analysis (ECBA), issuer: IIBA, family: business_analysis, aliases: [ecba]}
+    lss-yellow-belt: {name: Lean Six Sigma Yellow Belt, issuer: null, family: lean_six_sigma,
+                      aliases: [lean six sigma yellow belt, six sigma yellow belt, yellow belt]}
+    lss-green-belt: {name: Lean Six Sigma Green Belt, issuer: null, family: lean_six_sigma,
+                     aliases: [lean six sigma green belt, six sigma green belt, lssgb, green belt]}
+    lss-black-belt: {name: Lean Six Sigma Black Belt, issuer: null, family: lean_six_sigma,
+                     aliases: [lean six sigma black belt, six sigma black belt, lssbb, black belt]}
+    pl-300: {name: Microsoft PL-300 Power BI Data Analyst, issuer: Microsoft, family: power_bi,
+             aliases: [pl-300, pl300, pl 300, power bi data analyst, microsoft power bi data analyst]}
+    pl-900: {name: Microsoft PL-900 Power Platform Fundamentals, issuer: Microsoft, family: power_platform,
+             aliases: [pl-900, pl900, pl 900, power platform fundamentals]}
+    pl-100: {name: Microsoft PL-100 Power Platform App Maker, issuer: Microsoft, family: power_platform,
+             aliases: [pl-100, pl100, power platform app maker]}
+    pl-200: {name: Microsoft PL-200 Power Platform Functional Consultant, issuer: Microsoft, family: power_platform,
+             aliases: [pl-200, pl200, power platform functional consultant]}
+    pl-400: {name: Microsoft PL-400 Power Platform Developer, issuer: Microsoft, family: power_platform,
+             aliases: [pl-400, pl400, power platform developer]}
+    pl-600: {name: Microsoft PL-600 Power Platform Solution Architect, issuer: Microsoft, family: power_platform,
+             aliases: [pl-600, pl600, power platform solution architect]}
+    mo-210: {name: Microsoft Office Specialist Excel Associate (MO-210), issuer: Microsoft, family: microsoft_office,
+             aliases: [mo-210, mo210, mos excel associate, microsoft office specialist excel associate,
+                       "microsoft office specialist: excel associate"]}
+    mcp: {name: Microsoft Certified Professional (MCP), issuer: Microsoft, family: microsoft,
+          aliases: [mcp, microsoft certified professional]}
+    comptia-a-plus: {name: CompTIA A+, issuer: CompTIA, family: comptia, aliases: [comptia a+, a+ certification]}
+    comptia-security-plus: {name: CompTIA Security+, issuer: CompTIA, family: comptia, aliases: [security+, comptia security+]}
+    itil: {name: ITIL Foundation, issuer: AXELOS, family: itil, aliases: [itil, itil foundation, itil v4, itil 4]}
+    cissp: {name: CISSP, issuer: ISC2, family: security, aliases: [cissp]}
+    cpc: {name: Certified Professional Coder (CPC), issuer: AAPC, family: medical_coding, aliases: [cpc, certified professional coder]}
+    coc: {name: Certified Outpatient Coder (COC), issuer: AAPC, family: medical_coding, aliases: [coc, certified outpatient coder]}
+    crc: {name: Certified Risk Adjustment Coder (CRC), issuer: AAPC, family: medical_coding,
+          aliases: [crc, certified risk adjustment coder]}
+    ccs: {name: Certified Coding Specialist (CCS), issuer: AHIMA, family: medical_coding, aliases: [ccs, certified coding specialist]}
+    rhit: {name: Registered Health Information Technician (RHIT), issuer: AHIMA, family: health_information,
+           aliases: [rhit, registered health information technician]}
+    rhia: {name: Registered Health Information Administrator (RHIA), issuer: AHIMA, family: health_information,
+           aliases: [rhia, registered health information administrator]}
+    cpht: {name: Certified Pharmacy Technician (CPhT), issuer: PTCB, family: pharmacy,
+           aliases: [cpht, certified pharmacy technician, pharmacy technician certification]}
+    cfe: {name: Certified Fraud Examiner (CFE), issuer: ACFE, family: fraud, aliases: [cfe, certified fraud examiner]}
+    ahfi: {name: Accredited Health Care Fraud Investigator (AHFI), issuer: NHCAA, family: fraud,
+           aliases: [ahfi, accredited health care fraud investigator, accredited healthcare fraud investigator]}
+    hcafa: {name: Health Care Anti-Fraud Associate (HCAFA), issuer: NHCAA, family: fraud,
+            aliases: [hcafa, health care anti-fraud associate]}
+    cafp: {name: Certified AML and Fraud Professional (CAFP), issuer: ACFCS, family: fraud, aliases: [cafp]}
+    salesforce-admin: {name: Salesforce Certified Administrator, issuer: Salesforce, family: salesforce,
+                       aliases: [salesforce admin certification, salesforce certified administrator,
+                                 salesforce administrator certification]}
+    asa: {name: Associate of the Society of Actuaries (ASA), issuer: SOA, family: actuarial,
+          aliases: [asa credential, associate of the society of actuaries]}
+    aws-cloud-practitioner: {name: AWS Certified Cloud Practitioner, issuer: AWS, family: aws,
+                             aliases: [aws certified cloud practitioner, aws cloud practitioner]}
+    aws-ai-practitioner: {name: AWS Certified AI Practitioner, issuer: AWS, family: aws,
+                          aliases: [aws certified ai practitioner, aws ai practitioner]}
+  families:                  # named only in a certification phrase that names no specific credential
+    project_management: {name: Project management certification, issuer: null, terms: [project management]}
+    agile: {name: Agile certification, issuer: null, terms: [agile]}
+    scrum: {name: Scrum certification, issuer: null, terms: [scrum]}
+    safe: {name: SAFe certification, issuer: Scaled Agile, terms: [SAFe], case_sensitive: true}
+    business_analysis: {name: Business analysis certification, issuer: null, terms: [business analysis]}
+    lean_six_sigma: {name: Six Sigma certification, issuer: null, terms: [six sigma]}
+    power_bi: {name: Power BI certification, issuer: Microsoft, terms: [power bi]}
+    power_platform: {name: Power Platform certification, issuer: Microsoft, terms: [power platform]}
+    medical_coding: {name: Medical coding certification, issuer: null, terms: [medical coding, coding certification, coder]}
+    health_information: {name: Health information certification, issuer: null, terms: [health information]}
+    fraud: {name: Fraud investigation certification, issuer: null, terms: [fraud]}
+    pharmacy: {name: Pharmacy technician certification, issuer: null, terms: [pharmacy technician]}
+    salesforce: {name: Salesforce certification, issuer: Salesforce, terms: [salesforce]}
+    veeva: {name: Veeva certification, issuer: Veeva Systems, terms: [veeva]}
+    aws: {name: AWS certification, issuer: AWS, terms: [aws]}
+    comptia: {name: CompTIA certification, issuer: CompTIA, terms: [comptia]}
+    itil: {name: ITIL certification, issuer: AXELOS, terms: [itil]}
+  issuers:                   # "certification through AAPC": the issuer and the family it certifies
+    AAPC: medical_coding
+    AHIMA: health_information
+    PMI: project_management
+    IIBA: business_analysis
+    NHCAA: fraud
+    ACFE: fraud
+    PTCB: pharmacy
+  equivalent: []             # owner-approved only, e.g. [[pmp, prince2]]; never inferred from a family
+  # Short names that mean something else too (CSM = customer success manager, ITIL = a process framework): they count as
+  # a certification only in a sentence that says certification, certified, certificate or credential.
+  context_only: [csm, coc, crc, ccs, cfe, mcp, cpc, itil, itil 4, itil v4, green belt, black belt, yellow belt,
+                 power bi data analyst]
+
 freshness:
   - {max_days: 1, score: 100}
   - {max_days: 3, score: 80}

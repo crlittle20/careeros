@@ -156,8 +156,11 @@ class GateTests(unittest.TestCase):
         self.assertTrue(p.has_certification("pl-900"))
         self.assertFalse(p.has_certification("pl-200"))
         self.assertFalse(p.has_certification("pmp"))
-        names = {r.name for r in extract("Requirements:\n- Lean Six Sigma certification required", POLICY).requirements if r.category == "certification"}
-        self.assertEqual(names, {"lean six sigma"})
+        reqs = extract("Requirements:\n- Lean Six Sigma certification required", POLICY).requirements
+        self.assertEqual({r.name for r in reqs if r.category == "certification"}, {"family:lean_six_sigma"})   # 2026-10-15: a family
+        from careeros.qualify.certifications import analyse
+        record = analyse(reqs, p, POLICY)[0]
+        self.assertEqual((record["match_type"], record["satisfied"], record["decision_effect"]), ("family_match", True, "requirement_satisfied"))
 
     def test_training_only_skills_are_partial_coverage(self):
         from careeros.qualify.profile import Profile

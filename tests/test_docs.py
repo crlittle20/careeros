@@ -21,7 +21,8 @@ DOCS = ENGINE_ROOT / "docs"
 CHECKED = [DOCS / "architecture.md", DOCS / "security_architecture.md", DOCS / "data_lineage.md",
            *sorted((DOCS / "adr").glob("*.md")),
            ENGINE_ROOT / "README.md", DOCS / "case_study.md", DOCS / "ai_assisted_development.md",   # Prompt 11
-           DOCS / "demo_walkthrough.md", DOCS / "portfolio_mvp_report.md"]   # Prompt 12
+           DOCS / "demo_walkthrough.md", DOCS / "portfolio_mvp_report.md",   # Prompt 12
+           DOCS / "experience_match.md", DOCS / "certifications.md"]   # 2026-10-15
 DIAGRAMS = ("flowchart", "graph", "sequenceDiagram", "stateDiagram-v2", "erDiagram", "classDiagram")
 
 

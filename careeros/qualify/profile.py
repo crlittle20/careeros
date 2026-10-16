@@ -1,6 +1,7 @@
 """Candidate profile v0 (vault). Unknown values stay None; they become flags, never assumed facts."""
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -71,9 +72,10 @@ class Profile:
         return 0 if known else None
 
     def certifications(self) -> set[str]:
+        """Names of the certifications you HOLD (2026-10-15: an item marked `status: planned` or `in_progress` is not held)."""
         names = set()
         for cert in self.data.get("certifications") or []:
-            if isinstance(cert, dict):
+            if isinstance(cert, dict) and cert.get("status", "held") == "held":
                 names.add(norm(cert.get("name", "")))
                 names.update(norm(m) for m in cert.get("matches") or [])
         return names
@@ -89,25 +91,32 @@ class Profile:
     def years_for(self, name: str) -> float | None:
         """Years used for SCREENING. An item's `screening_years` (set by the user) overrides `years` here only;
         application answers and resumes (Phase 2) must use the factual `years` and real dates."""
+        match = self.years_match(name)
+        return match["years"] if match else None
+
+    def years_match(self, name: str) -> dict | None:
+        """The profile item a years requirement is judged on (2026-10-15): its kind, the years used for screening, its
+        factual `years` (never changed here) and its recorded evidence. None when no item answers the requirement."""
         hit = self.skill(name) or self.function(name)
         if hit and _screening_years(hit) is not None:
-            return _screening_years(hit)
+            return _years_match(hit, "skill" if "via" in hit else "function")
         # e.g. "3+ years of claims experience" or "medical claims operations" vs the claims domain
-        years = [_screening_years(d) for d in self._items("domains")
-                 if _screening_years(d) is not None and (norm(d["name"]) == norm(name) or contains(norm(name), norm(d["name"])))]
-        if years:
-            return max(years)
+        domains = [d for d in self._items("domains")
+                   if _screening_years(d) is not None and (norm(d["name"]) == norm(name) or contains(norm(name), norm(d["name"])))]
+        if domains:
+            return _years_match(max(domains, key=lambda d: _screening_years(d) or 0.0), "domain")
         # e.g. "2+ years as a Data Analyst": role titles YOU confirmed your years count for (profile `role_titles`).
         # An `exact: true` title only matches that exact wording: "analyst" answers "years as an analyst", never
         # "years as a Data Analyst".
-        roles = [_screening_years(r) for r in self._items("role_titles")
+        roles = [r for r in self._items("role_titles")
                  if _screening_years(r) is not None and (norm(r["name"]) == norm(name)
                                                          or (not r.get("exact") and contains(norm(name), norm(r["name"]))))]
         if roles:
-            return max(roles)
+            return _years_match(max(roles, key=lambda r: _screening_years(r) or 0.0), "role_title")
         if norm(name) in GENERIC_EXPERIENCE:  # "3+ years of relevant experience": your total professional years
             total = self.data.get("total_professional_years")
-            return float(total) if total is not None else None
+            return {"kind": "generic", "item": "total professional years", "years": float(total), "factual_years": float(total),
+                    "evidence": None} if total is not None else None
         return None
 
     def level_rank(self) -> int | None:
@@ -131,6 +140,18 @@ _STOP = {"a", "an", "the", "of", "in", "and", "or", "with", "as", "for", "to", "
 def _screening_years(item: dict) -> float | None:
     value = item.get("screening_years", item.get("years"))
     return float(value) if value is not None else None
+
+
+def _years_match(item: dict, kind: str) -> dict:
+    factual = item.get("years")
+    return {"kind": kind, "item": item["name"], "years": _screening_years(item),
+            "factual_years": float(factual) if factual is not None else None, "evidence": item.get("evidence")}
+
+
+def alternatives(name: str) -> list[str]:
+    """A requirement's area and the alternatives it lists: "consulting, business analyst or healthcare" -> the whole
+    phrase, then each alternative."""
+    return [name] + [a.strip() for a in re.split(r",|/|\band/or\b|\bor\b", name) if a.strip()]
 
 
 def _stems(text: str) -> set[str]:

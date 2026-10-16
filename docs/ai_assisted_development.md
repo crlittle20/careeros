@@ -140,14 +140,16 @@ review by a person or a tool outside this chain is still recommended.
 ## 4. How tests validated behavior
 
 - **Tests come with the change.** Each milestone that changed system behaviour or documentation added or updated tests
-  for the change. The suite has 419 tests on synthetic fixtures, fake transports and fixed clocks, and
+  for the change. The suite has 485 tests on synthetic fixtures, fake transports and fixed clocks, and
   `tools/validate.py` runs it with outbound network refused.
 - **Planted defects check the tests themselves.** `tools/mutate.py` deliberately breaks each safety rule, one at a
-  time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 284
+  time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 305
   such defects. A full run on 2026-10-14 caught 283 of them. The one that survived, a private staffing agency probed for a
   board, had been reported caught in an earlier re-check for a reason that could not be found; its test was
-  strengthened, and the final full run caught all 284. Spot checks made between 2026-10-13 and that re-check proved nothing: the tool's scratch copies lacked files some
-  tests need, so every defect looked caught. The tool now refuses to run unless an unmutated copy passes.
+  strengthened, and the next full run caught all 284. The latest full run (2026-10-15, after Experience Match and
+  certifications) caught all 305. Spot checks made between 2026-10-13 and that re-check proved nothing: the tool's
+  scratch copies lacked files some tests need, so every defect looked caught. The tool now refuses to run unless an
+  unmutated copy passes.
 - **Expectations do not come from the system.** The Functional MVP gate derives its 92 checks from the postings and the
   policy. For example, it recomputes tiers from the thresholds rather than reading the stored tier.
 - **Proof that a gate can fail.** Both fixes prompted by the Functional MVP gate were proven by running the gate against

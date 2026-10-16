@@ -53,6 +53,11 @@ CLAIMS_REQS = ["3+ years of claims, PBM or payer operations experience required"
                "SQL experience preferred"]
 BSA_REQS = ["3+ years of business systems analysis in healthcare required", "Requirements gathering and user acceptance testing",
             "SQL experience required", "Jira or similar tracking tools"]
+# Experience Match demo (2026-10-15): 8 years asked, the persona has 6 in business systems analysis and 5 in healthcare,
+# a medium gap (12 of 20) whose future effect would cap the job at Tier B. Shadow mode: its tier does not change.
+BSA_REQS_SENIOR = ["8+ years of business systems analysis in healthcare required", *BSA_REQS[1:],
+                   # Certifications demo (2026-10-15): a family the persona holds, a planned credential, one not held
+                   "Six Sigma certification required", "PL-300 certification preferred", "PMP a plus"]
 DATA_REQS = ["3+ years of healthcare data analysis required", "SQL experience required", "Power BI or Tableau experience required"]
 
 
@@ -162,7 +167,7 @@ def _postings(token: str, day: int) -> list[dict] | None:
                     body(about, ["Resolve pended claims"], CLAIMS_REQS, "This remote role is open to residents of NY and NJ only.",
                          "Pay range: $72,000 - $80,000 per year")),
                 job("a1f0c3d2-0000-4000-8000-000000000206", "Pharmacy Benefit Analyst", "Remote - US",
-                    body(about, ["Analyse pharmacy benefit designs", "Test formulary and plan changes"], BSA_REQS, REMOTE_US,
+                    body(about, ["Analyse pharmacy benefit designs", "Test formulary and plan changes"], BSA_REQS_SENIOR, REMOTE_US,
                          "Pay range: $80,000 - $95,000 per year"))]
         if day >= 2:
             jobs.append(job("a1f0c3d2-0000-4000-8000-000000000207", "Benefits Configuration Analyst", "Remote - US",
@@ -439,7 +444,10 @@ current_level: senior
 total_professional_years: 8
 education:
   - {level: bachelor, field: information systems, completed: true}
-certifications: []
+certifications:   # synthetic: the demo persona is fictional, and so are its credentials
+  - {name: Professional Scrum Master I, status: held}
+  - {name: Lean Six Sigma Yellow Belt, status: held}
+  - {name: PL-300, status: planned}
 licenses: []
 functions:
   - {name: business systems analysis, years: 6, evidence: direct}

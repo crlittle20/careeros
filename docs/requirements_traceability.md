@@ -5,7 +5,7 @@
 - Companion to `business_requirements.md`.
 
 Each row reads: **business problem → requirement → system component → test → demo evidence**.
-- **Tests** are `file::test_name` under `tests/`. All of them pass (419 tests on 2026-10-15).
+- **Tests** are `file::test_name` under `tests/`. All of them pass (485 tests on 2026-10-15).
 - **Demo evidence** says what a reviewer can observe:
   - "Today" is a command or report section in the working system.
   - "Demo Dn" is a step of the synthetic demo, `careeros demo tour` (`docs/demo_mode.md`), listed at the end. D10 does

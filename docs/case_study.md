@@ -98,7 +98,7 @@ list. The details are in `architecture.md`.
 
 - **Stack:** Python 3.12 and the standard library, SQLite, httpx and PyYAML. The anthropic SDK backs an optional
   requirement reader that must quote the posting word for word and falls back to the rules.
-- **Size:** about 13,400 lines of engine code and 6,800 lines of tests, 38 tables, 12 forward-only migrations and 32
+- **Size:** about 13,400 lines of engine code and 6,800 lines of tests, 38 tables, 12 forward-only migrations and 33
   commands.
 - **Order of work:**
   1. Phase 1: board scanning, normalisation, the eligibility gate, scoring and the review page.
@@ -149,8 +149,8 @@ command, the same command as the CI workflow.
 
 | Measure | Result |
 |---|---|
-| Automated tests | 419, all passing; repeated full runs on 2026-10-13, including a fresh clone, showed no flaky test |
-| Planted defects | 284 defined. A full run on 2026-10-14 caught 283; the survivor exposed a weak test, which was strengthened (below). The final full run caught all 284 (`evidence/mutation-receipt.json`). |
+| Automated tests | 485, all passing; repeated full runs on 2026-10-13, including a fresh clone, showed no flaky test |
+| Planted defects | 305 defined. A full run on 2026-10-14 caught 283; the survivor exposed a weak test, which was strengthened (below). The last full run (2026-10-15, after Experience Match and certifications) caught all 305 (`evidence/mutation-receipt.json`). |
 | Functional MVP gate | 92 checks: no requirement fails; 10 PASS, 3 PARTIAL (5 small gaps, listed in `functional_mvp_report.md`) |
 | Release scan | No secret in the files or the Git history. Anyone can repeat the public repository's scan (`python tools/release_scan.py --history`); the private repository's result is reported, not inspectable. |
 | Dependency audit | pip-audit: no known vulnerabilities in either lock |

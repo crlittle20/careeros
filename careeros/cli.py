@@ -12,7 +12,8 @@
     careeros app-status APPLICATION STATE [--notes ...]   e.g. screening, interviewing, rejected, ghosted
     careeros applications             list your applications and their status
     careeros funnel [--by source|family|profile|tier|channel|domain]   hiring outcomes and conversion rates
-    careeros eval                     agreement between your labels and the system (Phase 1 exit check)
+    careeros eval                     agreement between your labels and the system (Phase 1 exit check; three-way)
+    careeros certifications           which certifications your target jobs ask for, and your status for each
     careeros employers list|add|verify
     careeros gmail connect|status|fetch|disconnect   read job-alert emails from your Gmail (see GMAIL_SETUP.md)
     careeros inbox                    read job recommendations from the private GitHub inbox now (also daily)
@@ -49,7 +50,7 @@ from careeros.pipeline import Context, ingest, process
 from careeros.qualify.profile import load_profile
 from careeros.review.applications import (ApplicationConflict, application_matrix, applications, record_application,
                                           update_application)
-from careeros.review.labels import agreement, record_label
+from careeros.review.labels import agreement, record_label, three_way
 from careeros.review.report import build_report, last_review_at
 
 log = logging.getLogger("careeros")
@@ -1273,7 +1274,14 @@ def _board_maintenance(ctx: Context, started: str) -> Counter:
 
 
 def cmd_eval(ctx: Context, paths, args) -> None:
-    print(json.dumps({"primary": agreement(ctx.store), "night": agreement(ctx.store, "night")}, indent=2))
+    print(json.dumps({"primary": agreement(ctx.store), "night": agreement(ctx.store, "night"),
+                      "primary_three_way": three_way(ctx.store, ctx.policy, ctx.profile)}, indent=2))
+
+
+def cmd_certifications(ctx: Context, paths, args) -> None:
+    """Certification demand across your target jobs and your status for each (2026-10-15). Read only."""
+    from careeros.review.certification_demand import demand
+    print(json.dumps(demand(ctx.store, ctx.policy, ctx.profile), indent=1, default=str))
 
 
 def cmd_status(ctx: Context, paths, args) -> None:
@@ -1427,6 +1435,7 @@ def main(argv=None) -> None:
     p.add_argument("action", choices=["connect", "status", "fetch", "disconnect"])
     p.add_argument("--client-file", help="OAuth client JSON from Google Cloud (default: vault/secrets/gmail_oauth_client.json)")
     p.add_argument("--days", type=int, help="with fetch: look back this many days instead of the default")
+    sub.add_parser("certifications", help="which certifications your target jobs ask for, and your status for each")
     sub.add_parser("status")
     sub.add_parser("verify")
     sub.add_parser("unlock")
@@ -1477,7 +1486,8 @@ def _dispatch(args) -> None:
                 "applied": cmd_applied, "app-status": cmd_app_status, "applications": cmd_applications, "funnel": cmd_funnel, "backup": cmd_backup, "gmail": cmd_gmail, "inbox": cmd_inbox,
                 "seen-index": cmd_seen_index, "sources": cmd_sources, "audit": cmd_audit, "dismiss": cmd_dismiss, "explain": cmd_explain,
                 "paste": cmd_paste, "shortlist": cmd_shortlist, "draft": cmd_draft, "metrics": cmd_metrics,
-                "status": cmd_status, "verify": cmd_verify, "export": cmd_export}
+                "status": cmd_status, "verify": cmd_verify, "export": cmd_export,
+                "certifications": cmd_certifications}
     read_only = (args.command == "employers" and args.action == "list") or (args.command == "gmail" and args.action != "fetch")
     lock = SingleWriterLock(paths["lock"]) if args.command in WRITES and not read_only else None
     try:

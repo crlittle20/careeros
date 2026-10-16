@@ -1,9 +1,9 @@
 {
- "at": "2026-10-15T16:55:46+00:00",
+ "at": "2026-10-16T00:47:55+00:00",
  "commit": "",
  "uncommitted_changes": false,
- "private_vault": "decoy",
- "seconds": 16,
+ "private_vault": "the real private vault (read only)",
+ "seconds": 53,
  "overall": "PARTIAL",
  "grades": {
   "fresh demo initialization": "PASS",
@@ -76,7 +76,7 @@
     "check": "`careeros demo run --all` runs the four simulated days",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, 2.7s"
+    "evidence": "exit 0, 9.3s"
    },
    {
     "check": "each day is a completed production run (`careeros run`)",
@@ -454,7 +454,7 @@
     "check": "a run with four failing boards (HTTP 503, invalid JSON, timeout, 1-hour rate limit) completes",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, run completed, 4.2s"
+    "evidence": "exit 0, run completed, 5.1s"
    },
    {
     "check": "each failure is recorded against its board with its own error code",
@@ -490,7 +490,7 @@
     "check": "a 1-hour Retry-After is reported, not slept through",
     "ok": true,
     "core": false,
-    "evidence": "4.2s"
+    "evidence": "5.1s"
    },
    {
     "check": "an unreadable email and an empty pasted file are reported and skipped",
@@ -548,13 +548,13 @@
     "check": "the GitHub inbox is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "Local\\Temp\\careeros-mvp-gate-3m57x48c\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
+    "evidence": "Local\\Temp\\careeros-mvp-gate-eh0uk93r\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
    },
    {
     "check": "the clipboard is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-3m57x48c\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
+    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-eh0uk93r\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
    },
    {
     "check": "Gmail is refused in Demo Mode",
@@ -578,7 +578,7 @@
     "check": "the private vault (a decoy on a machine without one) is untouched: sizes, timestamps, hashes",
     "ok": true,
     "core": true,
-    "evidence": "1 files compared"
+    "evidence": "3668 files compared"
    },
    {
     "check": "the demo vault is outside the private vault and the code, and carries the demo marker",

@@ -278,7 +278,8 @@ def ingest(ctx: Context, employer: dict | None, postings: list[RawPosting], *, s
 
 # --- process -----------------------------------------------------------------------------------------
 def _extraction_fingerprint(ctx: Context, job, use_ai: bool | None = None) -> str:
-    vocab = {"aliases": ctx.policy.get("skill_aliases"), "domains": ctx.policy.get("domain_terms")}
+    vocab = {"aliases": ctx.policy.get("skill_aliases"), "domains": ctx.policy.get("domain_terms"),
+             "certifications": ctx.policy.get("certifications")}   # 2026-10-15: a catalog change re-reads postings
     use_ai = (ctx.ai is not None) if use_ai is None else use_ai
     extractor = f"{rules.EXTRACTOR_ID}|{ctx.ai.extractor_id}" if use_ai else rules.EXTRACTOR_ID
     return fingerprint({"extractor": extractor, "content": job["content_fingerprint"], "vocab": fingerprint(vocab)})

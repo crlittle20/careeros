@@ -16,6 +16,7 @@ from datetime import timedelta
 from careeros.core import private_sites
 from careeros.core.clock import parse_utc
 from careeros.db.store import Store
+from careeros.qualify import certifications, experience
 
 TIER_TITLES = {"A": "Tier A: exceptional", "B": "Tier B: strong apply", "near_miss": "Near-miss: manual review"}
 STATE_NOTE = {"CONDITIONAL": "CONDITIONAL: check the flagged unknowns before applying",
@@ -157,7 +158,9 @@ def _plain_card(store: Store, job, now: str, token: str | None, form_keys: dict,
         parts.append('<div class="scores">' + "".join(f'<span class="pill">{n} <b>{v:.0f}</b></span>' for n, v in pills)
                      + f'<span class="pill">Interview chance: <b>{esc(score["interview_band"])}</b></span>'
                      + (f'<span class="pill">domain <b>{esc(domain["level"])}</b></span>' if domain.get("level") else "")
-                     + ('<span class="pill flag"><b>Stretch</b>: degree required</span>' if comps.get("stretch") else "")
+                     + ('<span class="pill flag"><b>Stretch</b>: '
+                        + ("experience gap" if comps.get("stretch_reason") == "experience" else "degree required") + '</span>'
+                        if comps.get("stretch") else "")
                      + (f'<span class="pill" title="{esc(comps["eligibility"]["dims"]["skills_coverage"]["basis"])}">'
                         f'skills covered (weighted) <b>{comps["skill_coverage"]:.0%}</b></span>'
                         if comps.get("skill_coverage") is not None else "") + '</div>')
@@ -168,6 +171,12 @@ def _plain_card(store: Store, job, now: str, token: str | None, form_keys: dict,
             parts.append(f'<div class="row">matches: {esc(", ".join(matched[:10]))}</div>')
         if comps["eligibility"]["missing_skills"]:
             parts.append(f'<div class="row fail">missing required: {esc(", ".join(comps["eligibility"]["missing_skills"]))}</div>')
+        if comps.get("certifications"):  # certification requirements, named and matched (2026-10-15)
+            parts.append('<div class="row">certifications: ' + esc(" | ".join(certifications.summary(r) for r in comps["certifications"]))
+                         + "</div>")
+        if (comps.get("experience") or {}).get("decisive_line") is not None:  # Experience Match, shadow mode (2026-10-15)
+            parts.append(f'<div class="row" title="{esc(" ".join(experience.explain(comps["experience"])))}">'
+                         f'{esc(experience.summary(comps["experience"]))}</div>')
     if gate:
         failures, flags = json.loads(gate["hard_failures_json"]), json.loads(gate["flags_json"])
         items = [f'<li class="fail">{esc(f["detail"])}'

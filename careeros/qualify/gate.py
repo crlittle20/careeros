@@ -7,7 +7,6 @@ not passes. `state_for` turns a result into ELIGIBLE / CONDITIONAL / HOLD / INEL
 """
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 from urllib.parse import urlsplit
 
@@ -15,10 +14,12 @@ from careeros.normalize.posting import contains_term, excluded_term, norm, pay_q
 
 from careeros.extract.model import requirement_strength
 
-from .profile import DEGREE_RANK, Profile
+from . import certifications as certification_mod
+from . import experience as experience_mod
+from .profile import DEGREE_RANK, Profile, alternatives
 
 # Bump when gate logic changes: results recorded under an older version are re-evaluated automatically.
-RULES_VERSION = "gate-2026-10-13a"  # a: pay-floor rejections quote the pay line
+RULES_VERSION = "gate-2026-10-15b"  # b: certifications named, matched by status, alternatives honoured; a: Experience Match
 PROFESSIONAL_LICENSES = ["pharmacist", "pharmacy technician", "registered nurse", "rn license", "nursing license", "cpa",
                          "attorney", "bar admission", "lpn", "physician", "insurance license", "life and health"]
 HOURS_PER_YEAR = 2080
@@ -239,8 +240,7 @@ def _education_summary(profile: Profile) -> str:
 def best_years(profile: Profile, name: str) -> float | None:
     """Your strongest years across the alternatives a requirement lists ("consulting, business analyst or
     healthcare"): an OR-list is met by any one of them. None when none of them is known."""
-    alternatives = [name] + [a.strip() for a in re.split(r",|/|\band/or\b|\bor\b", name) if a.strip()]
-    found = [y for y in (profile.years_for(a) for a in alternatives) if y is not None]
+    found = [y for y in (profile.years_for(a) for a in alternatives(name)) if y is not None]
     return max(found) if found else None
 
 
@@ -278,8 +278,12 @@ def _requirement_rules(result: GateResult, requirements: list, profile: Profile,
             if found is not None:
                 line_best[key] = max(line_best.get(key, found), found)
     judged: set = set()
+    # Certifications (2026-10-15): judged per set of alternatives, on what you hold (careeros/qualify/certifications.py)
+    cert_records = certification_mod.analyse(requirements, profile, policy)
+    cert_group = {m["index"]: group for group in certification_mod.gate_groups(cert_records) for m in group}
+    held = [c["name"] for c in certification_mod.profile_credentials(profile, policy) if c["status"] == "held"]
 
-    for req in requirements:
+    for req_index, req in enumerate(requirements):
         hard = req.requirement_type == "hard_required"
         soft_required = req.requirement_type in ("required_with_equivalency", "ambiguous")
         years_line = (req.source_text, req.years)
@@ -312,15 +316,23 @@ def _requirement_rules(result: GateResult, requirements: list, profile: Profile,
                     result.flag("degree_equivalency", f"{req.name} degree or equivalent experience", req.source_text)
 
         elif req.category == "certification":
-            if req.name == "unspecified certification":
-                result.flag("certification_check", "a certification is mentioned", req.source_text)
-            elif not profile.has_certification(req.name):
-                if hard:
-                    result.fail("certification_required", f"{req.name.upper()} required", req.source_text,
-                                profile=f"certifications: {', '.join(sorted(profile.certifications())) or 'none'}",
-                                confidence=req.confidence, strength=requirement_strength(req.requirement_type))
-                else:
-                    result.flag("certification_gap", f"{req.name.upper()} requested", req.source_text)
+            group = cert_group.get(req_index)
+            if not group or group[0]["index"] != req_index:   # each set of alternatives is judged once, at its first record
+                continue
+            effects = {m["decision_effect"] for m in group}
+            names = " or ".join(m["normalized_name"] for m in group)
+            notes = "".join(certification_mod.status_note(m) for m in group)
+            if effects == {"hard_failure"}:   # every alternative is a named credential you do not hold
+                result.fail("certification_required", f"{names} required{notes}", req.source_text,
+                            profile=f"certifications held: {', '.join(held) or 'none'}",
+                            confidence=req.confidence, strength=requirement_strength(req.requirement_type))
+                result.hard_failures[-1]["certifications"] = group
+            elif "requirement_satisfied" not in effects and effects & {"check_required", "hard_failure"}:
+                named = all(m["kind"] == "credential" for m in group)
+                code, what = ("certification_gap", f"{names} requested{notes}") if named else \
+                    ("certification_check", f'a certification is mentioned: {names}{notes} ("{group[0]["mention"]}")')
+                result.flag(code, what, req.source_text)
+                result.flags[-1]["certifications"] = group
 
         elif req.category == "license":
             professional = any(t in req.name for t in PROFESSIONAL_LICENSES)
@@ -361,7 +373,14 @@ def _requirement_rules(result: GateResult, requirements: list, profile: Profile,
                 if gap > major_gap and hard:
                     result.fail("years_far_short", f"{req.years:g}+ years of {req.name} required; you have {have:g}", req.source_text,
                                 profile=f"{have:g} years (your best match on this line)", confidence=req.confidence, strength=requirement_strength(req.requirement_type))
+                    # 2026-10-15: the rejection keeps the figure and the line's Experience Match, so it can be explained
+                    result.hard_failures[-1].update({"required_years": req.years, "experience": experience_mod.gate_line(
+                        [r for r in requirements if (r.source_text, r.years) == years_line], profile, policy)})
                 elif gap > minor_gap:
                     result.flag("years_gap", f"{req.years:g}+ years of {req.name} requested; you have {have:g}", req.source_text)
                 elif gap > 0:
                     result.flag("years_slightly_short", f"{req.years:g}+ years of {req.name}; you have {have:g}", req.source_text)
+
+    for conflict in experience_mod.conflicts(requirements):  # separate hard lines, one area, different years
+        result.flag("years_conflicting", f"{', '.join(f'{y:g}' for y in conflict['years'])} years of {conflict['area']} "
+                                         f"stated; the higher figure ({conflict['counted']:g}) counts", conflict["source_text"])

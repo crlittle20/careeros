@@ -25,7 +25,7 @@ Read next: [reviewer walkthrough](docs/demo_walkthrough.md) · [case study](docs
 | What | A local, single-user Python application: a daily pipeline, a command line, a local review page and a Power BI report |
 | For | One real job search. Designed for healthcare operations and business-systems roles, including claims and pharmacy-benefit work. It runs daily on the owner's machine. |
 | Shown publicly through | Demo Mode: the same production code on fictional employers, offline, with no credentials |
-| Size | About 13,400 lines of Python in the engine and 6,800 in tests; 38 database tables; 32 commands |
+| Size | About 13,400 lines of Python in the engine and 6,800 in tests; 38 database tables; 33 commands |
 | Specified by | 113 numbered requirements ([business requirements](docs/business_requirements.md)), traced to code and tests ([traceability](docs/requirements_traceability.md)), and 8 architecture decision records ([ADRs](docs/adr/README.md)) |
 | Built with | A human-directed, AI-assisted workflow: the owner directed and decided, ChatGPT helped design and challenge, Claude implemented ([how](docs/ai_assisted_development.md)) |
 | Status | Phase 1 (discovery and qualification) is in daily private use. The public repository is a generated snapshot of the private development repository ([limitations](#limitations)). |
@@ -68,6 +68,8 @@ time goes into applying rather than screening. Five principles run through the d
 | Deduplication | Requisition-aware identity across channels; sightings, reposts and closures; one application per role across duplicates and agency channels |
 | Eligibility | Hard rules with the posting line quoted as evidence. Only a hard requirement can reject; unknowns are flags. |
 | Scoring and routing | Fit, career value and freshness give an apply priority and a tier. A separate profile judges overnight and part-time work without touching the main decision. |
+| Certifications | Every certification a posting names is recorded: which one, its issuer, how the posting words it, whether the job seeker holds it (held, in progress or planned), and whether the match is exact, related or by family. Only a held credential satisfies a requirement; certifications add no score points. `careeros certifications` shows demand across target jobs ([details](docs/certifications.md)). |
+| Experience gaps | Shadow-mode experience-gap analysis: each years requirement gets a 20-point Experience Match (shortfall, coverage, relevance) and the tier effect it would have. It is shown and measured against the job seeker's labels, and changes no tier until the owner turns it on ([details](docs/experience_match.md)). |
 | Explainability | `careeros explain JOB` answers 14 questions about any job; `careeros sources explain` shows why a board is trusted |
 | Employer intelligence | Stable employer records with aliases and official domains, three separate board scores, ATS migrations, provider outages, and a Career Fit score that sets how often each employer is scanned |
 | Human review and tracking | A local review page, labels (apply, stretch, skip), a shortlist with the next step for each job, private application briefs drafted from the approved profile, application tracking through its own workflow, dismissals with reasons, title-screen audits, a hiring funnel |
@@ -209,8 +211,8 @@ Every control in the threat model is tied to a test and to a planted defect that
 
 | Layer | What it shows |
 |---|---|
-| 419 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`) |
-| 284 planted defects | `tools/mutate.py` breaks each safety rule in a scratch copy, and the test suite must then fail. A defect that survives is an untested rule. |
+| 485 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`) |
+| 305 planted defects | `tools/mutate.py` breaks each safety rule in a scratch copy, and the test suite must then fail. A defect that survives is an untested rule. |
 | Functional MVP gate | `tools/mvp_gate.py` runs the real command line in Demo Mode and makes 92 checks against expectations written from the postings and the policy, not read back from the system. Result: no requirement fails. Of 13, 10 are PASS and 3 are PARTIAL, with the gaps listed in the [report](docs/functional_mvp_report.md). |
 | Documentation tests | The documents' named files, tests, tables and commands must exist |
 | Static checks | ruff (pyflakes, bugbear and security rules), mypy against a recorded baseline of older errors, configuration checks |
@@ -306,6 +308,8 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
 - Reach the Phase 1 exit test and publish the agreement measure, then measure the source-expansion pilot.
 - Decide how to handle JavaScript careers pages (pending a review of a week of verification results).
 - Review the lead-matching path; reduce the type-check baseline; decide whether the Linux CI job becomes required.
+- Decide whether to enforce Experience Match once `careeros eval` reports it calibrated (50 labels, 20 of them with a
+  years requirement).
 - Phase 2: fuller application packages prepared from the approved profile, for the person to review and submit
   themselves.
 

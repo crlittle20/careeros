@@ -159,11 +159,11 @@ hosted or multi-user deployment.
 | The AI-assisted development disclosure now quotes the owner's own account of the process (given 2026-10-13), and the case study and README follow it | `docs/ai_assisted_development.md`, `docs/case_study.md`, `README.md` | `test_portfolio_docs` |
 | Gate evidence regenerated after the G6 fix: 10 PASS, 3 PARTIAL, 0 FAIL | `evidence/functional_mvp.json`, `docs/functional_mvp_report.md` (section 8) | `test_portfolio_docs`, `tools/validate.py` |
 
-After these changes and the refactor of 2026-10-14: 419 automated tests pass. There are 284 planted defects. The spot checks reported at this gate proved
+After these changes and the refactor of 2026-10-14: 485 automated tests pass. There are 305 planted defects. The spot checks reported at this gate proved
 nothing at the time: the tool's scratch copies lacked files some tests need, so every defect looked caught. After the
-fix (2026-10-14), a full run caught 283 of them. The survivor exposed a weak test, which was strengthened; the final
-full run caught all 284 (`evidence/mutation-receipt.json`). `tools/validate.py`
-passes all seven checks.
+fix (2026-10-14), a full run caught 283 of them. The survivor exposed a weak test, which was strengthened; the next
+full run caught all 284, and the latest (2026-10-15, after Experience Match and certifications) caught all 305
+(`evidence/mutation-receipt.json`). `tools/validate.py` passes all seven checks.
 
 ## 7. Scope freeze
 

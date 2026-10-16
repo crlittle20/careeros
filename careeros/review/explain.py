@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 
 from careeros.pipeline import TITLE_SCREEN
+from careeros.qualify import certifications, experience
 
 FIELDS = ("source", "first_seen_at", "last_seen_at", "employer", "verification", "duplicate_decision", "eligibility", "fit",
           "career_value", "routing", "status", "rejection_reason", "review_reason", "actions")
@@ -89,11 +90,19 @@ def explain_job(store, policy, job_id: str) -> dict:
         out["eligibility"] = _na("a duplicate is never judged on its own") if state == "duplicate" else \
             f"not judged yet (state {state})"
     else:
+        failures = _loads(gate["hard_failures_json"], [])
+        years_rejection = next((experience.rejection_block(f) for f in failures if f.get("code") == "years_far_short"), None)
+        experience_block = comps.get("experience") or years_rejection
+        cert_records = comps.get("certifications") or [m for f in failures + _loads(gate["flags_json"], []) for m in f.get("certifications") or []]
         out["eligibility"] = {"decision": gate["decision"],
                               "stage": "title screen" if gate["extraction_fingerprint"] == TITLE_SCREEN else
                               "review" if gate["decision"] == "needs_review" else "eligibility rules",
-                              "hard_failures": _loads(gate["hard_failures_json"], []), "flags": _loads(gate["flags_json"], []),
-                              "facts": comps.get("facts", []), "decided_at": gate["at"]}
+                              "hard_failures": failures, "flags": _loads(gate["flags_json"], []),
+                              "facts": comps.get("facts", []), "decided_at": gate["at"],
+                              # Experience Match (2026-10-15): as scored, or as recorded with a years rejection
+                              "experience": experience.explain(experience_block) if experience_block else None,
+                              # Certifications (2026-10-15): as scored, or as recorded with the gate's decision
+                              "certifications": certifications.explain(cert_records) if cert_records else None}
 
     # fit, career value and routing (only scored jobs have them)
     not_scored = _na("rejected before scoring") if state == "rejected" else _na("duplicate") if state == "duplicate" else \
@@ -103,7 +112,7 @@ def explain_job(store, policy, job_id: str) -> dict:
                       "components": {k: comps.get(k) for k in ("eligibility", "candidate_fit") if k in comps}}
         out["career_value"] = {"score": score["career_value"], "components": comps.get("career_value")}
         out["routing"] = {"tier": score["tier"], "apply_priority": score["apply_priority"], "interview_band": score["interview_band"],
-                          "stretch": bool(comps.get("stretch"))}
+                          "stretch": bool(comps.get("stretch")), "stretch_reason": comps.get("stretch_reason")}
     else:
         out["fit"] = out["career_value"] = not_scored
         out["routing"] = {"tier": None, "why": not_scored}
