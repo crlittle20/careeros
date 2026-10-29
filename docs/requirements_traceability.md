@@ -2,6 +2,7 @@
 
 - Version: 1.0
 - Date: 2026-10-13
+- Updated: 2026-10-29, status of NFR-006 and AC-004.
 - Companion to `business_requirements.md`.
 
 Each row reads: **business problem → requirement → system component → test → demo evidence**.
@@ -128,7 +129,7 @@ Each row reads: **business problem → requirement → system component → test
 | AUD-001 transitions and fail-closed | `db/store.py`, `core/transitions.py` | `test_core::test_transition_writes_history_projection_and_audit`; `..::test_illegal_transition_leaves_no_trace`; `..::test_projection_mismatch_fails_closed` | Today: `careeros verify` |
 | AUD-002, FR-081 hash chain and on-demand verification | `db/store.py`, `cli.py: cmd_verify` | `test_core::test_event_chain_detects_tampering`; `test_core::test_history_invariants`; `test_applications::test_status_follows_the_matrix_and_history_stays_consistent` | Today: `careeros verify` |
 | NFR-001 local, single user | whole system | by design (SQLite file, no server) | — |
-| NFR-006 portability | platform guards in `core/credentials.py`, `core/locks.py`, `ops/notify.py` | CI runs Windows (required) and Ubuntu (informational): `test_ci::test_windows_is_required_and_linux_informational`. Neither has run on GitHub yet (no remote); Linux is unverified | — |
+| NFR-006 portability | platform guards in `core/credentials.py`, `core/locks.py`, `ops/notify.py` | CI runs Windows (required) and Ubuntu (informational), passing since 2026-10-15: `test_ci::test_windows_is_required_and_linux_informational` | — |
 | NFR-008 policy configuration | `core/policy.py`, `pipeline.py: NOT_PRIMARY_DECISIONS` | `test_ops::test_operational_settings_never_re_evaluate_jobs` | — |
 | AUD-003 append-only history | schema triggers | `test_core::test_history_tables_are_immutable` | — |
 | AUD-004 idempotency | `db/store.py: receipt` | `test_core::test_idempotency_receipts`; `test_applications::test_record_once_and_replay_a_double_click` | — |
@@ -185,4 +186,6 @@ Each row reads: **business problem → requirement → system component → test
 - **Open:**
   - demo step D4 lacks a board contradicted by the employer's own site, and D7 lacks an overnight posting that NIGHT
     accepts (`functional_mvp_report.md`);
-  - AC-004 (50 labels) is pending the job seeker's labels.
+  - AC-004 (50 labels, measured on 2026-10-16) is not claimed: the coded thresholds were met, but the precision figure
+    rests on one top-tier job, the recall figure rests on a private near-miss setting, and nothing in the test counts
+    how many wanted jobs reach the top tiers (`case_study.md`, section 9).

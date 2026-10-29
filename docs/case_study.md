@@ -1,7 +1,7 @@
 # CareerOS: case study
 
-- Version: 1.0
-- Date: 2026-10-13
+- Version: 1.1
+- Date: 2026-10-29 (first version 2026-10-13; ranking calibration and dependency audit added)
 - Companions: `README.md` (overview), `architecture.md`, `business_requirements.md`, `functional_mvp_report.md`,
   `ai_assisted_development.md`.
 
@@ -9,8 +9,9 @@
 - **Engineering evidence:** measured in this repository (tests, planted defects, gates, scans).
 - **SYNTHETIC:** a result of Demo Mode on fictional employers and postings. It shows that the logic works, not how a
   real job market behaves.
-- **Observed on the private system:** timings already recorded in the requirements and gate reports. They are
-  observations, not benchmarks.
+- **Observed on the private system:** timings already recorded in the requirements and gate reports, and one
+  calibration against the job seeker's labels, reported as aggregate figures only (counts, means and ranges), never a
+  label, job, employer or pay figure. They are observations, not benchmarks.
 
 No outcome of the job search itself (applications, interviews, offers) is reported here.
 
@@ -108,10 +109,11 @@ list. The details are in `architecture.md`.
   5. A portfolio sequence: requirements and traceability, explainability, Demo Mode, a Functional MVP gate, the
      analytics export and Power BI report, architecture documents, a security and privacy review, CI, and this
      documentation.
-- **How it was built:** through a human-directed, AI-assisted workflow. The owner set the direction, requirements,
-  acceptance criteria and decisions; ChatGPT served as a design and analysis partner; Claude implemented. Every
-  milestone ended with tests and a written report, and every commit was approved by the owner. `ai_assisted_development.md` explains what the AI did,
-  what stayed with the person, and how the work was checked.
+- **How it was built:** through a human-directed, AI-assisted workflow. The owner set the direction and acceptance
+  criteria, supplied or approved the requirements and decisions, and approved changes before they were committed;
+  ChatGPT served as a design and analysis partner; Claude implemented. Every milestone ended with tests and a written
+  report. `ai_assisted_development.md` explains what the AI did, what stayed with the person, and how the work was
+  checked.
 
 ## 7. Controls
 
@@ -145,15 +147,15 @@ command, the same command as the CI workflow.
 
 ## 9. Results
 
-### Engineering evidence (this repository, 2026-10-13)
+### Engineering evidence (this repository)
 
 | Measure | Result |
 |---|---|
 | Automated tests | 485, all passing; repeated full runs on 2026-10-13, including a fresh clone, showed no flaky test |
-| Planted defects | 305 defined. A full run on 2026-10-14 caught 283; the survivor exposed a weak test, which was strengthened (below). The last full run (2026-10-15, after Experience Match and certifications) caught all 305 (`evidence/mutation-receipt.json`). |
+| Planted defects | 305 defined. A full run on 2026-10-14, when 284 were defined, caught all but one; the survivor exposed a weak test, which was strengthened (below), and the next full run caught all 284. The last full run (2026-10-15, after Experience Match and certifications) caught all 305 (`evidence/mutation-receipt.json`). |
 | Functional MVP gate | 92 checks: no requirement fails; 10 PASS, 3 PARTIAL (5 small gaps, listed in `functional_mvp_report.md`) |
 | Release scan | No secret in the files or the Git history. Anyone can repeat the public repository's scan (`python tools/release_scan.py --history`); the private repository's result is reported, not inspectable. |
-| Dependency audit | pip-audit: no known vulnerabilities in either lock |
+| Dependency audit | At release, the first CI run's pip-audit (2026-10-15) found no known vulnerabilities in either lock. Advisories published afterwards affected three pinned packages (certifi, filelock and msgpack), which were raised to fixed versions, with every pin checked against PyPI and OSV advisory data, and a local pip-audit of both locks, on 2026-10-29. After the update, that pip-audit found no known vulnerabilities. Two of the fixed releases were under 14 days old; the lock's header records them as exceptions. |
 
 ### Defects the controls caught
 
@@ -191,10 +193,60 @@ market.
   re-evaluation of every job after the rule changes of 2026-10-13, with no errors and every job able to explain
   itself. These observations are functional evidence, not performance benchmarks.
 
+### Ranking calibration: identify, measure, improve, validate
+
+Observed on the private system on 2026-10-16, using the scoring code published here (commit `8ad32cf`) with the job
+seeker's private profile and settings. It reports aggregate figures only (counts, means and ranges), never a label,
+job, employer or pay figure.
+
+| Step | Status | Where it stands |
+|---|---|---|
+| Identify | Done | The question: do the hard rules and the tiers agree with the job seeker's own Apply, Stretch and Skip labels (HR-001)? |
+| Measure | Done, once | The latest label on each of 50 jobs (22 Apply, 11 Stretch, 17 Skip), compared read-only with the decisions stored after every job was re-judged under those rules |
+| Improve | Not done | No rule, weight or threshold in this repository has changed in response |
+| Validate | Not done | No change has been checked on labels given after it was chosen |
+
+**What was measured:**
+- **The hard rules agreed with the job seeker's 50 labels (in-sample).** They rejected 6 of the labelled jobs, all
+  labelled Skip, each for a stated hard requirement. None of the 33 Apply or Stretch jobs was rejected.
+- **The tiers did not.** 1 of the 57 jobs scored on the private system at the time (labelled or not) reached Tier A/B;
+  the only top-tier job was one the job seeker had marked as wanted. None of the 22 Apply jobs did: 20 were
+  near-misses and 2 had closed. Every scored Apply job's priority was below 77, under the Tier B line of 85; across
+  all 57 scored jobs the median was 70.0 and the highest 85.3.
+- **Priority did not separate wanted from unwanted.** Over the jobs still scored (the 20 open Apply jobs, and the Skip
+  jobs the hard rules had not rejected), mean priority was 70.3 for Apply and 70.3 for Skip, to one decimal place. The
+  requirement-match measures did separate them: mean eligibility score 86.0 against 67.7, and mean skill coverage 0.89
+  against 0.64. Priority is 0.65 × candidate fit + 0.25 × career value + 0.10 × freshness; the eligibility score is
+  not part of it. Career value averaged slightly higher for the Skip jobs (84.6) than for the Apply jobs (81.9).
+- **The near-miss band rests on a private setting**, so these tier results cannot be reproduced from the public
+  defaults alone.
+- **The exit test is not claimed.** As coded, it asks for at least 50 labels, at least 90% of Tier A/B picks wanted
+  (the precision figure), and at most 10% of wanted jobs rejected or archived (the recall figure). Not claimed: the
+  coded thresholds were met, but the precision figure rests on one top-tier job, the recall figure rests on a private
+  near-miss setting, and nothing in the test counts how many wanted jobs reach the top tiers.
+
+**How much it can bear:**
+- 50 labels is a small sample. Three pairs of postings are probably one role advertised in several cities, so it may
+  be 47 roles.
+- One person gave every label, mostly on jobs the review page showed, so a wanted job that CareerOS rejected or
+  archived would rarely have been labelled.
+- No label records a reason, so a Skip cannot be split into "not qualified" and "not wanted".
+- Labels are judgements, not outcomes. No interview or offer is used.
+
+**Not done: improve.** The calibration's leading hypothesis is to decide the top tiers on requirement match rather
+than on priority: an eligible job with an eligibility score of at least 80, skill coverage of at least 0.70, no
+medium or larger experience gap and no degree stretch. On the same 50 labels that rule would pick 12 of the 20 scored
+Apply jobs and no Skip job, against none of either today. It was chosen on the labels it was scored on, so it is a
+hypothesis, not a result. The configuration-only alternative, lowering the Tier B line to a priority of 70, would have
+let 3 Skip jobs in. Nothing in this repository has changed in response.
+
+**Not done: validate.** No change has been measured on labels given after it was chosen, so nothing is validated.
+Private development is working on that check; it is not part of this repository.
+
 ### Not yet measured
 
-- **Agreement with the job seeker's judgement.** This is the Phase 1 exit test: at least 50 labels, with measured
-  agreement. It has not been reached.
+- **Whether a changed tier rule agrees better with the job seeker.** The calibration above measured the published
+  rules once; no change has been made, and nothing has been measured on labels given after it.
 - **The source-expansion pilot's targets** (more apply-worthy openings, audited match accuracy, review time). They are
   instrumented, but provisional.
 - **Job-search outcomes.** They are private and are not reported.
@@ -215,11 +267,16 @@ market.
    generated from an allowlist rather than cleaned up.
 7. **AI assistance needs gates, not trust.** Several of the defects above were introduced or missed in AI-written work
    and then caught by the controls. `ai_assisted_development.md` describes those gates.
+8. **A score has to be checked against the person it serves.** Priority averaged the same for the jobs the job seeker
+   wanted and the ones they would skip. Only a comparison with labels showed it, and only new labels can show whether
+   a fix works.
 
 ## 11. Next iteration
 
 1. Close the five remaining Functional MVP gaps, including a demo employer whose own website contradicts a board and an overnight
    role that the overnight profile accepts.
-2. Reach the Phase 1 exit test and publish the agreement measure, then measure the source-expansion pilot.
+2. Improve the tier rule that the calibration found weak, test any change side by side on new labels before adopting
+   it, and add to the exit test a measure of how many wanted jobs reach the top tiers; then measure the
+   source-expansion pilot.
 3. Decide how to handle careers pages that build their job lists with JavaScript, after a week of verification results.
 4. Review the lead-matching path that still uses an older identity check, and reduce the type-check baseline.

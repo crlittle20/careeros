@@ -4,7 +4,19 @@
 # hashes are PyPI's for the same releases. pydantic is 2.13.5 here (2.14.0 in requirements.lock was 4 days old).
 #   python -m venv .venv-dev
 #   .venv-dev\Scripts\python.exe -m pip install --require-hashes --only-binary :all: --no-deps -r requirements-dev.lock
-# Change it only the same way: pinned versions, verified hashes, and the 14-day rule for every package.
+# Change it only the same way: pinned versions, verified hashes, and the 14-day rule for every package, except
+# recorded, owner-approved security exceptions (below).
+# Updated 2026-10-29 against PyPI and OSV advisories: certifi 2026.7.22 -> 2026.10.19, filelock 4.0.6 -> 4.2.1 and
+# msgpack 1.2.2 -> 1.2.3. msgpack 1.2.3 (published 2026-09-29) fixes GHSA-j586-36cw-2gc2 / CVE-2026-114613 (High: a
+# C-extension memory leak on rejected map keys) and follows the 14-day rule; both its sha256 values are PyPI's.
+# One exception, approved by the owner for this repository on 2026-10-29 (as for the private engine on 2026-10-20):
+# certifi 2026.10.19 (published 2026-10-20) fixes GHSA-6q48-6c7w-9gw2 / PYSEC-2026-4320 (Critical: compromised eMudhra
+# intermediates under emSign ECC Root CA - G3); its wheel's sha256 matched PyPI's own file listing. A second exception,
+# approved by the owner for this repository on 2026-10-29 (as for the private engine on 2026-10-23): filelock 4.2.1
+# (published 2026-10-17) fixes the 14 advisories against 4.0.6
+# (CVE-2026-112907 to -112913, -112915, -112934 to -112936 and -112938 to -112940; the highest, CVE-2026-112940, is
+# High), used here by pip-audit's cache; one universal wheel with no dependencies, its sha256 matched PyPI's own file
+# listing. Every other package still follows the 14-day rule.
 annotated-types==0.8.0 \
     --hash=sha256:f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0
 anthropic==1.8.0 \
@@ -18,8 +30,8 @@ boolean.py==5.0 \
     --hash=sha256:ef28a70bd43115208441b53a045d1549e2f0ec6e3d08a9d142cbc41c1938e8d9
 CacheControl==0.14.4 \
     --hash=sha256:b7ac014ff72ee199b5f8af1de29d60239954f223e948196fa3d84adaffc71d2b
-certifi==2026.7.22 \
-    --hash=sha256:62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775
+certifi==2026.10.19 \
+    --hash=sha256:42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b
 charset-normalizer==3.5.1 \
     --hash=sha256:3617ac3cfd8b9888f145ad89dd6e692285834b0201c6074a5eeaad3fd4d668c2 \
     --hash=sha256:6df0ec430f9a831772c23ca5a224cba36517a58a84bb32c32bb59a9fa67c47f6 \
@@ -32,8 +44,8 @@ defusedxml==0.7.1 \
     --hash=sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61
 docstring-parser==0.18.0 \
     --hash=sha256:b3fcbed555c47d8479be0796ef7e19c2670d428d72e96da63f3a40122860374b
-filelock==4.0.6 \
-    --hash=sha256:9b139fb93b2ac5807f7feaf63aa4546fbd74074a2d3f554c040f40a4694d7b9f
+filelock==4.2.1 \
+    --hash=sha256:7be2662e9e826b9bba28afc0f843a123280d799a2ea44bb5d35ccec67905ae44
 h11==0.16.0 \
     --hash=sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86
 httpcore2==2.13.1 \
@@ -58,9 +70,9 @@ markdown-it-py==4.2.0 \
     --hash=sha256:9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a
 mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8
-msgpack==1.2.2 \
-    --hash=sha256:77c2e018417dc1d66f235e383877ee885b60ade9d29e494dd581e08af2cb1923 \
-    --hash=sha256:b68614fba0570349833b7dd999ff0aed4e5cc8d9eb6e3a7d4527be33c65e33d3
+msgpack==1.2.3 \
+    --hash=sha256:3ec409b0d6aa8e9eec6eaf881b893caa215dbe68c5319ca96e8a271d81bb111d \
+    --hash=sha256:ede33b2892ceb976283e009ad12fa1834cfdf1f9c43ee9c97849fc588d00a618
 mypy-extensions==1.1.0 \
     --hash=sha256:1be4cccdb0f2482337c4743e60421de3a356cd97508abadd57d47403e94f5505
 mypy==2.3.1 \

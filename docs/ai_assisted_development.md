@@ -1,7 +1,8 @@
 # CareerOS: AI-assisted development
 
-- Version: 1.1
-- Date: 2026-10-13
+- Version: 1.2
+- Date: 2026-10-29 (version 1.1: 2026-10-13). This version corrects the CI status, the planted-defect history and the
+  label calibration, and adds the 2026-10-29 dependency update.
 - Companions: `case_study.md`, `functional_mvp_report.md`, `security_architecture.md`, `adr/README.md`.
 - Basis: the session records of the development work, the repository's history, and the owner's own account. Where a
   point could not be established from those records, it is left out or marked as open (section 7).
@@ -144,12 +145,12 @@ review by a person or a tool outside this chain is still recommended.
   `tools/validate.py` runs it with outbound network refused.
 - **Planted defects check the tests themselves.** `tools/mutate.py` deliberately breaks each safety rule, one at a
   time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 305
-  such defects. A full run on 2026-10-14 caught 283 of them. The one that survived, a private staffing agency probed for a
-  board, had been reported caught in an earlier re-check for a reason that could not be found; its test was
-  strengthened, and the next full run caught all 284. The latest full run (2026-10-15, after Experience Match and
-  certifications) caught all 305. Spot checks made between 2026-10-13 and that re-check proved nothing: the tool's
-  scratch copies lacked files some tests need, so every defect looked caught. The tool now refuses to run unless an
-  unmutated copy passes.
+  such defects. A full run on 2026-10-14, when 284 were defined, caught all but one. The one that survived, a private
+  staffing agency probed for a board, had been reported caught in an earlier re-check for a reason that could not be
+  found; its test was strengthened, and the next full run caught all 284. The latest full run (2026-10-15, after
+  Experience Match and certifications) caught all 305. Spot checks made between 2026-10-13 and that re-check proved
+  nothing: the tool's scratch copies lacked files some tests need, so every defect looked caught. The tool now refuses
+  to run unless an unmutated copy passes.
 - **Expectations do not come from the system.** The Functional MVP gate derives its 92 checks from the postings and the
   policy. For example, it recomputes tiers from the thresholds rather than reading the stored tier.
 - **Proof that a gate can fail.** Both fixes prompted by the Functional MVP gate were proven by running the gate against
@@ -162,8 +163,10 @@ review by a person or a tool outside this chain is still recommended.
   silent passes.
 
 **What the tests do not show.** They check specified behaviour, mostly on synthetic data. They do not measure whether
-CareerOS's recommendations agree with the owner's own judgement. That is the Phase 1 exit test, which needs at least 50
-of the owner's labels and has not been reached.
+CareerOS's recommendations agree with the owner's own judgement. That is the Phase 1 exit test. A first calibration
+against 50 of the owner's labels (2026-10-16) found that the hard rules agreed with the owner's 50 labels (in-sample)
+and that the ranking did not separate the jobs the owner wanted from those they would skip, so the test is not claimed
+(see the case study's ranking calibration).
 
 ## 5. How security-sensitive changes were validated
 
@@ -199,8 +202,13 @@ snapshot. The records do not show the owner inspecting the implementations thems
 
   The first attempt was rejected because ten packages were too new; so was the second, because of the newest pydantic.
   Older versions were pinned, and the result is hash-locked in `requirements-dev.lock` and audited with pip-audit.
+
+  On 2026-10-29, advisories published after the release had affected three pinned packages (certifi, filelock and
+  msgpack). They were raised to fixed versions, with hashes checked against PyPI. Two of the fixed releases were less
+  than 14 days old; the lock's header records them as exceptions, the same ones the owner had approved for the private
+  engine.
 - **CI.** The CI workflow uses no secrets, gets a read-only token that is not kept after checkout, and pins each action
-  to a full commit. It has not run yet.
+  to a full commit. Its first runs passed on Windows and Linux on 2026-10-15, and it runs on every push.
 
 ## 6. How architecture decisions were evaluated
 

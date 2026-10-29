@@ -53,7 +53,8 @@ Out of scope:
 - Direct dependencies are pinned in `pyproject.toml`: PyYAML, httpx, anthropic. Everything else is the Python
   standard library. `requirements.lock` records the engine's installed set.
 - The checking tools and the same dependencies are hash-locked in `requirements-dev.lock` (wheels only, sha256 equal
-  to PyPI's, every release at least 14 days old). `tools/validate.py`, here and in CI, runs `pip-audit` on both
-  locks. YAML is only ever read with `yaml.safe_load`.
+  to PyPI's, every release at least 14 days old, except two security fixes recorded in the lock header with the
+  owner's approval). `tools/validate.py`, here and in CI, runs `pip-audit` on both locks. YAML is only ever read with
+  `yaml.safe_load`.
 - There is no `eval`, `exec`, `pickle` or `shell=True` in the code, and ruff's security rules (`pyproject.toml`) keep
   it that way.

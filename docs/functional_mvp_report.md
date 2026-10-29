@@ -1,5 +1,7 @@
 # CareerOS: Functional MVP report
 
+- Author: Claude, the AI coding assistant that implemented CareerOS for its owner, Christopher Little. This is
+  Claude's self-assessment, not an independent review, and "I" in this report means Claude (note added 2026-10-29).
 - Version: 1.0
 - Date: 2026-10-13
 - Prompt: Portfolio Prompt 6, Functional MVP gate.

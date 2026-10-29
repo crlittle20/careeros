@@ -4,6 +4,7 @@
 - Date: 2026-10-13
 - Status: describes the system **as built**. Every requirement below is implemented unless its status says otherwise.
 - Traceability: `requirements_traceability.md`.
+- Updated: 2026-10-29, status of AC-004, AC-106 and AC-107.
 
 Requirement IDs are stable and are never reused:
 - FR = functional
@@ -247,7 +248,7 @@ These are expectations measured on the live system, not guarantees.
 | AC-001 | The daily run collects, screens, scores and reports without manual steps. | Met |
 | AC-002 | Every rejection has a reason and evidence; unknowns are flags. | Met (tests) |
 | AC-003 | No duplicate applications across variants, duplicates or channels. | Met (tests) |
-| AC-004 | At least 50 job-seeker labels with measured agreement (the Phase 1 exit test). | **Not yet** (labels pending) |
+| AC-004 | At least 50 job-seeker labels with measured agreement (the Phase 1 exit test). | **Not claimed**: the coded thresholds were met, but the precision figure rests on one top-tier job, the recall figure rests on a private near-miss setting, and nothing in the test counts how many wanted jobs reach the top tiers. 50 labels measured on 2026-10-16 ([case study](case_study.md#ranking-calibration-identify-measure-improve-validate)) |
 | AC-005 | Every change is gated by the full test suite and the mutation check. | Met |
 
 **Portfolio functional MVP.** From `portfolio_v1_plan.md`.
@@ -259,5 +260,5 @@ These are expectations measured on the live system, not guarantees.
 | AC-103 | Each demo job can be explained with its evidence. | Met: `careeros explain JOB` and `careeros sources explain` with `CAREEROS_DEMO_MODE=true` |
 | AC-104 | The demo covers each decision type: eligible, rejected, unknown pay, duplicate, night route, scam, verified / contradicted / impostor board. | Met except two cases not in the demo world yet: a board contradicted by the employer's own site (the impostor case is Quillon), and an overnight posting that NIGHT accepts (NIGHT routes are shown as conditional) |
 | AC-105 | A Power BI-ready export with a data dictionary. | Met: `careeros export`, `analytics_data_dictionary.md`, `powerbi_dashboard_spec.md`, demo sample `samples/analytics_demo/` (`tests/test_analytics.py`), and the report itself: `powerbi/CareerOS.pbip` (the private build also keeps a `.pbix` saved by Power BI Desktop), checked in Power BI Desktop (`tests/test_powerbi.py`). |
-| AC-106 | CI runs the tests, the demo and a release-safety scan. | **Partly met**: `.github/workflows/ci.yml` runs `tools/validate.py` (lint, types, configuration, the tests with the network refused, the Demo Mode MVP gate, the release scan, pip-audit), and the same command passes here and in a fresh clone. The workflow has not run on GitHub yet: this repository has no remote |
-| AC-107 | A sanitised public snapshot contains no private data, credentials or history. | **Not yet**: strategy, findings and release gate defined (`public_release_checklist.md`, `tools/release_scan.py`); the preparatory refactor (R4) was done on 2026-10-14; the snapshot generator (`tools/build_snapshot.py`) is built; the snapshot, its review and publication follow |
+| AC-106 | CI runs the tests, the demo and a release-safety scan. | Met: first runs passed on Windows (required) and Linux (informational) on 2026-10-15; runs on every push and pull request. `.github/workflows/ci.yml` runs `tools/validate.py` (lint, types, configuration, the tests with the network refused, the Demo Mode MVP gate, the release scan, pip-audit) |
+| AC-107 | A sanitised public snapshot contains no private data, credentials or history. | Met: published 2026-10-15 as a generated snapshot with fresh history (`portfolio_mvp_report.md`, B1/B2) |
