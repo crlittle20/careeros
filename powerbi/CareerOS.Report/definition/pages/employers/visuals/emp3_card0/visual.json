@@ -5,7 +5,7 @@
     "x": 780,
     "y": 612,
     "z": 0,
-    "width": 240,
+    "width": 157,
     "height": 96,
     "tabOrder": 0
   },
@@ -23,16 +23,31 @@
                       "Entity": "_Measures"
                     }
                   },
-                  "Property": "Boards"
+                  "Property": "Scan Reliability"
                 }
               },
-              "queryRef": "_Measures.Boards",
-              "nativeQueryRef": "Boards"
+              "queryRef": "_Measures.Scan Reliability",
+              "nativeQueryRef": "Scan Reliability"
             }
           ]
         }
       }
     },
-    "drillFilterOtherVisuals": true
+    "drillFilterOtherVisuals": true,
+    "objects": {
+      "categoryLabels": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "10D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
   }
 }

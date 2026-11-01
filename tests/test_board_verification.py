@@ -697,7 +697,7 @@ class DataTests(unittest.TestCase):
         store.conn.execute("INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', '11')")
         store.conn.execute("INSERT INTO employers (employer_id, name, parent, ats, board_token, status) VALUES "
                            "('greenhouse:oldco', 'Old Co', 'Old Co', 'greenhouse', 'oldco', 'verified')")
-        self.assertEqual(store.migrate(), 12)
+        self.assertGreaterEqual(store.migrate(), 12)
         self.assertEqual(store.one("SELECT admitted_via FROM employers")["admitted_via"], "legacy")
         ctx = Context(store, POLICY, MID, JOB_MATRIX, None)
         ingest(ctx, dict(store.one("SELECT * FROM employers")), [RawPosting("greenhouse", "oldco", "1", "Claims Analyst", "Remote - US",

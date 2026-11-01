@@ -63,15 +63,20 @@ SECRET = "PRIVATE-SENTINEL-4f9a2c"   # planted in the decoy private vault: must 
 
 
 def snapshot(root: Path) -> dict:
-    """Every file and folder under root, with each file's hash and modification time."""
-    return {str(f.relative_to(root)): ("dir" if f.is_dir() else (hashlib.sha256(f.read_bytes()).hexdigest(), f.stat().st_mtime_ns))
+    """Every file and folder under root, with each file's hash and modification time. An .eml file's time is left out:
+    in an indexed folder (Documents) Windows' own .eml property handler adds an "OECustomProperty" stream to it within
+    seconds, which moves its modification time with no program of ours running (found 2026-10-20 after the independent
+    Codex review saw it; reproduced with no Python involved). The .txt beside it keeps the inbox's time check."""
+    return {str(f.relative_to(root)): ("dir" if f.is_dir() else (hashlib.sha256(f.read_bytes()).hexdigest(),
+                                                                  None if f.suffix == ".eml" else f.stat().st_mtime_ns))
             for f in sorted(root.rglob("*"))}
 
 
 def decoy_private_vault(root: Path) -> None:
     for name, text in {"data/careeros.db": f"not a database {SECRET}", "profile/candidate_profile_v0.yaml": f"name: {SECRET}\n",
                        "policy/overrides.yaml": f"operations:\n  github_inbox: someone/{SECRET}\n",
-                       "applications/notes.md": f"Recruiter Jane at Real Employer {SECRET}", "inbox/alert.eml": f"Subject: {SECRET}\n"}.items():
+                       "applications/notes.md": f"Recruiter Jane at Real Employer {SECRET}", "inbox/alert.eml": f"Subject: {SECRET}\n",
+                       "inbox/saved-posting.txt": f"Saved posting at Real Employer {SECRET}\n"}.items():
         (root / name).parent.mkdir(parents=True, exist_ok=True)
         (root / name).write_text(text, encoding="utf-8")
 
@@ -126,7 +131,20 @@ class DemoTourTest(unittest.TestCase):
         cls.addClassCleanup(sandbox.install, None)
         cls.before = snapshot(cls.private)
         cls.hosts = []
-        cls.jail, cls.status, cls.calls = cls.tour()
+        cls.ready = None     # the tour runs at the first test (setUp), not here
+
+    def setUp(self):
+        # Once per class. Not in setUpClass: a failure there hides the class's tests from the count, and a SystemExit there
+        # ends the whole run (the 2026-10-18 full run); here every test of the class reports it.
+        cls = type(self)
+        if cls.ready is None:
+            try:
+                cls.jail, cls.status, cls.calls = cls.tour()
+                cls.ready = True
+            except (Exception, SystemExit) as exc:  # noqa: BLE001 - reported by each test below
+                cls.ready = exc
+        if cls.ready is not True:
+            self.fail(f"`careeros demo tour` failed: {cls.ready!r}")
 
     @classmethod
     def tour(cls):
@@ -292,7 +310,7 @@ class DemoTourTest(unittest.TestCase):
                   ("explain", "greenhouse:meridianrx:101"): ["tier: near_miss", "apply_priority: 80.7"],
                   ("shortlist",): ["Pharmacy Claims Analyst | Meridian Rx | open | tier B ELIGIBLE"],
                   ("verify",): ['"event_chain_breaks": []'],
-                  ("export",): ["all 78 checks passed"]}
+                  ("export",): ["all 81 checks passed"]}
         flat = lambda text: " ".join(text.split())
         walkthrough = flat((vault_layout.ENGINE_ROOT / "docs" / "demo_walkthrough.md").read_text(encoding="utf-8"))
         with mock.patch.dict(os.environ, {sandbox.ENV: "true"}), Jail() as jail:

@@ -150,7 +150,8 @@ class GateTests(unittest.TestCase):
 
     def test_certification_matching_is_specific(self):
         from careeros.qualify.profile import Profile
-        p = Profile({"certifications": [{"name": "Lean Six Sigma Green Belt", "matches": ["lean six sigma"]}, {"name": "PL-900"}]}, "x")
+        p = Profile({"certifications": [{"name": "Lean Six Sigma Green Belt", "matches": ["lean six sigma"], "status": "held"},
+                                        {"name": "PL-900", "status": "held"}]}, "x")
         self.assertTrue(p.has_certification("six sigma"))
         self.assertTrue(p.has_certification("lean six sigma"))
         self.assertTrue(p.has_certification("pl-900"))

@@ -134,6 +134,11 @@ recommendation for the same job adds a sighting next to it (`openings.py`).
 | `labels` | review | append-only | Your Apply / Stretch / Skip labels with the system's tier at the time | Agreement, funnel, analytics |
 | `dismissals` | review | append-only | Jobs you dismissed, and why | Shortlist, analytics |
 | `applications` | tracker, transitions | projection (no deletes) | Applications you recorded and their current status | Funnel, analytics (`fact_application`) |
+| `submission_releases` | submission (`careeros release`) | append-only | Your releases of a submission hold, one posting and one channel at a time, and their revocations | Submission permission (`careeros/review/submission.py`), the review card |
+| `packages` | assist (`careeros package prepare`) | append-only | Each version of an application package: route, manifest and its SHA-256 (ADR 0009) | Readiness, approvals, sessions |
+| `package_approvals` | assist (`careeros package approve`, `revoke`) | append-only | Your approval of one exact package version, or its revocation | Readiness |
+| `assist_sessions` | assist (`careeros assist open`) | append-only | A reservation of one role while you apply: package, mode, destination | One session per role, handoffs |
+| `assist_outcomes` | assist (`careeros assist close`) | append-only | How a session ended (submitted with evidence, not submitted, uncertain) and your measurements | Applications, the assistance report |
 | `runs` | runner, discovery, admin | mutable | Each run: status and counts | `status`, observability |
 | `exceptions` | any component | mutable (resolution) | Failures to follow up | Report, observability |
 | `receipts` | the store | append-only | Idempotency keys of actions already recorded | Replays and double clicks |

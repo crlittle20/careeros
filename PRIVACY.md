@@ -13,6 +13,8 @@ leaves the machine.
 | Jobs seen, decisions, scores, reasons | Public job postings plus CareerOS's own rules | `vault\data\careeros.db` |
 | Labels, applications, dismissals, notes | The job seeker | `vault\data\careeros.db` |
 | Alert-email leads: links, titles, the text beside each link, sender and subject | The job seeker's mailbox, read-only | `vault\data\careeros.db` (message bodies are never stored) |
+| Reusable answers and the documents they name | Written by the job seeker | `vault\profile\answers.yaml`, `vault\documents\` |
+| Application packages and assistance handoff files | Built from the above (ADR 0009) | `vault\packages\`, `vault\handoff\` |
 | Reports, logs, backups, analytics exports | Built from the above | `vault\reports`, `logs` (redacted), `backups`, `exports` |
 
 The vault sits **outside the code repository**, and CareerOS refuses to run with a vault inside it. Nothing from the
@@ -33,6 +35,15 @@ hold them, which is why the public repository is a fresh snapshot with its own h
 | Anthropic API (optional; only with a stored API key) | Public posting text only. Never the profile. | Only if AI reading is enabled |
 
 Nothing else is sent. No application, message or email is ever sent on the job seeker's behalf.
+
+Two cases need saying plainly:
+- **The browser extension (CareerOS Assist).** When the job seeker asks it to, it fills values into the form they
+  opened. Those values reach the employer only when the job seeker submits the form.
+  - It has no network access of its own and stores nothing.
+  - It reads only the handoff file the job seeker chooses. That file holds only that form's values and expires
+    after two hours.
+- **Reading a Greenhouse posting's form questions.** This is a request to the same public job-board API as the
+  daily run, and it carries nothing about the job seeker.
 
 ## Demonstrations and public material
 

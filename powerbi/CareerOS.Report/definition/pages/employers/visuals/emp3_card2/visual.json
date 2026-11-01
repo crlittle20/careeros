@@ -1,9 +1,9 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
-  "name": "emp_card2",
+  "name": "emp3_card2",
   "position": {
     "x": 1113,
-    "y": 400,
+    "y": 612,
     "z": 2,
     "width": 157,
     "height": 96,
@@ -23,16 +23,31 @@
                       "Entity": "_Measures"
                     }
                   },
-                  "Property": "Average Board Trust"
+                  "Property": "Postings Read"
                 }
               },
-              "queryRef": "_Measures.Average Board Trust",
-              "nativeQueryRef": "Average Board Trust"
+              "queryRef": "_Measures.Postings Read",
+              "nativeQueryRef": "Postings Read"
             }
           ]
         }
       }
     },
-    "drillFilterOtherVisuals": true
+    "drillFilterOtherVisuals": true,
+    "objects": {
+      "categoryLabels": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "10D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
   }
 }

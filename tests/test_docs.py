@@ -7,9 +7,11 @@ so the documents cannot drift silently:
 - every table of the database is in data_lineage.md, and every table it names exists;
 - every `careeros <command>` is a real command;
 - every relative link resolves; every Mermaid block starts with a known diagram type;
-- every ADR has its sections and is in the index.
+- every ADR has its sections and is in the index;
+- in the public snapshot, the paths it leaves out (NEVER in tools/build_snapshot.py) may be named although absent.
 """
 import re
+import sys
 import unittest
 from pathlib import Path
 
@@ -17,12 +19,24 @@ from careeros.core.clock import FixedClock
 from careeros.db.store import open_store
 from careeros.paths import ENGINE_ROOT
 
+sys.path.insert(0, str(ENGINE_ROOT / "tools"))
+import build_snapshot  # noqa: E402
+
 DOCS = ENGINE_ROOT / "docs"
+# The public snapshot leaves a few paths out (NEVER in tools/build_snapshot.py: the operator manual, and the browser
+# extension with its tests until publishing it is decided, 2026-10-31). The documents still name them, truthfully: the
+# private repository holds and checks them. In a copy without them, the snapshot, those names, and the tests a document
+# cites from those modules, are allowed to be absent.
+LEFT_OUT = tuple(n for n in build_snapshot.NEVER if not (ENGINE_ROOT / n).exists())
+LEFT_OUT_MODULES = {Path(n).stem for n in LEFT_OUT if n.startswith("tests/test_")}
 CHECKED = [DOCS / "architecture.md", DOCS / "security_architecture.md", DOCS / "data_lineage.md",
            *sorted((DOCS / "adr").glob("*.md")),
            ENGINE_ROOT / "README.md", DOCS / "case_study.md", DOCS / "ai_assisted_development.md",   # Prompt 11
            DOCS / "demo_walkthrough.md", DOCS / "portfolio_mvp_report.md",   # Prompt 12
-           DOCS / "experience_match.md", DOCS / "certifications.md"]   # 2026-10-15
+           DOCS / "experience_match.md", DOCS / "certifications.md",   # 2026-10-15
+           DOCS / "shadow_scoring.md",   # 2026-10-16
+           DOCS / "portfolio_overview.md",   # 2026-10-29
+           DOCS / "testing.md", DOCS / "defect_coverage.md"]   # 2026-10-31: planted defects, and the page generated from their receipt
 DIAGRAMS = ("flowchart", "graph", "sequenceDiagram", "stateDiagram-v2", "erDiagram", "classDiagram")
 
 
@@ -45,19 +59,30 @@ def commands() -> set[str]:
     return set(re.findall(r'sub\.add_parser\("([\w-]+)"', text(ENGINE_ROOT / "careeros" / "cli.py")))
 
 
+def left_out(token: str) -> bool:
+    """A path the public snapshot leaves out, or a file under one: absent from this copy by design."""
+    return any(token == n or token.startswith(n + "/") for n in LEFT_OUT)
+
+
+def left_out_tests(body: str) -> set[str]:
+    """The left-out test modules, and the tests a document cites from them (`test_extension::test_...`)."""
+    return LEFT_OUT_MODULES | {name for module, name in re.findall(r"\b(test_\w+)::(test_\w+)", body) if module in LEFT_OUT_MODULES}
+
+
 class DocumentsTest(unittest.TestCase):
     def test_every_named_file_exists(self):
         """Paths are written from the repository root, or from careeros/, config/, docs/ or careeros/discovery/; files
         that live in the private vault are named but never in the repository."""
         bases = [ENGINE_ROOT, ENGINE_ROOT / "careeros", ENGINE_ROOT / "config", DOCS, ENGINE_ROOT / "careeros" / "discovery"]
         names = {p.name for p in ENGINE_ROOT.rglob("*") if not any(part.startswith(".venv") for part in p.parts) and ".git" not in p.parts}
-        vault_files = {"overrides.yaml", "curated_employers.yaml", "private_sites.yaml"}
+        vault_files = {"overrides.yaml", "curated_employers.yaml", "private_sites.yaml", "preferences.yaml", "adoption_criteria.md",
+                       "approved_facts.yaml", "answers.yaml"}
         missing = []
         for doc in CHECKED:
             for span in code_spans(doc):
                 for token in re.findall(r"[\w./\\-]+\.(?:py|md|yaml|json|sql)\b", span):
                     token = token.replace("\\", "/")
-                    found = (token.split("/")[-1] in vault_files
+                    found = (token.split("/")[-1] in vault_files or left_out(token)
                              or (any((b / token).exists() for b in bases) if "/" in token else token in names))
                     if not found:
                         missing.append(f"{doc.name}: {token}")
@@ -68,8 +93,13 @@ class DocumentsTest(unittest.TestCase):
         (test_t01 ... test_t30, test_t13_*)."""
         defined = tests_defined()
         modules = {p.stem for p in (ENGINE_ROOT / "tests").glob("test_*.py")}
-        missing = [f"{doc.name}: {name}" for doc in CHECKED for name in re.findall(r"\b(test_\w+)", text(doc))
-                   if name not in defined and name not in modules and not any(d.startswith(name) for d in defined)]
+        missing = []
+        for doc in CHECKED:
+            body = text(doc)
+            allowed = left_out_tests(body)
+            missing += [f"{doc.name}: {name}" for name in re.findall(r"\b(test_\w+)", body)
+                        if name not in defined and name not in modules and name not in allowed
+                        and not any(d.startswith(name) for d in defined)]
         self.assertEqual(missing, [])
 
     def test_data_lineage_names_every_table_and_only_real_tables(self):

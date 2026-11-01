@@ -3,10 +3,10 @@
   "name": "qual_errors",
   "position": {
     "x": 640,
-    "y": 110,
+    "y": 210,
     "z": 0,
     "width": 630,
-    "height": 300,
+    "height": 245,
     "tabOrder": 0
   },
   "visual": {

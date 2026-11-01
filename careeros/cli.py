@@ -10,6 +10,8 @@
     careeros label JOB apply|stretch|skip [--reason ...]
     careeros applied JOB --channel direct|agency|referral|other [--agency NAME] [--notes ...]
     careeros app-status APPLICATION STATE [--notes ...]   e.g. screening, interviewing, rejected, ghosted
+    careeros release JOB [--hold ID --channel C [--agency NAME] --reason ...]   submission holds: show, or release one
+    careeros release --revoke RELEASE_ID --reason ...      withdraw a release
     careeros applications             list your applications and their status
     careeros funnel [--by source|family|profile|tier|channel|domain]   hiring outcomes and conversion rates
     careeros eval                     agreement between your labels and the system (Phase 1 exit check; three-way)
@@ -23,6 +25,8 @@
 from __future__ import annotations
 
 import argparse
+import codecs
+import io
 import json
 import logging
 import re
@@ -48,8 +52,8 @@ from careeros.normalize.sanitize import clean_text, html_to_text
 from careeros.paths import CONFIG_DIR, vault_paths
 from careeros.pipeline import Context, ingest, process
 from careeros.qualify.profile import load_profile
-from careeros.review.applications import (ApplicationConflict, application_matrix, applications, record_application,
-                                          update_application)
+from careeros.review.applications import (CONFIRM_CODES, ApplicationConflict, ApplicationHold, application_matrix, applications,
+                                          record_application, update_application)
 from careeros.review.labels import agreement, record_label, three_way
 from careeros.review.report import build_report, last_review_at
 
@@ -947,13 +951,42 @@ def cmd_label(ctx: Context, paths, args) -> None:
 
 def cmd_applied(ctx: Context, paths, args) -> None:
     try:
-        app_id = record_application(ctx.store, application_matrix(), args.job_id, args.channel, agency=args.agency, notes=args.notes,
-                                    key=f"cli:{secrets.token_hex(8)}", allow_second_channel=args.second_channel)
+        app_id = record_application(ctx.store, application_matrix(), args.job_id, args.channel, policy=ctx.policy, agency=args.agency,
+                                    notes=args.notes, key=f"cli:{secrets.token_hex(8)}", reapply=args.reapply, confirm=args.confirm,
+                                    evidence=getattr(args, "evidence", "owner_attested"))
+    except ApplicationHold as exc:
+        codes = exc.check.codes()
+        sys.exit(f"Not recorded yet: {exc}."
+                 + ("\n  Applying to this role again? Add --reapply \"<why>\"." if "applied_before" in codes else "")
+                 + ("\n  Already applied this way? Add --confirm \"<your explanation>\" (it is kept with the record and never "
+                    "releases a submission hold)." if any(c in CONFIRM_CODES for c in codes) else ""))
     except ApplicationConflict as exc:
-        sys.exit(f"Not recorded: {exc}. Add --second-channel only if you really applied twice.")
+        sys.exit(f"Not recorded: {exc}.")
     except ValueError as exc:
         sys.exit(f"Not recorded: {exc}")
     print(f"recorded {app_id}")
+
+
+def cmd_release(ctx: Context, paths, args) -> None:
+    """Submission holds (R2): show what holds a job and whether each channel may submit; release one hold for one
+    posting and one channel; or revoke a release. A release never changes a tier and never skips the other checks."""
+    from careeros.review import submission
+    try:
+        if args.revoke:
+            print(f"revoked {args.revoke}: {submission.revoke(ctx.store, args.revoke, reason=args.reason, key=f'cli:{secrets.token_hex(8)}')}")
+            return
+        if not args.job_id:
+            sys.exit("Give a JOB_ID (or --revoke RELEASE_ID).")
+        if args.hold:
+            if not args.channel:
+                sys.exit("Not changed: --channel is required with --hold.")
+            release_id = submission.release(ctx.store, ctx.policy, args.job_id, args.channel, hold_id=args.hold, reason=args.reason,
+                                            agency=args.agency, key=f"cli:{secrets.token_hex(8)}")
+            print(f"released {args.hold} for {args.job_id} via {args.channel}{' (' + args.agency + ')' if args.agency else ''}: "
+                  f"{release_id}. Only that hold, posting and channel; every other check still applies.")
+        print(submission.describe(ctx.store, ctx.policy, args.job_id, agency=args.agency, profile=ctx.profile))
+    except ValueError as exc:
+        sys.exit(f"Not changed: {exc}")
 
 
 def cmd_app_status(ctx: Context, paths, args) -> None:
@@ -1212,12 +1245,14 @@ def cmd_paste(ctx: Context, paths, args) -> None:
 
 def cmd_shortlist(ctx: Context, paths, args) -> None:
     from careeros.review.shortlist import shortlist
-    items = shortlist(ctx.store)
+    items = shortlist(ctx.store, ctx.policy)
     if not items:
         print("Shortlist is empty: label jobs Apply or Stretch (careeros review).")
     for i in items:
         print(f"- {i['title']} | {i['employer']} | {i['status']} | tier {i['tier']} {i['state']}{' | STRETCH' if i['stretch'] else ''}")
         print(f"    next: {i['next_action']}")
+        if i.get("submission"):
+            print(f"    {i['submission']}")
         for f in i["incompatible"] + i["unknowns"][:3]:
             print(f"    {f['status']}: {f['facet']}: {f['detail']}")
 
@@ -1225,10 +1260,143 @@ def cmd_shortlist(ctx: Context, paths, args) -> None:
 def cmd_draft(ctx: Context, paths, args) -> None:
     from careeros.review.shortlist import draft
     try:
-        path = draft(ctx.store, ctx.profile, args.job_id, paths["drafts"])
+        from careeros.review import approved_facts
+        path = draft(ctx.store, ctx.profile, args.job_id, paths["drafts"], ctx.policy, approved_facts.load(paths["approved_facts"]))
     except ValueError as exc:
         sys.exit(str(exc))
     print(f"Draft (from your approved profile only; nothing submitted): {path}")
+
+
+def _package_inputs(paths) -> tuple[list, dict]:
+    from careeros.review import answers, approved_facts
+    return approved_facts.load(paths["approved_facts"]), answers.load(paths["answers"])
+
+
+def cmd_package(ctx: Context, paths, args) -> None:
+    """Application packages (ADR 0009): prepare one for a job you pursue (or the standing policy picks), show whether
+    it's ready, approve or revoke a Stretch package, list them, or read a Greenhouse posting's form questions."""
+    from careeros.review import packages
+    root = paths["root"]
+    try:
+        if args.action == "list":   # the preparation queue: each package's state now
+            from careeros.review import assist
+            facts, library = _package_inputs(paths)
+            rows = ctx.store.all("SELECT p.*, j.title, j.employer_name FROM packages p JOIN jobs j ON j.job_id = p.job_id "
+                                 "WHERE p.version = (SELECT MAX(version) FROM packages q WHERE q.job_id = p.job_id) ORDER BY p.at DESC")
+            for r in rows:
+                ready = packages.readiness(ctx.store, ctx.policy, ctx.profile, r["job_id"], facts=facts, library=library,
+                                           vault_root=root, questions=packages.load_questions(root, r["job_id"]))
+                sessions = [s["state"] for s in assist.role_sessions(ctx.store, r["job_id"]) if s["state"] in ("open", "uncertain")]
+                state = ready["state"] + (f", session {sessions[-1]}" if sessions else "")
+                print(f"{r['package_id']}  v{r['version']}  {r['route']:<8}  {state:<24}  {r['job_id']}  {r['title']} at {r['employer_name']}")
+            print(f"{len(rows)} package(s)")
+            return
+        if args.action == "gaps":
+            from careeros.review import answers
+            gaps = packages.common_gaps(ctx.store)
+            for label, count, slot in gaps:   # a document or standard field is known by the form's key, not its words
+                if slot in answers.DOCUMENT_KINDS:
+                    how = f"document: answers.yaml covers it with documents.{slot}"
+                elif slot:
+                    how = f"standard field: answers.yaml covers it with field: {slot}"
+                else:   # only a question that reads as a reusable kind is worth an answer in the file
+                    kinds = answers.kinds_for(label)
+                    how = 'kind: ' + ', '.join(kinds) if kinds else 'no reusable kind: answer it on each form'
+                print(f"{count:>3}  {label}  ({how})")
+            if gaps:
+                print("Answer the ones with a kind once in vault\\profile\\answers.yaml (with that kind), and the standard "
+                      "fields and documents with the entry shown, to cover every package that asks them. The rest stay "
+                      "yours on each form.")
+            _, library = _package_inputs(paths)
+            held = [(a, answers.withheld(a, ctx.store.clock.now()[:10])) for a in library["answers"]]
+            if any(why for _, why in held):   # say which words held an answer back, so a false alarm can be reworded
+                print("\nAnswers in your file that are not used now:")
+                for entry, why in held:
+                    if why:
+                        print(f"  {entry['id']}: {why}")
+            return
+        if not args.target and not (args.action == "prepare" and args.standing):
+            sys.exit("Give the JOB_ID, PACKAGE_ID or APPROVAL_ID this action is for.")
+        if args.action == "revoke":
+            print(f"revoked: {packages.revoke(ctx.store, args.target, reason=args.reason, key=f'cli:{secrets.token_hex(8)}')}")
+            return
+        if args.action == "approve":
+            approval = packages.approve(ctx.store, args.target, reason=args.reason, batch=args.batch,
+                                        key=f"cli:{secrets.token_hex(8)}")
+            print(f"approved {args.target}: {approval}. It covers this exact version only; a new version needs a new approval.")
+            return
+        if args.action == "questions":
+            from careeros.discovery.http import HttpClient
+            from careeros.review.adapters import fetch_greenhouse_questions
+            found = fetch_greenhouse_questions(HttpClient(), args.target)
+            path = packages.save_questions(root, args.target, found, "greenhouse job-board API", ctx.store.clock.now())
+            print(f"{len(found)} question(s) read into {path}")
+            return
+        facts, library = _package_inputs(paths)
+        if args.action == "prepare" and args.standing:
+            picked = packages.standing_candidates(ctx.store, ctx.policy)
+            for job_id in picked:
+                out = packages.prepare(ctx.store, ctx.policy, ctx.profile, job_id, facts=facts, library=library, vault_root=root,
+                                       questions=packages.load_questions(root, job_id), actor="standing_policy")
+                print(("prepared" if out["new"] else "unchanged") + f" {job_id} v{out['version']} ({len(out['gaps'])} open item(s))")
+            print(f"{len(picked)} job(s) picked by the standing preparation policy" + ("" if packages.settings(ctx.policy)["enabled"]
+                                                                                      else " (it is off)"))
+            return
+        questions = packages.load_questions(root, args.target)
+        if args.action == "prepare":
+            out = packages.prepare(ctx.store, ctx.policy, ctx.profile, args.target, facts=facts, library=library,
+                                   vault_root=root, questions=questions)
+            print(("prepared" if out["new"] else "unchanged") + f" {out['package_id']} v{out['version']} ({out['route']}) in "
+                  f"vault\\{out['folder']}")
+            for gap in out["gaps"]:
+                print(f"  open: {gap}")
+        ready = packages.readiness(ctx.store, ctx.policy, ctx.profile, args.target, facts=facts, library=library,
+                                   vault_root=root, questions=questions)
+        print(f"{args.target}: {ready['state'].replace('_', ' ')}" + "".join(f"\n  {r}" for r in ready["reasons"]))
+    except ValueError as exc:
+        sys.exit(f"Not done: {exc}")
+
+
+def cmd_assist(ctx: Context, paths, args) -> None:
+    """Assistance sessions (ADR 0009): open one to apply (it reserves the role; nothing is submitted), close it with what
+    happened, list sessions, or report the measured time and corrections by mode."""
+    from careeros.review import assist
+    try:
+        if args.action == "report":
+            print(json.dumps(assist.report(ctx.store), indent=1))
+            return
+        if args.action == "list":
+            rows = ctx.store.all("SELECT * FROM assist_sessions" + (" WHERE job_id = ?" if args.target else "")
+                                 + " ORDER BY opened_at DESC", (args.target,) if args.target else ())
+            for r in rows:
+                print(f"{r['session_id']}  {assist.session_state(ctx.store, r['session_id']):<13} {r['mode']:<8} {r['job_id']}  "
+                      f"opened {r['opened_at'][:16]}")
+            print(f"{len(rows)} session(s)")
+            return
+        if args.action == "open":
+            from careeros.review import packages
+            facts, library = _package_inputs(paths)
+            out = assist.open_session(ctx.store, ctx.policy, ctx.profile, args.target, args.mode, facts=facts, library=library,
+                                      vault_root=paths["root"], questions=packages.load_questions(paths["root"], args.target),
+                                      key=f"cli:{secrets.token_hex(8)}")
+            print(f"session {out['session_id']} open ({out['mode']}). Answers to copy: vault\\{out['answers']}")
+            if out.get("handoff"):
+                print(f"  handoff for the extension: vault\\{out['handoff']} (expires {out['expires_at'][:16]} UTC)")
+            print("  Review the form, submit it yourself, then: careeros assist close "
+                  f"{out['session_id']} --outcome submitted|not_submitted|uncertain")
+            return
+        if not args.target or not args.outcome:
+            sys.exit("Give the SESSION_ID and --outcome submitted|not_submitted|uncertain.")
+        out = assist.close_session(ctx.store, application_matrix(), ctx.policy, args.target, args.outcome,
+                                   key=f"cli:{secrets.token_hex(8)}", evidence=args.evidence, minutes=args.minutes,
+                                   corrections=args.corrections, custom_questions=args.custom_questions,
+                                   login_steps=args.login_steps, notes=args.notes, reapply=args.reapply, confirm=args.confirm)
+        print(f"closed {args.target}: {args.outcome}" + (f"; application {out['application_id']} recorded" if out["application_id"] else "")
+              + ("; this reconciles an uncertain session" if out["reconciled"] else ""))
+    except ApplicationHold as exc:
+        sys.exit(f"Not closed yet: {exc}. Add --reapply or --confirm with your explanation, as for 'careeros applied'.")
+    except ValueError as exc:
+        sys.exit(f"Not done: {exc}")
 
 
 def cmd_metrics(ctx: Context, paths, args) -> None:
@@ -1292,6 +1460,11 @@ def cmd_status(ctx: Context, paths, args) -> None:
                          WHERE j.current_state = 'scored' GROUP BY s.tier""")
     runs = store.one("SELECT * FROM runs ORDER BY started_at DESC LIMIT 1")
     print("profile:", "approved" if ctx.profile.approved else "DRAFT (scores provisional)")
+    from careeros.qualify import certifications as certification_mod
+    for warning in certification_mod.profile_warnings(ctx.profile, ctx.policy):
+        print("  certification:", warning)
+    for item in certification_mod.evidence_review(ctx.profile, ctx.policy):
+        print(f"  evidence to review: {item['item']} rests on {item['credential']} ({item['status'].replace('_', ' ')})")
     print("AI requirement reading:", _ai_status(ctx))
     print("AI calls today:", store.one("SELECT COUNT(*) c FROM events WHERE event_type='ai_extraction_call' "
                                        "AND substr(occurred_at,1,10)=?", (store.clock.now()[:10],))["c"])
@@ -1329,11 +1502,22 @@ def cmd_verify(ctx: Context, paths, args) -> None:
 
 WRITES = {"init", "employers", "discover", "add-url", "import", "process", "run", "label", "applied", "app-status", "backup", "gmail", "inbox",
           "sources", "audit", "dismiss", "paste", "draft", "metrics",
-          "seen-index",
+          "seen-index", "release", "package", "assist",
           "export"}   # the export only reads, but takes the lock so it never reads a run half-way through
 
 
+def _write_utf8() -> None:
+    """Piped or redirected, Python on Windows writes the ANSI code page, which can't spell every label a form or a
+    posting uses: a non-breaking hyphen stopped `package gaps` part-way (live data, 2026-10-26). Such a stream writes
+    UTF-8 instead. A console, a stream already in UTF-8 (PYTHONIOENCODING) and a missing one are left as they are."""
+    for name in ("stdout", "stderr"):
+        stream = getattr(sys, name)
+        if isinstance(stream, io.TextIOWrapper) and codecs.lookup(stream.encoding).name != "utf-8":
+            stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+
+
 def main(argv=None) -> None:
+    _write_utf8()
     parser = argparse.ArgumentParser(prog="careeros", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("init")
@@ -1364,7 +1548,19 @@ def main(argv=None) -> None:
     p.add_argument("--channel", choices=["direct", "agency", "referral", "other"], required=True)
     p.add_argument("--agency", help="agency name, e.g. 'Harbor Staffing' (required with --channel agency)")
     p.add_argument("--notes")
-    p.add_argument("--second-channel", action="store_true", help="record it even though the role already has an application")
+    p.add_argument("--reapply", metavar="REASON", help="you applied to this role before (rejected, withdrawn...): why again")
+    p.add_argument("--evidence", choices=["owner_attested", "confirmation_observed"], default="owner_attested",
+                   help="confirmation_observed when you saw the employer's confirmation (default: your statement)")
+    p.add_argument("--confirm", metavar="REASON", help="record it despite another application to the role, a possible duplicate, "
+                                                       "an unfinished duplicate check, a submission hold or an unidentified "
+                                                       "employer: your explanation (never releases a hold)")
+    p = sub.add_parser("release", help="submission holds: show a job's, release one hold for one posting and channel, or revoke")
+    p.add_argument("job_id", nargs="?")
+    p.add_argument("--hold", help="the hold to release (its id, as shown by 'careeros release JOB')")
+    p.add_argument("--channel", choices=["direct", "agency", "referral", "other"])
+    p.add_argument("--agency", help="with --channel agency: the agency")
+    p.add_argument("--reason", help="why you release it (required with --hold or --revoke)")
+    p.add_argument("--revoke", metavar="RELEASE_ID", help="withdraw a release")
     p = sub.add_parser("app-status", help="update an application's status")
     p.add_argument("application_id")
     p.add_argument("state")
@@ -1373,7 +1569,13 @@ def main(argv=None) -> None:
     p = sub.add_parser("funnel", help="recommended -> approved -> applied -> ... -> hired, by a dimension")
     p.add_argument("--by", choices=["source", "family", "profile", "tier", "channel", "domain", "night_mode", "employment_type",
                                     "employer"], default="source")
-    sub.add_parser("eval")
+    p = sub.add_parser("eval", help="agreement with your labels; --scoring compares production, the baseline and the shadow rubric")
+    p.add_argument("--scoring", action="store_true",
+                   help="shadow scoring evaluation on a read-only snapshot (never writes the database)")
+    p.add_argument("--snapshot", help="with --scoring: evaluate this database copy instead of taking a new snapshot")
+    p.add_argument("--draw", action="store_true", help="with --scoring: draw a calibration list (statuses hidden; predictions "
+                                                       "frozen; needs your adoption criteria written down first)")
+    p.add_argument("--seed", help="with --draw: the random seed (recorded in the list; default: a new random one)")
     p = sub.add_parser("employers")
     p.add_argument("action", choices=["list", "add", "verify"])
     p.add_argument("--name")
@@ -1428,6 +1630,25 @@ def main(argv=None) -> None:
     sub.add_parser("shortlist", help="shortlisted openings with evidence, open questions and the next action")
     p = sub.add_parser("draft", help="an application brief from your approved profile (Apply/Stretch jobs only)")
     p.add_argument("job_id")
+    p = sub.add_parser("package", help="application packages: prepare, show, approve/revoke (Stretch), list, questions")
+    p.add_argument("action", choices=["prepare", "show", "approve", "revoke", "list", "questions", "gaps"])
+    p.add_argument("--standing", action="store_true", help="with prepare: every job the standing preparation policy picks")
+    p.add_argument("target", nargs="?", help="JOB_ID (prepare, show, questions), PACKAGE_ID (approve) or APPROVAL_ID (revoke)")
+    p.add_argument("--reason", help="why (required to approve or revoke)")
+    p.add_argument("--batch", help="with approve: a name for packages approved together")
+    p = sub.add_parser("assist", help="assistance sessions: open one to apply, close it with what happened, list, report")
+    p.add_argument("action", choices=["open", "close", "list", "report"])
+    p.add_argument("target", nargs="?", help="JOB_ID (open, list) or SESSION_ID (close)")
+    p.add_argument("--mode", choices=["manual", "native", "assisted"], default="manual")
+    p.add_argument("--outcome", choices=["submitted", "not_submitted", "uncertain"])
+    p.add_argument("--evidence", choices=["owner_attested", "confirmation_observed"], help="with --outcome submitted")
+    p.add_argument("--minutes", type=float, help="how long applying took (P3 measurement)")
+    p.add_argument("--corrections", type=int, help="fields you had to correct")
+    p.add_argument("--custom-questions", type=int, help="questions the package didn't answer")
+    p.add_argument("--login-steps", type=int, help="sign-in or verification steps")
+    p.add_argument("--notes")
+    p.add_argument("--reapply", metavar="REASON")
+    p.add_argument("--confirm", metavar="REASON")
     p = sub.add_parser("metrics", help="discovery and opportunity metrics (pilot instrumentation)")
     p.add_argument("--days", type=int, default=30)
     p.add_argument("--log-review-minutes", type=float)
@@ -1478,6 +1699,10 @@ def _dispatch(args) -> None:
         handle = open(args.output_file, "a", encoding="utf-8", buffering=1)
         sys.stdout = sys.stderr = handle
         print(f"=== {Clock().now()} careeros {args.command} ===")
+    if args.command == "eval" and args.scoring:  # read-only: a snapshot copy, no lock, no Store, no log file
+        from careeros.review import scoring_eval
+        scoring_eval.main(paths, args, clock=demo_clock)
+        return
     _setup_logging(paths)
     paths["db"].parent.mkdir(parents=True, exist_ok=True)
     handlers = {"init": cmd_init, "run": cmd_run, "discover": cmd_discover, "add-url": cmd_add_url, "process": cmd_process,
@@ -1487,8 +1712,11 @@ def _dispatch(args) -> None:
                 "seen-index": cmd_seen_index, "sources": cmd_sources, "audit": cmd_audit, "dismiss": cmd_dismiss, "explain": cmd_explain,
                 "paste": cmd_paste, "shortlist": cmd_shortlist, "draft": cmd_draft, "metrics": cmd_metrics,
                 "status": cmd_status, "verify": cmd_verify, "export": cmd_export,
-                "certifications": cmd_certifications}
-    read_only = (args.command == "employers" and args.action == "list") or (args.command == "gmail" and args.action != "fetch")
+                "certifications": cmd_certifications, "release": cmd_release, "package": cmd_package, "assist": cmd_assist}
+    read_only = ((args.command == "employers" and args.action == "list") or (args.command == "gmail" and args.action != "fetch")
+                 or (args.command == "release" and not (args.hold or args.revoke))
+                 or (args.command == "package" and args.action in ("show", "list", "gaps"))
+                 or (args.command == "assist" and args.action in ("list", "report")))
     lock = SingleWriterLock(paths["lock"]) if args.command in WRITES and not read_only else None
     try:
         if lock:

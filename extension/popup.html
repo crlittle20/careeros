@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CareerOS Assist</title>
+<style>
+  body { font: 13px/1.4 system-ui, sans-serif; width: 380px; margin: 12px; color: #1f2328; }
+  h1 { font-size: 15px; margin: 0 0 8px; }
+  .note { color: #59636e; margin: 6px 0; }
+  .error { color: #b42318; }
+  .ok { color: #1a7f37; }
+  ul { padding-left: 18px; margin: 4px 0; }
+  li { margin: 2px 0; word-break: break-word; }
+  .value { font-weight: 600; }
+  button { margin-top: 8px; padding: 6px 12px; }
+  button[disabled] { opacity: 0.5; }
+</style>
+</head>
+<body>
+<h1>CareerOS Assist</h1>
+<p class="note">Choose the handoff file CareerOS wrote for this application (vault\handoff). You review every value
+before anything is filled. Assist never submits, clicks or uploads: you check the whole form and submit it yourself.</p>
+<input type="file" id="handoff" accept=".json,application/json">
+<div id="status" class="note"></div>
+<div id="preview" hidden>
+  <p><span id="job"></span></p>
+  <p class="note">Values to fill:</p>
+  <ul id="fields"></ul>
+  <p class="note">You do these yourself:</p>
+  <ul id="review"></ul>
+  <button id="fill" disabled>Fill these fields</button>
+</div>
+<div id="result" class="note"></div>
+<script src="fill.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>

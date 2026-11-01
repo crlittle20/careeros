@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "fact_job_evaluation.night_mode",
-              "nativeQueryRef": "night_mode"
+              "nativeQueryRef": "night_mode",
+              "displayName": "NIGHT mode"
             }
           ]
         },

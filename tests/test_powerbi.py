@@ -93,6 +93,24 @@ class PowerBIProjectTest(unittest.TestCase):
                         problems += [f"{v['name']}: {key}"] if key not in columns else []
         self.assertEqual(problems, [])
 
+    def test_titles_are_readable(self):
+        """S15 (2026-10-31): every column a visual shows has a display name, so no subtitle or axis shows a raw field
+        name, and every KPI card is wide enough for its title (8 px a character at the 12 pt default label, 7 at 10 pt,
+        plus 40 px of padding; eight cards across cut most titles off)."""
+        problems = []
+        for v in self.visuals:
+            for state in v["visual"]["query"]["queryState"].values():
+                problems += [f"{v['name']}: {p['queryRef']} has no display name" for p in state["projections"]
+                             if "Column" in p["field"] and not p.get("displayName")]
+            if v["visual"]["visualType"] == "card":
+                labels = v["visual"].get("objects", {}).get("categoryLabels", [{}])[0].get("properties", {})
+                size = float(labels["fontSize"]["expr"]["Literal"]["Value"].rstrip("D")) if "fontSize" in labels else 12
+                title = v["visual"]["query"]["queryState"]["Values"]["projections"][0]["nativeQueryRef"]
+                needed = 40 + len(title) * (8 if size >= 12 else 7)
+                if v["position"]["width"] < needed:
+                    problems.append(f"{v['name']}: '{title}' needs {needed} px, has {v['position']['width']}")
+        self.assertEqual(problems, [])
+
     def test_the_measures_are_those_of_the_dashboard_spec(self):
         documented, in_dax = set(), False
         for line in SPEC.read_text(encoding="utf-8").splitlines():

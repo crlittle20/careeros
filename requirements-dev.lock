@@ -4,19 +4,17 @@
 # hashes are PyPI's for the same releases. pydantic is 2.13.5 here (2.14.0 in requirements.lock was 4 days old).
 #   python -m venv .venv-dev
 #   .venv-dev\Scripts\python.exe -m pip install --require-hashes --only-binary :all: --no-deps -r requirements-dev.lock
-# Change it only the same way: pinned versions, verified hashes, and the 14-day rule for every package, except
-# recorded, owner-approved security exceptions (below).
-# Updated 2026-10-29 against PyPI and OSV advisories: certifi 2026.7.22 -> 2026.10.19, filelock 4.0.6 -> 4.2.1 and
-# msgpack 1.2.2 -> 1.2.3. msgpack 1.2.3 (published 2026-09-29) fixes GHSA-j586-36cw-2gc2 / CVE-2026-114613 (High: a
-# C-extension memory leak on rejected map keys) and follows the 14-day rule; both its sha256 values are PyPI's.
-# One exception, approved by the owner for this repository on 2026-10-29 (as for the private engine on 2026-10-20):
-# certifi 2026.10.19 (published 2026-10-20) fixes GHSA-6q48-6c7w-9gw2 / PYSEC-2026-4320 (Critical: compromised eMudhra
-# intermediates under emSign ECC Root CA - G3); its wheel's sha256 matched PyPI's own file listing. A second exception,
-# approved by the owner for this repository on 2026-10-29 (as for the private engine on 2026-10-23): filelock 4.2.1
-# (published 2026-10-17) fixes the 14 advisories against 4.0.6
-# (CVE-2026-112907 to -112913, -112915, -112934 to -112936 and -112938 to -112940; the highest, CVE-2026-112940, is
-# High), used here by pip-audit's cache; one universal wheel with no dependencies, its sha256 matched PyPI's own file
-# listing. Every other package still follows the 14-day rule.
+# Change it only the same way: pinned versions, verified hashes, and the 14-day rule for every package.
+# One exception, approved by the owner 2026-10-20: certifi 2026.10.19 (published 2026-10-20) fixes GHSA-6q48-6c7w-9gw2 /
+# PYSEC-2026-4320 (Critical: compromised eMudhra intermediates under emSign ECC Root CA - G3); its wheel's sha256 matched
+# PyPI's own file listing and the downloaded file. A second exception, approved by the owner 2026-10-23: filelock
+# 4.2.1 (published 2026-10-17) fixes CVE-2026-112907, CVE-2026-112913 and CVE-2026-112940 (published 2026-10-23, in
+# 4.0.6, used here by pip-audit's cache); one universal wheel with no dependencies, its sha256 matched PyPI's own file
+# listing and the downloaded file. Every other package still follows the 14-day rule.
+# 2026-10-29: msgpack 1.2.2 -> 1.2.3 (published 2026-09-29, so within the 14-day rule; no exception) fixes
+# GHSA-j586-36cw-2gc2 / CVE-2026-114613 (High: a C-extension memory leak on rejected map keys; used here by pip-audit's
+# cache). Both sha256 values are PyPI's, and the public repository's CI installed both wheels with --require-hashes
+# on 2026-10-29 (run 40821349712). A .venv-dev installed before this keeps 1.2.2 until it is reinstalled from this file.
 annotated-types==0.8.0 \
     --hash=sha256:f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0
 anthropic==1.8.0 \
@@ -132,5 +130,7 @@ typing-extensions==4.16.0 \
     --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8
 typing-inspection==0.4.4 \
     --hash=sha256:65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147
+tzdata==2026.4 \
+    --hash=sha256:c2169a8b0a7a5e9674da5a135ccdfb2b3e671b333ed9fed17b41f73c34476e81
 urllib3==2.8.0 \
     --hash=sha256:0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3

@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "CareerOS Assist",
+  "version": "0.1.0",
+  "description": "Fills the fields a CareerOS package answers on the application form you opened. It never submits, clicks or uploads.",
+  "minimum_chrome_version": "120",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_title": "CareerOS Assist",
+    "default_popup": "popup.html"
+  }
+}

@@ -69,6 +69,16 @@ class ReleaseScanTest(unittest.TestCase):
         self.assertTrue(any(f.startswith("history: old.txt") for f in self.result["findings"]["GitHub token"]))
         self.assertEqual(self.result["commit_metadata"], {"Name in commit author or committer": 3})   # example.com is not personal
 
+    def test_a_starred_term_is_found_with_letters_attached_and_others_stay_whole_words(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "deny.txt"
+            path.write_text(f"{PRIVATE_TERM}*\nPlainword\n", encoding="utf-8")
+            deny = release_scan.load_denylist(path)
+        self.assertEqual(release_scan.scan_text(f"the {PRIVATE_TERM}Rx unit\n", deny), [("Denylisted term #1", 1)])
+        self.assertEqual(release_scan.scan_text(f"sub{PRIVATE_TERM.lower()}\n", deny), [])   # inside a longer word: another word
+        self.assertEqual(release_scan.scan_text("Plainword here\n", deny), [("Denylisted term #2", 1)])
+        self.assertEqual(release_scan.scan_text("Plainwordly\n", deny), [])
+
     def test_placeholders_and_fiction_are_not_findings(self):
         files = {f for kind in self.result["findings"].values() for f in kind}
         self.assertNotIn("placeholder.py", files)

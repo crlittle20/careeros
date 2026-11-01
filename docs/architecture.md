@@ -173,7 +173,7 @@ override a mismatch, an unsafe address or a manual-only system (ADR 0007).
 
 | Element | Design |
 |---|---|
-| Store | One SQLite file (`vault\data\careeros.db`) in WAL mode. Schema migrations are `careeros/db/schema/001-012`. |
+| Store | One SQLite file (`vault\data\careeros.db`) in WAL mode. Schema migrations are `careeros/db/schema/001-014`. |
 | Write permissions | Each component gets a `Writer` limited to the tables, and for some tables the columns, it owns (`TABLES_BY_COMPONENT`, `COLUMN_LIMITS`). For example, `qualify` cannot write jobs, `discovery` cannot write scores, and only `admin` may activate a board or record an override. |
 | Workflow state | Changes only through `Writer.transition`, which checks the matrix. Projection and history must agree, or the write fails closed. |
 | History | Append-only tables (transitions, events, gate results, scores, verification evidence ...), enforced by database triggers. Re-evaluation adds rows and never rewrites them. |
@@ -303,3 +303,4 @@ The schema, its grain and the measures are in `analytics_data_dictionary.md`. Th
 | [0006](adr/0006-unsupported-ats-systems-stay-manual.md) | Unsupported ATS systems stay manual |
 | [0007](adr/0007-human-approval-at-selected-stages.md) | A person decides at selected stages, and CareerOS does not apply or send |
 | [0008](adr/0008-local-store-with-enforced-duties-and-audit-chain.md) | One local store, with enforced separation of duties and an audit chain |
+| [0009](adr/0009-assisted-applications.md) | CareerOS prepares packages and fills forms on request; the person submits |

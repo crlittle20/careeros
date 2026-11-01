@@ -5,7 +5,8 @@
 It NEVER prints a matched value. A finding is a TYPE, a file (or, with --history, a path in an earlier commit), and
 line numbers. Personal terms the scan cannot guess (your name, user names, the employers in your own search, your pay
 figures) come from a denylist file that lives outside the repository. The default is the vault's
-`release_denylist.txt`, one term per line, with `#` for comments. Its entries are reported by number, never by text.
+`release_denylist.txt`, one term per line, with `#` for comments; a term ending in `*` also matches with letters
+attached, for names used in compounds. Its entries are reported by number, never by text.
 
 Exit code: 2 if a secret-type finding exists; 1 if any other finding exists; 0 if clean. Use it as a release gate
 (docs/public_release_checklist.md).
@@ -68,7 +69,15 @@ def load_denylist(path: Path | None) -> list[re.Pattern]:
     if not path:
         return []
     terms = [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip() and not line.strip().startswith("#")]
-    return [re.compile(r"(?i)(?<![A-Za-z0-9])" + re.escape(t) + r"(?![A-Za-z0-9])") for t in terms]
+    return [_term_pattern(t) for t in terms]
+
+
+def _term_pattern(term: str) -> re.Pattern:
+    """A whole word by default. A term ending in * also matches with letters attached, for names that appear in
+    compounds ("Acme*" finds "AcmeRx"); 2026-10-17, after a whole-word match let such a compound into a docstring."""
+    prefix = term.endswith("*")
+    core = re.escape(term.rstrip("*").strip())
+    return re.compile(r"(?i)(?<![A-Za-z0-9])" + core + ("" if prefix else r"(?![A-Za-z0-9])"))
 
 
 def scan_text(text: str, deny: list[re.Pattern]) -> list[tuple[str, int]]:

@@ -1,9 +1,9 @@
 {
- "at": "2026-10-16T00:47:55+00:00",
+ "at": "2026-11-01T17:58:15+00:00",
  "commit": "",
  "uncommitted_changes": false,
- "private_vault": "the real private vault (read only)",
- "seconds": 53,
+ "private_vault": "decoy",
+ "seconds": 22,
  "overall": "PARTIAL",
  "grades": {
   "fresh demo initialization": "PASS",
@@ -76,7 +76,7 @@
     "check": "`careeros demo run --all` runs the four simulated days",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, 9.3s"
+    "evidence": "exit 0, 3.7s"
    },
    {
     "check": "each day is a completed production run (`careeros run`)",
@@ -262,7 +262,7 @@
     "check": "one application per role: applying to its duplicate or applying twice is refused",
     "ok": true,
     "core": true,
-    "evidence": "('via direct; applying through a second channel can disqualify you. Add --second-channel only if you really applied twice.', 'ready_applied: you applied to this role on 2026-11-05 via direct. Add --second-channel only if you really applied twice.', 'applications 4 -> 5')"
+    "evidence": "(' applied this way? Add --confirm \"<your explanation>\" (it is kept with the record and never releases a submission hold).', ' applied this way? Add --confirm \"<your explanation>\" (it is kept with the record and never releases a submission hold).', 'applications 4 -> 5')"
    }
   ],
   "eligibility": [
@@ -454,7 +454,7 @@
     "check": "a run with four failing boards (HTTP 503, invalid JSON, timeout, 1-hour rate limit) completes",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, run completed, 5.1s"
+    "evidence": "exit 0, run completed, 4.3s"
    },
    {
     "check": "each failure is recorded against its board with its own error code",
@@ -490,7 +490,7 @@
     "check": "a 1-hour Retry-After is reported, not slept through",
     "ok": true,
     "core": false,
-    "evidence": "5.1s"
+    "evidence": "4.3s"
    },
    {
     "check": "an unreadable email and an empty pasted file are reported and skipped",
@@ -548,13 +548,13 @@
     "check": "the GitHub inbox is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "Local\\Temp\\careeros-mvp-gate-eh0uk93r\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
+    "evidence": "Local\\Temp\\careeros-mvp-gate-a5msspsy\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
    },
    {
     "check": "the clipboard is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-eh0uk93r\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
+    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-a5msspsy\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
    },
    {
     "check": "Gmail is refused in Demo Mode",
@@ -578,7 +578,7 @@
     "check": "the private vault (a decoy on a machine without one) is untouched: sizes, timestamps, hashes",
     "ok": true,
     "core": true,
-    "evidence": "3668 files compared"
+    "evidence": "1 files compared"
    },
    {
     "check": "the demo vault is outside the private vault and the code, and carries the demo marker",

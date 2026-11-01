@@ -5,10 +5,13 @@ DemoExportTest runs the four-day demo and `careeros export` once, as a user woul
   the committed sample (samples/analytics_demo, rebuilt by tools/build_demo_export.py);
 - every table and column is documented in docs/analytics_data_dictionary.md, and every KPI value quoted in
   docs/powerbi_dashboard_spec.md is what the export measures;
+- each job carries its latest recorded dismissal (2026-10-30), never the dismissal's own note, and the manifest's
+  schema_revision says which columns the files have;
 - the validation catches broken exports; the export only reads; a private export never lands in the code repository,
   a demo export never leaves the demo vault, and an export never replaces a folder it did not write.
 """
 import copy
+import hashlib
 import io
 import json
 import logging
@@ -23,7 +26,7 @@ from pathlib import Path
 from unittest import mock
 
 from careeros import cli
-from careeros.analytics.export import TABLES, build, reconcile, validate
+from careeros.analytics.export import SCHEMA_REVISION, SCHEMA_VERSION, TABLES, build, reconcile, validate
 from careeros.demo import runner, sandbox
 from careeros.paths import ENGINE_ROOT
 
@@ -61,10 +64,23 @@ class DemoExportTest(unittest.TestCase):
         cls.addClassCleanup(shutil.rmtree, cls.tmp, True)
         cls.addClassCleanup(close_log_files, cls.tmp)
         cls.addClassCleanup(sandbox.install, None)
-        quiet("demo", "tour")
-        quiet("export")      # Demo Mode is on: `careeros demo` switched it on
-        cls.out = cls.tmp / "demo" / "exports" / "analytics"
-        cls.manifest = json.loads((cls.out / "manifest.json").read_text(encoding="utf-8"))
+        cls.ready = None     # the demo and the export run at the first test (setUp), not here
+
+    def setUp(self):
+        # Once per class. Not in setUpClass: a failure there hides the class's tests from the count, and a SystemExit there
+        # ends the whole run (the 2026-10-18 full run); here every test of the class reports it.
+        cls = type(self)
+        if cls.ready is None:
+            try:
+                quiet("demo", "tour")
+                quiet("export")      # Demo Mode is on: `careeros demo` switched it on
+                cls.out = cls.tmp / "demo" / "exports" / "analytics"
+                cls.manifest = json.loads((cls.out / "manifest.json").read_text(encoding="utf-8"))
+                cls.ready = True
+            except (Exception, SystemExit) as exc:  # noqa: BLE001 - reported by each test below
+                cls.ready = exc
+        if cls.ready is not True:
+            self.fail(f"the demo tour or the export failed: {cls.ready!r}")
 
     def demo_tables(self):
         ctx = cli._context(runner.paths(), clock=runner.demo_clock())
@@ -125,6 +141,16 @@ class DemoExportTest(unittest.TestCase):
         for name, columns in TABLES.items():
             self.assertEqual(documented[name], [c for c, _ in columns], name)
 
+    def test_the_contract_revision_names_these_columns(self):
+        """Within analytics-1, columns are only ever added, and each addition raises schema_revision (2026-10-30), so a
+        manifest says which columns its files have. A change to TABLES must come with a new revision or version."""
+        columns = {1: "9137c0fd60d82089", 2: "ed8f6d32b8175028"}   # revision -> fingerprint of TABLES (names and types, in order)
+        self.assertEqual((self.manifest["schema_version"], self.manifest["schema_revision"]), ("analytics-1", SCHEMA_REVISION))
+        self.assertEqual(hashlib.sha256(json.dumps(TABLES).encode()).hexdigest()[:16], columns.get(SCHEMA_REVISION),
+                         "the tables changed: raise SCHEMA_REVISION (columns added at the end) or the version, record the "
+                         "new fingerprint here and describe the revision in the data dictionary")
+        self.assertIn(f"- Version: 1.1 (schema `{SCHEMA_VERSION}`, revision {SCHEMA_REVISION})", DICTIONARY.read_text(encoding="utf-8"))
+
     def test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured(self):
         quoted = {}
         for line in SPEC.read_text(encoding="utf-8").splitlines():
@@ -158,6 +184,8 @@ class DemoExportTest(unittest.TestCase):
             (lambda t: t["fact_job_evaluation"][rejected].update(is_qualified=1), "job flags agree with the job's state"),
             (lambda t: t["dim_date"].pop(3), "dim_date is one row per day with no gaps"),
             (lambda t: t["fact_job_evaluation"][0].update(extra=1), "every table is present with its documented columns"),
+            (lambda t: t["fact_job_evaluation"][0].update(is_dismissed=1), "dismissed jobs, and only they, have a dismissal date"),
+            (lambda t: t["fact_job_evaluation"][0].update(dismissal_reason="pay"), "dismissed jobs, and only they, have a dismissal date"),
         ]
         for corrupt, check in cases:
             broken = copy.deepcopy(tables)
@@ -170,6 +198,68 @@ class DemoExportTest(unittest.TestCase):
         broken = copy.deepcopy(tables)
         broken["fact_job_evaluation"][rejected].update(is_qualified=1)
         self.assertTrue(failed(reconcile(broken, ctx.store, ctx.policy), "jobs_qualified equals the application's own figure"))
+        broken = copy.deepcopy(tables)   # well-formed, but the demo has no dismissal on record
+        broken["fact_job_evaluation"][scored].update(is_dismissed=1, dismissed_date_key=broken["dim_date"][0]["date_key"], dismissal_reason="pay")
+        self.assertFalse(failed(validate(broken), "dismissed jobs, and only they"))
+        self.assertTrue(failed(reconcile(broken, ctx.store, ctx.policy), "dismissed jobs (by their latest reason) match the application"))
+
+    def test_a_rate_is_compared_as_the_application_rounds_it(self):
+        """33 complete scans of 227 is 0.1454, which the application shows as 0.15. Rounded to the manifest's 3 places
+        (0.145) and then to 2 (0.14), it used to fail its own reconciliation, so a correct export was refused
+        (2026-10-30). The comparison stays exact: a figure the application would show differently is still refused."""
+        from careeros.review import discovery_metrics
+        ctx, tables = self.demo_tables()
+        scans = copy.deepcopy(tables)
+        scans["fact_board_scan"] = [dict(tables["fact_board_scan"][0], scan_key=n, is_complete=int(n <= 33)) for n in range(1, 228)]
+        figures = discovery_metrics.metrics(ctx.store, ctx.policy, 36500)
+        for shown, accepted in ((round(33 / 227, 2), True), (0.14, False), (0.16, False)):
+            figures["verification"]["scan_success_rate"] = shown
+            with self.subTest(application=shown), mock.patch.object(discovery_metrics, "metrics", return_value=figures):
+                self.assertEqual(failed(reconcile(scans, ctx.store, ctx.policy), "scan_reliability equals"), not accepted)
+
+    def test_a_recommended_variant_counts_once_and_never_stops_the_export(self):
+        """A variant is another posting of the same opening. It was left out of is_qualified but not of is_recommended,
+        so a tier A/B variant was recommended without being qualified, and the export's own check refused to write
+        (2026-10-30). Both flags now count openings, as the application's funnel does; the check is unchanged."""
+        from tests.test_job_lifecycle import jid, world
+        store, ctx = world()   # job 3 is a scored variant of job 1
+        for job in (jid(1), jid(3)):   # both rise to tier B in a later score
+            score = dict(store.one("SELECT * FROM scores WHERE job_id = ? ORDER BY at DESC, rowid DESC LIMIT 1", (job,)))
+            score.update(score_id=score["score_id"] + "-b", tier="B")
+            store.conn.execute(f"INSERT INTO scores ({', '.join(score)}) VALUES ({', '.join('?' * len(score))})", tuple(score.values()))
+        tables = build(store, ctx.policy)
+        self.assertTrue(all(c["ok"] for c in validate(tables) + reconcile(tables, store, ctx.policy)))
+        rows = {r["job_key"]: r for r in tables["fact_job_evaluation"]}
+        flags = lambda job: tuple(rows[job][f] for f in ("tier", "is_variant", "is_qualified", "is_recommended"))  # noqa: E731
+        self.assertEqual((flags(jid(1)), flags(jid(3))), (("B", 0, 1, 1), ("B", 1, 0, 0)))
+        broken = copy.deepcopy(tables)   # the check itself is as strict as before
+        broken["fact_job_evaluation"][list(rows).index(jid(3))].update(is_recommended=1)
+        self.assertTrue(failed(validate(broken), "job flags agree with the job's state"))
+
+    def test_dismissals_are_exported_with_the_latest_reason(self):
+        from careeros.review.dismiss import dismiss
+        from tests.test_job_lifecycle import jid, world
+        store, ctx = world()
+        dismiss(store, jid(1), "pay", "a private note")
+        store.clock.advance(days=1)
+        dismiss(store, jid(1), "qualifications")
+        dismiss(store, jid(7), "location")
+        store.conn.execute("UPDATE jobs SET exclude_from_kpi = 1 WHERE job_id = ?", (jid(7),))   # a drill: left out with its dismissal
+        tables = build(store, ctx.policy)
+        self.assertTrue(all(c["ok"] for c in validate(tables) + reconcile(tables, store, ctx.policy)))
+        rows = {r["job_key"]: r for r in tables["fact_job_evaluation"]}
+        self.assertNotIn(jid(7), rows)
+        latest = store.one("SELECT at FROM dismissals WHERE job_id = ? ORDER BY at DESC, rowid DESC LIMIT 1", (jid(1),))["at"]
+        self.assertEqual((rows[jid(1)]["is_dismissed"], rows[jid(1)]["dismissal_reason"], rows[jid(1)]["dismissed_date_key"]),
+                         (1, "qualifications", int(latest[:10].replace("-", ""))))
+        self.assertEqual(rows[jid(1)]["current_state"], "scored")   # a dismissal is your decision, not a change of the job's state
+        others = [r for k, r in rows.items() if k != jid(1)]
+        self.assertTrue(others and all((r["is_dismissed"], r["dismissed_date_key"], r["dismissal_reason"]) == (0, None, None) for r in others))
+        self.assertIn(rows[jid(1)]["dismissed_date_key"], {d["date_key"] for d in tables["dim_date"]})
+        self.assertNotIn("a private note", json.dumps(tables))   # the dismissal's own words are free text: never exported
+        from careeros.review.dismiss import REASONS
+        documented = next(line for line in DICTIONARY.read_text(encoding="utf-8").splitlines() if line.startswith("| `dismissal_reason` |"))
+        self.assertEqual(re.findall(r"`(\w+)`", documented)[1:], list(REASONS))
 
     def test_rows_marked_as_drills_or_tests_are_left_out(self):
         from tests.test_job_lifecycle import jid, world

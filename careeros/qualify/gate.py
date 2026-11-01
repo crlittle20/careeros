@@ -19,7 +19,10 @@ from . import experience as experience_mod
 from .profile import DEGREE_RANK, Profile, alternatives
 
 # Bump when gate logic changes: results recorded under an older version are re-evaluated automatically.
-RULES_VERSION = "gate-2026-10-15b"  # b: certifications named, matched by status, alternatives honoured; a: Experience Match
+RULES_VERSION = "gate-2026-10-18a"  # 10-18a: certification alternatives only when "or" joins them; unknown kinds and
+# courses never count; a course and a certification of one name kept apart; issuer requirements by issuer only
+_PREVIOUS_RULES = "gate-2026-10-16a"  # 10-16a: certification status must be explicit (missing = unknown), courses never count
+# 10-15b: certifications named, matched by status, alternatives honoured; 10-15a: Experience Match
 PROFESSIONAL_LICENSES = ["pharmacist", "pharmacy technician", "registered nurse", "rn license", "nursing license", "cpa",
                          "attorney", "bar admission", "lpn", "physician", "insurance license", "life and health"]
 HOURS_PER_YEAR = 2080
@@ -226,9 +229,12 @@ def scam_rules(result: GateResult, text_norm: str, policy) -> None:
 
 
 def held_rule(result: GateResult, job: dict, policy) -> None:
+    """An employer-level ELIGIBILITY hold (policy gate.held_parents; none by default): the job is judged but kept out of
+    Tier A/B. The flag keeps its historical code name. Permission to submit is a separate layer (review/submission.py);
+    since 2026-10-16 the D13 employer is held there, not here."""
     held = [norm(p) for p in policy.get("gate", "held_parents", default=[]) or []]
     if norm(job.get("parent") or "") in held or norm(job.get("employer_name") or "") in held:
-        result.flag("held_d13", "employer is on hold until you decide about it (D13)")
+        result.flag("held_d13", "employer is on an eligibility hold (gate.held_parents) until you decide about it")
 
 
 def _education_summary(profile: Profile) -> str:
@@ -281,7 +287,7 @@ def _requirement_rules(result: GateResult, requirements: list, profile: Profile,
     # Certifications (2026-10-15): judged per set of alternatives, on what you hold (careeros/qualify/certifications.py)
     cert_records = certification_mod.analyse(requirements, profile, policy)
     cert_group = {m["index"]: group for group in certification_mod.gate_groups(cert_records) for m in group}
-    held = [c["name"] for c in certification_mod.profile_credentials(profile, policy) if c["status"] == "held"]
+    held = certification_mod.held_names(profile, policy)
 
     for req_index, req in enumerate(requirements):
         hard = req.requirement_type == "hard_required"

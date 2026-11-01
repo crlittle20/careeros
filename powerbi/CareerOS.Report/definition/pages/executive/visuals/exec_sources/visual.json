@@ -3,10 +3,10 @@
   "name": "exec_sources",
   "position": {
     "x": 640,
-    "y": 450,
+    "y": 505,
     "z": 0,
     "width": 630,
-    "height": 260,
+    "height": 205,
     "tabOrder": 0
   },
   "visual": {
@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_source.source_name",
-              "nativeQueryRef": "source_name"
+              "nativeQueryRef": "source_name",
+              "displayName": "Source"
             }
           ]
         },

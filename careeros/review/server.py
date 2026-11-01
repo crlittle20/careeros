@@ -13,10 +13,10 @@ from urllib.parse import parse_qs, quote, urlsplit
 
 from careeros.core.locks import LockError, SingleWriterLock
 
-from .applications import ApplicationConflict, application_matrix, record_application, update_application
+from .applications import CONFIRM_CODES, ApplicationConflict, ApplicationHold, application_matrix, record_application, update_application
 from .labels import record_label
 from .leads import dismiss_lead
-from .report import build_report, esc, last_review_at
+from .report import _form, build_report, esc, last_review_at
 
 MAX_BODY = 4096
 MAX_PASTE_BODY = 200_000   # a pasted posting (Part 6)
@@ -62,6 +62,22 @@ def make_handler(store, profile, policy, token: str, lock_path, port_holder: dic
             return self._send(status, f'<!doctype html><meta charset="utf-8"><p>{esc(message)}</p>'
                                       f'<p><a href="/?t={esc(token)}">Back to the review page</a></p>')
 
+        def _hold_page(self, target: str, form: dict, exc: ApplicationHold) -> str:
+            """The application was not recorded yet: show why and ask for the reason, with a fresh one-time form."""
+            codes = exc.check.codes()
+            fields = (f'<input type="hidden" name="channel" value="{esc(form.get("channel", ""))}">'
+                      f'<input type="hidden" name="agency" value="{esc(form.get("agency", ""))}">')
+            if "applied_before" in codes:
+                fields += ('<p><label>Why apply to this role again? <input type="text" name="reapply_reason" required '
+                           'maxlength="300"></label></p>')
+            if any(c in CONFIRM_CODES for c in codes):
+                fields += ('<p><label>Your explanation (kept with the record; it never releases a submission hold): '
+                           '<input type="text" name="confirm_reason" required maxlength="300"></label></p>')
+            items = "".join(f"<li>{esc(r['detail'])}</li>" for r in exc.check.reasons if r["level"] in ("hold", "warn"))
+            return (f'<!doctype html><meta charset="utf-8"><p>Not recorded yet. This needs your reason:</p><ul>{items}</ul>'
+                    + _form("apply", target, token, form_keys, fields + "<button>Record it</button>")
+                    + f'<p><a href="/?t={esc(token)}">Back to the review page</a></p>')
+
         def do_GET(self):
             if urlsplit(self.path).path != "/" or not self._authorized():
                 return self._send(403, "forbidden")
@@ -94,7 +110,8 @@ def make_handler(store, profile, policy, token: str, lock_path, port_holder: dic
                         anchor = f"night-{target}"
                     elif action == "apply":
                         channel, agency = parse_channel(form.get("channel", ""), form.get("agency", ""))
-                        record_application(store, app_matrix, target, channel, agency=agency, key=key)
+                        record_application(store, app_matrix, target, channel, policy=policy, agency=agency, key=key,
+                                           reapply=form.get("reapply_reason"), confirm=form.get("confirm_reason"))
                     elif action == "status":
                         update_application(store, app_matrix, target, form.get("state", ""), notes=form.get("notes", ""), key=key)
                     elif action == "dismiss":
@@ -116,9 +133,10 @@ def make_handler(store, profile, policy, token: str, lock_path, port_holder: dic
                         anchor = "leads"
             except LockError:
                 return self._problem(409, "A CareerOS run is writing right now. Go back and try again in a moment.")
+            except ApplicationHold as exc:
+                return self._send(409, self._hold_page(target, form, exc))
             except ApplicationConflict as exc:
-                return self._problem(409, f"Not recorded. {exc}. If you really did apply twice, record it with "
-                                          f"'careeros applied {target} --channel ... --second-channel'.")
+                return self._problem(409, f"Not recorded. {exc}.")
             except ValueError as exc:
                 return self._problem(400, f"Not recorded: {exc}")
             self._send(303, "", {"Location": f"/?t={token}#{quote(anchor, safe=':')}"})

@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_employer.employer_name",
-              "nativeQueryRef": "employer_name"
+              "nativeQueryRef": "employer_name",
+              "displayName": "Employer"
             }
           ]
         },
@@ -103,6 +104,26 @@
               "expr": {
                 "Literal": {
                   "Value": "'Career fit against qualified jobs'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'One bubble per employer, sized by jobs discovered'"
                 }
               }
             }

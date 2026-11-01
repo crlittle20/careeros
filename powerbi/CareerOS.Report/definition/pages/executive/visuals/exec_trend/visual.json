@@ -3,10 +3,10 @@
   "name": "exec_trend",
   "position": {
     "x": 640,
-    "y": 190,
+    "y": 290,
     "z": 0,
     "width": 630,
-    "height": 250,
+    "height": 205,
     "tabOrder": 0
   },
   "visual": {
@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_date.date",
-              "nativeQueryRef": "date"
+              "nativeQueryRef": "date",
+              "displayName": "Date"
             }
           ]
         },

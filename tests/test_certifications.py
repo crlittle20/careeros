@@ -136,14 +136,14 @@ class FalsePositiveTests(unittest.TestCase):
 
 class MatchingTests(unittest.TestCase):
     def test_required_and_held_exactly(self):
-        gate, reqs, _ = judged(person({"name": "PMP"}), "PMP required")
-        record = certs.analyse(reqs, person({"name": "PMP"}), POLICY)[-1]
+        gate, reqs, _ = judged(person({"name": "PMP", "status": "held"}), "PMP required")
+        record = certs.analyse(reqs, person({"name": "PMP", "status": "held"}), POLICY)[-1]
         self.assertEqual((record["candidate_status"], record["match_type"], record["satisfied"], record["decision_effect"]),
                          ("held", "exact", True, "requirement_satisfied"))
         self.assertNotIn("certification_required", {f["code"] for f in gate.hard_failures})
 
     def test_a_related_credential_never_satisfies_a_named_one(self):
-        capm = person({"name": "Certified Associate in Project Management (CAPM)"})
+        capm = person({"name": "Certified Associate in Project Management (CAPM)", "status": "held"})
         gate, reqs, _ = judged(capm, "PMP required")
         record = certs.analyse(reqs, capm, POLICY)[-1]
         self.assertEqual((record["candidate_status"], record["match_type"], record["satisfied"], record["decision_effect"]),
@@ -163,8 +163,59 @@ class MatchingTests(unittest.TestCase):
         self.assertEqual(certs.analyse(reqs, in_progress, POLICY)[-1]["candidate_status"], "in_progress")
         self.assertFalse(certs.analyse(reqs, in_progress, POLICY)[-1]["satisfied"])
 
+    def test_a_missing_status_is_unknown_never_held(self):
+        unrecorded = person({"name": "PMP"})
+        gate, reqs, _ = judged(unrecorded, "PMP required")
+        record = certs.analyse(reqs, unrecorded, POLICY)[-1]
+        self.assertEqual((record["candidate_status"], record["satisfied"]), ("unknown", False))
+        failure = next(f for f in gate.hard_failures if f["code"] == "certification_required")
+        self.assertIn("yours is without a recorded status, not counted as held", failure["detail"])
+        self.assertFalse(unrecorded.has_certification("pmp"))
+        self.assertEqual(certs.profile_warnings(unrecorded, POLICY), ["PMP: no status recorded (counted as unknown, not held)"])
+        self.assertIn("status not recorded", certs.summary(record))
+
+    def test_a_completed_course_is_not_a_certification(self):
+        course = person({"name": "Professional Scrum Master I", "kind": "course_certificate", "status": "completed"})
+        _gate, reqs, _ = judged(course, "Scrum certification required")
+        record = certs.analyse(reqs, course, POLICY)[-1]
+        self.assertEqual((record["candidate_status"], record["satisfied"]), ("completed", False))
+        mislabelled = person({"name": "Professional Scrum Master I", "kind": "course_certificate", "status": "held"})
+        self.assertFalse(certs.analyse(reqs, mislabelled, POLICY)[-1]["satisfied"])   # a course never counts as held
+        self.assertEqual(certs.held_names(mislabelled, POLICY), [])
+        self.assertFalse(mislabelled.has_certification("professional scrum master i"))
+
+    def test_conflicting_records_are_flagged_and_never_held(self):
+        both = person({"name": "PMP", "status": "held"}, {"name": "Project Management Professional", "status": "in_progress"})
+        _gate, reqs, _ = judged(both, "PMP required")
+        record = certs.analyse(reqs, both, POLICY)[-1]
+        self.assertEqual((record["candidate_status"], record["satisfied"]), ("conflicting", False))
+        self.assertEqual(len([w for w in certs.profile_warnings(both, POLICY) if "different statuses" in w]), 2)
+        self.assertEqual(certs.credential_status(both, POLICY, "PMP"), "conflicting")
+
+    def test_the_evidence_basis_is_shown_and_only_an_issuer_check_is_verification(self):
+        _gate, reqs, _ = judged(PROFILE, "PMP required")
+        for basis, words in (("self_reported", "held (self-reported)"), ("document_inspected", "held (certificate checked)"),
+                             ("issuer_verified", "held (verified with the issuer)")):
+            p = person({"name": "PMP", "status": "held", "evidence": {"source": "resume", "basis": basis}})
+            record = certs.analyse(reqs, p, POLICY)[-1]
+            self.assertIn(words, certs.summary(record), basis)
+            self.assertIn(words, certs.explain([record])[0], basis)
+            if basis != "issuer_verified":
+                self.assertNotIn("verified", certs.summary(record) + certs.explain([record])[0], basis)
+
+    def test_credential_backed_evidence_is_kept_but_flagged_for_review(self):
+        skills = [{"name": "agile delivery", "evidence": "adjacent", "source": "PMP certification", "credentials": ["PMP"]}]
+        for status, expected in (("held", []), ("in_progress", ["in_progress"]), (None, ["unknown"])):
+            cert = {"name": "PMP", **({"status": status} if status else {})}
+            p = Profile({**PROFILE.data, "certifications": [cert], "skills": skills}, "r")
+            self.assertEqual([r["status"] for r in certs.evidence_review(p, POLICY)], expected, status)
+            self.assertEqual(p.skill("agile delivery")["evidence"], "adjacent")     # never erased
+        gone = Profile({**PROFILE.data, "certifications": [], "skills": skills}, "r")
+        self.assertEqual(certs.evidence_review(gone, POLICY), [{"item": "agile delivery", "kind": "skill", "credential": "PMP",
+                                                               "status": "absent"}])
+
     def test_preferred_held_is_a_plus_and_preferred_missing_is_nothing(self):
-        held = person({"name": "PL-300"})
+        held = person({"name": "PL-300", "status": "held"})
         gate, reqs, _ = judged(held, "PL-300 certification preferred")
         self.assertEqual(certs.analyse(reqs, held, POLICY)[-1]["decision_effect"], "positive_signal")
         gate, reqs, _ = judged(PROFILE, "PMP preferred")
@@ -172,14 +223,14 @@ class MatchingTests(unittest.TestCase):
         self.assertFalse([f for f in gate.hard_failures + gate.flags if f["code"].startswith("certification")])
 
     def test_a_family_requirement_is_met_by_any_held_member(self):
-        psm = person({"name": "Professional Scrum Master I"})
+        psm = person({"name": "Professional Scrum Master I", "status": "held"})
         gate, reqs, _ = judged(psm, "Scrum certification required")
         record = certs.analyse(reqs, psm, POLICY)[-1]
         self.assertEqual((record["match_type"], record["satisfied"]), ("family_match", True))
         self.assertFalse([f for f in gate.flags if f["code"] == "certification_check"])
 
     def test_alternatives_are_satisfied_by_any_one(self):
-        cbap = person({"name": "CBAP"})
+        cbap = person({"name": "CBAP", "status": "held"})
         gate, reqs, _ = judged(cbap, "PMP or CBAP certification required")
         self.assertNotIn("certification_required", {f["code"] for f in gate.hard_failures})
         pmp = next(r for r in certs.analyse(reqs, cbap, POLICY) if r["certification_key"] == "pmp")
@@ -191,7 +242,7 @@ class MatchingTests(unittest.TestCase):
                       failures[0]["detail"])
 
     def test_owner_approved_equivalence_only(self):
-        prince2 = person({"name": "PRINCE2"})
+        prince2 = person({"name": "PRINCE2", "status": "held"})
         _gate, reqs, _ = judged(prince2, "PMP required")
         self.assertEqual(certs.analyse(reqs, prince2, POLICY)[-1]["match_type"], "related")
         from tests.test_v21_policy import policy_with
@@ -203,6 +254,65 @@ class MatchingTests(unittest.TestCase):
         gate, _reqs, _ = judged(PROFILE, "Relevant industry certification required")
         flag = next(f for f in gate.flags if f["code"] == "certification_check")
         self.assertIn('("- Relevant industry certification required")', flag["detail"])
+
+
+class ReviewFixTests(unittest.TestCase):
+    """Fresh-context Claude review of 4486b82 (2026-10-18). Synthetic credentials only."""
+
+    def failures(self, profile, *lines):
+        gate, _, _ = judged(profile, *lines)
+        return [f for f in gate.hard_failures if f["code"] == "certification_required"]
+
+    def test_an_or_elsewhere_on_the_line_never_makes_separate_credentials_alternatives(self):
+        cbap = person({"name": "CBAP", "status": "held"})
+        self.assertTrue(self.failures(cbap, "Must hold both PMP and CBAP certifications, plus experience with Jira or Azure DevOps"))
+        self.assertFalse(self.failures(cbap, "PMP or CBAP certification required"))
+        self.assertFalse(self.failures(cbap, "PMP, PSM I, or CBAP certification required"))
+        self.assertFalse(self.failures(cbap, "One of the following certifications is required: PMP, CBAP"))
+        by_line = {r["normalized_name"]: r for r in records(posting_with("PMP and CBAP required; Jira or Azure DevOps"), cbap)}
+        self.assertNotIn("satisfied_by_alternative", by_line["Project Management Professional (PMP)"])
+
+    def test_a_course_or_an_unknown_kind_never_counts_as_held(self):
+        for kind in ("course certificate", "course", "Course_Certificate", "banana"):
+            p = person({"name": "PMP", "status": "held", "kind": kind})
+            self.assertTrue(self.failures(p, "PMP required"), kind)
+            self.assertEqual(certs.held_names(p, POLICY), [], kind)
+            self.assertFalse(p.has_certification("pmp"), kind)
+        self.assertIn("never counted as held", " ".join(certs.profile_warnings(person({"name": "PMP", "status": "held", "kind": "banana"}), POLICY)))
+        self.assertIn("a course never counts", " ".join(certs.profile_warnings(person({"name": "PMP", "status": "held", "kind": "course"}), POLICY)))
+
+    def test_a_course_named_like_a_certification_never_collides_with_it(self):
+        both = person({"name": "Microsoft Power BI Data Analyst Professional Certificate", "status": "completed", "kind": "course_certificate"},
+                      {"name": "PL-300", "status": "held"})
+        self.assertEqual({c["status"] for c in certs.profile_credentials(both, POLICY)}, {"completed", "held"})
+        self.assertFalse(self.failures(both, "PL-300 certification required"))
+        course_first = person({"name": "Project Management Professional course", "status": "held", "kind": "course_certificate",
+                               "matches": ["pmp"]}, {"name": "PMP", "status": "held"})
+        self.assertFalse(self.failures(course_first, "PMP required"))
+
+    def test_an_issuer_requirement_is_met_by_that_issuer_only(self):
+        ccs = person({"name": "CCS", "status": "held"})
+        record = records(posting_with("AAPC certification required"), ccs)[-1]
+        self.assertFalse(record["satisfied"])
+        self.assertTrue(records(posting_with("AAPC certification required"), person({"name": "CPC", "status": "held"}))[-1]["satisfied"])
+
+    def test_status_words_kinds_and_bases_are_normalised_and_checked(self):
+        for written in ("Held", "HELD", " held "):
+            self.assertEqual(certs.held_names(person({"name": "PMP", "status": written}), POLICY), ["PMP"], written)
+        for written in ("in progress", "in-progress", "In_Progress"):
+            self.assertEqual(certs.profile_credentials(person({"name": "PMP", "status": written}), POLICY)[0]["status"], "in_progress")
+        self.assertEqual(certs.held_names(person({"name": "PMP", "status": "expired"}), POLICY), [])
+        odd = person({"name": "PMP", "status": "held", "evidence": {"basis": "verified"}})
+        self.assertIsNone(certs.profile_credentials(odd, POLICY)[0]["basis"])                     # never shown as verified
+        self.assertIn("unrecognised evidence basis", " ".join(certs.profile_warnings(odd, POLICY)))
+
+    def test_a_skill_from_a_completed_course_is_not_under_review(self):
+        trained = Profile({**PROFILE.data, "certifications": [{"name": "Data Course", "status": "completed", "kind": "course_certificate"}],
+                           "skills": [{"name": "sql", "years": 1, "credentials": ["Data Course"]}]}, "t")
+        self.assertEqual([r for r in certs.evidence_review(trained, POLICY) if r["item"] == "sql"], [])
+        planned = Profile({**trained.data, "certifications": [{"name": "PL-300", "status": "planned"}],
+                           "skills": [{"name": "power bi", "years": 2, "credentials": ["PL-300"]}]}, "u")
+        self.assertEqual([r["status"] for r in certs.evidence_review(planned, POLICY)], ["planned"])
 
 
 class ScoringTests(unittest.TestCase):

@@ -3,10 +3,10 @@
   "name": "exec_funnel",
   "position": {
     "x": 10,
-    "y": 190,
+    "y": 290,
     "z": 0,
     "width": 620,
-    "height": 250,
+    "height": 205,
     "tabOrder": 0
   },
   "visual": {
@@ -133,6 +133,26 @@
               "expr": {
                 "Literal": {
                   "Value": "'From discovery to application'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Jobs at each stage'"
                 }
               }
             }

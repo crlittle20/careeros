@@ -2,10 +2,10 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
   "name": "exec_card7",
   "position": {
-    "x": 1121,
-    "y": 92,
+    "x": 962,
+    "y": 192,
     "z": 7,
-    "width": 149,
+    "width": 308,
     "height": 90,
     "tabOrder": 7
   },

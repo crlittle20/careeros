@@ -1,101 +1,50 @@
 # CareerOS
 
-**An evidence-driven job-search operations and decision-support platform.** CareerOS discovers job openings, validates
-where they come from, normalizes them, rejects those that fail a stated hard requirement and ranks the rest for a person
-to review. Along the way it builds intelligence about employers and keeps an auditable record of every decision.
-
-It does not apply for jobs. A person reads its short, explained list and decides; CareerOS has no code that submits
-an application or contacts an employer or recruiter.
-
-**Built by Christopher Little**, product owner and business systems analyst, for my own job search. I defined the
-problem and the acceptance criteria, set my own screening rules and approved the rest, and made the product decisions.
-Claude (Anthropic's AI coding assistant) wrote the code and tests under my direction, and ChatGPT was the design
-partner.
-[My role in detail](#who-built-this-and-my-role).
+**An evidence-driven job-search operations and decision-support platform:** CareerOS discovers openings, verifies their
+source, rejects those that fail a stated hard requirement, ranks the rest for a person to review and records the reason
+for every decision. It does not apply for jobs; no code in it submits an application or contacts an employer or
+recruiter.
 
 ![The Executive Overview page of the CareerOS Power BI report, on synthetic demo data](powerbi/screenshots/executive.png)
 
-*The Executive Overview page, on Demo Mode data. Every number in the screenshots is synthetic.*
+*Executive Overview page, on Demo Mode data: every number in the screenshots is synthetic.*
 
-### Executive summary
+**Built by Christopher Little**, product owner and business systems analyst, for their own job search. Chris supplied
+or approved the requirements and screening rules, made the product, privacy and release decisions, reviewed the work
+by using it, labelled the 50 postings behind the calibration and wrote the private Power BI measures. Claude
+(Anthropic) implemented the code, tests and documentation under Chris's direction; Codex (OpenAI) reviewed it
+independently; ChatGPT helped design it. Full account: [My role](docs/portfolio_overview.md#my-role) in the portfolio
+overview and [AI-assisted development](docs/ai_assisted_development.md). Below, "I" and "the owner" are Chris; "the job
+seeker" is Chris on the private system and a fictional person in Demo Mode.
 
-CareerOS treats a job search as an operations problem: high volume, duplicate postings, eligibility rules buried in
-free text, and sources that cannot be taken at face value. This local Python system collects openings daily from
-job-board listings and alert emails, checks that each job board belongs to the employer, catches duplicates, rejects
-jobs that fail a stated hard requirement, scores the rest and records the reason for every decision. A person reviews
-the result and decides; nothing is applied for automatically. I defined the problem, supplied or approved the
-business rules, set the acceptance criteria, and made or approved the product, privacy and release decisions. Claude,
-an AI coding assistant, wrote the code; ChatGPT helped design it. I labelled 50 real postings, and a first calibration
-against them (2026-10-16) found that the hard rules agreed with my 50 labels (in-sample), but that the ranking does not
-yet separate the jobs I want from those I would skip.
+**Results**
 
-For hiring managers, the [portfolio overview](docs/portfolio_overview.md) maps each skill to its evidence and includes
-a two-minute tour.
+- 850 automated tests pass locally with outbound network refused. The public repository's CI runs the same
+  validation; this version's CI result comes with its publication.
+- 723 planted defects: the latest full run (2026-11-01) caught every one with a failing test
+  (`evidence/mutation-receipt.json`).
+- Chris labelled 50 real postings (2026-10-16): the hard rules agreed with all 50 (in-sample), the ranking did not;
+  ranking effectiveness is not demonstrated ([limitations](#limitations)).
 
-### Who built this, and my role
+### Project status (2026-11-01)
 
-I'm Christopher Little. CareerOS is my project, built for my own job search. I was its **product owner and business
-systems analyst**. Claude, an AI coding assistant, wrote the code; ChatGPT helped design it. What I did:
-
-- Defined the problem and the goal: fewer, better-qualified openings, not more applications (quality over volume).
-- Supplied my own facts and personal rules (profile, pay floor, location rule, which job titles count) and approved
-  the rest of the screening rules.
-- Set the acceptance rule for every milestone (tests passing, regressions fixed, a written report, open issues listed)
-  and approved the two MVP gates.
-- Made the decisions put to me, and overrode the AI twice on tier rules (a skill-coverage minimum for the top tiers; a
-  second, broader tier of job titles my experience counts for).
-- Judged the work by using it: labelled 50 real postings and sent work back when it did not match what I meant.
-- Set the privacy requirements, approved the MIT licence and approved publication.
-
-More detail, skill by skill: the [portfolio overview](docs/portfolio_overview.md). In these documents, "the owner"
-means me; "the job seeker" means me on the private system and a fictional person in Demo Mode.
-
-**Who wrote the code.** Claude, an AI coding assistant, wrote the code and tests, and the script that generates the
-Power BI files, under my direction. ChatGPT (OpenAI) was the design and analysis partner: it drafted the main
-specifications and the Phase 1 audit (its audit of the first phase); I chose which were built and decided their open
-questions. Claude consolidated those specifications and the built system into 113 numbered requirements traced to code
-and tests.
-Claude also made lower-level technical choices and, once, at my instruction, a night's sixteen design decisions,
-logged for my review. Details: [AI-assisted development](docs/ai_assisted_development.md).
-
-### Skills shown, and the evidence
-
-For business systems analyst, automation analyst and process improvement analyst roles. The
-[portfolio overview](docs/portfolio_overview.md) has a fuller map.
-
-| Skill | Most relevant to | My part | Evidence |
-|---|---|---|---|
-| Problem framing | Business systems, process improvement | Defined the problem and the goal: quality over volume | [Business problem](#business-problem); [case study](docs/case_study.md), sections 1-2 |
-| Requirements and acceptance criteria | Business systems | Supplied or approved the requirements; set the acceptance rule for every milestone and approved the two MVP gates | [business requirements](docs/business_requirements.md); [traceability](docs/requirements_traceability.md); [Functional MVP report](docs/functional_mvp_report.md) |
-| Business rules and decision logic | Business systems, automation | Supplied my own facts and personal rules (profile, pay floor, location rule, which job titles count) and approved the rest of the screening rules; required a skill minimum for the top tiers and a second tier of experience titles, overriding the AI's recommendation both times | `config/policy/defaults.yaml` (public defaults); [architecture](docs/architecture.md), section 5; [AI-assisted development](docs/ai_assisted_development.md), section 6 |
-| Workflow and process design | Business systems, process improvement | Made or approved the product and workflow decisions; accepted, redirected or sent back proposed designs at each milestone | [Workflow](#workflow); [job lifecycle](docs/job_lifecycle.md); [ADR 0007](docs/adr/0007-human-approval-at-selected-stages.md) |
-| Automation with controls | Automation | Chose which milestones were built; approved scheduling, installs, downloads and publishing; new collection features were switched on only at my instruction | [Workflow](#workflow); [architecture](docs/architecture.md), section 3; `tools/validate.py` |
-| Measurement and continuous improvement | Process improvement | Labelled 50 real postings; Claude ran the comparison for my decision. Improving and validating the ranking are not done yet. | [Ranking calibration](docs/case_study.md#ranking-calibration-identify-measure-improve-validate) |
-| Testing and quality gates | All three | Set the acceptance rules; judged the running system and sent work back | [Testing](#testing); [Portfolio MVP report](docs/portfolio_mvp_report.md); `evidence/mutation-receipt.json` |
-| Analytics and KPIs | Business systems, process improvement | Approved the milestone that built them. Claude wrote the export and the report generator | [data dictionary](docs/analytics_data_dictionary.md); [dashboard spec](docs/powerbi_dashboard_spec.md) |
-| Privacy, security and release governance | All three | Set or approved the privacy requirements; chose a sanitized public snapshot; approved publication | [security architecture](docs/security_architecture.md); [release checklist](docs/public_release_checklist.md); [PRIVACY.md](PRIVACY.md) |
-| Directing AI-assisted delivery | All three | Directed AI assistants through bounded milestones, each ending in tests, a report and my approval before commit | [AI-assisted development](docs/ai_assisted_development.md) |
-
-### Project status (2026-10-29)
-
-- First published 2026-10-15 (UTC); the code here was last updated 2026-10-16 (UTC; Experience Match and
-  certifications).
-- Documentation and dependency locks were updated 2026-10-29, directly in this public repository (not generated from
-  the private engine).
-- Private development continues on application-preparation tooling and scoring calibration; that work is not in this
-  repository.
+- First published 2026-10-15 (UTC). This version publishes the code as of 2026-10-31; the code published before it
+  was the snapshot of 2026-10-16 (UTC; Experience Match and certifications), with documentation and dependency locks
+  updated on 2026-10-29 ([limitations](#limitations)).
+- New since then: assisted applications ([ADR 0009](docs/adr/0009-assisted-applications.md)) with the browser
+  extension, which fills nothing until a destination passes its installed-extension check, and dismissal fields in
+  the analytics export (schema revision 2; [data dictionary](docs/analytics_data_dictionary.md)).
+- The 50 labelled postings behind the calibration and the owner's Power BI report on real data stay private.
 
 ### For technical reviewers
 
-The sections below describe the system itself: architecture, employer verification, data quality, analytics,
-security, testing, Demo Mode and a quickstart.
-
-**Try it:** the demo runs offline on synthetic data and needs no credentials. See the [quickstart](#quickstart).
-
-Read next: [reviewer walkthrough](docs/demo_walkthrough.md) · [case study](docs/case_study.md) ·
-[architecture](docs/architecture.md) ·
-[AI-assisted development](docs/ai_assisted_development.md) · [Demo Mode](docs/demo_mode.md) ·
-[security architecture](docs/security_architecture.md) · [business requirements](docs/business_requirements.md)
+- **Try it:** the demo runs offline on synthetic data and needs no credentials: [quickstart](#quickstart), then the
+  [reviewer walkthrough](docs/demo_walkthrough.md).
+- **Read next:** [case study](docs/case_study.md) · [architecture](docs/architecture.md) ·
+  [AI-assisted development](docs/ai_assisted_development.md) · [Demo Mode](docs/demo_mode.md) ·
+  [security architecture](docs/security_architecture.md) · [business requirements](docs/business_requirements.md)
+- **Chris's own Power BI work:** the [CareerOS Power BI showcase](https://github.com/crlittle20/careeros-powerbi-showcase),
+  the measures Chris wrote (Power Query and DAX), rebuilt on this project's synthetic demo export.
 
 ## Project summary
 
@@ -104,10 +53,10 @@ Read next: [reviewer walkthrough](docs/demo_walkthrough.md) · [case study](docs
 | What | A local, single-user Python application: a daily pipeline, a command line, a local review page and a Power BI report |
 | For | One real job search. Designed for healthcare operations and business-systems roles, including claims and pharmacy-benefit work. It runs daily on the owner's machine. |
 | Shown publicly through | Demo Mode: the same production code on fictional employers, offline, with no credentials |
-| Size | About 13,400 lines of Python in the engine and 6,800 in tests; 38 database tables; 33 commands |
-| Documented by | 113 numbered requirements (101 requirements and 12 acceptance criteria), consolidated from the specifications and the built system and traced to code and tests ([business requirements](docs/business_requirements.md), [traceability](docs/requirements_traceability.md)), and 8 architecture decision records ([ADRs](docs/adr/README.md)) |
+| Size | About 19,800 lines of Python in the engine and 13,700 in tests; 43 database tables; 36 commands |
+| Documented by | 119 numbered requirements (107 requirements and 12 acceptance criteria), consolidated from the specifications and the built system and traced to code and tests ([business requirements](docs/business_requirements.md), [traceability](docs/requirements_traceability.md)), and 9 architecture decision records ([ADRs](docs/adr/README.md)) |
 | Built with | A human-directed, AI-assisted workflow: the owner directed and decided, ChatGPT helped design and challenge, Claude implemented ([how](docs/ai_assisted_development.md)) |
-| Status | Phase 1 (discovery and qualification) is in daily private use. The public repository's code is a generated snapshot of the private development repository; its documentation and dependency locks were updated directly here on 2026-10-29 ([limitations](#limitations)). |
+| Status | Phase 1 (discovery and qualification) is in daily private use. The public repository's code is a generated snapshot of the private development repository; its documentation and dependency locks were also updated directly in the public repository on 2026-10-29, and the private repository carries the same corrections ([limitations](#limitations)). |
 
 ## Business problem
 
@@ -148,6 +97,8 @@ time goes into applying rather than screening. Five principles run through the d
 | Eligibility | Hard rules with the posting line quoted as evidence. Only a hard requirement can reject; unknowns are flags. |
 | Scoring and routing | Fit, career value and freshness give an apply priority and a tier. A separate profile judges overnight and part-time work without touching the main decision. |
 | Certifications | Every certification a posting names is recorded: which one, its issuer, how the posting words it, whether the job seeker holds it (held, in progress or planned), and whether the match is exact, related or by family. Only a held credential satisfies a requirement; certifications add no score points. `careeros certifications` shows demand across target jobs ([details](docs/certifications.md)). |
+| Submission holds | Permission to submit kept apart from qualification: an employer-level hold, read from policy with the employer resolved through its aliases, is cleared only by your release of one posting and one channel, never by a score, a label or a recorded application. Nothing submits for you ([ADR 0007](docs/adr/0007-human-approval-at-selected-stages.md)). |
+| Shadow scoring | A read-only second opinion on the tiers: Qualification and Opportunity scored separately, with unknowns kept visible as a range instead of a neutral guess, a status (Tier A/B, Check First, Stretch review, Near-miss, Archive) and queues. `careeros eval --scoring` compares it with production and a simpler baseline on a read-only snapshot, one role counted once, and draws blind calibration lists for unbiased estimates. It changes no production tier; nothing is adopted without a prospective check ([details](docs/shadow_scoring.md)). |
 | Experience gaps | Shadow-mode experience-gap analysis: each years requirement gets a 20-point Experience Match (shortfall, coverage, relevance) and the tier effect it would have. It is shown and measured against the job seeker's labels, and changes no tier until the owner turns it on ([details](docs/experience_match.md)). |
 | Explainability | `careeros explain JOB` answers 14 questions about any job; `careeros sources explain` shows why a board is trusted |
 | Employer intelligence | Stable employer records with aliases and official domains, three separate board scores, ATS migrations, provider outages, and a Career Fit score that sets how often each employer is scanned |
@@ -290,12 +241,14 @@ Every control in the threat model is tied to a test and to a planted defect that
 
 | Layer | What it shows |
 |---|---|
-| 485 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`) |
-| 305 planted defects | `tools/mutate.py` breaks each safety rule in a scratch copy, and the test suite must then fail. A defect that survives is an untested rule. |
+| 850 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`) |
+| 723 planted defects | `tools/mutate.py` breaks each safety rule in a scratch copy, and the test suite must then fail. A defect that survives is an untested rule. |
 | Functional MVP gate | `tools/mvp_gate.py` runs the real command line in Demo Mode and makes 92 checks against expectations written from the postings and the policy, not read back from the system. Result: no requirement fails. Of 13, 10 are PASS and 3 are PARTIAL, with the gaps listed in the [report](docs/functional_mvp_report.md). |
 | Documentation tests | The documents' named files, tests, tables and commands must exist |
 | Static checks | ruff (pyflakes, bugbear and security rules), mypy against a recorded baseline of older errors, configuration checks |
 | Release and supply chain | The release scan for secrets, and pip-audit of both dependency locks |
+
+How the planted-defect runs work, in plain terms, is in [testing](docs/testing.md).
 
 One command runs it all, the same command the CI workflow (`.github/workflows/ci.yml`) runs:
 
@@ -322,7 +275,7 @@ numbers describe a hand-written world chosen to exercise every rule, not a real 
 | Area | Choice |
 |---|---|
 | Language and runtime | Python 3.12, standard library first |
-| Storage | SQLite in WAL mode, 12 forward-only migrations |
+| Storage | SQLite in WAL mode, 14 forward-only migrations |
 | Dependencies | httpx (HTTP), PyYAML (policy), anthropic (an optional AI requirement reader, used only when an API key is stored) |
 | Review page | The standard library's HTTP server, bound to 127.0.0.1 |
 | Analytics | CSV star schema; Power BI project files (TMSL model and PBIR report) generated by `tools/build_powerbi_project.py` |
@@ -331,7 +284,10 @@ numbers describe a hand-written world chosen to exercise every rule, not a real 
 
 ## Quickstart
 
-Tested on Windows 10 and 11 with Python 3.12. The core is plain Python, but other platforms are not verified yet.
+The hash-locked development set (`requirements-dev.lock`, wheels only) installs on CPython 3.12 on Windows x64 or
+Linux x64, and on nothing else yet: Windows 10 and 11 are where the owner runs CareerOS, and the Linux install is
+verified by the CI job. On macOS, or with another Python version, the install fails because no hashed wheel matches;
+the [reviewer walkthrough](docs/demo_walkthrough.md) says what can be checked without installing.
 
 ```
 python -m venv .venv-dev
@@ -339,7 +295,11 @@ python -m venv .venv-dev
 .venv-dev\Scripts\python.exe -m careeros demo tour
 ```
 
-Then explore the result with Demo Mode on (Command Prompt syntax; in PowerShell use `$env:CAREEROS_DEMO_MODE = "true"`):
+The commands are written for Windows. On Linux, use `python3` to create the environment and `.venv-dev/bin/python`
+wherever they say `.venv-dev\Scripts\python.exe`.
+
+Then explore the result with Demo Mode on (Command Prompt syntax; in PowerShell use `$env:CAREEROS_DEMO_MODE = "true"`;
+on Linux, `export CAREEROS_DEMO_MODE=true` to switch it on and `unset CAREEROS_DEMO_MODE` to switch it off):
 
 ```
 set CAREEROS_DEMO_MODE=true
@@ -349,7 +309,8 @@ set CAREEROS_DEMO_MODE=true
 set CAREEROS_DEMO_MODE=
 ```
 
-And run every check: `.venv-dev\Scripts\python.exe tools\validate.py --offline`.
+And run every check: `.venv-dev\Scripts\python.exe tools\validate.py --offline` (on Linux,
+`.venv-dev/bin/python tools/validate.py --offline`).
 
 The [reviewer walkthrough](docs/demo_walkthrough.md) goes from here through every part of the system in about ten
 minutes, with the output to expect. In the documentation, `careeros <command>` means
@@ -361,7 +322,8 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
 ## Limitations
 
 - **Single user, local, Windows.** The full validation also passes on Linux in CI, where that job is informational;
-  the daily-run setup (Task Scheduler, Credential Manager, notifications) is Windows-only. macOS is untested.
+  the daily-run setup (Task Scheduler, Credential Manager, notifications) is Windows-only. The hash-locked install is
+  for CPython 3.12 on Windows x64 or Linux x64 only; macOS is unsupported and untested.
 - **CI runs only on the public repository.** The private development repository has no remote. The first run
   (2026-10-15) passed on Windows (required) and Linux (informational).
 - **Four providers.** Only Greenhouse, Lever, Ashby and Workable are read automatically. Other systems are manual
@@ -371,22 +333,23 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
 - **Rules-based reading.** Requirements are read by deterministic rules. The AI reader is optional, needs an API key,
   and is switched off in the owner's own setup.
 - **Ranking effectiveness not demonstrated (measured 2026-10-16).** I labelled 50 real postings (22 Apply, 11
-  Stretch, 17 Skip), and a calibration compared the published scoring code's decisions with them. The hard rules
-  agreed with my 50 labels (in-sample): they rejected 6 labelled jobs, all labelled Skip, and none of the 33 Apply or
-  Stretch jobs. The ranking did not: none of the 22 Apply jobs reached the top tiers (A/B), and scored Apply and Skip
-  jobs had the same average priority to one decimal place (70.3), although eligibility score and skill coverage did
-  separate them. The sample is small, comes from one person, mostly on jobs the review page showed, and no change has
-  been made or checked on new labels. The Phase 1 exit test asks for at least 50 labels with measured agreement. Not
-  claimed: the coded thresholds were met, but the precision figure rests on one top-tier job, the recall figure rests
-  on a private near-miss setting, and nothing in the test counts how many wanted jobs reach the top tiers
-  ([calibration](docs/case_study.md#ranking-calibration-identify-measure-improve-validate)). The source-expansion
-  targets are provisional.
+  Stretch, 17 Skip), and a calibration compared the decisions of the scoring code published on 2026-10-16 with them.
+  The hard rules agreed with my 50 labels (in-sample): they rejected 6 labelled jobs, all labelled Skip, and none of
+  the 33 Apply or Stretch jobs. The ranking did not: none of the 22 Apply jobs reached the top tiers (A/B), and scored
+  Apply and Skip jobs had the same average priority to one decimal place (70.3), although eligibility score and skill
+  coverage did separate them. The sample is small, comes from one person, mostly on jobs the review page showed, and
+  no tier rule in this repository has been changed in response or checked on new labels
+  ([shadow scoring](docs/shadow_scoring.md) is read-only and not adopted). The Phase 1 exit test asks for at least 50
+  labels with measured agreement. Not claimed: the coded thresholds were met, but the precision figure rests on one
+  top-tier job, the recall figure rests on a private near-miss setting, and nothing in the test counts how many wanted
+  jobs reach the top tiers ([calibration](docs/case_study.md#ranking-calibration-identify-measure-improve-validate)).
+  The source-expansion targets are provisional.
 - **Known gaps.** The Functional MVP gate grades 3 of 13 requirements PARTIAL (5 small gaps, listed in its report).
   Lead matching still relies on an older identity check. Type checking runs against a baseline of 164 older errors.
 - **Generated, not mirrored.** The public repository's code is a snapshot generated from an allowlist, with fresh
-  history ([release checklist](docs/public_release_checklist.md)). Its documentation and dependency locks were updated
-  directly here on 2026-10-29, not generated from the private engine. The private development repository's history
-  still holds private settings and is never published.
+  history ([release checklist](docs/public_release_checklist.md)). Its documentation and dependency locks were also
+  updated directly in the public repository on 2026-10-29; the private development repository carries the same
+  corrections. The private development repository's history still holds private settings and is never published.
 
 ## Roadmap
 
@@ -401,8 +364,10 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
 - Review the lead-matching path; reduce the type-check baseline; decide whether the Linux CI job becomes required.
 - Decide whether to enforce Experience Match once `careeros eval` reports it calibrated (50 labels, 20 of them with a
   years requirement).
-- Phase 2: fuller application packages prepared from the approved profile, for the person to review and submit
-  themselves.
+- Assisted applications are built ([ADR 0009](docs/adr/0009-assisted-applications.md)): versioned packages prepared
+  from the approved profile, and form filling only at the person's request; the person always submits. Filling stays
+  off for each destination until its installed-extension check. Next: compare assisted with manual applications
+  (`careeros assist report`), and build an adapter for another destination only where that shows time saved.
 
 **Deferred:** automatic applications. CareerOS applies to nothing today. A later phase may let the job seeker promote a
 channel to automatic submission after a clean record, under its own decision record

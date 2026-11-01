@@ -27,6 +27,7 @@ from careeros.review.applications import application_matrix, record_application,
 from careeros.review.funnel import funnel
 from careeros.review.labels import agreement, record_label
 
+from tests.test_saved import POLICY as TEST_POLICY
 from tests.helpers import JOB_MATRIX, add_job
 from tests.test_github_inbox import FakeGh, issue
 from tests.test_label_findings import PROFILE
@@ -43,7 +44,8 @@ APPROVED = policy_with(
     night__enabled=True,
     night__modes__supplemental__compensation={"floor_hourly": 29, "target_hourly": None},
     night__modes__replacement__compensation={"floor_annual": 74000, "target_annual": None})
-WITH_DAY_JOB = policy_with(night__enabled=True, night__day_job={"start": "08:00", "end": "16:30", "days": ["mon", "tue", "wed", "thu", "fri"]},
+WITH_DAY_JOB = policy_with(night__enabled=True, night__day_job={"start": "08:00", "end": "16:30", "days": ["mon", "tue", "wed", "thu", "fri"],
+                                                                 "timezone": "America/New_York"},
                            night__modes__supplemental__compensation={"floor_hourly": 29, "target_hourly": None},
                            night__modes__replacement__compensation={"floor_annual": 74000, "target_annual": None})
 # A synthetic mid-level persona with about four years and no completed bachelor's degree.
@@ -79,7 +81,7 @@ def flags(result):
 
 def assess(title, body, policy=APPROVED, profile=MID, **kw):
     j = job(title, body, **kw)
-    return night.assess(j, extract(body, policy).requirements, profile, policy, 60.0)
+    return night.assess(j, extract(body, policy).requirements, profile, policy, 60.0, now="2026-10-19T12:00:00.000Z")
 
 
 def store_ctx(policy=APPROVED, profile=MID):
@@ -192,21 +194,29 @@ class WeightedCoverageTests(unittest.TestCase):
 # --- #5 Workload and #6 COI ------------------------------------------------------------------------------------------
 class WorkloadTests(unittest.TestCase):
     def test_levels(self):
-        level = lambda schedule, shift, policy=WITH_DAY_JOB: night.workload(schedule, shift, policy)["level"]
-        self.assertEqual(level("overnight", (23 * 60, 7 * 60)), "severe")   # 8:00-4:30 day job + 11pm-7am
-        self.assertEqual(level("overnight", (23 * 60, 3 * 60)), "caution")  # + 11pm-3am
-        self.assertEqual(level("evening", (18 * 60, 20 * 60)), "green")
-        self.assertEqual(level("weekend", None), "green")
-        self.assertEqual(level("unknown", None), "unknown")
-        self.assertEqual(level("overnight", (23 * 60, 7 * 60), APPROVED), "unknown")  # day-job hours not set
+        def level(text, schedule="overnight", policy=WITH_DAY_JOB):
+            return night.workload(text, schedule, policy, now="2026-10-19T12:00:00.000Z")["level"]
+        self.assertEqual(level("Shift: 11pm to 7am Eastern Time, Monday to Friday"), "severe")   # 8:00-4:30 day job + 11pm-7am
+        self.assertEqual(level("Shift: 11pm to 4am Eastern Time, Monday to Friday"), "caution")  # + 11pm-4am
+        self.assertEqual(level("Shift: 6pm to 9pm Eastern Time, Monday to Friday", "evening"), "green")
+        self.assertEqual(level("Shift: 6pm to 9pm, Monday to Friday", "evening"), "unconfirmed")   # zone not stated: never green
+        self.assertEqual(level("Weekend availability required", "weekend"), "unknown")             # no hours stated
+        self.assertEqual(level("Hours not given", "unknown"), "unknown")
+        self.assertEqual(level("Shift: 11pm to 7am Eastern Time, Monday to Friday", policy=APPROVED), "unknown")  # day job not set
 
     def test_workload_is_informational_but_overlapping_hours_make_supplemental_incompatible(self):
         stacked = assess("Claims Quality Auditor (Part-Time)", OVERNIGHT, policy=WITH_DAY_JOB, employment="part time")
         self.assertEqual((stacked["mode"], stacked["workload"]["level"]), ("supplemental", "severe"))
         self.assertNotIn("overlaps_day_job", {f["code"] for f in stacked["failures"]})
         self.assertEqual(stacked["decision"], "eligible")  # severe is information for you, not a rejection
+        unconfirmed = assess("Claims Quality Auditor (Part-Time)", OVERNIGHT.replace("overnight shift, Sunday to Thursday, 11pm to 7:30am",
+                                                                                     "evening shift, 1pm to 9pm"),
+                             policy=WITH_DAY_JOB, employment="part time")
+        self.assertNotIn("overlaps_day_job", {f["code"] for f in unconfirmed["failures"]})   # zone and days unstated: never a rejection
+        self.assertIn("possible_day_job_overlap", {f["code"] for f in unconfirmed["flags"]})
+        self.assertEqual((unconfirmed["decision"], unconfirmed["state"]), ("eligible", "CONDITIONAL"))
         overlap = assess("Claims Quality Auditor (Part-Time)", OVERNIGHT.replace("overnight shift, Sunday to Thursday, 11pm to 7:30am",
-                                                                                 "evening shift, 1pm to 9pm"),
+                                                                                 "evening shift, Monday to Friday, 1pm to 9pm Central Time"),
                          policy=WITH_DAY_JOB, employment="part time")
         self.assertIn("overlaps_day_job", {f["code"] for f in overlap["failures"]})
         self.assertIn("its hours overlap your day job", overlap["coi"]["reasons"])
@@ -767,15 +777,16 @@ class FunnelTests(unittest.TestCase):
         store, _ = store_ctx()
         matrix = application_matrix()
         for n, tier in ((1, "near_miss"), (2, "B"), (3, "archive")):
-            job_id = add_job(store, f"gh:synth:{n}", current_state="scored", employment_type="contract")
+            job_id = add_job(store, f"gh:synth:{n}", current_state="scored", employment_type="contract",
+                             title=f"Claims Analyst {n}", title_norm=f"claims analyst {n}")  # three distinct roles
             store.writer("qualify").insert("scores", {
                 "score_id": f"s{n}", "job_id": job_id, "at": store.clock.now(), "policy_fingerprint": "p", "profile_fingerprint": "q",
                 "eligibility": 90, "candidate_fit": 90, "career_value": 90, "freshness": 90, "apply_priority": 90, "tier": tier,
                 "interview_band": "High", "state": "ELIGIBLE", "components_json": json.dumps({"domain": {"level": "direct"}})})
         record_label(store, "gh:synth:1", "apply", None, "l1")
         record_label(store, "gh:synth:2", "skip", None, "l2")
-        a1 = record_application(store, matrix, "gh:synth:1", "agency", agency="Synthetic Staffing", key="k1")
-        a3 = record_application(store, matrix, "gh:synth:3", "direct", key="k3")
+        a1 = record_application(store, matrix, "gh:synth:1", "agency", agency="Synthetic Staffing", policy=TEST_POLICY, key="k1")
+        a3 = record_application(store, matrix, "gh:synth:3", "direct", policy=TEST_POLICY, key="k3")
         update_application(store, matrix, a1, "acknowledged", key="u1")
         update_application(store, matrix, a3, "acknowledged", key="u2")
         update_application(store, matrix, a3, "rejected", key="u3")

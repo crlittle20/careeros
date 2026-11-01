@@ -41,7 +41,8 @@ into applying rather than screening.
 
 ## 3. Requirements
 
-The requirements are written as 113 numbered statements in `business_requirements.md` and traced to code and tests in
+The requirements are written as 119 numbered statements (107 requirements and 12 acceptance criteria) in
+`business_requirements.md` and traced to code and tests in
 `requirements_traceability.md`. The ones that shaped everything else:
 
 | Requirement | Why it is non-negotiable |
@@ -77,7 +78,7 @@ Working through real postings and real failures produced the findings that drove
 
 ## 5. Design
 
-Eight architecture decision records (`docs/adr/`) capture the main choices, with the alternatives that were rejected:
+Nine architecture decision records (`docs/adr/`) capture the main choices, with the alternatives that were rejected:
 
 | Decision | Rejected alternatives |
 |---|---|
@@ -89,6 +90,7 @@ Eight architecture decision records (`docs/adr/`) capture the main choices, with
 | Unsupported ATS systems stay manual (ADR 0006) | Scraping Workday or iCIMS pages; third-party aggregator APIs |
 | A person decides at selected stages, and CareerOS does not apply or send (ADR 0007) | Auto-approving the review band; permanent manual overrides. Automatic applications are deferred to a later phase, not rejected. |
 | One local store with enforced separation of duties and an audit chain (ADR 0008) | A server database; plain JSON or CSV files; an ORM |
+| CareerOS prepares packages and fills forms on request; the person submits (ADR 0009) | Matching questions to stored answers by a model's judgement of similarity; host permissions for every ATS. Automatic submission stays deferred (ADR 0007), and a native-messaging bridge was not built. |
 
 The resulting architecture is a single Python process over one SQLite file. Each component may write only the tables
 it owns. Every state change goes through a workflow matrix and writes history, the new state and an audit event in one
@@ -99,7 +101,7 @@ list. The details are in `architecture.md`.
 
 - **Stack:** Python 3.12 and the standard library, SQLite, httpx and PyYAML. The anthropic SDK backs an optional
   requirement reader that must quote the posting word for word and falls back to the rules.
-- **Size:** about 13,400 lines of engine code and 6,800 lines of tests, 38 tables, 12 forward-only migrations and 33
+- **Size:** about 19,800 lines of engine code and 13,700 lines of tests, 43 tables, 14 forward-only migrations and 36
   commands.
 - **Order of work:**
   1. Phase 1: board scanning, normalisation, the eligibility gate, scoring and the review page.
@@ -151,11 +153,11 @@ command, the same command as the CI workflow.
 
 | Measure | Result |
 |---|---|
-| Automated tests | 485, all passing; repeated full runs on 2026-10-13, including a fresh clone, showed no flaky test |
-| Planted defects | 305 defined. A full run on 2026-10-14, when 284 were defined, caught all but one; the survivor exposed a weak test, which was strengthened (below), and the next full run caught all 284. The last full run (2026-10-15, after Experience Match and certifications) caught all 305 (`evidence/mutation-receipt.json`). |
+| Automated tests | 850, all passing; repeated full runs on 2026-10-13, including a fresh clone, showed no flaky test |
+| Planted defects | 723 defined. The latest full run (2026-11-01) caught all 723, each by a real failing test with the whole suite loaded (`evidence/mutation-receipt.json`). Every full run since the first, with the survivors each one exposed and the fixes that followed (the first survivor, a weak test, is in the table below), is in [testing.md](testing.md); every defect and the tests that caught it are in [defect_coverage.md](defect_coverage.md). |
 | Functional MVP gate | 92 checks: no requirement fails; 10 PASS, 3 PARTIAL (5 small gaps, listed in `functional_mvp_report.md`) |
 | Release scan | No secret in the files or the Git history. Anyone can repeat the public repository's scan (`python tools/release_scan.py --history`); the private repository's result is reported, not inspectable. |
-| Dependency audit | At release, the first CI run's pip-audit (2026-10-15) found no known vulnerabilities in either lock. Advisories published afterwards affected three pinned packages (certifi, filelock and msgpack), which were raised to fixed versions, with every pin checked against PyPI and OSV advisory data, and a local pip-audit of both locks, on 2026-10-29. After the update, that pip-audit found no known vulnerabilities. Two of the fixed releases were under 14 days old; the lock's header records them as exceptions. |
+| Dependency audit | At release, the first CI run's pip-audit, in the public repository (2026-10-15), found no known vulnerabilities in either lock. Advisories published afterwards affected three pinned packages, which were raised to fixed versions with hashes checked against PyPI: certifi on 2026-10-20, filelock on 2026-10-23 and msgpack on 2026-10-29. After the last update, pip-audit of both locks (2026-10-29) found no known vulnerabilities. Two of the fixed releases were under 14 days old; the lock's header records them as exceptions the owner approved. |
 
 ### Defects the controls caught
 
@@ -195,15 +197,15 @@ market.
 
 ### Ranking calibration: identify, measure, improve, validate
 
-Observed on the private system on 2026-10-16, using the scoring code published here (commit `8ad32cf`) with the job
-seeker's private profile and settings. It reports aggregate figures only (counts, means and ranges), never a label,
+Observed on the private system on 2026-10-16, using the scoring code published on 2026-10-16 (public repository commit
+`8ad32cf`) with the job seeker's private profile and settings. It reports aggregate figures only (counts, means and ranges), never a label,
 job, employer or pay figure.
 
 | Step | Status | Where it stands |
 |---|---|---|
 | Identify | Done | The question: do the hard rules and the tiers agree with the job seeker's own Apply, Stretch and Skip labels (HR-001)? |
 | Measure | Done, once | The latest label on each of 50 jobs (22 Apply, 11 Stretch, 17 Skip), compared read-only with the decisions stored after every job was re-judged under those rules |
-| Improve | Not done | No rule, weight or threshold in this repository has changed in response |
+| Improve | Started, not adopted | No tier rule, weight or threshold in this repository has changed in response. A read-only shadow scoring (`shadow_scoring.md`) is compared with production and with the calibration's rule |
 | Validate | Not done | No change has been checked on labels given after it was chosen |
 
 **What was measured:**
@@ -233,20 +235,23 @@ job, employer or pay figure.
 - No label records a reason, so a Skip cannot be split into "not qualified" and "not wanted".
 - Labels are judgements, not outcomes. No interview or offer is used.
 
-**Not done: improve.** The calibration's leading hypothesis is to decide the top tiers on requirement match rather
+**Improve: started, not adopted.** The calibration's leading hypothesis is to decide the top tiers on requirement match rather
 than on priority: an eligible job with an eligibility score of at least 80, skill coverage of at least 0.70, no
 medium or larger experience gap and no degree stretch. On the same 50 labels that rule would pick 12 of the 20 scored
 Apply jobs and no Skip job, against none of either today. It was chosen on the labels it was scored on, so it is a
 hypothesis, not a result. The configuration-only alternative, lowering the Tier B line to a priority of 70, would have
-let 3 Skip jobs in. Nothing in this repository has changed in response.
+let 3 Skip jobs in. No tier rule in this repository has changed in response. The hypothesis is used only where it changes no
+tier: as baseline B0 in shadow scoring (`shadow_scoring.md`), a read-only second opinion that scores qualification and
+opportunity separately, and as the rule for standing package preparation (FR-084), which is off by default and never
+writes a label.
 
 **Not done: validate.** No change has been measured on labels given after it was chosen, so nothing is validated.
-Private development is working on that check; it is not part of this repository.
+Shadow scoring is built for that check: `careeros eval --scoring` compares it with production on a read-only snapshot.
 
 ### Not yet measured
 
-- **Whether a changed tier rule agrees better with the job seeker.** The calibration above measured the published
-  rules once; no change has been made, and nothing has been measured on labels given after it.
+- **Whether a changed tier rule agrees better with the job seeker.** The calibration above measured the production
+  rules once; no tier rule in this repository has changed in response, and nothing has been measured on labels given after it.
 - **The source-expansion pilot's targets** (more apply-worthy openings, audited match accuracy, review time). They are
   instrumented, but provisional.
 - **Job-search outcomes.** They are private and are not reported.

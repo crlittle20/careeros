@@ -24,6 +24,7 @@ from careeros.review.explain import FIELDS, explain_job, render
 from careeros.review.funnel import funnel
 from careeros.review.labels import record_label
 
+from tests.test_saved import POLICY as TEST_POLICY
 from tests.helpers import JOB_MATRIX
 from tests.test_v21_policy import OVERNIGHT, policy_with
 from tests.test_v25_audit import APPROVED, MID, store_ctx
@@ -75,7 +76,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(states[jid(7)], "rejected")
         # ACTION -> STATUS -> OUTCOME
         record_label(store, jid(1), "apply", "strong claims fit", "label-1")
-        app_id = record_application(store, application_matrix(), jid(1), "direct", key="apply-1")
+        app_id = record_application(store, application_matrix(), jid(1), "direct", policy=TEST_POLICY, key="apply-1")
         update_application(store, application_matrix(), app_id, "screening", key="screen-1")
         # every job, whatever happened to it, answers every question
         for job_id in states:

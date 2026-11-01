@@ -1,6 +1,7 @@
 """Shortlist to action (2026-10-12, Part 10).
 
-The shortlist = openings you labelled Apply or Stretch, plus Tier A/B picks, minus those you dismissed or that closed.
+The shortlist = openings you labelled Apply or Stretch, plus Tier A/B picks, minus those you dismissed, labelled Skip
+(your latest label wins over a Tier A/B pick) or that closed.
 For each one it shows: evidence-backed reasons it fits, confirmed incompatibilities and open questions (eligibility
 facts), listing status, the direct application link, whether you already applied or dismissed it, and the one next
 useful action.
@@ -30,6 +31,8 @@ def shortlisted_job_ids(store: Store) -> list[str]:
                         WHERE j.current_state NOT IN ('duplicate')
                           AND (s.tier IN ('A','B') OR (SELECT label FROM labels l WHERE l.job_id = j.job_id AND l.profile = 'primary'
                                                         ORDER BY at DESC, rowid DESC LIMIT 1) IN ('apply','stretch'))
+                          AND COALESCE((SELECT label FROM labels l WHERE l.job_id = j.job_id AND l.profile = 'primary'
+                                        ORDER BY at DESC, rowid DESC LIMIT 1), '') != 'skip'
                           AND NOT EXISTS (SELECT 1 FROM dismissals d WHERE d.job_id = j.job_id)
                         ORDER BY s.apply_priority DESC""")
     return [r["job_id"] for r in rows]
@@ -66,6 +69,8 @@ def next_action(item: dict) -> str:
             days = item.get("days_since_applied") or 0
             return "follow up with the recruiter" if days >= 7 else "wait for a response"
         return f"track the {app['current_state'].replace('_', ' ')} stage"
+    if item.get("submission"):   # held, employer unidentified, or broken hold settings: preparation only
+        return "prepare only, don't submit yet: " + item["submission"]
     if item["incompatible"]:
         return "dismiss it, or record why you would still apply: " + item["incompatible"][0]["detail"]
     if item["unknowns"]:
@@ -75,7 +80,7 @@ def next_action(item: dict) -> str:
     return "apply: " + (item["apply_url"] or "open the posting")
 
 
-def shortlist(store: Store) -> list[dict]:
+def shortlist(store: Store, policy=None) -> list[dict]:
     from careeros.openings import application_status, conflicts
     now = store.clock.now()
     out = []
@@ -95,18 +100,49 @@ def shortlist(store: Store) -> list[dict]:
                 "dismissed": status["dismissed"], "stretch": bool(comps.get("stretch"))}
         if status["applied"]:
             item["days_since_applied"] = (parse_utc(now) - parse_utc(status["applied"]["applied_at"])) / timedelta(days=1)
+        if policy is not None:   # permission to submit (R2), shown apart from the qualification
+            from .submission import display
+            item["submission"] = display(store, policy, job_id)
         item["next_action"] = next_action(item)
         out.append(item)
     return out
 
 
 # --- drafts --------------------------------------------------------------------------------------------------
-def draft(store: Store, profile, job_id: str, folder: Path) -> Path:
-    """An application brief for an opening you chose to pursue, from approved profile facts only."""
-    from careeros.pipeline import load_requirements
+def draft(store: Store, profile, job_id: str, folder: Path, policy=None, facts: list | None = None) -> Path:
+    """An application brief for an opening you chose to pursue, from approved profile facts only. Your approved facts
+    (careeros/review/approved_facts.py) are quoted word for word, and the brief checks its own wording against them."""
     label = _latest_label(store, job_id)
     if not label or label["label"] not in ("apply", "stretch"):
         raise ValueError("not_pursued: label it Apply or Stretch first (drafts are only for openings you chose to pursue)")
+    lines, issues = brief_lines(store, profile, job_id, policy, facts,
+                                f"- Your label: {label['label']}" + (f" ({label['reason']})" if label["reason"] else ""))
+    folder.mkdir(parents=True, exist_ok=True)
+    stem = f"{store.clock.now()[:10]}-{job_id.replace(':', '_')}"
+    path, n = folder / f"{stem}.md", 2
+    while True:   # never overwrite an earlier brief (you may have edited it): a later one the same day gets a number
+        try:
+            with path.open("x", encoding="utf-8") as handle:
+                handle.write("\n".join(lines) + "\n")
+            break
+        except FileExistsError:
+            path, n = folder / f"{stem}-{n}.md", n + 1
+    store.writer("review").event("draft_created", outcome="success", entity_type="job", entity_id=job_id,
+                                 actor_type="human", actor_id="user", metadata={"path": path.name, "wording_issues": len(issues)})
+    return path
+
+
+def brief_lines(store: Store, profile, job_id: str, policy, facts: list | None, why: str) -> tuple[list[str], list[dict]]:
+    """(lines, wording issues) of an application brief: `why` says why it was prepared (your label, or the standing
+    preparation policy for a package). Shared by `draft` and application packages (careeros/review/packages.py)."""
+    from careeros.review import approved_facts
+    facts = facts or []
+
+    def wording(item: dict) -> str:
+        fact = next((f for f in facts if (item.get("name") or "").strip().lower() in f["applies_to"]), None)
+        return f' Approved wording: "{fact["text"]}"' if fact else ""
+
+    from careeros.pipeline import load_requirements
     job = store.one("SELECT * FROM jobs WHERE job_id = ?", (job_id,))
     requirements = [r for r in load_requirements(store, job) if r.requirement_type != "responsibility"]
     items = {"skill": profile._items("skills"), "function": profile._items("functions"), "domain": profile._items("domains")}
@@ -117,13 +153,27 @@ def draft(store: Store, profile, job_id: str, folder: Path) -> Path:
             return hit
         return next((d for d in items["domain"] if d["name"].lower() == name.lower()), None)
 
+    from careeros.qualify.certifications import evidence_review
+    review = {(r["item"] or "").lower(): r for r in (evidence_review(profile, policy) if policy is not None else [])}
+
+    def under_review(item: dict) -> str:
+        flag = review.get((item.get("name") or "").lower())
+        return (f" UNDER REVIEW: this rests on {flag['credential']}, whose status is {flag['status'].replace('_', ' ')};"
+                " don't present it as confirmed.") if flag else ""
+
+    def held(name: str) -> str | None:
+        """Your status for a certification requirement, when you hold it (so it is never listed as a gap)."""
+        if policy is None:
+            return "held" if profile.has_certification(name) else None
+        from careeros.qualify.certifications import holds
+        return "held" if holds(profile, policy, name) else None   # never a course or an unknown kind
+
     def factual(item: dict) -> str:
         years = item.get("years")  # the FACT, never screening_years
         return f"{years:g} years" if isinstance(years, (int, float)) else "years not recorded"
 
     lines = [f"# Application brief: {job['title']} at {job['employer_name']}", "",
-             f"- Link: {job['apply_url'] or job['url'] or 'not recorded'}",
-             f"- Your label: {label['label']}" + (f" ({label['reason']})" if label["reason"] else ""),
+             f"- Link: {job['apply_url'] or job['url'] or 'not recorded'}", why,
              "- Built from your approved profile only. Years are the factual numbers from your resume (no screening rounding).",
              "  Edit freely; nothing here is submitted anywhere.", "", "## Requirements and your evidence", ""]
     gaps = []
@@ -137,7 +187,9 @@ def draft(store: Store, profile, job_id: str, folder: Path) -> Path:
         if item:
             source = item.get("source") or "your profile"
             lines.append(f"- **{r.name}** ({r.requirement_type.replace('_', ' ')}): {factual(item)}, {item.get('evidence', 'direct')}"
-                         f" evidence. Source: {source}")
+                         f" evidence. Source: {source}" + under_review(item) + wording(item))
+        elif r.category == "certification" and held(r.name):
+            lines.append(f"- **{r.name}** ({r.requirement_type.replace('_', ' ')}): you hold it (your profile's certifications)")
         else:
             gaps.append(r)
     lines += ["", "## Honest gaps (do not claim these)", ""]
@@ -146,10 +198,11 @@ def draft(store: Store, profile, job_id: str, folder: Path) -> Path:
     for kind in ("function", "skill"):
         for item in items[kind]:
             if item.get("evidence") == "direct" and item.get("source"):
-                lines.append(f"- {item['name']}: {factual(item)} ({item['source']})")
-    folder.mkdir(parents=True, exist_ok=True)
-    path = folder / f"{store.clock.now()[:10]}-{job_id.replace(':', '_')}.md"
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    store.writer("review").event("draft_created", outcome="success", entity_type="job", entity_id=job_id,
-                                 actor_type="human", actor_id="user", metadata={"path": path.name})
-    return path
+                lines.append(f"- {item['name']}: {factual(item)} ({item['source']}){under_review(item)}{wording(item)}")
+    issues = []
+    if facts:
+        lines += ["", "## Approved facts (quote them exactly)", ""] + [f'- "{f["text"]}"' for f in facts]
+        issues = approved_facts.check("\n".join(lines), facts)
+        lines += ["", "## Wording check", ""] + ([f"- {i['kind']} ('{i['words']}'): \"{i['sentence']}\"" for i in issues]
+                                                or ["- no figure from your approved facts is reworded above"])
+    return lines, issues

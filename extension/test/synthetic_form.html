@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Synthetic application form (CareerOS Assist test page)</title>
+<style>body { font: 14px system-ui, sans-serif; margin: 24px; } label { display: block; margin-top: 10px; }</style>
+</head>
+<body>
+<!-- A FICTIONAL form shaped like a Greenhouse-hosted application: field ids are the job-board API's field names.
+     Used to check fill.js by hand (docs/assisted_applications.md). It counts any submit attempt. -->
+<h1>Claims Analyst at Example Health Plan</h1>
+<form id="application_form" action="#" method="post">
+  <label for="first_name">First Name *</label><input type="text" id="first_name" name="first_name">
+  <label for="last_name">Last Name *</label><input type="text" id="last_name" name="last_name" value="Typed-by-you">
+  <label for="email">Email *</label><input type="email" id="email" name="email">
+  <label for="question_1">Are you authorized to work in the US? *</label>
+  <select id="question_1" name="question_1"><option value="">Select...</option><option value="1">Yes</option><option value="0">No</option></select>
+  <label for="question_4">Why do you want to work here?</label><textarea id="question_4" name="question_4"></textarea>
+  <label for="resume">Resume/CV *</label><input type="file" id="resume" name="resume">
+  <label for="question_9">Gender</label>
+  <select id="question_9" name="question_9"><option value="">Select...</option><option>Prefer not to say</option></select>
+  <button type="submit" id="submit_app">Submit application</button>
+</form>
+<p>Submit attempts: <span id="submits">0</span></p>
+<script>
+  window.submitCount = 0;
+  document.getElementById("application_form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    window.submitCount += 1;
+    document.getElementById("submits").textContent = String(window.submitCount);
+  });
+</script>
+</body>
+</html>

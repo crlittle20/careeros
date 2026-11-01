@@ -40,13 +40,32 @@ and `responsibility`. The posting's own words are kept as the record's `wording`
 
 ## Your status and the match
 
-- **Status:** `held`, `in_progress`, `planned`, `not_held` or `unknown`. A profile item may carry `status: planned` or
-  `status: in_progress`; without one it is held. Only a held credential ever satisfies a requirement.
+- **Status** (explicit since 2026-10-16): each profile item says `held`, `in_progress`, `planned`, `completed` or
+  `expired`. Case, spaces and hyphens don't matter ("In progress" is `in_progress`). An item without a status, or with
+  a status not on that list, is `unknown`, never held, and `careeros status` lists it. Two items for one credential with
+  different statuses are `conflicting` and never held until you resolve them. Only an explicit `held` satisfies a
+  requirement.
+- **Kind:** `certification` (the default), `applied_skill` or `course_certificate` (also written "course"). A course
+  certificate never satisfies a certification requirement, and a kind not on that list never counts as held
+  (2026-10-18). A course named like a certification ("... Professional Certificate") is kept apart from the
+  certification itself: they never conflict, and a requirement is matched to the certification first. A brief never
+  says you hold a certification on the strength of a course certificate or an unrecognised kind (2026-10-20).
+- **Evidence:** `evidence: {source, basis, checked}`, where basis is `self_reported`, `document_inspected` or
+  `issuer_verified`. Cards and `careeros explain` show it ("held (self-reported)", "held (certificate checked)"); only
+  `issuer_verified` is ever called verified, and a basis not on that list is shown as nothing and listed by
+  `careeros status`.
+- **Evidence that rests on a credential:** a skill, function or domain may list `credentials: [...]`. When one of them
+  is not held, the evidence is kept as recorded but flagged for your review: `careeros status` lists it, and a draft
+  marks the line UNDER REVIEW, in its requirements and its talking points, instead of presenting it as confirmed. A
+  skill resting on a completed course is not flagged: the course is the training it rests on.
 - **Match:** `exact`; `equivalent`, only through an owner-approved pair in the policy's `equivalent` list (empty by
-  default); `family_match`, when the posting asks only for a family or an issuer and you hold any credential of it;
+  default); `family_match`, when the posting asks only for a family and you hold any credential of it, or only for
+  an issuer and you hold one of THAT issuer's credentials (never another issuer's in the same field);
   `related`, a different credential of the same family, which never satisfies a named one (CAPM is not PMP); `none`;
   or `unknown` for a certification the posting does not name.
-- **Alternatives:** "PMP or CBAP" is satisfied by either one, and judged once.
+- **Alternatives:** "PMP or CBAP", "PMP, CBAP or PSM I" and "one of PMP, CBAP" are satisfied by any one, and judged
+  once. Since 2026-10-18 only when they are named in one sentence with nothing but "or", "and/or", "/" or a comma list
+  between them: "PMP and CBAP, plus Jira or Azure DevOps" is two requirements.
 
 ## Decision effect
 

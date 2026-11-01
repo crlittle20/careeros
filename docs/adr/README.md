@@ -13,8 +13,9 @@ Records are short and are never rewritten. A changed decision gets a new record 
 | [0006](0006-unsupported-ats-systems-stay-manual.md) | Unsupported ATS systems stay manual | Accepted |
 | [0007](0007-human-approval-at-selected-stages.md) | A person decides at selected stages, and CareerOS does not apply or send | Accepted (amended 2026-10-14) |
 | [0008](0008-local-store-with-enforced-duties-and-audit-chain.md) | One local store, with enforced separation of duties and an audit chain | Accepted |
+| [0009](0009-assisted-applications.md) | CareerOS prepares packages and fills forms on request; the person submits | Accepted (2026-10-21) |
 
-All eight were written on 2026-10-13. Most describe decisions taken earlier, so each record gives the date the
+The first eight were written on 2026-10-13; 0009 on 2026-10-21. Most describe decisions taken earlier, so each record gives the date the
 decision itself was made. A new record copies the structure:
 - the header (status, decided, recorded, related);
 - Context, Decision, Consequences, Alternatives considered;

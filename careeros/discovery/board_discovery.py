@@ -53,7 +53,7 @@ _GENERIC_NAMES = {"health", "healthcare", "care", "group", "solutions", "service
 def cfg(policy) -> dict:
     return {"enabled": False, "auto_activate": False, "slug_guessing": True, "max_slug_variants": 2, "daily_request_budget": 60,
             "per_provider_budget": 20, "curated_share": 0.2, "lookback_days": 90, "closed_after_days": 45,
-            "retry_days": {}, "staffing_agencies": [], **(policy.get("source_discovery", default={}) or {})}
+            "retry_days": {}, "staffing_agencies": [], "skip_employers": [], **(policy.get("source_discovery", default={}) or {})}
 
 
 def retry_days(policy, outcome: str) -> float:
@@ -281,9 +281,10 @@ def discover(ctx, candidate: Candidate, client: HttpClient, *, now: str | None =
     start = client.requests
     result = {"outcome": None, "mappings": [], "requests": 0, "matches": 0}
 
-    held = {norm_company(p) for p in policy.get("gate", "held_parents", default=[]) or []}
+    skipped = [*(policy.get("gate", "held_parents", default=[]) or []), *cfg(policy)["skip_employers"]]
+    held = {norm_company(p) for p in skipped}   # held, or employers whose sites stay manual (source_discovery.skip_employers)
     if excluded_employer({"employer_name": candidate.employer_name}, policy) or candidate.employer_norm in held:
-        _attempt(store, candidate, "skipped_policy", detail="excluded or held employer")
+        _attempt(store, candidate, "skipped_policy", detail="excluded, held or skipped employer")
         result["outcome"] = "skipped_policy"
         return result
     if candidate.relationship == "staffing_agency":

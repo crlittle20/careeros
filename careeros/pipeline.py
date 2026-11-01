@@ -49,8 +49,11 @@ def job_view(row) -> dict:
 
 
 # Policy sections that never change a PRIMARY decision: how CareerOS runs, and the separate NIGHT profile (which has
-# its own fingerprint below). Changing them must not re-evaluate every PRIMARY job.
-NOT_PRIMARY_DECISIONS = ("operations", "night", "scanning", "source_discovery", "board_verification")
+# its own fingerprint below). Changing them must not re-evaluate every PRIMARY job. `submission` (who may submit, and the
+# representation facts) and `employer_identity` (names that are other organisations) decide permission to submit only.
+NOT_PRIMARY_DECISIONS = ("operations", "night", "scanning", "source_discovery", "board_verification", "submission",
+                         "preparation", "assistance",
+                         "employer_identity")
 
 
 def decision_fingerprint(ctx: Context) -> str:
@@ -249,8 +252,15 @@ def ingest(ctx: Context, employer: dict | None, postings: list[RawPosting], *, s
                 else:
                     extra = {k: fields[k] for k in ("department", "source_updated_at", "deadline_at", "remote_scope",
                                                      "timezone_requirement") if existing[k] != fields[k]}
-                    disc.update("jobs", {"last_seen_at": now, "absent_scans": 0, **extra}, "job_id = ?", (job_id,))
-                    counts["unchanged"] += 1
+                    # the same text under a new requisition or address is a new identity for that posting (2026-10-18):
+                    # recorded as a meaningful change, so a submission release for the old one no longer counts
+                    moved = {k: fields[k] for k in ("requisition_id", "canonical_url") if (existing[k] or None) != (fields[k] or None)}
+                    disc.update("jobs", {"last_seen_at": now, "absent_scans": 0, **extra, **moved}, "job_id = ?", (job_id,))
+                    if moved:
+                        from careeros.openings import record_change
+                        record_change(store, job_id, [], extra="identifiers changed: " + "; ".join(
+                            f"{k} {existing[k] or '-'} -> {fields[k] or '-'}" for k in sorted(moved)))
+                    counts["reidentified" if moved else "unchanged"] += 1
         except Exception as exc:  # one bad posting never stops the run
             disc.exception("data_quality", "medium", f"ingest failed: {type(exc).__name__}: {exc}", entity_type="job",
                            entity_id=job_id, error_code="ingest_failed")
@@ -581,6 +591,8 @@ def _night_fingerprint(ctx: Context, job) -> str:
     from careeros.qualify import night
     return fingerprint({"v": night.NIGHT_VERSION, "rules": gate_mod.RULES_VERSION, "policy": decision_fingerprint(ctx),
                         "night": fingerprint(ctx.policy.data.get("night") or {}),
+                        "identity": fingerprint(ctx.policy.data.get("employer_identity") or {}),   # read by the NIGHT conflict check
+                        "holds": fingerprint((ctx.policy.data.get("submission") or {}).get("holds") or []),   # held families are familiar
                         "profile": ctx.profile.fingerprint, "content": job["content_fingerprint"],
                         "derived": [job["employment_type"], job["remote_type"], job["remote_states_json"],
                                     job["remote_excluded_states_json"], job["country"], job["comp_max"]],
@@ -588,14 +600,13 @@ def _night_fingerprint(ctx: Context, job) -> str:
 
 
 def _has_application(ctx: Context, job_id: str) -> bool:
-    """An open application anywhere in the job's role group (a right-to-represent check for NIGHT Supplemental)."""
-    from careeros.review.applications import OPEN_STATES, role_group
-    group = role_group(ctx.store, job_id)
-    if not group:
+    """An open application anywhere in the job's role group (a right-to-represent check for NIGHT Supplemental), from the
+    shared check; a duplicate search that could not finish counts as a possible conflict, never as clearance."""
+    from careeros.review.applications import preflight
+    if ctx.store.one("SELECT 1 FROM jobs WHERE job_id = ?", (job_id,)) is None:
         return False
-    marks = ",".join("?" * len(group))
-    return ctx.store.one(f"SELECT 1 FROM applications WHERE job_id IN ({marks}) AND current_state IN "
-                         f"({','.join('?' * len(OPEN_STATES))}) LIMIT 1", (*group, *OPEN_STATES)) is not None
+    check = preflight(ctx.store, job_id)
+    return bool(check.open_applications) or not check.complete
 
 
 def night_process(ctx: Context) -> Counter:
@@ -624,7 +635,7 @@ def night_process(ctx: Context) -> Counter:
                 requirements = rules.extract(job["description_text"] or "", ctx.policy).requirements
                 fresh = score_mod.freshness(view, store.clock.now(), ctx.policy)["score"]
                 out = night.assess(view, requirements, ctx.profile, ctx.policy, fresh,
-                                   application_conflict=_has_application(ctx, job["job_id"]))
+                                   application_conflict=_has_application(ctx, job["job_id"]), now=store.clock.now())
             writer.insert("night_results", {
                 "result_id": f"night:{uuid.uuid4().hex}", "job_id": job["job_id"], "at": store.clock.now(), "fingerprint": fp,
                 "decision": out["decision"], "state": out["state"], "mode": out["mode"], "tier": out["tier"],

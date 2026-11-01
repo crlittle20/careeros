@@ -135,7 +135,7 @@ def _act(ctx, day: int) -> None:
         if action == "label":
             record_label(ctx.store, job_id, value, rest[0] if rest else None, key=key)
         elif action == "apply":
-            record_application(ctx.store, matrix, job_id, value, key=key)
+            record_application(ctx.store, matrix, job_id, value, policy=ctx.policy, key=key)
         else:
             app = ctx.store.one("SELECT application_id FROM applications WHERE job_id = ?", (job_id,))
             update_application(ctx.store, matrix, app["application_id"], value, key=key)

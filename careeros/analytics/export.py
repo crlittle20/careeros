@@ -25,6 +25,7 @@ from careeros.discovery import sources
 from careeros.paths import CONFIG_DIR
 
 SCHEMA_VERSION = "analytics-1"
+SCHEMA_REVISION = 2     # raised by each column added within a version: 1 = 2026-10-13; 2 = dismissals (2026-10-30)
 NONE = "(none)"
 QUALIFIED_TIERS = ("A", "B", "near_miss")       # as in review/discovery_metrics.py
 RECOMMENDED_TIERS = ("A", "B")
@@ -70,7 +71,8 @@ TABLES = {
         ("freshness", "num"), ("apply_priority", "num"), ("skill_coverage", "num"), ("interview_band", "text"),
         ("decisive_unknowns", "int"), ("night_decision", "text"), ("night_mode", "text"), ("night_state", "text"),
         ("label", "text"), ("label_date_key", "int"), ("has_application", "flag"), ("sightings", "int"), ("source_count", "int"),
-        ("meaningful_changes", "int"), ("evaluations", "int"), ("days_to_decision", "num"), ("days_listed", "num")],
+        ("meaningful_changes", "int"), ("evaluations", "int"), ("days_to_decision", "num"), ("days_listed", "num"),
+        ("is_dismissed", "flag"), ("dismissed_date_key", "int"), ("dismissal_reason", "text")],   # added last: earlier columns keep their place
     "fact_job_observation": [
         ("observation_key", "int"), ("job_key", "key"), ("employer_key", "key"), ("ats_key", "key"), ("source_key", "key"),
         ("evidence_level", "text"), ("observed_date_key", "int"), ("is_first_sighting", "flag"), ("is_cross_source", "flag"),
@@ -308,6 +310,7 @@ def build(store, policy) -> dict[str, list[dict]]:
     scores = latest("SELECT * FROM scores ORDER BY at, rowid")
     nights = latest("SELECT * FROM night_results ORDER BY at, rowid")
     labels = latest("SELECT * FROM labels WHERE profile = 'primary' ORDER BY at, rowid")
+    dismissals = latest("SELECT job_id, reason_code, at FROM dismissals ORDER BY at, rowid")   # as review/dismiss.latest
     last_reason = {r["entity_id"]: r["reason_code"] for r in q("SELECT entity_id, reason_code FROM transitions "
                                                                  "WHERE entity_type = 'job' ORDER BY entity_id, sequence")}
     count = lambda sql: {r["job_id"]: r["c"] for r in q(sql)}  # noqa: E731
@@ -329,7 +332,7 @@ def build(store, policy) -> dict[str, list[dict]]:
     rows = []
     for j in jobs:
         jid, state = j["job_id"], j["current_state"]
-        g, s, n, lab = gates.get(jid), scores.get(jid), nights.get(jid), labels.get(jid)
+        g, s, n, lab, dis = gates.get(jid), scores.get(jid), nights.get(jid), labels.get(jid), dismissals.get(jid)
         if s and not (g and g["decision"] != "rejected" and s["at"] >= g["at"]):
             s = None   # a score only describes the job while its latest decision is the one it was made under
         comp = json.loads(s["components_json"]) if s else {}
@@ -349,7 +352,7 @@ def build(store, policy) -> dict[str, list[dict]]:
             "gate_decision": g["decision"] if g else None, "eligibility_state": s["state"] if s else None, "tier": tier,
             "is_evaluated": _flag(state in ("scored", "rejected", "needs_review")), "is_scored": _flag(scored),
             "is_qualified": _flag(scored and tier in QUALIFIED_TIERS and not j["variant_of"]),
-            "is_recommended": _flag(scored and tier in RECOMMENDED_TIERS),
+            "is_recommended": _flag(scored and tier in RECOMMENDED_TIERS and not j["variant_of"]),   # openings, as is_qualified
             "is_manual_review": _flag((scored and tier == "near_miss") or state == "needs_review"),
             "is_rejected": _flag(state == "rejected"), "is_duplicate": _flag(state == "duplicate"), "is_closed": _flag(state == "closed"),
             "is_variant": _flag(j["variant_of"]), "is_repost": _flag(j["repost_of"]), "linked_openings": links.get(jid, 0),
@@ -363,7 +366,9 @@ def build(store, policy) -> dict[str, list[dict]]:
             "has_application": _flag(jid in applied), "sightings": len(seen.get(jid, [])), "source_count": len(set(seen.get(jid, []))),
             "meaningful_changes": changes.get(jid, 0), "evaluations": evaluations.get(jid, 0),
             "days_to_decision": _days(j["first_seen_at"], g["at"]) if g else None,
-            "days_listed": _days(j["first_seen_at"], j["closed_at"] or j["last_seen_at"])})
+            "days_listed": _days(j["first_seen_at"], j["closed_at"] or j["last_seen_at"]),
+            "is_dismissed": _flag(dis), "dismissed_date_key": _key(dis["at"]) if dis else None,
+            "dismissal_reason": dis["reason_code"] if dis else None})
     tables["fact_job_evaluation"] = rows
 
     rows = []
@@ -445,11 +450,13 @@ def _calendar(first: int, last: int) -> list[dict]:
 
 
 # --- measures (the same definitions as the DAX in docs/powerbi_dashboard_spec.md) --------------------------------------
-def kpis(tables: dict[str, list[dict]]) -> dict:
+def kpis(tables: dict[str, list[dict]], *, exact: bool = False) -> dict:
+    """As the manifest records them; exact=True leaves rates and averages unrounded (for reconcile())."""
     jobs, boards = tables["fact_job_evaluation"], [b for b in tables["dim_board"] if b["board_key"] != NONE]
     scans, apps = tables["fact_board_scan"], tables["fact_application"]
     total = lambda rows, column: sum(r[column] or 0 for r in rows)  # noqa: E731
-    rate = lambda a, b: round(a / b, 3) if b else None  # noqa: E731
+    places = lambda value, digits: value if exact else round(value, digits)  # noqa: E731
+    rate = lambda a, b: places(a / b, 3) if b else None  # noqa: E731
     scored = [j["candidate_fit"] for j in jobs if j["is_scored"] and j["candidate_fit"] is not None]
     judged = [b for b in boards if b["collection"] == "allowed" and b["verification_status"] not in ("historical", "retired")]
     new = [b for b in boards if not b["is_legacy"] and b["collection"] == "allowed"]
@@ -465,7 +472,7 @@ def kpis(tables: dict[str, list[dict]]) -> dict:
         "duplicates_prevented": total(jobs, "is_duplicate") + total(jobs, "linked_openings"),
         "cross_source_sightings": total(tables["fact_job_observation"], "is_cross_source"),
         "verified_employers": len({b["employer_key"] for b in boards if b["verification_status"] == "active"}),
-        "average_fit": round(sum(scored) / len(scored), 1) if scored else None,
+        "average_fit": places(sum(scored) / len(scored), 1) if scored else None,
         "board_verification_rate": rate(sum(1 for b in judged if b["verification_status"] == "active"), len(judged)),
         "new_board_verification_rate": rate(sum(1 for b in new if b["verification_status"] in ("quarantined", "active")), len(new)),
         "scan_reliability": rate(total(scans, "is_complete"), len(scans)),
@@ -523,6 +530,9 @@ def validate(tables: dict[str, list[dict]]) -> list[dict]:
                     or (j["is_qualified"] and not j["is_scored"]) or (j["is_recommended"] and not j["is_qualified"])
                     or (j["is_scored"] and j["tier"] is None) or (j["is_rejected"] and not j["rejection_reason"])]
     _check(checks, "job flags agree with the job's state (scored jobs have a tier, rejections a reason)", not inconsistent, inconsistent[:5])
+    dismissed = [j["job_key"] for j in jobs if j["is_dismissed"] != _flag(j["dismissed_date_key"] is not None)
+                 or j["is_dismissed"] != _flag(j["dismissal_reason"])]
+    _check(checks, "dismissed jobs, and only they, have a dismissal date and reason", not dismissed, dismissed[:5])
     dates = [r["date_key"] for r in tables["dim_date"]]
     _check(checks, "dim_date is one row per day with no gaps",
            len(dates) == len(set(dates)) and all(_next(a) == b for a, b in zip(dates, dates[1:], strict=False)), f"{len(dates)} days")
@@ -554,13 +564,20 @@ def reconcile(tables: dict[str, list[dict]], store, policy) -> list[dict]:
     jobs = tables["fact_job_evaluation"]
     app_states = {r["current_state"]: r["c"] for r in store.all(f"SELECT current_state, COUNT(*) c FROM jobs WHERE {included} GROUP BY 1")}
     _check(checks, "jobs by state match the application", dict(Counter(j["current_state"] for j in jobs)) == app_states, app_states)
+    dismissed = {r["reason_code"]: r["c"] for r in store.all(
+        "SELECT reason_code, COUNT(*) c FROM (SELECT reason_code, ROW_NUMBER() OVER (PARTITION BY job_id ORDER BY at DESC, rowid DESC) n "
+        f"FROM dismissals WHERE job_id IN (SELECT job_id FROM jobs WHERE {included})) WHERE n = 1 GROUP BY 1")}
+    _check(checks, "dismissed jobs (by their latest reason) match the application",
+           dict(Counter(j["dismissal_reason"] for j in jobs if j["is_dismissed"])) == dismissed, dismissed)
     scopes = {r["remote_scope"] or "unknown": r["c"] for r in store.all(f"SELECT remote_scope, COUNT(*) c FROM jobs WHERE {included} GROUP BY 1")}
     exported = Counter(next(loc["remote_scope"] for loc in tables["dim_location"] if loc["location_key"] == j["location_key"]) for j in jobs)
     _check(checks, "remote classifications match the application", dict(exported) == scopes, scopes)
     boards = {r["verification_status"]: r["c"] for r in store.all("SELECT verification_status, COUNT(*) c FROM board_mappings GROUP BY 1")}
     _check(checks, "boards by verification status match the application",
            dict(Counter(b["verification_status"] for b in tables["dim_board"] if b["board_key"] != NONE)) == boards, boards)
-    k = kpis(tables)
+    # Unrounded, then rounded once as the application rounds its figures (2 places). Rounding the manifest's 3-place
+    # value again refused correct exports: 33 of 227 is 0.1454, which the application shows as 0.15, but 0.145 -> 0.14.
+    k = kpis(tables, exact=True)
     m = metrics(store, policy, 36500)   # the whole history, as the export has it
     v = m["verification"]
     pairs = {"jobs_qualified": m["opportunities"]["distinct_qualified_openings"],
@@ -571,7 +588,8 @@ def reconcile(tables: dict[str, list[dict]], store, policy) -> list[dict]:
         got = k[name]
         same = (got is None and expected is None) or (got is not None and expected is not None and
                                                       round(float(got), 2) == round(float(expected), 2))
-        _check(checks, f"{name} equals the application's own figure", same, f"export {got}, application {expected}")
+        _check(checks, f"{name} equals the application's own figure", same,
+               f"export {round(got, 4) if isinstance(got, float) else got}, application {expected}")
     return checks
 
 
@@ -612,7 +630,7 @@ def export(store, policy, out_dir: Path, *, source: str) -> dict:
     tables = build(store, policy)
     checks = validate(tables) + reconcile(tables, store, policy) + (synthetic_only(tables) if source == "demo" else [])
     files = {f"{t}.csv": to_csv(t, rows) for t, rows in tables.items()}
-    manifest = {"schema_version": SCHEMA_VERSION, "source": source, "generated_at": store.clock.now(),
+    manifest = {"schema_version": SCHEMA_VERSION, "schema_revision": SCHEMA_REVISION, "source": source, "generated_at": store.clock.now(),
                 "tables": {t: {"file": f"{t}.csv", "rows": len(rows), "sha256": hashlib.sha256(files[f"{t}.csv"]).hexdigest()}
                            for t, rows in tables.items()},
                 "kpis": kpis(tables), "valid": all(c["ok"] for c in checks), "checks": checks}

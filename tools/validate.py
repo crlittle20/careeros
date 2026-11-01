@@ -13,7 +13,9 @@ Checks, in order (all run; the exit code is 1 if any fails):
   types      mypy; fails on any error not listed in tools/mypy_baseline.txt (the list may only shrink)
   config     tests/test_config.py and tests/test_ci.py: policy, workflows, site policy, dependency pins, .env.example,
              the CI workflow and this tool
-  tests      every test, with outbound network refused (tools/offline_tests.py)
+  tests      every test, with outbound network refused (tools/offline_tests.py). The extension's behaviour tests need a
+             Node.js runtime (CAREEROS_NODE, or node on PATH): without one the line says they were NOT RUN, and a
+             --full run fails
   demo       tools/mvp_gate.py in Demo Mode on a throwaway vault; fails on FAIL, or on any item graded lower than in
              evidence/functional_mvp.json
   security   tools/release_scan.py (any secret fails; values are never printed) and pip-audit of both locks
@@ -142,7 +144,10 @@ def check_types(env: dict[str, str], scratch: Path, args: argparse.Namespace) ->
 def check_config(env: dict[str, str], scratch: Path, args: argparse.Namespace) -> Outcome:
     done = run([sys.executable, "-m", "unittest", "tests.test_config", "tests.test_ci"], env)
     ran = re.search(r"Ran (\d+) tests?", done.stderr)
-    return Outcome(done.returncode == 0, f"{ran.group(1) if ran else '?'} checks", done.stderr[-6000:])
+    # every planted defect's anchor, outside the test suite (a test would fail in every mutated copy and catch them all)
+    anchors = run([sys.executable, str(ROOT / "tools" / "mutate.py"), "--check-anchors"], env)
+    detail = f"{ran.group(1) if ran else '?'} checks" + ("" if anchors.returncode == 0 else "; stale planted-defect anchors")
+    return Outcome(done.returncode == 0 and anchors.returncode == 0, detail, (done.stderr[-6000:] + "\n" + anchors.stdout).strip())
 
 
 def check_tests(env: dict[str, str], scratch: Path, args: argparse.Namespace) -> Outcome:
@@ -151,7 +156,14 @@ def check_tests(env: dict[str, str], scratch: Path, args: argparse.Namespace) ->
     status = (re.findall(r"^(OK.*|FAILED.*)$", done.stderr, re.M) or ["no result"])[-1]
     detail = f"{ran.group(1)} tests, {status}" if ran else status
     failures = done.stderr[done.stderr.find("=" * 70):] if "=" * 70 in done.stderr else done.stderr[-6000:]
-    return Outcome(done.returncode == 0, detail + ", network refused", failures)
+    # a skip is not a pass: say when the extension's behaviour wasn't run (second Claude review, 2026-10-22)
+    node = env.get("CAREEROS_NODE") or shutil.which("node", path=env.get("PATH"))
+    if node:
+        return Outcome(done.returncode == 0, detail + ", network refused; extension behaviour run in Node", failures)
+    detail += ", network refused; extension behaviour tests NOT RUN (no Node.js runtime: set CAREEROS_NODE)"
+    if args.full:
+        return Outcome(False, detail + "; a --full run needs them", failures)
+    return Outcome(done.returncode == 0, detail, failures)
 
 
 def check_demo(env: dict[str, str], scratch: Path, args: argparse.Namespace) -> Outcome:
@@ -202,9 +214,14 @@ def check_security(env: dict[str, str], scratch: Path, args: argparse.Namespace)
 
 
 def check_mutations(env: dict[str, str], scratch: Path, args: argparse.Namespace) -> Outcome:
-    done = run([sys.executable, str(ROOT / "tools" / "mutate.py"), "--workers", str(args.workers)], env, timeout=4 * 3600)
-    caught = re.search(r"(\d+)/(\d+) mutations caught", done.stdout)
-    survived = [line for line in done.stdout.splitlines() if line.startswith(("SURVIVED", "ANCHOR"))]
+    # each mutated suite has its own timeout in mutate.py; this cap only stops a runaway (443 defects take about 6 hours)
+    done = run([sys.executable, str(ROOT / "tools" / "mutate.py"), "--workers", str(args.workers)], env, timeout=14 * 3600)
+    caught = re.search(r"(\d+)/(\d+) mutations caught[^\n]*", done.stdout)
+    if done.returncode in (2, 3):   # mutate stopped before a result (a change, another run, a stop request): its last lines say why
+        return Outcome(False, f"stopped before a result (exit {done.returncode})", done.stdout[-4000:])
+    listing = done.stdout.split("\nnot caught:\n", 1)[-1]   # each defect's final result, not every attempt's line
+    survived = [line for line in listing.splitlines()
+                if line.startswith(("SURVIVED", "ANCHOR", "LOAD_ERROR", "TIMEOUT", "INFRA_ERROR", "SLEPT", "TREE_CHANGED", "ENV_CHANGED"))]
     return Outcome(done.returncode == 0, caught.group(0) if caught else f"no result (exit {done.returncode})", "\n".join(survived) or done.stdout[-4000:])
 
 

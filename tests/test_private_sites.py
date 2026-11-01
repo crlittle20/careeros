@@ -101,7 +101,7 @@ class ConsumersTest(unittest.TestCase):
 class HomeStateTest(unittest.TestCase):
     """The home state is a vault setting (location.home_state, 2026-10-14). Messages read it; shared code, settings, tools
     and documents never name a state in full (apart from the state table and the fictional demo job seeker's state) or
-    a U.S. time zone (only the posting reader and the fictional demo postings use those)."""
+    a U.S. time zone (only the posting readers and the fictional demo postings use those)."""
 
     def test_messages_name_the_configured_state(self):
         job = {"comp_min": None, "comp_max": None, "description_text": ""}
@@ -118,7 +118,8 @@ class HomeStateTest(unittest.TestCase):
         for path in paths:
             rel = path.relative_to(ROOT).as_posix()
             if (path.suffix not in (".py", ".md", ".yaml", ".yml", ".json", ".sql") or "__pycache__" in path.parts
-                    or rel in ("careeros/normalize/posting.py", "docs/operator_manual.md")):
+                    or rel in ("careeros/normalize/posting.py", "careeros/qualify/worktime.py",   # posting readers
+                               "docs/operator_manual.md")):
                 continue
             text = path.read_text(encoding="utf-8")
             named = {m.group(1).lower() for m in names.finditer(text)} - allowed

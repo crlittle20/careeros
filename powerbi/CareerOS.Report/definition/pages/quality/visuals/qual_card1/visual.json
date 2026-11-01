@@ -2,10 +2,10 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
   "name": "qual_card1",
   "position": {
-    "x": 169,
+    "x": 328,
     "y": 10,
     "z": 1,
-    "width": 149,
+    "width": 308,
     "height": 90,
     "tabOrder": 1
   },

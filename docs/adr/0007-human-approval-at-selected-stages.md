@@ -25,7 +25,7 @@ CareerOS **prepares and explains**. A person decides:
 | Stage | The person's role | Safeguard |
 |---|---|---|
 | Applying and messaging | Does it themselves, outside CareerOS | No code exists that submits an application or sends a message to an employer or recruiter |
-| Recording an application | `careeros applied`, or the review page | One application per role across variants, duplicates and reposts; a second channel needs an explicit flag |
+| Recording an application | `careeros applied`, or the review page | One shared check (`preflight`, 2026-10-16) for the review page, the shortlist, NIGHT and recording: one application per role across variants, duplicates, reposts and same-opening links; a second channel needs an explicit flag; applying again to a role you applied to before (any outcome) needs a reason; a possible duplicate (a linked posting, or the same title at the same employer with no conflicting requisition), an unfinished duplicate search or the employer hold needs a confirmation reason. Your Skip removes a job from the shortlist. Each record is marked as your statement |
 | Labels | Apply, stretch or skip | Labels are measured against the system's tiers (the 50-label exit test) |
 | Boards in the review band (trust 65-84) and review cases | Approve with a reason, reject, or resolve | An approval expires (90 days). It can never override an identity mismatch, an unsafe address, a contradicting official site or a manual-only system. |
 | Near-miss jobs and decisive unknowns | Check before applying | Shown as "manual review" and "check before applying" |
@@ -67,3 +67,14 @@ CareerOS **prepares and explains**. A person decides:
 - **2026-10-15.** "Send" in this record means to an employer or recruiter. A pre-publication review pointed out that
   CareerOS does write outward in one place: replies on the owner's issues, and a sanitized index, in the owner's own
   private GitHub inbox. The wording now says so. Nothing in the code changed.
+- **2026-10-16.** Permission to submit is now a layer of its own, apart from eligibility and scoring
+  (`review/submission.py`). Holds are read from policy at the moment of the check; the employer is resolved by
+  `normalize/employer_identity.py`; and only the owner's release of one hold for one posting and one channel clears it
+  (`careeros release`, table `submission_releases`). Recording an application already made is never refused: conflicts
+  and holds ask for the owner's explanation and stay with the record, and recording never releases a hold. Still no code
+  submits an application; a future tool must call `authorize`, which also checks eligibility, the employer's identity and
+  competing submissions (`test_a_release_never_skips_eligibility_or_competing_submissions`).
+- **2026-10-16, later.** The D13 employer left qualification: its jobs are judged like any other (they can reach Tier A/B)
+  and are held only for submission. The gate keeps its generic employer-level eligibility hold, now unused; NIGHT's
+  same-employer-family check uses the shared family lookup
+  (`test_qualification_no_longer_holds_the_employer_but_submission_still_does`).

@@ -1,7 +1,16 @@
 # CareerOS: analytics data dictionary
 
-- Version: 1.0 (schema `analytics-1`)
-- Date: 2026-10-13
+- Version: 1.1 (schema `analytics-1`, revision 2)
+- Date: 2026-10-13; revision 2 on 2026-10-30
+- Contract: `manifest.json` names it in two keys, `schema_version` (`analytics-1`) and `schema_revision` (a whole
+  number). Within a version, columns may only be added at the end of a table, and each addition raises the revision:
+  - 1: the tables of 2026-10-13 (an export without `schema_revision` is revision 1);
+  - 2: `is_dismissed`, `dismissed_date_key` and `dismissal_reason` at the end of `fact_job_evaluation`.
+
+  Removing, renaming, retyping or reordering a column, or changing what one means, needs a new version (`analytics-2`).
+  A correction that changes no value an earlier export can hold keeps both: on 2026-10-30 `is_recommended` stopped
+  counting variants, as `is_qualified` already did. An export with a recommended variant was always refused by its
+  own checks, so no export ever written holds one.
 - Code: `careeros/analytics/export.py`
 - Command: `careeros export [--out FOLDER]`
 - Demo sample: `samples/analytics_demo/` (rebuilt by `tools/build_demo_export.py`)
@@ -102,7 +111,7 @@ All relationships are many-to-one, from the fact (many) to the dimension (one), 
 | fact_job_evaluation | location_key | dim_location | yes |
 | fact_job_evaluation | discovery_source_key | dim_source | yes |
 | fact_job_evaluation | first_seen_date_key | dim_date | yes |
-| fact_job_evaluation | decided_date_key, posted_date_key, last_seen_date_key, closed_date_key, label_date_key | dim_date | no (`USERELATIONSHIP`) |
+| fact_job_evaluation | decided_date_key, posted_date_key, last_seen_date_key, closed_date_key, label_date_key, dismissed_date_key | dim_date | no (`USERELATIONSHIP`) |
 | fact_job_observation | job_key, employer_key, ats_key, source_key | dim_job, dim_employer, dim_ats, dim_source | yes |
 | fact_job_observation | observed_date_key | dim_date | yes |
 | fact_board_scan | board_key, employer_key, ats_key | dim_board, dim_employer, dim_ats | yes |
@@ -126,13 +135,14 @@ Two things are deliberately **not** relationships:
   - Something you record yourself late in a U.S. evening can carry the next UTC date.
 - **`dim_date`** has one row per day, with no gaps. It runs from the earliest to the latest date used anywhere in the
   export, so it always covers the data and needs no maintenance.
-- **Role-playing dates.** `fact_job_evaluation` has six dates. *First seen* (when CareerOS first recorded the job) is
+- **Role-playing dates.** `fact_job_evaluation` has seven dates. *First seen* (when CareerOS first recorded the job) is
   the active relationship. The others are reached with `USERELATIONSHIP` in a measure:
   - *posted*: what the employer states;
   - *decided*: the latest eligibility decision;
   - *last seen*;
   - *closed*;
-  - *labelled*.
+  - *labelled*;
+  - *dismissed*: your latest dismissal.
 - **`days_to_decision`** and **`days_listed`** are in days, from timestamps, to two decimals. Days listed runs from
   first seen to closed, or to last seen for a job still listed.
 - **Snapshot.** `fact_job_evaluation` is a snapshot: each job's state and decision at export time. The event facts
@@ -292,8 +302,8 @@ Grain: one row per job (`jobs`), plus `(none)`. Descriptive attributes only; the
 ### fact_job_evaluation
 
 Grain: **one row per job**, describing its current state and latest decision (a snapshot at export time). Source:
-`jobs`, plus the latest `gate_results`, `scores`, `night_results` and primary label, the latest transition, and counts
-from `observations`, `job_changes`, `opening_links` and `gate_results`. Demo rows: 45.
+`jobs`, plus the latest `gate_results`, `scores`, `night_results`, primary label and dismissal, the latest transition,
+and counts from `observations`, `job_changes`, `opening_links` and `gate_results`. Demo rows: 45.
 
 | Column | Type | Description |
 |---|---|---|
@@ -320,7 +330,7 @@ from `observations`, `job_changes`, `opening_links` and `gate_results`. Demo row
 | `is_evaluated` | 0/1 | Has a current decision: scored, rejected or needs review. |
 | `is_scored` | 0/1 | Passed eligibility and is scored. |
 | `is_qualified` | 0/1 | Scored, tier A, B or near-miss, and not a variant (the application's "qualified openings"). |
-| `is_recommended` | 0/1 | Scored, tier A or B. |
+| `is_recommended` | 0/1 | Scored, tier A or B, and not a variant (like `is_qualified`, so every recommended job is also qualified). |
 | `is_manual_review` | 0/1 | Needs a person's judgement: tier near-miss ("manual review") or state needs_review. |
 | `is_rejected` | 0/1 | Rejected. |
 | `is_duplicate` | 0/1 | A duplicate of another job (not reviewed again). |
@@ -348,10 +358,17 @@ from `observations`, `job_changes`, `opening_links` and `gate_results`. Demo row
 | `evaluations` | whole number | Eligibility decisions made over the job's life (re-evaluations included). |
 | `days_to_decision` | decimal | First seen → latest decision, in days. |
 | `days_listed` | decimal | First seen → closed (or last seen), in days. |
+| `is_dismissed` | 0/1 | You dismissed it (`careeros dismiss`, or Dismiss on the review page). Recorded against this job only; a dismissal of another posting of the same opening is not carried over. |
+| `dismissed_date_key` | whole number | When you last dismissed it. |
+| `dismissal_reason` | text | The reason of your latest dismissal: `pay`, `location`, `remote`, `schedule`, `seniority`, `skills`, `qualifications`, `domain`, `employer`, `duplicate`, `closed`, `applied_elsewhere`, `not_interested`, `other`. The note you may add is not exported. |
 
 **A note on scores.** The score columns, and `tier`, are filled only while the job's latest decision is the one the
 score was made under. A job that was scored and later rejected shows no score. A job that was scored and then closed
 keeps its last score, but is not counted as qualified.
+
+**A note on dismissals.** A dismissal is your decision about a job, not a change of the job's state: a dismissed job
+keeps its `current_state`, tier and scores, and stays in every count above. Dismissals are append-only, so
+`is_dismissed` never goes back to 0. To leave dismissed jobs out of a view, filter on `is_dismissed` = 0.
 
 ### fact_job_observation
 
@@ -452,7 +469,7 @@ dashboard spec quotes the demo values; a test checks those quotes.
 | Distinct openings | Jobs that are neither duplicates nor variants. |
 | Jobs evaluated | `is_evaluated` = 1. |
 | Jobs qualified | `is_qualified` = 1. Equals the application's "distinct qualified openings". |
-| Jobs recommended | `is_recommended` = 1 (tiers A and B). |
+| Jobs recommended | `is_recommended` = 1: distinct openings in tiers A and B (variants are not counted). |
 | Jobs rejected | `is_rejected` = 1. |
 | Manual review rate | Jobs needing manual review ÷ jobs evaluated. |
 | Duplicates prevented | Duplicate jobs + linked openings. Equals the application's "duplicate reviews avoided". |
@@ -476,11 +493,13 @@ names the failures. The checks:
   - every value has its column's type;
   - scores are within 0-100 and skill coverage within 0-1;
   - job flags agree with the job's state;
+  - dismissed jobs, and only they, have a dismissal date and reason;
   - `dim_date` has no gaps.
 - **Reconciliation with the application:**
   - each fact has one row per source record;
   - every board is in `dim_board`;
-  - jobs by state, remote classifications and boards by status match the database;
+  - jobs by state, dismissed jobs by their latest reason, remote classifications and boards by status match the
+    database;
   - jobs qualified, duplicates prevented, verified employers, scan reliability and new-board verification rate equal
     `careeros metrics`.
 - **Demo exports only:** the only email addresses are `example.com` ones, and every employer website is a fictional
@@ -505,4 +524,4 @@ The checks and their results are in `manifest.json`, next to the row count and S
 
 **Not in the export at all:**
 - **Your profile, pay floor and policy.** Decisions carry their outcome, not their inputs.
-- **Free text** (posting descriptions, notes, email content).
+- **Free text** (posting descriptions, notes, dismissal notes, email content).

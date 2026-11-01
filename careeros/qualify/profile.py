@@ -72,10 +72,12 @@ class Profile:
         return 0 if known else None
 
     def certifications(self) -> set[str]:
-        """Names of the certifications you HOLD (2026-10-15: an item marked `status: planned` or `in_progress` is not held)."""
+        """Names of the certifications you HOLD: only an explicit `status: held` counts (2026-10-16), never a course
+        certificate. A missing status is unknown, not held."""
         names = set()
         for cert in self.data.get("certifications") or []:
-            if isinstance(cert, dict) and cert.get("status", "held") == "held":
+            if isinstance(cert, dict) and str(cert.get("status") or "").strip().lower() == "held" \
+                    and str(cert.get("kind") or "certification").strip().lower() in ("certification", "applied_skill"):
                 names.add(norm(cert.get("name", "")))
                 names.update(norm(m) for m in cert.get("matches") or [])
         return names

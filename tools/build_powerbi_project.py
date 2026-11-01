@@ -37,7 +37,7 @@ SCHEMA = "https://developer.microsoft.com/json-schemas/fabric"
 TMSL_TYPES = {"key": "string", "text": "string", "int": "int64", "flag": "int64", "num": "double", "date": "dateTime"}
 M_TYPES = {"key": "type text", "text": "type text", "int": "Int64.Type", "flag": "Int64.Type", "num": "type number", "date": "type date"}
 INACTIVE = {("fact_job_evaluation", c) for c in ("posted_date_key", "last_seen_date_key", "decided_date_key", "closed_date_key",
-                                                 "label_date_key")} | {("fact_verification", "started_date_key"),
+                                                 "label_date_key", "dismissed_date_key")} | {("fact_verification", "started_date_key"),
                                                                        ("fact_application", "last_change_date_key")}
 SORT_BY = {("dim_date", "month_name"): "month", ("dim_date", "day_name"): "day_of_week",
            ("dim_role_family", "family_name"): "sort_order", ("dim_location", "scope_label"): "sort_order"}
@@ -217,7 +217,8 @@ def literal(text: str) -> dict:
 
 
 def visual(name: str, kind: str, box: tuple, roles: dict, title: str | None = None, sort: str | None = None, z: int = 0,
-           objects: dict | None = None) -> dict:
+           objects: dict | None = None, subtitle: str | None = None) -> dict:
+    """subtitle: None keeps the theme's automatic one (the fields' display names), "" hides it, text replaces it."""
     x, y, w, h = box
     query = {"queryState": {role: {"projections": [field(r) for r in refs]} for role, refs in roles.items()}}
     if sort:
@@ -226,16 +227,28 @@ def visual(name: str, kind: str, box: tuple, roles: dict, title: str | None = No
     if objects:     # format settings: {object: {property: literal}}
         body["objects"] = {key: [{"properties": {p: {"expr": {"Literal": {"Value": v}}} for p, v in props.items()}}]
                            for key, props in objects.items()}
+    containers = {}
     if title:
-        body["visualContainerObjects"] = {"title": [{"properties": {"show": {"expr": {"Literal": {"Value": "true"}}},
-                                                                    "text": literal(title)}}]}
+        containers["title"] = [{"properties": {"show": {"expr": {"Literal": {"Value": "true"}}}, "text": literal(title)}}]
+    if subtitle is not None:
+        shown = {"show": {"expr": {"Literal": {"Value": "true" if subtitle else "false"}}}}
+        containers["subTitle"] = [{"properties": shown | ({"text": literal(subtitle)} if subtitle else {})}]
+    if containers:
+        body["visualContainerObjects"] = containers
     return {"$schema": f"{SCHEMA}/item/report/definition/visualContainer/2.4.0/schema.json", "name": name,
             "position": {"x": x, "y": y, "z": z, "width": w, "height": h, "tabOrder": z}, "visual": body}
 
 
-def cards(prefix: str, measures: list[str], y: int, height: int = 90, x0: int = 10, width: int = 1260) -> list[dict]:
-    w = (width - 10 * (len(measures) - 1)) / len(measures)
-    return [visual(f"{prefix}_card{n}", "card", (round(x0 + n * (w + 10)), y, round(w), height), {"Values": [f"[{m}]"]}, z=n)
+def cards(prefix: str, measures: list[str], y: int, height: int = 90, x0: int = 10, width: int = 1260, per_row: int | None = None,
+          label_size: int | None = None) -> list[dict]:
+    """KPI cards named prefix_card0.., per_row across (default: all in one row) in rows 10 px apart. A card's title is
+    its measure name, which the card cuts off when it does not fit: give it at least 8 px per character at the default
+    12 pt label, 7 px per character at label_size=10, plus 40 px (tests/test_powerbi.py checks this)."""
+    per_row = per_row or len(measures)
+    w = (width - 10 * (per_row - 1)) / per_row
+    objects = {"categoryLabels": {"fontSize": f"{label_size}D"}} if label_size else None
+    return [visual(f"{prefix}_card{n}", "card", (round(x0 + n % per_row * (w + 10)), y + n // per_row * (height + 10), round(w), height),
+                   {"Values": [f"[{m}]"]}, z=n, objects=objects)
             for n, m in enumerate(measures)]
 
 
@@ -245,20 +258,22 @@ BY_DAY = {"categoryAxis": {"axisType": "'Categorical'"}}                   # one
 
 PAGES = [
     ("executive", "Executive overview", lambda: [
-        visual("exec_slicer_date", "slicer", (10, 8, 300, 76), {"Values": ["dim_date[date]"]}, "Date", objects=RANGE),
-        visual("exec_slicer_family", "slicer", (320, 8, 300, 76), {"Values": ["dim_role_family[family_name]"]}, "Role family",
+        visual("exec_slicer_date", "slicer", (10, 8, 300, 76), {"Values": ["dim_date[date] as Date"]}, "Date", objects=RANGE),
+        visual("exec_slicer_family", "slicer", (320, 8, 300, 76), {"Values": ["dim_role_family[family_name] as Role family"]}, "Role family",
                objects=DROPDOWN),
+        # two rows of four: eight across (148 px each) cut most titles off (S15); a card under 90 px cuts the title off too
         *cards("exec", ["Jobs Discovered", "Jobs Qualified", "Jobs Recommended", "Jobs Rejected", "Duplicates Prevented",
-                        "Verified Employers", "Average Fit", "Manual Review Rate"], 92),
-        visual("exec_funnel", "funnel", (10, 190, 620, 250),
+                        "Verified Employers", "Average Fit", "Manual Review Rate"], 92, per_row=4),
+        visual("exec_funnel", "funnel", (10, 290, 620, 205),
                {"Y": ["[Jobs Discovered]", "[Distinct Openings]", "[Jobs Evaluated]", "[Jobs Qualified]", "[Jobs Recommended]",
-                      "[Labelled Apply]", "[Applied]"]}, "From discovery to application"),
-        visual("exec_trend", "lineChart", (640, 190, 630, 250), {"Category": ["dim_date[date]"], "Y": ["[Jobs Discovered]", "[Jobs Qualified]"]},
+                      "[Labelled Apply]", "[Applied]"]}, "From discovery to application",
+               subtitle="Jobs at each stage"),      # the automatic subtitle lists all seven measures and is cut off
+        visual("exec_trend", "lineChart", (640, 290, 630, 205), {"Category": ["dim_date[date] as Date"], "Y": ["[Jobs Discovered]", "[Jobs Qualified]"]},
                "Jobs discovered and qualified by first-seen date", objects=BY_DAY),
-        visual("exec_rejections", "clusteredBarChart", (10, 450, 620, 260),
+        visual("exec_rejections", "clusteredBarChart", (10, 505, 620, 205),
                {"Category": ["fact_job_evaluation[rejection_group] as Reason"], "Y": ["[Jobs Rejected by Reason] as Jobs rejected"]},
                "Why jobs are rejected", sort="[Jobs Rejected by Reason]"),
-        visual("exec_sources", "donutChart", (640, 450, 630, 260), {"Category": ["dim_source[source_name]"], "Y": ["[Jobs Qualified]"]},
+        visual("exec_sources", "donutChart", (640, 505, 630, 205), {"Category": ["dim_source[source_name] as Source"], "Y": ["[Jobs Qualified]"]},
                "Where qualified jobs come from"),
     ]),
     ("employers", "Employer intelligence", lambda: [
@@ -267,19 +282,20 @@ PAGES = [
             "[Jobs Recommended] as A/B", "[Average Fit] as Avg fit", "dim_employer[career_fit_score] as Career fit",
             "dim_employer[career_priority] as Priority", "dim_employer[boards_active] as Boards", "[Scan Reliability] as Scans OK"]},
             "Employers", sort="[Jobs Qualified]"),
-        visual("emp_scatter", "scatterChart", (780, 10, 490, 380), {"Category": ["dim_employer[employer_name]"], "X": ["[Average Career Fit]"],
-                                                                    "Y": ["[Jobs Qualified]"], "Size": ["[Jobs Discovered]"]},
-               "Career fit against qualified jobs"),
+        visual("emp_scatter", "scatterChart", (780, 10, 490, 380), {"Category": ["dim_employer[employer_name] as Employer"],
+                                                                    "X": ["[Average Career Fit]"], "Y": ["[Jobs Qualified]"], "Size": ["[Jobs Discovered]"]},
+               "Career fit against qualified jobs", subtitle="One bubble per employer, sized by jobs discovered"),
         visual("emp_boards", "pivotTable", (10, 400, 760, 310), {"Rows": ["dim_board[ats_key] as Provider"], "Columns": ["dim_board[verification_status] as Status"],
                                                                  "Values": ["[Boards]"]}, "Board verification by provider"),
-        *cards("emp", ["Verified Employers", "Board Verification Rate", "Average Board Trust"], 400, height=96, x0=780, width=490),
-        *cards("emp2", ["New-Board Verification Rate", "Scan Reliability"], 506, height=96, x0=780, width=490),
-        *cards("emp3", ["Boards", "Postings Read"], 612, height=96, x0=780, width=490),
+        # the long titles two across, the short ones three across, at a 10 pt label (S15)
+        *cards("emp", ["Verified Employers", "Board Verification Rate"], 400, height=96, x0=780, width=490, label_size=10),
+        *cards("emp2", ["New-Board Verification Rate", "Average Board Trust"], 506, height=96, x0=780, width=490, label_size=10),
+        *cards("emp3", ["Scan Reliability", "Boards", "Postings Read"], 612, height=96, x0=780, width=490, label_size=10),
     ]),
     ("pipeline", "Job pipeline", lambda: [
         # a time-scale axis: undecided and open jobs have no decided or closed date, which a categorical axis shows as (Blank)
         visual("pipe_flow", "clusteredColumnChart", (10, 10, 520, 290),
-               {"Category": ["dim_date[date]"], "Y": ["[Jobs Discovered]", "[Jobs Decided]", "[Jobs Closed]"]}, "Jobs in and out by day"),
+               {"Category": ["dim_date[date] as Date"], "Y": ["[Jobs Discovered]", "[Jobs Decided]", "[Jobs Closed]"]}, "Jobs in and out by day"),
         visual("pipe_apps", "clusteredBarChart", (540, 10, 230, 290), {"Category": ["fact_application[current_state] as Status"], "Y": ["[Applications]"]},
                "Applications by status"),
         *cards("pipe", ["Average Days to Decision", "Average Days Listed"], 10, height=140, x0=780, width=490),
@@ -301,28 +317,29 @@ PAGES = [
             "[Qualified Rate] as Qualified %", "[Average Fit] as Avg fit", "[Average Top of Pay Range (annual)] as Avg top pay",
             "[Pay Stated Rate] as Pay stated"]}, "Role families", sort="[Jobs Qualified]"),
         visual("role_remote", "hundredPercentStackedBarChart", (780, 10, 490, 340),
-               {"Category": ["dim_role_family[family_name]"], "Series": ["dim_location[scope_label]"], "Y": ["[Jobs Discovered]"]},
-               "What 'remote' means, by family"),
+               {"Category": ["dim_role_family[family_name] as Family"], "Series": ["dim_location[scope_label] as Remote scope"],
+                "Y": ["[Jobs Discovered]"]}, "What 'remote' means, by family"),
         visual("role_rejections", "pivotTable", (10, 360, 580, 350),
                {"Rows": ["dim_role_family[family_name] as Family"], "Columns": ["fact_job_evaluation[rejection_group] as Reason"],
                 "Values": ["[Jobs Rejected by Reason] as Rejected"]},
                "Rejection reasons by family"),
         visual("role_night", "clusteredColumnChart", (600, 360, 170, 350),
-               {"Category": ["fact_job_evaluation[night_mode]"], "Y": ["[NIGHT Routed]"]}, "NIGHT routing"),
+               {"Category": ["fact_job_evaluation[night_mode] as NIGHT mode"], "Y": ["[NIGHT Routed]"]}, "NIGHT routing"),
         # bars, not columns: the family names are too long to label a column axis
         visual("role_pay", "clusteredBarChart", (780, 360, 490, 350),
-               {"Category": ["dim_role_family[family_name]"], "Y": ["[Average Top of Pay Range (annual)]"]}, "Top of pay range by family"),
+               {"Category": ["dim_role_family[family_name] as Family"], "Y": ["[Average Top of Pay Range (annual)]"]}, "Top of pay range by family"),
     ]),
     ("quality", "System quality", lambda: [
         *cards("qual", ["Board Verification Rate", "New-Board Verification Rate", "Scan Reliability", "Verification Pass Rate",
-                        "Average Board Trust", "Duplicates Prevented", "Cross-Source Sightings", "Manual Review Rate"], 10),
-        visual("qual_scans", "lineChart", (10, 110, 620, 300), {"Category": ["dim_date[date]"], "Y": ["[Scan Reliability]"]},
+                        "Average Board Trust", "Duplicates Prevented", "Cross-Source Sightings", "Manual Review Rate"], 10, per_row=4),
+        visual("qual_scans", "lineChart", (10, 210, 620, 245), {"Category": ["dim_date[date] as Date"], "Y": ["[Scan Reliability]"]},
                "Scan reliability by day", objects=BY_DAY),
-        visual("qual_errors", "clusteredBarChart", (640, 110, 630, 300), {"Category": ["fact_board_scan[error_code] as Error"], "Y": ["[Scan Failures by Error] as Failures"]},
+        visual("qual_errors", "clusteredBarChart", (640, 210, 630, 245), {"Category": ["fact_board_scan[error_code] as Error"], "Y": ["[Scan Failures by Error] as Failures"]},
                "Scan failures by error"),
-        visual("qual_verify", "pivotTable", (10, 420, 620, 290), {"Rows": ["fact_verification[kind] as Kind"], "Columns": ["fact_verification[outcome] as Outcome"],
+        # the matrix needs about 460 px; the board table its 780, or it scrolls sideways (S15)
+        visual("qual_verify", "pivotTable", (10, 465, 470, 245), {"Rows": ["fact_verification[kind] as Kind"], "Columns": ["fact_verification[outcome] as Outcome"],
                                                                    "Values": ["[Verification Runs]"]}, "Verification runs"),
-        visual("qual_boards", "tableEx", (640, 420, 630, 290), {"Values": [
+        visual("qual_boards", "tableEx", (490, 465, 780, 245), {"Values": [
             "dim_board[board_key] as Board", "dim_board[verification_status] as Status", "dim_board[board_trust_score] as Trust",
             "dim_board[board_health_score] as Health", "dim_board[board_activity] as Activity", "dim_board[paused_reason] as Paused",
             "[Boards] as Count"]}, "Board health"),   # the Boards measure leaves out the (none) member

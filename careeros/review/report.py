@@ -17,10 +17,11 @@ from careeros.core import private_sites
 from careeros.core.clock import parse_utc
 from careeros.db.store import Store
 from careeros.qualify import certifications, experience
+from careeros.review.applications import OPEN_STATES
 
 TIER_TITLES = {"A": "Tier A: exceptional", "B": "Tier B: strong apply", "near_miss": "Near-miss: manual review"}
 STATE_NOTE = {"CONDITIONAL": "CONDITIONAL: check the flagged unknowns before applying",
-              "HOLD": "HOLD: employer on hold (D13) until you decide about it"}
+              "HOLD": "HOLD: an employer-level eligibility hold (gate.held_parents) until you decide about it"}
 STALE_DAYS = 60  # default only: the policy's discovery.max_posting_age_days decides (2026-10-12)
 NO_RESPONSE_DAYS = 14
 # Jobs that reached CareerOS only as NIGHT recommendations: their PRIMARY verdict is not a PRIMARY decision to audit.
@@ -134,11 +135,13 @@ def _stale_note(posted: str | None, now: str, stale_days: int) -> str:
 
 
 def _plain_card(store: Store, job, now: str, token: str | None, form_keys: dict, variants: int = 0, note: str = "",
-                new: bool = False, stale_days: int = STALE_DAYS) -> str:
+                new: bool = False, stale_days: int = STALE_DAYS, policy=None) -> str:
     score = _latest(store, "scores", job["job_id"])
     gate = _latest(store, "gate_results", job["job_id"])
     label = _latest(store, "labels", job["job_id"])
-    app = store.one("SELECT * FROM applications WHERE job_id = ? ORDER BY applied_at DESC LIMIT 1", (job["job_id"],))
+    from careeros.openings import application_status   # the same check recording uses (role group, history, holds)
+    status = application_status(store, job["job_id"])
+    app = status["applied"]
     states = json.loads(job["remote_states_json"] or "[]")
     parts = [f'<div class="card{" new" if new else ""}" id="{esc(job["job_id"])}"><h3>{safe_link(job["url"], job["title"])}</h3>',
              f'<div class="row"><span>{esc(job["employer_name"])}</span><span>{esc(job["location_raw"] or "location unknown")}'
@@ -189,9 +192,18 @@ def _plain_card(store: Store, job, now: str, token: str | None, form_keys: dict,
         parts.append(f'<div class="labelled">your label: {esc(label["label"])}{" — " + esc(label["reason"]) if label["reason"] else ""}</div>')
     if app:
         parts.append(f'<div class="ok">Applied {esc(app["applied_at"][:10])} via {esc(app["channel"])}'
-                     f'{" (" + esc(app["agency"]) + ")" if app["agency"] else ""} — status: {esc(app["current_state"].replace("_", " "))}</div>')
+                     f'{" (" + esc(app["agency"]) + ")" if app["agency"] else ""} — status: {esc(app["current_state"].replace("_", " "))}'
+                     f'{" (another posting of this role)" if app["job_id"] != job["job_id"] else ""}</div>')
+    holds = [c["detail"] for c in status["checks"] if c["level"] == "hold"]
+    if holds:
+        parts.append(f'<div class="flag">Before applying: {esc("; ".join(holds))}</div>')
+    if policy is not None:   # permission to submit (R2): its own line, apart from tier, state and scores
+        from .submission import display
+        line = display(store, policy, job["job_id"])
+        if line:
+            parts.append(f'<div class="flag"><b>{esc(line)}</b></div>')
     parts.append(_label_form(job["job_id"], token, form_keys))
-    if not app:
+    if not app or app["current_state"] not in OPEN_STATES:   # a finished application can be followed by a reasoned re-application
         parts.append(_apply_form(job["job_id"], token, form_keys))
     parts.append("</div>")
     return "".join(parts)
@@ -303,7 +315,7 @@ def _night_section(store: Store, now: str, token, form_keys, policy) -> list[str
             ("Tier A", [r for r in mine if r["n_tier"] == "A"]),
             ("Tier B", [r for r in mine if r["n_tier"] == "B"]),
             ("Conditional priority", [r for r in mine if r["n_state"] == "CONDITIONAL" and r["n_priority"] >= conditional_min]),
-            ("On hold (D13)", [r for r in mine if r["n_state"] == "HOLD" and r["n_priority"] >= near_min]),
+            ("On hold", [r for r in mine if r["n_state"] == "HOLD" and r["n_priority"] >= near_min]),
             ("Near-miss", [r for r in mine if r["n_tier"] == "near_miss" and r["n_state"] != "HOLD"
                            and not (r["n_state"] == "CONDITIONAL" and r["n_priority"] >= conditional_min)]),
         ]
@@ -326,7 +338,7 @@ def _stale_days(policy) -> int:
 def build_report(store: Store, profile, policy, *, token: str | None = None, form_keys: dict | None = None,
                  seed: int | None = None, since: str | None = None, app_matrix=None) -> str:
     now = store.clock.now()
-    _card = functools.partial(_plain_card, stale_days=_stale_days(policy))
+    _card = functools.partial(_plain_card, stale_days=_stale_days(policy), policy=policy)
     form_keys = {} if form_keys is None else form_keys
     counts = Counter(r["current_state"] for r in store.all("SELECT current_state FROM jobs"))
     scored = store.all("""SELECT j.*, s.tier, s.apply_priority, s.state FROM jobs j JOIN scores s ON s.score_id =
@@ -345,7 +357,7 @@ def build_report(store: Store, profile, policy, *, token: str | None = None, for
     out.append('<div class="meta">' + " · ".join(f"{esc(k)}: {v}" for k, v in sorted(counts.items())) +
                " | tiers: " + " · ".join(f"{esc(k)}: {v}" for k, v in sorted(tiers.items())) + "</div>")
 
-    out.extend(_shortlist_section(store, token, form_keys))
+    out.extend(_shortlist_section(store, token, form_keys, policy))
     out.extend(_applications_section(store, now, token, form_keys, app_matrix))
     out.extend(_funnel_section(store))
     out.extend(_reconsidered_section(store, since))
@@ -366,8 +378,8 @@ def build_report(store: Store, profile, policy, *, token: str | None = None, for
         ("Tier B: strong apply", [r for r in scored if r["tier"] == "B"], ""),
         ("Conditional priority", [r for r in scored if r["state"] == "CONDITIONAL" and r["apply_priority"] >= conditional_min],
          "Strong scores, but a material fact is unknown. Resolve the flagged unknowns before applying."),
-        ("On hold (D13)", [r for r in scored if r["state"] == "HOLD" and r["apply_priority"] >= near_min],
-         "Viable, but the employer is on hold until you decide about it. Kept for re-evaluation."),
+        ("On hold", [r for r in scored if r["state"] == "HOLD" and r["apply_priority"] >= near_min],
+         "Viable, but the employer is on an eligibility hold until you decide about it. Kept for re-evaluation."),
         ("Near-miss: manual review", [r for r in scored if r["tier"] == "near_miss" and r["state"] != "HOLD"
                                       and not (r["state"] == "CONDITIONAL" and r["apply_priority"] >= conditional_min)], ""),
     ]
@@ -432,9 +444,9 @@ def _dismiss_form(job_id: str, token: str | None, form_keys: dict) -> str:
                  '<button>Dismiss</button>')
 
 
-def _shortlist_section(store: Store, token, form_keys) -> list[str]:
+def _shortlist_section(store: Store, token, form_keys, policy=None) -> list[str]:
     from .shortlist import shortlist
-    items = shortlist(store)
+    items = shortlist(store, policy)
     out = [f'<h2 id="shortlist">Shortlist ({len(items)})</h2><div class="meta">Your Apply / Stretch labels and Tier A/B picks, '
            'with the evidence, open questions and the next useful action. Drafts: <code>careeros draft JOB_ID</code> '
            '(only after you choose to pursue a job). Nothing is ever submitted for you.</div>']
@@ -445,6 +457,8 @@ def _shortlist_section(store: Store, token, form_keys) -> list[str]:
                 + (f'<span>your label: {esc(i["label"])}</span>' if i["label"] else "")
                 + ('<span class="flag"><b>Stretch</b></span>' if i["stretch"] else "") + '</div>',
                 f'<div class="ok"><b>Next:</b> {esc(i["next_action"])}</div>']
+        if i.get("submission"):
+            bits.append(f'<div class="flag"><b>{esc(i["submission"])}</b></div>')
         if i["fit"]:
             bits.append("<ul>" + "".join(f"<li>{esc(f)}</li>" for f in i["fit"]) + "</ul>")
         if i["incompatible"] or i["unknowns"] or i["conflicts"]:

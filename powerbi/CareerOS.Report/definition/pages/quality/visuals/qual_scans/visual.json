@@ -3,10 +3,10 @@
   "name": "qual_scans",
   "position": {
     "x": 10,
-    "y": 110,
+    "y": 210,
     "z": 0,
     "width": 620,
-    "height": 300,
+    "height": 245,
     "tabOrder": 0
   },
   "visual": {
@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_date.date",
-              "nativeQueryRef": "date"
+              "nativeQueryRef": "date",
+              "displayName": "Date"
             }
           ]
         },

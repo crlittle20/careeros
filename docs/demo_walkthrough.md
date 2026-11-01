@@ -1,14 +1,16 @@
 # CareerOS: reviewer walkthrough
 
-- Version: 1.0
-- Date: 2026-10-13
+- Version: 1.1
+- Date: 2026-10-13; 1.1 on 2026-10-31
 - Companions: `README.md` (Quickstart), `demo_mode.md`, `portfolio_mvp_report.md`.
 
 This walkthrough shows each part of CareerOS working, in Demo Mode, in about ten minutes. Everything you see is
 **synthetic**: fictional employers on `example.com`, a fictional job seeker, and four simulated days. Nothing reaches
 the internet, and no credential is needed.
 
-**Before you start** (Windows, Python 3.12), set up once from the repository folder, as in the README:
+**Before you start** (CPython 3.12 on Windows x64 or Linux x64: the hash-locked install supports nothing else yet, and
+on macOS or another Python version it fails rather than installing), set up once from the repository folder, as in the
+README:
 
 ```
 python -m venv .venv-dev
@@ -16,12 +18,18 @@ python -m venv .venv-dev
 ```
 
 In this document, `careeros <command>` means `.venv-dev\Scripts\python.exe -m careeros <command>`, run from the
-repository folder.
+repository folder. The commands are written for Windows; on Linux, use `python3` to create the environment and
+`.venv-dev/bin/python` wherever they say `.venv-dev\Scripts\python.exe`.
 After the tour, switch Demo Mode on for the other commands:
 - Command Prompt: `set CAREEROS_DEMO_MODE=true`
 - PowerShell: `$env:CAREEROS_DEMO_MODE = "true"`
+- Linux shell: `export CAREEROS_DEMO_MODE=true`
 
 The output excerpts below are checked against the real commands by `tests/test_demo_mode.py`, so they stay true.
+
+**Without installing** (on macOS, for example): steps 1, 2 and 13 are mostly reading; the quoted output in the other
+steps is that checked output, so it can be read as the result; the five Power BI pages are in `powerbi/screenshots/`
+and the synthetic export behind them in `samples/analytics_demo/`.
 
 ## The 3-minute demo
 
@@ -48,7 +56,7 @@ daily run, the job lifecycle, verification and Demo Mode. Each major choice has 
 
 ### 3. Install the portfolio build
 
-Run the two setup commands above. They install 51 hash-checked packages into `.venv-dev` and leave the rest of your
+Run the two setup commands above. They install 52 hash-checked packages into `.venv-dev` and leave the rest of your
 system alone. Expect a minute or two.
 
 ### 4. Initialize Demo Mode
@@ -122,6 +130,8 @@ Pharmacy Claims Analyst | Meridian Rx | open | tier B ELIGIBLE
 The `careeros status` line in step 5 shows the separate overnight and part-time profile (NIGHT). `careeros review` shows
 both routes on one page: Tier B, near-miss, "check before applying", and the NIGHT section.
 
+![The review page in Demo Mode: the shortlist, with each job's evidence and next action](images/review_page_demo.png)
+
 ### 10. Inspect evidence
 
 - `careeros explain greenhouse:meridianrx:101 --json`: the same 14 answers, as data.
@@ -138,7 +148,7 @@ both routes on one page: Tier B, near-miss, "check before applying", and the NIG
 `careeros export` writes 13 CSV files and a manifest into the demo vault, after its own checks:
 
 ```
-all 78 checks passed
+all 81 checks passed
 ```
 
 To see the Power BI report:
@@ -153,7 +163,7 @@ To see the Power BI report:
 .venv-dev\Scripts\python.exe tools\validate.py --offline
 ```
 
-It runs lint, formatting rules, type checks, configuration checks, every test (with the network refused), the
+On Linux: `.venv-dev/bin/python tools/validate.py --offline`. It runs lint, formatting rules, type checks, configuration checks, every test (with the network refused), the
 Functional MVP gate and the release scan, and ends with `Validation: PASS (7 checks)`. It takes a few minutes.
 
 ### 13. Understand privacy controls
@@ -165,5 +175,5 @@ Read the README's **Security**, then `PRIVACY.md`. Section 3 of `demo_mode.md` l
 Refused: Gmail is not available in Demo Mode
 ```
 
-**When you are done:** run `careeros demo reset`, and switch Demo Mode off (`set CAREEROS_DEMO_MODE=` or
-`Remove-Item Env:CAREEROS_DEMO_MODE`).
+**When you are done:** run `careeros demo reset`, and switch Demo Mode off (`set CAREEROS_DEMO_MODE=`,
+`Remove-Item Env:CAREEROS_DEMO_MODE`, or on Linux `unset CAREEROS_DEMO_MODE`).

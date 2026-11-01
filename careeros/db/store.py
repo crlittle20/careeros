@@ -63,6 +63,8 @@ TABLES_BY_COMPONENT = {
     "qualify": {"gate_results", "scores", "night_assessments", "night_results"},
     "review": {"labels", "leads", "dismissals", "lead_matches", "title_audit"},
     "tracker": {"applications"},
+    "submission": {"submission_releases"},   # your releases of a submission hold (R2)
+    "assist": {"packages", "package_approvals", "assist_sessions", "assist_outcomes"},   # assisted applications (ADR 0009)
     "runner": {"runs"},
     "admin": {"employers", "runs", "meta", "board_mappings", "employer_aliases", "discovery_queue", "employer_entities",
               "board_reviews", "verification_evidence", "verification_runs"},

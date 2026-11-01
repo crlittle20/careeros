@@ -1,5 +1,6 @@
 {
  "schema_version": "analytics-1",
+ "schema_revision": 2,
  "source": "demo",
  "generated_at": "2026-11-05T13:01:00.000Z",
  "tables": {
@@ -46,7 +47,7 @@
   "fact_job_evaluation": {
    "file": "fact_job_evaluation.csv",
    "rows": 45,
-   "sha256": "54628074bfb48573c5dd4114d01bb9f6918bb9e143a908897a9c3a0049974b41"
+   "sha256": "0b99e8449e6dc288680d53f51e104864b8f3b7cb56d41ecb0e2c92603f73a7e4"
   },
   "fact_job_observation": {
    "file": "fact_job_observation.csv",
@@ -283,6 +284,11 @@
    "detail": "[]"
   },
   {
+   "check": "fact_job_evaluation.dismissed_date_key -> dim_date: every reference exists",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
    "check": "fact_job_observation.job_key -> dim_job: every reference exists",
    "ok": true,
    "detail": "[]"
@@ -398,6 +404,11 @@
    "detail": "[]"
   },
   {
+   "check": "dismissed jobs, and only they, have a dismissal date and reason",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
    "check": "dim_date is one row per day with no gaps",
    "ok": true,
    "detail": "9 days"
@@ -436,6 +447,11 @@
    "check": "jobs by state match the application",
    "ok": true,
    "detail": "{'closed': 4, 'duplicate': 1, 'rejected': 13, 'scored': 27}"
+  },
+  {
+   "check": "dismissed jobs (by their latest reason) match the application",
+   "ok": true,
+   "detail": "{}"
   },
   {
    "check": "remote classifications match the application",

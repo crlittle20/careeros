@@ -1,0 +1,60 @@
+# Shadow scoring (rubric v1), SCORING_SHADOW_SPEC 2026-10-16. Read ONLY by the read-only shadow evaluator
+# (careeros/qualify/rubric.py, careeros/review/shadow_policy.py). It is NOT part of the decision policy, so changing it
+# never changes the decision fingerprint, never re-evaluates a job and never changes a production tier.
+# Every number here is a hypothesis (H0) to be validated prospectively; nothing here is adopted.
+version: rubric-v1-2026-10-16
+
+qualification:            # points per section (sum 100)
+  coverage: 45            # required skill/domain items, importance x evidence
+  areas: 20               # required experience areas
+  duration: 20            # the Experience Match decisive line
+  level: 10               # present ability vs the posting's level
+  preferred: 5            # preferred skills and credentials (capped here)
+
+opportunity:              # points per section (sum 100)
+  pay: 30                 # low end of the posted range vs your floor and target
+  progression: 20         # posting level vs your level
+  domain: 20              # your stated domain priority (existing domain levels)
+  growth: 10              # growth-skill terms present / 3, capped at 1
+  arrangement: 10         # remote / hybrid / onsite value
+  terms: 10               # employment-type stability
+
+thresholds:               # H0, hypothetical
+  tier_a: 90              # Qa
+  tier_b: 80              # Qb
+  stretch: 65             # Qs
+  near_miss: 50           # Qn
+  coverage_b: 70          # CovL needed for B
+  coverage_a: 90          # CovL needed for A (and CovC = 100)
+  opportunity_floor: 50   # "lower desirability" annotation when O_high is below this
+  tolerated_unknowns_for_a: [pay]
+
+primary:                  # the configuration reported first; all alternatives are always computed
+  core: R2                # R0 | R1 | R2 | R3
+  duration: D2            # D1 (shortfall + coverage points / 16) | D2 (line score / 20, with relevance)
+  check_first_order: O1   # O1 (Q_high, C) | O2 (Q_low, fewest facts to resolve)
+  opportunity_order: OM1  # OM1 (O_mid, neutral imputation, ordering only) | OM2 (O_low)
+
+# --- the comparison harness (careeros/review/scoring_eval.py, `careeros eval --scoring`) ----------------------------
+baseline:                 # B0: the calibration review's rule (2026-10-16), frozen for comparison; stored production values
+  eligibility_b: 80       # eligibility score
+  coverage_b: 0.70        # production skill coverage, including its neutral 0.70 for postings with too few skills
+  gaps_b: [strong_match, small_gap, unknown]
+  eligibility_a: 90
+  coverage_a: 0.90
+  gaps_a: [strong_match]
+
+evaluation:
+  group_at: strong        # role groups for the primary analysis: strong or confirmed identity
+  strong_similarity: 0.99 # posting text similarity needed for strong identity
+  review_depths: [1, 3, 5, 10]   # "wanted jobs found per review" after the first k Check First reviews
+  daily_budget: 5         # hypothetical, per queue: "precision within the daily budget" (never changes a status)
+  relabel_check: 5        # already-labelled role groups mixed into each calibration list, to check your labels repeat
+
+sampling:                 # inclusion probability per role group, by the FIRST stratum it matches (hypothetical)
+  discordant: 1.0         # the approaches disagree on recommending it
+  recommended_by_all: 1.0
+  check_first_or_stretch: 1.0    # any rubric configuration gives Check First or Stretch review
+  near_miss: 0.25         # best status near-miss
+  archive: 0.10           # archive under every approach
+  gate_rejected: 0.05     # rejected by the gate (target job families)

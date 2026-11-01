@@ -2,10 +2,10 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
   "name": "emp3_card1",
   "position": {
-    "x": 1030,
+    "x": 947,
     "y": 612,
     "z": 1,
-    "width": 240,
+    "width": 157,
     "height": 96,
     "tabOrder": 1
   },
@@ -23,16 +23,31 @@
                       "Entity": "_Measures"
                     }
                   },
-                  "Property": "Postings Read"
+                  "Property": "Boards"
                 }
               },
-              "queryRef": "_Measures.Postings Read",
-              "nativeQueryRef": "Postings Read"
+              "queryRef": "_Measures.Boards",
+              "nativeQueryRef": "Boards"
             }
           ]
         }
       }
     },
-    "drillFilterOtherVisuals": true
+    "drillFilterOtherVisuals": true,
+    "objects": {
+      "categoryLabels": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "10D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
   }
 }

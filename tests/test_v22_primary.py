@@ -22,6 +22,7 @@ from careeros.review.funnel import funnel
 from careeros.review.report import build_report
 
 from tests import postings
+from tests.test_saved import POLICY as TEST_POLICY
 from tests.helpers import JOB_MATRIX, add_job
 from tests.test_label_findings import PROFILE
 from tests.test_qualify import POLICY, job
@@ -163,8 +164,8 @@ class OutcomeTests(unittest.TestCase):
         self.assertEqual(source_of(self.store, job("gh:synth:1")), ("board_scan", "primary"))
 
     def test_context_is_captured_and_confirmations_never_count_as_responses(self):
-        board = record_application(self.store, APP, "gh:synth:1", "direct", key="a1")
-        inbox = record_application(self.store, APP, "gh:synth:2", "agency", agency="Harbor Staffing", key="a2")
+        board = record_application(self.store, APP, "gh:synth:1", "direct", policy=TEST_POLICY, key="a1")
+        inbox = record_application(self.store, APP, "gh:synth:2", "agency", agency="Harbor Staffing", policy=TEST_POLICY, key="a2")
         ctx = json.loads(self.store.one("SELECT context_json FROM applications WHERE application_id = ?", (inbox,))["context_json"])
         self.assertEqual((ctx["source"], ctx["profile"]), ("chatgpt_inbox", "primary"))
         update_application(self.store, APP, board, "acknowledged", key="u1")  # an automatic confirmation only

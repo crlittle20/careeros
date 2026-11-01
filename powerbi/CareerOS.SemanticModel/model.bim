@@ -2148,6 +2148,47 @@
               }
             ],
             "formatString": "0.0"
+          },
+          {
+            "name": "is_dismissed",
+            "dataType": "int64",
+            "sourceColumn": "is_dismissed",
+            "lineageTag": "31193476-0a79-5065-a7a8-f486057d4a42",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "dismissed_date_key",
+            "dataType": "int64",
+            "sourceColumn": "dismissed_date_key",
+            "lineageTag": "61f28eac-16f9-53d6-b3fd-98dbbf207fc7",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ],
+            "isHidden": true
+          },
+          {
+            "name": "dismissal_reason",
+            "dataType": "string",
+            "sourceColumn": "dismissal_reason",
+            "lineageTag": "ae11f778-dbcc-506d-ab9c-5d4286d0eac5",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
           }
         ],
         "partitions": [
@@ -2159,7 +2200,7 @@
               "expression": [
                 "let",
                 "    Source = LoadTable(\"fact_job_evaluation\"),",
-                "    Typed = Table.TransformColumnTypes(Source, {{\"job_key\", type text}, {\"employer_key\", type text}, {\"board_key\", type text}, {\"ats_key\", type text}, {\"role_family_key\", type text}, {\"location_key\", type text}, {\"discovery_source_key\", type text}, {\"first_seen_date_key\", Int64.Type}, {\"posted_date_key\", Int64.Type}, {\"last_seen_date_key\", Int64.Type}, {\"decided_date_key\", Int64.Type}, {\"closed_date_key\", Int64.Type}, {\"current_state\", type text}, {\"state_reason\", type text}, {\"rejection_reason\", type text}, {\"rejection_group\", type text}, {\"decision_stage\", type text}, {\"gate_decision\", type text}, {\"eligibility_state\", type text}, {\"tier\", type text}, {\"is_evaluated\", Int64.Type}, {\"is_scored\", Int64.Type}, {\"is_qualified\", Int64.Type}, {\"is_recommended\", Int64.Type}, {\"is_manual_review\", Int64.Type}, {\"is_rejected\", Int64.Type}, {\"is_duplicate\", Int64.Type}, {\"is_closed\", Int64.Type}, {\"is_variant\", Int64.Type}, {\"is_repost\", Int64.Type}, {\"linked_openings\", Int64.Type}, {\"eligibility_score\", type number}, {\"candidate_fit\", type number}, {\"career_value\", type number}, {\"freshness\", type number}, {\"apply_priority\", type number}, {\"skill_coverage\", type number}, {\"interview_band\", type text}, {\"decisive_unknowns\", Int64.Type}, {\"night_decision\", type text}, {\"night_mode\", type text}, {\"night_state\", type text}, {\"label\", type text}, {\"label_date_key\", Int64.Type}, {\"has_application\", Int64.Type}, {\"sightings\", Int64.Type}, {\"source_count\", Int64.Type}, {\"meaningful_changes\", Int64.Type}, {\"evaluations\", Int64.Type}, {\"days_to_decision\", type number}, {\"days_listed\", type number}})",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"job_key\", type text}, {\"employer_key\", type text}, {\"board_key\", type text}, {\"ats_key\", type text}, {\"role_family_key\", type text}, {\"location_key\", type text}, {\"discovery_source_key\", type text}, {\"first_seen_date_key\", Int64.Type}, {\"posted_date_key\", Int64.Type}, {\"last_seen_date_key\", Int64.Type}, {\"decided_date_key\", Int64.Type}, {\"closed_date_key\", Int64.Type}, {\"current_state\", type text}, {\"state_reason\", type text}, {\"rejection_reason\", type text}, {\"rejection_group\", type text}, {\"decision_stage\", type text}, {\"gate_decision\", type text}, {\"eligibility_state\", type text}, {\"tier\", type text}, {\"is_evaluated\", Int64.Type}, {\"is_scored\", Int64.Type}, {\"is_qualified\", Int64.Type}, {\"is_recommended\", Int64.Type}, {\"is_manual_review\", Int64.Type}, {\"is_rejected\", Int64.Type}, {\"is_duplicate\", Int64.Type}, {\"is_closed\", Int64.Type}, {\"is_variant\", Int64.Type}, {\"is_repost\", Int64.Type}, {\"linked_openings\", Int64.Type}, {\"eligibility_score\", type number}, {\"candidate_fit\", type number}, {\"career_value\", type number}, {\"freshness\", type number}, {\"apply_priority\", type number}, {\"skill_coverage\", type number}, {\"interview_band\", type text}, {\"decisive_unknowns\", Int64.Type}, {\"night_decision\", type text}, {\"night_mode\", type text}, {\"night_state\", type text}, {\"label\", type text}, {\"label_date_key\", Int64.Type}, {\"has_application\", Int64.Type}, {\"sightings\", Int64.Type}, {\"source_count\", Int64.Type}, {\"meaningful_changes\", Int64.Type}, {\"evaluations\", Int64.Type}, {\"days_to_decision\", type number}, {\"days_listed\", type number}, {\"is_dismissed\", Int64.Type}, {\"dismissed_date_key\", Int64.Type}, {\"dismissal_reason\", type text}})",
                 "in",
                 "    Typed"
               ]
@@ -3489,6 +3530,14 @@
         "name": "12610a43-6df4-58bc-b2df-4fee22f14308",
         "fromTable": "fact_job_evaluation",
         "fromColumn": "label_date_key",
+        "toTable": "dim_date",
+        "toColumn": "date_key",
+        "isActive": false
+      },
+      {
+        "name": "3572a904-e03e-53fb-a269-492b1b7d9102",
+        "fromTable": "fact_job_evaluation",
+        "fromColumn": "dismissed_date_key",
         "toTable": "dim_date",
         "toColumn": "date_key",
         "isActive": false

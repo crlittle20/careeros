@@ -6,7 +6,7 @@
 - Companion to `business_requirements.md`.
 
 Each row reads: **business problem → requirement → system component → test → demo evidence**.
-- **Tests** are `file::test_name` under `tests/`. All of them pass (485 tests on 2026-10-15).
+- **Tests** are `file::test_name` under `tests/`. All of them pass (838 tests on 2026-10-30).
 - **Demo evidence** says what a reviewer can observe:
   - "Today" is a command or report section in the working system.
   - "Demo Dn" is a step of the synthetic demo, `careeros demo tour` (`docs/demo_mode.md`), listed at the end. D10 does
@@ -92,7 +92,13 @@ Each row reads: **business problem → requirement → system component → test
 | FR-062 one application per role, workflow, follow-up | `review/applications.py`, `config/workflows/application.json` | `test_applications::test_one_application_per_role_across_variants_and_duplicates`; `..::test_status_follows_the_matrix_and_history_stays_consistent`; `..::test_applications_section_offers_only_allowed_next_states_and_nudges_after_14_days` | Today: "Your applications" |
 | FR-053 shortlist, next action, dismissal | `review/shortlist.py`, `review/dismiss.py` | `test_v26_discovery::test_shortlist_next_action_dismissal_and_factual_drafts` | Today: `careeros shortlist`. Demo D9 |
 | FR-063 factual drafts | `review/shortlist.py: draft` | `test_v26_discovery::test_shortlist_next_action_dismissal_and_factual_drafts` | Today: `careeros draft JOB` |
-| HR-006 nothing applied automatically | whole system (no submission code exists) | by design: no component submits applications or sends messages | — |
+| HR-006 nothing applied automatically | whole system (no submission code exists); the extension fills only after your click | `test_extension::test_no_script_can_submit_click_type_send_store_or_navigate`; `test_extension::test_the_popup_fills_only_after_your_click_and_only_on_the_named_posting` | — |
+| FR-082 reusable answers | `review/answers.py` | `test_packages::test_an_answer_is_reused_only_for_its_question_or_a_listed_phrasing`; `..::test_an_expired_answer_needs_review_and_sensitive_questions_are_never_answered`; `..::test_consent_and_attestation_questions_beyond_the_first_person_are_never_answered`; `test_sensitive_questions::test_every_wording_in_the_corpus_is_never_answered_and_says_why` | Today: `careeros package gaps` |
+| FR-083 versioned packages, Stretch approval | `review/packages.py` | `test_packages::test_the_same_inputs_give_the_same_version_and_any_change_a_new_one`; `..::test_a_stretch_package_needs_approval_of_its_exact_version`; `..::test_a_posting_that_closes_or_that_the_gate_now_rejects_withdraws_its_package` | Today: `careeros package prepare JOB` |
+| FR-084 standing preparation | `review/packages.py: standing` | `test_packages::test_standing_preparation_is_off_by_default_and_never_writes_a_label`; `..::test_the_standing_batch_picks_only_unlabelled_unapplied_jobs_and_only_when_on` | Today: `careeros package prepare --standing` |
+| FR-085 assistance sessions | `review/assist.py` | `test_assist::test_a_session_reserves_the_role_until_you_close_it`; `..::test_an_uncertain_session_blocks_a_new_one_until_reconciled_and_is_never_resent` | Today: `careeros assist open JOB` |
+| FR-086 browser assistance | `extension/`, `review/adapters.py`, `review/assist.py: assistance_policy`, `config/site_policy.yaml` | `test_assist::test_a_handoff_holds_only_the_matched_values_bound_to_the_destination_and_expiring`; `test_extension::test_only_the_active_tab_and_scripting_permissions`; `test_extension_behaviour::test_a_tab_that_moved_to_another_posting_after_the_preview_is_never_filled`; `test_assist::test_greenhouse_filling_stays_off_until_you_turn_it_on_after_the_installed_check` | Today: `careeros assist open JOB --mode assisted` (refused until you turn a host on after the installed check, guide section 5) |
+| FR-087 assistance measurement | `review/assist.py: report` | `test_assist::test_the_report_labels_a_small_sample` | Today: `careeros assist report` |
 | HR-007 conflict of interest, holds | `qualify/night.py`, `qualify/gate.py` | `test_v25_audit::test_concrete_reasons_require_manual_review`; `test_qualify::test_held_employer_is_flagged_not_rejected` | Demo D7 |
 
 ## BP-7 Privacy
@@ -123,13 +129,13 @@ Each row reads: **business problem → requirement → system component → test
 | Requirement | Component | Tests | Demo evidence |
 |---|---|---|---|
 | FR-061, HR-001 labels and agreement | `review/labels.py`, `cli.py: cmd_eval` | `test_pipeline::test_report_escapes_posting_text_and_labels_measure_agreement`; `test_saved::test_review_page_labels_through_the_browser_form` | Today: `careeros eval` |
-| FR-075 analytics export (star schema, validated) | `analytics/export.py`, `cli.py: cmd_export`, `tools/build_demo_export.py` | `test_analytics::test_the_demo_export_is_valid_synthetic_and_reconciles_with_the_application`; `..::test_validation_catches_broken_exports`; `..::test_the_committed_sample_is_exactly_this_export`; `..::test_every_table_and_column_is_documented_in_order`; `..::test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured`; `..::test_the_export_only_reads_and_repeats_exactly`; `..::test_rows_marked_as_drills_or_tests_are_left_out`; `test_powerbi::test_the_committed_project_is_exactly_what_the_generator_builds`; `..::test_every_reference_resolves`; `..::test_relationships_follow_the_exports_references`; `..::test_the_measures_are_those_of_the_dashboard_spec` | Demo D10: `samples/analytics_demo/`, `powerbi/CareerOS.pbix`, `powerbi/screenshots/` |
+| FR-075 analytics export (star schema, validated) | `analytics/export.py`, `cli.py: cmd_export`, `tools/build_demo_export.py` | `test_analytics::test_the_demo_export_is_valid_synthetic_and_reconciles_with_the_application`; `..::test_validation_catches_broken_exports`; `..::test_the_committed_sample_is_exactly_this_export`; `..::test_every_table_and_column_is_documented_in_order`; `..::test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured`; `..::test_the_export_only_reads_and_repeats_exactly`; `..::test_rows_marked_as_drills_or_tests_are_left_out`; `..::test_dismissals_are_exported_with_the_latest_reason`; `..::test_the_contract_revision_names_these_columns`; `..::test_a_rate_is_compared_as_the_application_rounds_it`; `..::test_a_recommended_variant_counts_once_and_never_stops_the_export`; `test_powerbi::test_the_committed_project_is_exactly_what_the_generator_builds`; `..::test_every_reference_resolves`; `..::test_relationships_follow_the_exports_references`; `..::test_the_measures_are_those_of_the_dashboard_spec` | Demo D10: `samples/analytics_demo/`, `powerbi/CareerOS.pbix`, `powerbi/screenshots/` |
 | FR-072 metrics and funnel | `review/discovery_metrics.py`, `review/funnel.py` | `test_v26_discovery::test_enrichment_is_kept_apart_from_new_opportunities`; `test_v25_audit::test_recommended_to_hired_with_negatives_and_new_dimensions`; `test_demo_mode::test_reported_verified_boards_are_the_boards_verification_admitted` | Today: `careeros metrics`, `careeros funnel`. Demo D10 (M5 export) |
 | FR-060 review page | `review/report.py`, `review/server.py` | `test_applications::test_new_since_last_review_and_stale_flag`; `test_pipeline::test_full_flow` | Today: `careeros review`. Demo D9 |
 | AUD-001 transitions and fail-closed | `db/store.py`, `core/transitions.py` | `test_core::test_transition_writes_history_projection_and_audit`; `..::test_illegal_transition_leaves_no_trace`; `..::test_projection_mismatch_fails_closed` | Today: `careeros verify` |
 | AUD-002, FR-081 hash chain and on-demand verification | `db/store.py`, `cli.py: cmd_verify` | `test_core::test_event_chain_detects_tampering`; `test_core::test_history_invariants`; `test_applications::test_status_follows_the_matrix_and_history_stays_consistent` | Today: `careeros verify` |
 | NFR-001 local, single user | whole system | by design (SQLite file, no server) | — |
-| NFR-006 portability | platform guards in `core/credentials.py`, `core/locks.py`, `ops/notify.py` | CI runs Windows (required) and Ubuntu (informational), passing since 2026-10-15: `test_ci::test_windows_is_required_and_linux_informational` | — |
+| NFR-006 portability | platform guards in `core/credentials.py`, `core/locks.py`, `ops/notify.py` | CI runs Windows (required) and Ubuntu (informational) in the public repository, passing there since 2026-10-15: `test_ci::test_windows_is_required_and_linux_informational` | — |
 | NFR-008 policy configuration | `core/policy.py`, `pipeline.py: NOT_PRIMARY_DECISIONS` | `test_ops::test_operational_settings_never_re_evaluate_jobs` | — |
 | AUD-003 append-only history | schema triggers | `test_core::test_history_tables_are_immutable` | — |
 | AUD-004 idempotency | `db/store.py: receipt` | `test_core::test_idempotency_receipts`; `test_applications::test_record_once_and_replay_a_double_click` | — |
@@ -172,16 +178,15 @@ Each row reads: **business problem → requirement → system component → test
 | D11 | Validation: tests and the release-safety scan. | Tests exist (`tests/test_demo_mode.py`); the release-safety scan is Milestone 6 |
 
 ## Coverage summary
-- **Requirements:** 101 (FR 41, NFR 8, DQ 10, SEC 10, PRIV 8, AUD 6, PERF 3, EXC 8, HR 7), plus 12 acceptance criteria.
+- **Requirements:** 107 (FR 47, NFR 8, DQ 10, SEC 10, PRIV 8, AUD 6, PERF 3, EXC 8, HR 7), plus 12 acceptance criteria.
   Every one appears in this matrix.
 - **With at least one automated test:** all FR / DQ / SEC / PRIV / AUD / EXC / HR requirements, except:
-  - FR-080 scheduling (Windows Task Scheduler is external; backup and notification are tested);
-  - HR-006, satisfied by design: no submission code exists.
+  - FR-080 scheduling (Windows Task Scheduler is external; backup and notification are tested).
 - **Non-functional:** 5 of 8 tested.
   - NFR-001: by design.
   - NFR-004: is the test gate itself.
-  - NFR-006 (portability): checked by CI on Linux (an informational job, passing since 2026-10-15), not by a test of
-    its own.
+  - NFR-006 (portability): checked by CI on Linux in the public repository (an informational job, passing there since
+    2026-10-15), not by a test of its own.
 - **Measured, not tested:** PERF-001 (run duration). PERF-003 is observed.
 - **Open:**
   - demo step D4 lacks a board contradicted by the employer's own site, and D7 lacks an overnight posting that NIGHT

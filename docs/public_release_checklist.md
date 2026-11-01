@@ -63,6 +63,7 @@ Only the snapshot's manifest (source commit and file hashes) is recorded, and it
 | `evidence/` | Regenerated in the snapshot, not copied |
 | `README.md` | Yes: the project overview, written for publication on 2026-10-13 (Prompt 11). It is scanned with the denylist like every other file. |
 | `docs/operator_manual.md` | Never: the job seeker's operator manual (it was the README until 2026-10-13) |
+| `extension/`, `tests/test_extension.py`, `tests/test_extension_behaviour.py`, `tests/extension_harness.cjs` | Yes (owner decision, 2026-10-31): the form-filling browser extension ships with the code, with filling off until a destination's installed-extension check |
 | `SECURITY.md`, `PRIVACY.md`, `.gitignore`, `.env.example`, `LICENSE` | Yes (choose a licence) |
 | The vault, `.venv`, Git history, private notes outside the repository | Never |
 
@@ -148,10 +149,13 @@ initials.
   denylisted term in `careeros/`, `tests/`, `config/` or `docs/`.
 - [ ] R3 is resolved, or accepted in writing. (R1, R2 and G6 were resolved on 2026-10-13.)
 - [ ] The private denylist is up to date: name, user names, employer and agency, excluded employers, pay figures,
-  private repository names. Never commit it.
+  private repository names. End a name with `*` when it also appears in compounds (a product or subsidiary name built
+  on it): plain terms match whole words only. Never commit it.
 
 **Building:**
 - [ ] Copy the allowlisted paths from a clean checkout of a tagged commit, not from a working tree.
+- [ ] The README's `Project status (YYYY-MM-DD)` heading is refreshed (date and text) in the source commit:
+  `tools/build_snapshot.py` refuses a heading dated before that commit, and `--allow-stale-status` is for rehearsals only.
 - [ ] Apply the fixed replacements:
   - the demo `config/employers.yaml`;
   - `tools/build_powerbi_project.py --folder <placeholder>`;

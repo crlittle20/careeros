@@ -29,6 +29,10 @@ def vault_paths(vault: Path | None = None) -> dict[str, Path]:
         "inbox": root / "inbox",
         "backups": root / "backups",
         "profile": root / "profile" / "candidate_profile_v0.yaml",
+        "preferences": root / "profile" / "preferences.yaml",      # optional: dealbreakers / avoid (shadow evaluator)
+        "approved_facts": root / "profile" / "approved_facts.yaml",   # optional: wording drafts must quote exactly
+        "answers": root / "profile" / "answers.yaml",                 # optional: your reusable answers and documents (ADR 0009)
+        "adoption_criteria": root / "profile" / "adoption_criteria.md",   # yours, written before any calibration draw
         "overrides": root / "policy" / "overrides.yaml",
         "private_sites": root / "policy" / "private_sites.yaml",   # sites, systems and agencies tied to your situation (R4)
         "curated": root / "sources" / "curated_employers.yaml",   # employers you found independently (Part 9)

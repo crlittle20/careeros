@@ -28,6 +28,7 @@ from careeros.review.discovery_metrics import metrics
 from careeros.review.labels import record_label
 from careeros.review.shortlist import draft, shortlist
 
+from tests.test_saved import POLICY as TEST_POLICY
 from tests.helpers import JOB_MATRIX
 from tests.test_pipeline import as_greenhouse_html
 from tests.test_v21_policy import policy_with
@@ -35,7 +36,8 @@ from tests.test_v25_audit import MID
 
 POLICY = policy_with(compensation={"floor_annual": 74000, "floor_hourly": 36, "target_annual": None, "target_hourly": 36},
                      location__remote_only=True, location__commute_cities=[], location__home_state="FL",
-                     gate__excluded_employers=["Excluded Co"], gate__held_parents=["Held Parent Co"])
+                     gate__excluded_employers=["Excluded Co"], gate__held_parents=["Held Parent Co"],
+                     source_discovery__skip_employers=["Skipped Co"])
 CLAIMS = ("About us\nFoo Health is a health plan serving members across the US. Learn more at foohealth.com.\n\n"
           "Responsibilities:\n- Review claims adjudication outcomes in RxClaim and reconcile payer files\n"
           "- Investigate eligibility and enrollment discrepancies for members\n\n"
@@ -195,10 +197,10 @@ class IdentityTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             bd.activate(store, mapping["mapping_id"])  # a manual-only system is never collected automatically
 
-    def test_excluded_and_held_employers_are_skipped(self):
+    def test_excluded_held_and_skipped_employers_are_skipped(self):
         store, ctx = setup()
         client = client_for(FakeATS())
-        for name in ("Excluded Co", "Held Parent Co"):
+        for name in ("Excluded Co", "Held Parent Co", "Skipped Co, Inc."):
             self.assertEqual(bd.discover(ctx, bd.Candidate(employer_name=name, origin="manual"), client)["outcome"], "skipped_policy")
         client.close()
 
@@ -411,14 +413,14 @@ class OpeningTests(unittest.TestCase):
         self.assertIsNone(store.one("SELECT variant_of FROM jobs WHERE job_id = 'greenhouse:synth:2'")["variant_of"])
         self.assertEqual(store.one("SELECT relation FROM opening_links")["relation"], "possible_duplicate")
         matrix = application_matrix()
-        record_application(store, matrix, "greenhouse:synth:1", "direct", key="a1")
-        record_application(store, matrix, "greenhouse:synth:2", "direct", key="a2")  # a different vacancy: allowed
+        record_application(store, matrix, "greenhouse:synth:1", "direct", policy=TEST_POLICY, key="a1")
+        record_application(store, matrix, "greenhouse:synth:2", "direct", policy=TEST_POLICY, key="a2")  # a different vacancy: allowed
         self.assertEqual(application_status(store, "greenhouse:synth:2")["possibly_applied"], ["greenhouse:synth:1"])
 
     def test_reposts_and_reopenings_keep_application_history(self):
         store, ctx = setup()
         self.board(ctx, [gh_item(1, "Claims Analyst", CLAIMS, "synth")])
-        record_application(store, application_matrix(), "greenhouse:synth:1", "direct", key="a1")
+        record_application(store, application_matrix(), "greenhouse:synth:1", "direct", policy=TEST_POLICY, key="a1")
         self.board(ctx, [])  # missing once: possibly absent
         self.assertEqual(store.one("SELECT current_state FROM jobs")["current_state"], "normalized")
         self.board(ctx, [])  # missing twice: closed
@@ -540,6 +542,13 @@ class ChangeTests(unittest.TestCase):
         rows = store.all("SELECT meaningful, summary FROM job_changes ORDER BY at, rowid")
         self.assertEqual([r["meaningful"] for r in rows], [0, 1])
         self.assertIn("pay", rows[1]["summary"])
+        moved = {**paid, "requisition_id": "R-NEW", "absolute_url": "https://job-boards.greenhouse.io/synth/jobs/1?gh_src=x2"}
+        self.assertEqual(ingest(ctx, employer, [greenhouse_posting("synth", moved)], full_board=False)["reidentified"], 1)  # same text
+        job = store.one("SELECT requisition_id, canonical_url FROM jobs")
+        self.assertEqual(job["requisition_id"], "R-NEW")      # a release for the old requisition no longer counts
+        last = store.all("SELECT meaningful, summary FROM job_changes ORDER BY at, rowid")[-1]
+        self.assertEqual(last["meaningful"], 1)
+        self.assertIn("requisition_id", last["summary"])
         self.assertEqual(store.one("SELECT first_seen_at FROM jobs")["first_seen_at"], "2026-10-12T12:00:00.000Z")  # never "new" again
 
 
@@ -626,10 +635,62 @@ class ShortlistTests(unittest.TestCase):
             text = draft(store, factual, "greenhouse:synth:1", Path(tmp)).read_text(encoding="utf-8")
         self.assertIn("3.9 years", text)
         self.assertNotIn("**claims** (hard required): 4 years", text)
+        resting = Profile(data={**factual.data, "certifications": [],
+                                "domains": [{**factual.data["domains"][0], "credentials": ["PMP"]}]}, fingerprint="g")
+        with tempfile.TemporaryDirectory() as tmp:
+            first = draft(store, factual, "greenhouse:synth:1", Path(tmp))
+            first.write_text("my own edits\n", encoding="utf-8")
+            second = draft(store, factual, "greenhouse:synth:1", Path(tmp))     # the same day: a new file, never the edited one
+            self.assertEqual((first.read_text(encoding="utf-8"), second.name), ("my own edits\n", first.stem + "-2.md"))
+            self.assertIn("3.9 years", second.read_text(encoding="utf-8"))
+        with tempfile.TemporaryDirectory() as tmp:
+            flagged = draft(store, resting, "greenhouse:synth:1", Path(tmp), POLICY).read_text(encoding="utf-8")
+        self.assertIn("3.9 years", flagged)   # the evidence is kept, never erased
+        skilled = Profile(data={**resting.data, "skills": [{"name": "sql", "years": 2, "evidence": "direct", "source": "resume",
+                                                             "credentials": ["PMP"]}]}, fingerprint="h")
+        with tempfile.TemporaryDirectory() as tmp:
+            pointed = draft(store, skilled, "greenhouse:synth:1", Path(tmp), POLICY).read_text(encoding="utf-8")
+        talking = [line for line in pointed.split("## Talking points")[1].splitlines() if line.startswith("- sql")]
+        self.assertTrue(talking and all("UNDER REVIEW" in line for line in talking), talking)   # never shown as confirmed
+        self.assertIn("UNDER REVIEW: this rests on PMP, whose status is absent; don't present it as confirmed", flagged)
         with self.assertRaises(ValueError):
             dismiss(store, "greenhouse:synth:1", "because")
         dismiss(store, "greenhouse:synth:1", "pay", "range too low for me")
         self.assertEqual(shortlist(store), [])
+        ingest(ctx, employer, [greenhouse_posting("synth", gh_item(2, "Claims Analyst", CLAIMS + "\n- PMP certification required", "synth"))],
+               full_board=False)
+        process(ctx)
+        record_label(store, "greenhouse:synth:2", "apply", None, "k2")
+        holder = Profile(data={**factual.data, "certifications": [{"name": "PMP", "status": "held"}]}, fingerprint="i")
+        with tempfile.TemporaryDirectory() as tmp:
+            brief = draft(store, holder, "greenhouse:synth:2", Path(tmp), POLICY).read_text(encoding="utf-8")
+        gaps = brief.split("## Honest gaps")[1].split("## Talking points")[0].lower()
+        self.assertIn("you hold it", brief)
+        self.assertNotIn("pmp", gaps)                       # never told to leave out a credential you hold
+        for kind in ("course_certificate", "a made-up kind"):   # Codex review of f984d15: neither is the credential itself
+            course = Profile(data={**factual.data, "certifications": [{"name": "PMP", "status": "held", "kind": kind}]},
+                             fingerprint="j")
+            with tempfile.TemporaryDirectory() as tmp:
+                brief = draft(store, course, "greenhouse:synth:2", Path(tmp), POLICY).read_text(encoding="utf-8")
+            self.assertNotIn("you hold it", brief, kind)
+            self.assertIn("pmp", brief.split("## Honest gaps")[1].split("## Talking points")[0].lower(), kind)
+
+    def test_your_skip_wins_over_a_tier_a_b_pick(self):
+        from careeros.discovery.boards import greenhouse_posting
+        from careeros.review.shortlist import shortlisted_job_ids
+        store, ctx = setup()
+        ingest(ctx, {"employer_id": None, "name": "Synthetic Health", "parent": "Synthetic Health"},
+               [greenhouse_posting("synth", gh_item(2, "Claims Analyst", CLAIMS, "synth"))], full_board=False)
+        process(ctx)
+        store.writer("qualify").insert("scores", {
+            "score_id": "s:pick", "job_id": "greenhouse:synth:2", "at": store.clock.now(), "policy_fingerprint": "p",
+            "profile_fingerprint": "p", "tier": "B", "interview_band": "High", "components_json": "{}", "state": "ELIGIBLE",
+            "apply_priority": 90.0})
+        self.assertIn("greenhouse:synth:2", shortlisted_job_ids(store))
+        record_label(store, "greenhouse:synth:2", "skip", "pay too low", "l1")
+        self.assertNotIn("greenhouse:synth:2", shortlisted_job_ids(store))
+        record_label(store, "greenhouse:synth:2", "apply", "changed my mind", "l2")
+        self.assertIn("greenhouse:synth:2", shortlisted_job_ids(store))
 
 
 class ReviewPageTests(unittest.TestCase):

@@ -14,7 +14,7 @@ CareerOS is a job-search decision-support system that I conceived and directed a
 systems analyst, for my own job search. It treats the search as an operations problem. Each day it collects openings from
 public job-board listings and alert emails, checks that each job board belongs to the employer, catches duplicates,
 rejects jobs that fail a stated hard requirement, scores the rest and records the reason for every decision. A person
-reviews the result and decides; CareerOS has no code that applies for a job or contacts an employer or recruiter.
+reviews the result and decides; CareerOS has no code that submits an application or contacts an employer or recruiter.
 
 Claude, an AI coding assistant, wrote the code under my direction and my acceptance rules; ChatGPT helped design it. I
 had the result checked against my own judgement: I labelled 50 real postings and Claude compared CareerOS's decisions
@@ -39,6 +39,9 @@ I was the product owner and business systems analyst. In short:
   recommendation hand-off, and sending work back when behaviour did not match what I intended. I did not review the
   code line by line.
 - **Privacy and release.** I set the privacy requirements, approved the MIT licence, and approved publication.
+- **Analysis.** I wrote the calculations of my private Power BI report (a Power Query grouping column, two DAX
+  age columns and the measures for pursued postings), then rebuilt them on the demo export in a separate public
+  repository: the [CareerOS Power BI showcase](https://github.com/crlittle20/careeros-powerbi-showcase).
 
 Claude, an AI coding assistant (Anthropic, working through Claude Code), wrote nearly all of the code and tests,
 drafted most of the documentation, including the requirements catalogue and the decision records, and wrote the
@@ -55,11 +58,11 @@ repository root.
 | Skill | My part | Where to look | What it shows |
 |---|---|---|---|
 | Problem framing and business case | Defined the problem and the goal | [README](../README.md#business-problem), Business problem and Solution; [case study](case_study.md), sections 1-2 | Seven concrete pain points turned into five design principles |
-| Requirements | Supplied or approved the requirements. Claude consolidated them from ChatGPT's specifications and the built system | [business requirements](business_requirements.md): business problems BP-1 to BP-9, stakeholders, 101 requirements and 12 acceptance criteria | Numbered, stable requirement IDs grouped by type (functional, data quality, security, privacy, audit and more) |
+| Requirements | Supplied or approved the requirements. Claude consolidated them from ChatGPT's specifications and the built system | [business requirements](business_requirements.md): business problems BP-1 to BP-9, stakeholders, 107 requirements and 12 acceptance criteria | Numbered, stable requirement IDs grouped by type (functional, data quality, security, privacy, audit and more) |
 | Traceability | Approved the documentation milestone | [traceability](requirements_traceability.md), for example the rows for FR-032 (board verification), FR-021 (duplicates) and FR-074 (explain any job) | Each requirement traced to the code and the tests; many rows also name a demo step |
 | Business rules and decision logic | Supplied my own facts and personal rules (profile, pay floor, location rule, which job titles count) and approved the rest of the screening rules; overrode the AI on the tier skill minimum and the experience titles | `config/policy/defaults.yaml` (public defaults); [architecture](architecture.md), section 5 (verification decision flow); [AI-assisted development](ai_assisted_development.md), section 6 | Rules held as configuration, with the decision flow for admitting a job board |
 | Acceptance criteria and stage gates | Set the milestone rule and approved the two MVP gates | [Functional MVP report](functional_mvp_report.md); [Portfolio MVP report](portfolio_mvp_report.md) | Each requirement graded PASS, PARTIAL or FAIL, with gaps listed. Both reports are Claude's self-assessments |
-| Decision records | Made the decisions put to me; accepted or sent back the rest at milestones | [ADR index](adr/README.md) | Eight decisions, each with context, alternatives considered and evidence |
+| Decision records | Made the decisions put to me; accepted or sent back the rest at milestones | [ADR index](adr/README.md) | Nine decisions, each with context, alternatives considered and evidence |
 
 ### Automation analyst
 
@@ -78,7 +81,7 @@ repository root.
 | Defining the measure | Set the goal (quality over volume) and labelled 50 real postings | [case study](case_study.md#ranking-calibration-identify-measure-improve-validate), ranking calibration | The measure is agreement with the job seeker's own Apply, Stretch and Skip labels |
 | Measurement and analysis | Supplied the labels; the analysis was Claude's, for my decision | The same section | Where the process agreed with the labels (hard rules, in-sample) and where it did not (ranking) |
 | Error-proofing | Accepted the controls through the milestone process | [README](../README.md#employer-verification), Employer verification; [case study](case_study.md), "Defects the controls caught" | Impostor job boards rejected, duplicates caught by requisition number, defects caught by controls rather than by chance |
-| Quality of the checks themselves | Set the milestone rule; once held a commit until the full test-of-the-tests run (planted defects) had finished | [README](../README.md#testing), Testing; `evidence/mutation-receipt.json` | Planted defects show the tests catch each of 305 deliberately broken rules |
+| Quality of the checks themselves | Set the milestone rule; once held a commit until the full test-of-the-tests run (planted defects) had finished | [README](../README.md#testing), Testing; `evidence/mutation-receipt.json` | Planted defects show the tests catch each of 723 deliberately broken rules |
 | KPIs and reporting | Approved the milestone that built them. Claude wrote the export and the report generator | [data dictionary](analytics_data_dictionary.md); [dashboard spec](powerbi_dashboard_spec.md) | A validated star schema whose figures reconcile with the application before anything is written |
 
 ## Two-minute tour
@@ -109,14 +112,20 @@ Then, by role:
 ## Best visuals
 
 1. **The Executive Overview** (`powerbi/screenshots/executive.png`): KPI cards, the funnel from discovery to
-   application, and why jobs are rejected. Points to explain: some card titles are cut off; "Duplicates Prevented 3"
-   counts duplicate jobs plus linked openings, so it differs from the one duplicate job in `careeros status`; and the
-   "Applied" bar counts applications the fictional job seeker recorded, because CareerOS submits nothing.
+   application, and why jobs are rejected. Points to explain: "Duplicates Prevented 3" counts duplicate jobs plus
+   linked openings, so it differs from the one duplicate job in `careeros status`; and the "Applied" bar counts
+   applications the fictional job seeker recorded, because CareerOS submits nothing.
 
    ![The Executive Overview page of the CareerOS Power BI report, on synthetic demo data](../powerbi/screenshots/executive.png)
 
-2. **The per-job workflow diagram** in the [README](../README.md#workflow): source to person in one line.
-3. **Every decision explains itself**, Demo Mode output:
+2. **The review page** (`docs/images/review_page_demo.png`), the screen the job seeker works from: the shortlist with
+   each job's evidence, open questions and next action, on Demo Mode's synthetic data (captured 2026-11-01 from
+   `careeros review` in Demo Mode).
+
+   ![The CareerOS review page in Demo Mode: the shortlist with evidence and the next action for each job](images/review_page_demo.png)
+
+3. **The per-job workflow diagram** in the [README](../README.md#workflow): source to person in one line.
+4. **Every decision explains itself**, Demo Mode output:
 
    ```
    > careeros sources explain greenhouse:quillon
@@ -130,17 +139,18 @@ Then, by role:
    reason: same_requisition
    ```
 
-4. **Employer Intelligence** (`powerbi/screenshots/employers.png`): the board-verification matrix (8 active, 1
+5. **Employer Intelligence** (`powerbi/screenshots/employers.png`): the board-verification matrix (8 active, 1
    historical after an ATS migration, 2 manual-only, 1 rejected as an impostor, 1 awaiting review).
 
    ![The Employer Intelligence page of the CareerOS Power BI report, on synthetic demo data](../powerbi/screenshots/employers.png)
 
-5. **For a deeper look:** the [architecture](architecture.md) section 5 verification flowchart (business rules as a
+6. **For a deeper look:** the [architecture](architecture.md) section 5 verification flowchart (business rules as a
    decision tree) and section 3 sequence diagram (the automated daily run).
 
 About the Power BI report: its files are generated from the validated analytics export by
-`tools/build_powerbi_project.py`, a script Claude wrote, and a Claude session captured the screenshots. All five pages
-carry cosmetic issues (cut-off card titles, raw field names in subtitles, one table that scrolls sideways), and the
+`tools/build_powerbi_project.py`, a script Claude wrote, and a Claude session captured the screenshots (re-captured
+2026-10-31 after the card layout and field names were fixed). Two small issues remain: the Board health table on the
+System quality page still scrolls sideways, and a few legend and subtitle labels on the Roles page are shortened. The
 Job Pipeline page's response and interview rates are synthetic, not results of my job search.
 
 ## Where to find things
@@ -161,8 +171,8 @@ This is the project's continuous-improvement case.
 | Step | Status | What happened |
 |---|---|---|
 | Identify | Done | The question: do CareerOS's hard rules and tiers agree with my own Apply, Stretch and Skip labels? |
-| Measure | Done, once (2026-10-16) | I labelled 50 real postings (22 Apply, 11 Stretch, 17 Skip); Claude compared them, read-only, with the decisions of the code published here, on my private system |
-| Improve | Not done | A candidate rule exists as a hypothesis only; nothing in this repository has changed |
+| Measure | Done, once (2026-10-16) | I labelled 50 real postings (22 Apply, 11 Stretch, 17 Skip); Claude compared them, read-only, with the decisions of the code published on 2026-10-16, on my private system |
+| Improve | Started, not adopted | A candidate rule and a read-only [shadow scoring](shadow_scoring.md) are compared with production; no tier rule in this repository has changed in response |
 | Validate | Not done | No change has been checked on labels given after it was chosen |
 
 The hard rules agreed with my 50 labels (in-sample), but none of the 22 Apply jobs reached the top tiers (A/B), and

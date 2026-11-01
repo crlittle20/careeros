@@ -2,7 +2,7 @@
 
 - Version: 1.2
 - Date: 2026-10-29 (version 1.1: 2026-10-13). This version corrects the CI status, the planted-defect history and the
-  label calibration, and adds the 2026-10-29 dependency update.
+  label calibration, and adds the dependency updates of 2026-10-20 to 2026-10-29.
 - Companions: `case_study.md`, `functional_mvp_report.md`, `security_architecture.md`, `adr/README.md`.
 - Basis: the session records of the development work, the repository's history, and the owner's own account. Where a
   point could not be established from those records, it is left out or marked as open (section 7).
@@ -91,8 +91,9 @@ The owner's role was not limited to accepting generated code. The owner controll
 **What was delegated.** Not every decision was the owner's.
 - Lower-level technical choices were made by Claude and accepted or sent back through milestone approval. Examples:
   module and test design, tooling configuration, and how settings are stored.
-- Once, the owner handed over a night's design decisions with the instruction to approve the recommended options and
-  keep a log. Sixteen decisions were logged for review.
+- Twice, the owner handed over design decisions and asked for a log to review: one night's sixteen (2026-10-12),
+  with the instruction to approve the recommended options, and those of the assisted-applications build from
+  2026-10-21 (ADR 0009), with the instruction to make the best judgement on each.
 
 ## 3. How generated code was reviewed
 
@@ -141,16 +142,15 @@ review by a person or a tool outside this chain is still recommended.
 ## 4. How tests validated behavior
 
 - **Tests come with the change.** Each milestone that changed system behaviour or documentation added or updated tests
-  for the change. The suite has 485 tests on synthetic fixtures, fake transports and fixed clocks, and
+  for the change. The suite has 850 tests on synthetic fixtures, fake transports and fixed clocks, and
   `tools/validate.py` runs it with outbound network refused.
 - **Planted defects check the tests themselves.** `tools/mutate.py` deliberately breaks each safety rule, one at a
-  time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 305
-  such defects. A full run on 2026-10-14, when 284 were defined, caught all but one. The one that survived, a private
-  staffing agency probed for a board, had been reported caught in an earlier re-check for a reason that could not be
-  found; its test was strengthened, and the next full run caught all 284. The latest full run (2026-10-15, after
-  Experience Match and certifications) caught all 305. Spot checks made between 2026-10-13 and that re-check proved
-  nothing: the tool's scratch copies lacked files some tests need, so every defect looked caught. The tool now refuses
-  to run unless an unmutated copy passes.
+  time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 723
+  such defects. The latest full run (2026-11-01) caught all 723, each by a real failing test with the whole suite
+  loaded (`evidence/mutation-receipt.json`); every full run since the first, with what each survivor exposed, is in
+  [testing.md](testing.md). Spot checks made between 2026-10-13 and the first full run (2026-10-14) proved nothing:
+  the tool's scratch copies lacked files some tests need, so every defect looked caught. The tool now refuses to run
+  unless an unmutated copy passes.
 - **Expectations do not come from the system.** The Functional MVP gate derives its 92 checks from the postings and the
   policy. For example, it recomputes tiers from the thresholds rather than reading the stored tier.
 - **Proof that a gate can fail.** Both fixes prompted by the Functional MVP gate were proven by running the gate against
@@ -203,16 +203,17 @@ snapshot. The records do not show the owner inspecting the implementations thems
   The first attempt was rejected because ten packages were too new; so was the second, because of the newest pydantic.
   Older versions were pinned, and the result is hash-locked in `requirements-dev.lock` and audited with pip-audit.
 
-  On 2026-10-29, advisories published after the release had affected three pinned packages (certifi, filelock and
-  msgpack). They were raised to fixed versions, with hashes checked against PyPI. Two of the fixed releases were less
-  than 14 days old; the lock's header records them as exceptions, the same ones the owner had approved for the private
-  engine.
+  Advisories published after the first release affected three pinned packages. Each was raised to a fixed version,
+  with hashes checked against PyPI: certifi on 2026-10-20, filelock on 2026-10-23 and msgpack on 2026-10-29. The fixed
+  certifi and filelock releases were less than 14 days old; the owner approved each as an exception, and the lock's
+  header records them. The public repository's locks received the same three updates on 2026-10-29.
 - **CI.** The CI workflow uses no secrets, gets a read-only token that is not kept after checkout, and pins each action
-  to a full commit. Its first runs passed on Windows and Linux on 2026-10-15, and it runs on every push.
+  to a full commit. Its first runs, in the public repository, passed on Windows and Linux on 2026-10-15, and
+  it runs there on every push.
 
 ## 6. How architecture decisions were evaluated
 
-- **Decision records.** Eight ADRs (`adr/`), written by Claude, each state the context, the decision, its
+- **Decision records.** Nine ADRs (`adr/`), written by Claude, each state the context, the decision, its
   consequences, the alternatives considered and the evidence. A documentation test fails if one loses a section or
   drops out of the index.
 
@@ -232,9 +233,9 @@ snapshot. The records do not show the owner inspecting the implementations thems
 - **Linux CI.** The Linux job was made informational until it has been seen to pass. It passed on its first run
   (2026-10-15) and stays informational for now.
 
-**Decisions delegated to Claude.** Besides everyday technical choices, one night's sixteen design decisions were
-delegated explicitly, under the owner's instruction to approve the recommended options, and logged for review
-(section 2).
+**Decisions delegated to Claude.** Besides everyday technical choices, design decisions were delegated explicitly
+twice and logged for review: one night's sixteen, under the owner's instruction to approve the recommended options,
+and those of the assisted-applications build from 2026-10-21 (section 2).
 
 **Reversals are surfaced, not slipped in.** The board-verification specification required reading employers' own
 websites. That reversed an earlier rule that CareerOS must not become a general website crawler.

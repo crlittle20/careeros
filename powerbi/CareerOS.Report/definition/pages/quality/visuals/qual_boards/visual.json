@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
   "name": "qual_boards",
   "position": {
-    "x": 640,
-    "y": 420,
+    "x": 490,
+    "y": 465,
     "z": 0,
-    "width": 630,
-    "height": 290,
+    "width": 780,
+    "height": 245,
     "tabOrder": 0
   },
   "visual": {

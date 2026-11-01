@@ -27,7 +27,8 @@
                 }
               },
               "queryRef": "dim_role_family.family_name",
-              "nativeQueryRef": "family_name"
+              "nativeQueryRef": "family_name",
+              "displayName": "Role family"
             }
           ]
         }

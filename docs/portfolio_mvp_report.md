@@ -135,7 +135,7 @@ without its token is refused (HTTP 403).
 | S12 | G4 and G5: the demo shows no board contradicted by its employer's own site, and no overnight job that the overnight profile accepts | Open: it changes the demo world, its recorded totals, the committed analytics sample and the Power BI files, and re-saving the `.pbix` and screenshots needs Power BI Desktop |
 | S13 | R3: the runtime install (`requirements.lock`) is not hash-locked, and its pydantic is newer than 14 days | Open: from 2026-10-23 pydantic 2.14.0 meets the 14-day rule; the owner decides whether to hash-lock the engine's own environment |
 | S14 | Lead matching relies on the older identity check (`board_discovery._record_match`) | Open: a correctness review outside the demo, already recorded in `functional_mvp_report.md` section 6 |
-| S15 | Power BI cosmetics: some chart subtitles show raw field names, and one table scrolls sideways | Open: with S12, since both need Power BI Desktop |
+| S15 | Power BI cosmetics: some chart subtitles show raw field names, and one table scrolls sideways | **Mostly fixed (2026-10-31):** card titles fit (two rows of four), every field has a display name, screenshots re-captured; checked by `test_powerbi::test_titles_are_readable`. Still open: the Board health table scrolls sideways, and a few Roles-page legend labels are shortened |
 | S16 | `careeros explain` prints dense JSON fragments, and its SOURCE line names only the first channel | Open: presentation only; the walkthrough explains how to read it |
 
 ### POST-MVP
@@ -161,12 +161,11 @@ hosted or multi-user deployment.
 | The AI-assisted development disclosure now quotes the owner's own account of the process (given 2026-10-13), and the case study and README follow it | `docs/ai_assisted_development.md`, `docs/case_study.md`, `README.md` | `test_portfolio_docs` |
 | Gate evidence regenerated after the G6 fix: 10 PASS, 3 PARTIAL, 0 FAIL | `evidence/functional_mvp.json`, `docs/functional_mvp_report.md` (section 8) | `test_portfolio_docs`, `tools/validate.py` |
 
-After these changes and the refactor of 2026-10-14: 485 automated tests pass. There are 305 planted defects. The spot
-checks reported at this gate proved nothing at the time: the tool's scratch copies lacked files some tests need, so
-every defect looked caught. After the fix (2026-10-14), a full run, when 284 were defined, caught all but one. The
-survivor exposed a weak test, which was strengthened; the next full run caught all 284, and the latest (2026-10-15,
-after Experience Match and certifications) caught all 305 (`evidence/mutation-receipt.json`). `tools/validate.py`
-passes all seven checks.
+After these changes and the refactor of 2026-10-14: 850 automated tests pass. There are 723 planted defects. The spot checks reported at this gate proved
+nothing at the time: the tool's scratch copies lacked files some tests need, so every defect looked caught. After the
+fix (2026-10-14), full runs followed. The latest full run (2026-11-01) caught all 723, each by a real failing test with the whole suite loaded
+(`evidence/mutation-receipt.json`); the run history, with each run's survivors and what was fixed, is in [testing.md](testing.md).
+`tools/validate.py` passes all seven checks.
 
 ## 7. Scope freeze
 
@@ -175,7 +174,7 @@ it materially improves recruiter comprehension, demonstration quality, target-ro
 measurable business value. Measured that way, the work in order:
 1. **B1, then B2**: nothing else matters to a reviewer until the build can be published safely. Done on 2026-10-15.
 2. **The Phase 1 exit test and its agreement measure** (business value, credibility): no code, just labels.
-3. **S11, S12 and S15 as one milestone** (demonstration quality): the missing demo scenarios, the stale review cases
-   and the report's cosmetics, with the Power BI files re-saved once.
+3. **S11, S12 and what is left of S15 as one milestone** (demonstration quality): the missing demo scenarios, the
+   stale review cases and the report's last cosmetics, with the Power BI files re-saved once.
 4. **A short screen recording** (recruiter comprehension).
 5. **S10, S13 and S14** (data quality, security) when the owner chooses.

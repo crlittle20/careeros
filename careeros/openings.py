@@ -122,20 +122,19 @@ def describe_requirement_change(before: set, after: set) -> str | None:
 
 
 def application_status(store: Store, job_id: str) -> dict:
-    """{'applied': app row or None, 'possibly_applied': [job ids], 'dismissed': row or None} across the role group and
-    opening links, so a rediscovered or reposted opening keeps its history."""
-    from careeros.review.applications import role_group
-    group = role_group(store, job_id) or [job_id]
+    """{'applied': the latest application to the role (any state) or None, 'possibly_applied': [job ids that may be the
+    same role, or a same-title vacancy with another requisition, and carry an application], 'dismissed': row or None,
+    'complete': the duplicate search finished,
+    'checks': what recording would refuse or ask you to confirm}. It comes from the same check recording uses
+    (`careeros.review.applications.preflight`), so the card, the shortlist and recording always agree."""
+    from careeros.review.applications import preflight
+    check = preflight(store, job_id)
+    group = check.group or [job_id]
     marks = ",".join("?" * len(group))
-    applied = store.one(f"SELECT * FROM applications WHERE job_id IN ({marks}) ORDER BY applied_at DESC LIMIT 1", tuple(group))
-    linked = {r["other_id"] for r in store.all(f"SELECT other_id FROM opening_links WHERE job_id IN ({marks}) AND relation != "
-                                               f"'same_opening'", tuple(group))}
-    linked |= {r["job_id"] for r in store.all(f"SELECT job_id FROM opening_links WHERE other_id IN ({marks}) AND relation != "
-                                              f"'same_opening'", tuple(group))}
-    possibly = sorted(j for j in linked - set(group)
-                      if store.one("SELECT 1 FROM applications WHERE job_id = ?", (j,)))
     dismissed = store.one(f"SELECT * FROM dismissals WHERE job_id IN ({marks}) ORDER BY at DESC LIMIT 1", tuple(group))
-    return {"applied": applied, "possibly_applied": possibly, "dismissed": dismissed}
+    return {"applied": check.applications[0] if check.applications else None,
+            "possibly_applied": sorted(check.possible + check.distinct), "dismissed": dismissed, "complete": check.complete,
+            "checks": check.reasons}
 
 
 def conflicts(store: Store, job) -> list[dict]:

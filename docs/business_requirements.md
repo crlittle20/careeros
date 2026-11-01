@@ -143,6 +143,12 @@ every decision, so the job seeker spends time applying, not screening.
 | FR-075 | Export the data for analysis (`careeros export`): a documented star schema (8 dimensions, 5 facts) as CSV with a manifest; validated before it is written (structure, references, types, ranges, and reconciliation with the application's own figures); byte-identical for the same database. |
 | FR-080 | Run daily on a schedule, notify with a summary, and back up the database and settings with an integrity check and retention. |
 | FR-081 | Verify the audit trail on demand: the event hash chain, plus per-job and per-application history. |
+| FR-082 | Reuse the job seeker's own answers only for the exact question, or a phrasing they listed. Expired answers need review, and sensitive or voluntary questions are never answered (ADR 0009). |
+| FR-083 | Prepare a versioned application package per posting (brief, answers, gaps, documents by hash). A Stretch package needs approval of its exact version, and any change makes a new version. |
+| FR-084 | Prepare packages for unlabelled jobs only under an absolute standing rule, off by default. It never writes a label, and Skip, dismissal or an existing application always win. |
+| FR-085 | Reserve the role in an assistance session only when submission is authorized and the duplicate check is clear. An uncertain outcome blocks a new session until reconciled; evidence is named; nothing is resent. |
+| FR-086 | Fill a form only at the job seeker's request, on the posting named and after preview: text fields, text areas and plain lists, only for a destination permitted to be filled. Never submit, click, press keys or upload. |
+| FR-087 | Measure assistance (minutes, corrections, custom questions, sign-in steps) by mode, so new destinations are added on evidence. |
 
 ## 5. Non-functional requirements
 | ID | Requirement |
@@ -260,5 +266,5 @@ These are expectations measured on the live system, not guarantees.
 | AC-103 | Each demo job can be explained with its evidence. | Met: `careeros explain JOB` and `careeros sources explain` with `CAREEROS_DEMO_MODE=true` |
 | AC-104 | The demo covers each decision type: eligible, rejected, unknown pay, duplicate, night route, scam, verified / contradicted / impostor board. | Met except two cases not in the demo world yet: a board contradicted by the employer's own site (the impostor case is Quillon), and an overnight posting that NIGHT accepts (NIGHT routes are shown as conditional) |
 | AC-105 | A Power BI-ready export with a data dictionary. | Met: `careeros export`, `analytics_data_dictionary.md`, `powerbi_dashboard_spec.md`, demo sample `samples/analytics_demo/` (`tests/test_analytics.py`), and the report itself: `powerbi/CareerOS.pbip` (the private build also keeps a `.pbix` saved by Power BI Desktop), checked in Power BI Desktop (`tests/test_powerbi.py`). |
-| AC-106 | CI runs the tests, the demo and a release-safety scan. | Met: first runs passed on Windows (required) and Linux (informational) on 2026-10-15; runs on every push and pull request. `.github/workflows/ci.yml` runs `tools/validate.py` (lint, types, configuration, the tests with the network refused, the Demo Mode MVP gate, the release scan, pip-audit) |
+| AC-106 | CI runs the tests, the demo and a release-safety scan. | Met: first runs, in the public repository, passed on Windows (required) and Linux (informational) on 2026-10-15; it runs there on every push and pull request. `.github/workflows/ci.yml` runs `tools/validate.py` (lint, types, configuration, the tests with the network refused, the Demo Mode MVP gate, the release scan, pip-audit) |
 | AC-107 | A sanitised public snapshot contains no private data, credentials or history. | Met: published 2026-10-15 as a generated snapshot with fresh history (`portfolio_mvp_report.md`, B1/B2) |

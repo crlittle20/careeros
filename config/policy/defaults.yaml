@@ -73,7 +73,7 @@ title_rescue:
                              agent scorecards, coaching agents]
     sales: [sales quota, quota attainment, prospecting, cold calling]
 
-# Employer name -> parent company (caps, D13 holds, familiarity). Matched case-insensitively. Families tied to the job
+# Employer name -> parent company (caps, holds, familiarity). Matched case-insensitively. Families tied to the job
 # seeker's own situation are added in the vault overrides (refactor R4).
 parents:
   CVS Health: [cvs, cvs health, caremark, cvs caremark, aetna, signify health]
@@ -107,7 +107,7 @@ gate:
   scam_block_terms: [wire transfer, gift card, check deposit, purchase equipment, send your bank,
                      social security number, telegram, whatsapp interview, signal app, crypto payment,
                      processing fee, training fee]
-  held_parents: []            # set in vault overrides (D13)
+  held_parents: []            # employer-level ELIGIBILITY hold (judged, never Tier A/B); rare. Submission holds: `submission`
   # 2026-10-12 decision: a required bachelor's degree does not reject a PBM product role; it becomes a STRETCH
   # (kept, flagged "Stretch", never Tier A/B). PBM context = domain_levels.direct (PBM, pharmacy benefit, RxClaim).
   degree_stretch:
@@ -291,6 +291,31 @@ freshness:
   - {max_days: 100000, score: 15}
 freshness_unknown: 50
 
+# Who may SUBMIT an application, never whether a job qualifies (R2, 2026-10-16; careeros/review/submission.py). Outside
+# the decision fingerprint: editing it re-judges nothing. Set holds in the vault overrides, e.g.
+#   submission: {holds: [{id: my-hold, names: [Example Group], channels: all, reason: "why"}]}
+# Until `holds` is set, the gate's held_parents list counts as one hold. A hold is cleared only by your release of one
+# posting and one channel (`careeros release`).
+submission:
+  representation: {other_agencies_allowed: null}   # your statement about agency representation (shown, not enforced)
+
+# Application packages (ADR 0009; careeros/review/packages.py). Standing preparation prepares a package for a job you
+# haven't labelled when it meets this absolute rule (calibration review 2026-10-16, in-sample only). It never writes a
+# label and never submits; Skip, a dismissal or an application already made always win. Off until you turn it on in
+# vault overrides. approval_required: stretch (Stretch packages need your approval of the exact version) or all.
+# Never part of a job's decision: changing it re-judges nothing.
+preparation:
+  enabled: false
+  approval_required: stretch
+  min_eligibility: 80
+  min_skill_coverage: 0.70
+  excluded_gaps: [medium_gap, large_gap, severe_gap]
+  allow_degree_stretch: false
+
+# Names that start like an employer-family alias but belong to a different organisation (vault overrides).
+employer_identity:
+  different_organisations: []
+
 # NIGHT / overnight profile (prompts v2.1): judged and ranked separately from PRIMARY; never changes PRIMARY results.
 # Off until you approve its pay settings in vault overrides (night: {enabled: true, compensation: {...}}).
 night:
@@ -315,16 +340,20 @@ night:
   # conflict-of-interest review with a daytime job (Supplemental only). Same-industry overlap alone
   # (night_industry_overlap) is informational and never makes a job CONDITIONAL. An unset NIGHT pay floor is a
   # settings gap, not a job unknown.
-  material_unknowns_extra: [schedule_unknown, night_coi_review, daytime_hours_likely]
+  material_unknowns_extra: [schedule_unknown, night_coi_review, daytime_hours_likely, possible_day_job_overlap]
   # Your daytime job's hours, for Supplemental workload sustainability and overlap (2026-10-12). Unset = workload
-  # "unknown". Set in vault overrides, e.g. day_job: {start: "08:00", end: "16:30", days: [mon, tue, wed, thu, fri]}
+  # "unknown". Set in vault overrides, e.g. day_job: {start: "08:00", end: "16:30", days: [mon, tue, wed, thu, fri],
+  # timezone: America/New_York}. Without its timezone no workload result is confirmed (2026-10-16).
   day_job: {start: null, end: null, days: [mon, tue, wed, thu, fri]}
-  # Workload (informational, never a rejection): severe = 14+ working hours a day or under 6 hours' longest rest;
-  # caution = over 12 hours or under 8 hours' rest; green otherwise. Stated hours that OVERLAP the day job make the
-  # job incompatible with Supplemental (it cannot sit alongside the day job).
-  workload: {caution_total_hours: 12, severe_total_hours: 14, caution_min_rest_hours: 8, severe_min_rest_hours: 6}
+  # Workload (informational, never a rejection): severe = 14+ hours worked in one duty span, a duty span over 24 hours,
+  # or overlap; caution = over 12 hours worked or under 8 hours off before or after the span; green otherwise. A CONFIRMED
+  # overlap (zone resolved, days stated) makes the job incompatible with Supplemental; an unconfirmed one is flagged.
+  # Every number here is a hypothesis. A duty span is work separated by gaps shorter than duty_gap_hours; the breaks
+  # inside it are never counted as rest. careeros/qualify/worktime.py measures them on dated intervals in real time zones.
+  workload: {caution_total_hours: 12, severe_total_hours: 14, caution_min_rest_hours: 8, severe_min_rest_hours: 6,
+             duty_gap_hours: 6, severe_span_hours: 24}
   # Conflict-of-interest review (Supplemental). Concrete reasons make it manual_coi_review_required (CONDITIONAL):
-  # same employer family (familiar employers, held parents), the lists below (private: set them in vault overrides),
+  # same employer family (familiar employers, the employers in submission.holds), the lists below (private: set them in vault overrides),
   # an employment agreement that restricts outside work, posting text that forbids other employment, overlapping
   # hours, or an existing application through another channel. Same industry alone = industry_overlap (informational).
   coi:
@@ -409,7 +438,7 @@ domain_levels:
   healthcare: {value: 0.6, terms: [healthcare, health care, hospital, clinical, patient, pharmacy, health system, digital health]}
   none: {value: 0.3}
 
-# Prompts v2.2 eligibility states. INELIGIBLE = a hard failure. HOLD = an employer-level hold (D13). CONDITIONAL = no
+# Prompts v2.2 eligibility states. INELIGIBLE = a hard failure. HOLD = an employer-level eligibility hold. CONDITIONAL = no
 # hard failure but a material fact is unknown: check it before applying. Unposted pay never makes a job CONDITIONAL.
 eligibility_states:
   material_unknowns: [remote_unknown, home_state_unknown, commute_unknown, education_unknown, work_authorization_unknown,
@@ -578,6 +607,7 @@ source_discovery:
   closed_after_days: 45               # an unmatched lead older than this is treated as a closed historical opening
   retry_days: {slug_absent: 60, board_empty: 14, identity_unresolved: 30, no_qualified_roles: 30, access_restricted: 90,
                request_failed: 1, budget_exhausted: 0}
+  skip_employers: []                  # employers never probed for boards (e.g. sites that stay manual); set in the vault
   staffing_agencies: [teksystems, insight global, randstad, kforce, apex systems, aerotek, adecco, manpower,
                       kelly services, beacon hill, collabera, cybercoders, motion recruitment, actalent, judge group, vaco,
                       addison group, experis, hays, spherion, jobot, medix, solomon page, talentburst, mindlance]

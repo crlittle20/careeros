@@ -5,14 +5,20 @@ People read these documents to decide whether to trust the project, so they are 
 - every figure they quote for the tests, the planted defects, the Functional MVP gate and the demo world is the current
   one, and the demo figures sit only under a "synthetic" label;
 - they hold nothing a public release scan flags (secrets, personal addresses, machine paths), and the README does not
-  lean on the private operator manual.
+  lean on the private operator manual;
+- the planted-defect pages (docs/testing.md, and docs/defect_coverage.md generated from the receipt) say what the
+  committed receipt says (2026-10-31).
 Files, tests, commands and links they name are checked by tests/test_docs.py.
 """
+import io
 import json
 import re
 import sys
+import tempfile
 import unittest
 from collections import Counter
+from contextlib import redirect_stdout
+from datetime import datetime, timezone
 from pathlib import Path
 
 from careeros.demo import world
@@ -20,12 +26,17 @@ from careeros.paths import ENGINE_ROOT
 from tests.test_demo_mode import RECORDED
 
 sys.path.insert(0, str(ENGINE_ROOT / "tools"))
+import defect_coverage  # noqa: E402
 import mutate  # noqa: E402
 import release_scan  # noqa: E402
 
 README = ENGINE_ROOT / "README.md"
 CASE_STUDY = ENGINE_ROOT / "docs" / "case_study.md"
 AI_DEVELOPMENT = ENGINE_ROOT / "docs" / "ai_assisted_development.md"
+OVERVIEW = ENGINE_ROOT / "docs" / "portfolio_overview.md"   # the hiring-manager page (2026-10-29)
+RECEIPT = ENGINE_ROOT / "evidence" / "mutation-receipt.json"
+TESTING = ENGINE_ROOT / "docs" / "testing.md"   # planted defects in plain language (2026-10-31)
+COVERAGE = ENGINE_ROOT / "docs" / "defect_coverage.md"   # generated from the receipt by tools/defect_coverage.py
 README_SECTIONS = ["Project summary", "Business problem", "Solution", "Key capabilities", "Architecture", "Workflow",
                    "Employer verification", "Data quality", "Analytics", "Security", "Testing", "Demo Mode", "Tech stack",
                    "Quickstart", "Limitations", "Roadmap"]
@@ -60,6 +71,17 @@ def section(body: str, heading: str) -> str:
     return body[start: start + 1 + end.start()] if end else body[start:]
 
 
+def run_dates(receipt: dict) -> set[str]:
+    """The receipt's run date as a document may write it: in UTC, or in this machine's local time."""
+    at = datetime.fromisoformat(receipt["at"])
+    return {at.astimezone(timezone.utc).date().isoformat(), at.astimezone().date().isoformat()}
+
+
+def single_test_catches(receipt: dict) -> tuple[int, int]:
+    """(caught by exactly one test method, cannot be told): records are not tests (Codex review CR-2026-10-31, F1)."""
+    return defect_coverage.single_counts(receipt["results"])
+
+
 class StructureTest(unittest.TestCase):
     def test_the_readme_has_the_sections_in_order(self):
         self.assertEqual(headings(README), README_SECTIONS)
@@ -82,6 +104,7 @@ class FiguresTest(unittest.TestCase):
     def setUpClass(cls):
         cls.tests = unittest.defaultTestLoader.discover(str(ENGINE_ROOT / "tests"), top_level_dir=str(ENGINE_ROOT)).countTestCases()
         cls.gate = json.loads(text(ENGINE_ROOT / "evidence" / "functional_mvp.json"))
+        cls.receipt = json.loads(text(RECEIPT))
         cls.docs = {path.name: flat(text(path)) for path in (README, CASE_STUDY, AI_DEVELOPMENT)}
 
     def test_the_test_count_is_current(self):
@@ -98,6 +121,19 @@ class FiguresTest(unittest.TestCase):
         self.assertTrue(f"There are {count} such defects" in self.docs["ai_assisted_development.md"], f"There are {count} such defects")
         for name, body in self.docs.items():
             self.assertEqual(set(re.findall(r"\b(\d+) (?:planted|such) defects\b", body)) - {count}, set(), name)
+
+    def test_the_latest_full_run_is_quoted_from_its_receipt(self):
+        """The defined count above comes from the code; the run's date and count come from the committed receipt. The case
+        study, the disclosure and the gate report each quote the run once; the README's Testing row must agree where it does."""
+        caught, total = self.receipt["caught"], self.receipt["total"]
+        claim = f"caught all {caught}" if caught == total else f"caught {caught} of {total}"
+        for name, body in {**self.docs, REPORT.name: flat(text(REPORT))}.items():
+            found = re.findall(r"The latest full run \((\d{4}-\d{2}-\d{2})\) (caught (?:all )?\d+(?: of \d+)?)", body)
+            if name == README.name and not found:
+                continue
+            self.assertEqual(len(found), 1, f"{name} quotes the latest full run once")
+            self.assertIn(found[0][0], run_dates(self.receipt), f"{name}: the run's date")
+            self.assertEqual(found[0][1], claim, name)
 
     def test_the_functional_mvp_figures_match_its_evidence(self):
         checks = sum(len(found) for found in self.gate["checks"].values())
@@ -164,9 +200,72 @@ class PortfolioGateReportTest(unittest.TestCase):
             self.assertIn(f"\n{label}\n", body)
 
 
+class PlantedDefectPageTest(unittest.TestCase):
+    """docs/testing.md and the generated docs/defect_coverage.md (2026-10-31) say what evidence/mutation-receipt.json says:
+    the page is exactly what the receipt gives, the run history ends with that run, and each example is a planted defect the
+    receipt holds, caught by the test the example names."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.receipt = json.loads(text(RECEIPT))
+        cls.defects = {(e["file"], e["mutation"]): e for e in cls.receipt["results"]}
+
+    def test_the_coverage_page_is_exactly_what_the_receipt_gives(self):
+        self.assertEqual(text(COVERAGE), defect_coverage.render(self.receipt), "run tools/defect_coverage.py")
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(defect_coverage.main(["--check"]), 0)
+
+    def test_the_check_fails_on_a_page_that_is_not_the_receipts(self):
+        """Proof that the gate can fail: one result changed in a copy of the receipt, and --check against the committed page exits 1."""
+        changed = json.loads(text(RECEIPT))
+        changed["results"][0]["result"] = "SURVIVED"
+        with tempfile.TemporaryDirectory() as folder:
+            other = Path(folder) / "receipt.json"
+            other.write_text(json.dumps(changed), encoding="utf-8")
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(defect_coverage.main(["--check", "--receipt", str(other)]), 1)
+                self.assertEqual(defect_coverage.main(["--check", "--out", str(Path(folder) / "missing.md")]), 1)
+
+    def test_the_run_history_ends_with_the_committed_receipt(self):
+        body = text(TESTING)
+        rows = re.findall(r"^\| ([^|]+?) \| (\d+) / (\d+) \| ([^|]+?) \|", section(body, "## Run history"), re.M)
+        self.assertGreaterEqual(len(rows), 10, "the run history")
+        date, caught, total, _ = rows[-1]
+        self.assertEqual((int(caught), int(total)), (self.receipt["caught"], self.receipt["total"]))
+        self.assertIn(date, run_dates(self.receipt))
+        exact, unknown = single_test_catches(self.receipt)
+        self.assertIn(f"{exact} of the {self.receipt['total']} are caught by exactly one test method", flat(body))
+        self.assertIn(f"For {unknown} more the receipt cannot tell", flat(body))
+
+    def test_a_record_is_not_a_test(self):
+        """Codex review CR-2026-10-31, F1: one method that fails twice (subtests) is one test, and a receipt that dropped
+        records cannot say whether one method alone caught the defect."""
+        twice = {"result": "CAUGHT", "failures": 2, "errors": 0, "failing": ["tests.test_a.T.test_x", "tests.test_a.T.test_x"]}
+        dropped = {"result": "CAUGHT", "failures": 5, "errors": 0, "failing": ["tests.test_a.T.test_x"] * 3}
+        two = {"result": "CAUGHT", "failures": 1, "errors": 1, "failing": ["tests.test_a.T.test_x", "tests.test_b.U.test_y"]}
+        survived = {"result": "SURVIVED", "failures": 0, "errors": 0, "failing": []}
+        self.assertEqual([defect_coverage.single_method(e) for e in (twice, dropped, two, survived)], ["yes", "unknown", "", ""])
+        self.assertEqual(defect_coverage.single_counts([twice, dropped, two, survived]), (1, 1))
+        self.assertEqual(defect_coverage.catching(twice), "`test_a::test_x` (2 failure/error records)")
+        self.assertEqual(defect_coverage.catching(two), "`test_a::test_x`, `test_b::test_y`")
+        entry = next(e for e in self.receipt["results"] if e["mutation"] == "dangling export references accepted")
+        self.assertEqual((defect_coverage.failed_tests(entry), len(defect_coverage.methods(entry))), (2, 1))
+        self.assertEqual(defect_coverage.single_method(entry), "yes")
+
+    def test_each_example_is_a_planted_defect_caught_by_the_test_it_names(self):
+        rows = re.findall(r"^\| (.+?) \(`([^`]+)`\) \| .+? \| `([^`]+)`(?: and (\d+) more)? \|$", section(text(TESTING), "## Ten examples"), re.M)
+        self.assertEqual(len(rows), 10)
+        for label, file, test, more in rows:
+            entry = self.defects.get((file, label))
+            self.assertIsNotNone(entry, f"{label!r} is not a planted defect in {file}")
+            self.assertEqual(entry["result"], "CAUGHT", label)
+            self.assertIn(test, entry["failing"], label)
+            self.assertEqual(defect_coverage.failed_tests(entry), 1 + int(more or 0), f"{label}: how many failure records")
+
+
 class PublishableTest(unittest.TestCase):
     def test_nothing_a_release_scan_flags(self):
-        for path in (README, CASE_STUDY, AI_DEVELOPMENT):
+        for path in (README, CASE_STUDY, AI_DEVELOPMENT, OVERVIEW, TESTING, COVERAGE):
             self.assertEqual(release_scan.scan_text(text(path), []), [], path.name)
 
     def test_the_readme_stands_without_the_private_operator_manual(self):

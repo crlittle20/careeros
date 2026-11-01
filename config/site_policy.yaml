@@ -21,6 +21,21 @@ sources:
   indeed: manual
   glassdoor: manual
 
+# Assisted applications (ADR 0009): what CareerOS may do on an application form you opened and asked it to help with.
+# fill / upload: allowed | supervised_only | unknown | blocked. Submit is never listed: you always submit. Unknown and
+# blocked mean manual (you copy from the package's answer panel). A host not listed uses `default`; a listed host also
+# covers its subdomains. `reviewed_fill` is the most a host was reviewed for: you turn filling on yourself, in your
+# vault overrides (assistance: {host: {fill, installed_check}}), after the installed-extension check
+# (docs/assisted_applications.md). Until then every host is manual (Codex review of ac83e00, 2026-10-22).
+assistance:
+  default: {fill: unknown, upload: blocked}
+  # Greenhouse-hosted application forms (P5, 2026-10-21). Greenhouse publishes no candidate terms that forbid filling
+  # a form you opened yourself (greenhouse.com/legal lists its privacy policy, cookie notice and customer agreements);
+  # its own MyGreenhouse fills these forms. supervised_only: you open the form, ask for the fill, watch it, review
+  # everything and submit. The form's field ids are the job-board API's field names (checked on a public posting,
+  # read only). Forms embedded on an employer's own site are other origins and stay manual. Uploads stay yours.
+  greenhouse.io: {fill: unknown, upload: blocked, reviewed_fill: supervised_only}
+
 sites:
   - site: boards-api.greenhouse.io / api.lever.co / api.ashbyhq.com
     discovery: allowed            # public job-board APIs intended for listing jobs
