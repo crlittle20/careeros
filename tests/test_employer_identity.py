@@ -211,8 +211,8 @@ class NotInQualificationTests(unittest.TestCase):
     def test_only_submission_permission_and_night_conflicts_use_the_resolver(self):
         """Submission holds (R2) and NIGHT's same-employer-family check (R3) use it; the gate, scores and discovery don't."""
         uses = re.compile(r"normalize\.employer_identity|normalize import employer_identity|from \.employer_identity")
-        users = [p.relative_to(ENGINE_ROOT).as_posix() for p in (ENGINE_ROOT / "careeros").rglob("*.py")
-                 if p.name != "employer_identity.py" and uses.search(p.read_text(encoding="utf-8"))]
+        users = sorted(p.relative_to(ENGINE_ROOT).as_posix() for p in (ENGINE_ROOT / "careeros").rglob("*.py")
+                       if p.name != "employer_identity.py" and uses.search(p.read_text(encoding="utf-8")))   # rglob order differs by OS
         self.assertEqual(users, ["careeros/qualify/night.py", "careeros/review/submission.py"])
 
     def test_the_existing_hold_rule_is_unchanged(self):
