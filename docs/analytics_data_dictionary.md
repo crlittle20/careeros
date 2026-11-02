@@ -11,6 +11,11 @@
   A correction that changes no value an earlier export can hold keeps both: on 2026-10-30 `is_recommended` stopped
   counting variants, as `is_qualified` already did. An export with a recommended variant was always refused by its
   own checks, so no export ever written holds one.
+  On 2026-11-01 (ADR 0007, "Confirmation plus undo") a dismissal can be reinstated by a later event, so `is_dismissed`
+  can go back to 0, and it reads the latest event; and an application recorded by mistake can be voided (state
+  `void`), which stays a row of `fact_application` but no longer counts: `has_application` and the Applications measure
+  leave it out. That is the same rule: no export written before could hold a reinstatement or a void application, so
+  every earlier value stays as it was, no column was added or retyped, and the revision stays 2.
 - Code: `careeros/analytics/export.py`
 - Command: `careeros export [--out FOLDER]`
 - Demo sample: `samples/analytics_demo/` (rebuilt by `tools/build_demo_export.py`)
@@ -142,7 +147,7 @@ Two things are deliberately **not** relationships:
   - *last seen*;
   - *closed*;
   - *labelled*;
-  - *dismissed*: your latest dismissal.
+  - *dismissed*: the dismissal in force (your latest dismissal event, when it is not a reinstatement).
 - **`days_to_decision`** and **`days_listed`** are in days, from timestamps, to two decimals. Days listed runs from
   first seen to closed, or to last seen for a job still listed.
 - **Snapshot.** `fact_job_evaluation` is a snapshot: each job's state and decision at export time. The event facts
@@ -351,24 +356,25 @@ and counts from `observations`, `job_changes`, `opening_links` and `gate_results
 | `night_state` | text | `ELIGIBLE`, `CONDITIONAL`, `INELIGIBLE`. |
 | `label` | text | Your latest label: `apply`, `stretch`, `skip`. |
 | `label_date_key` | whole number | When you labelled it. |
-| `has_application` | 0/1 | You applied (an application is on record). |
+| `has_application` | 0/1 | You applied (an application is on record, other than a void one: a record made by mistake, 2026-11-01). |
 | `sightings` | whole number | Recorded sightings (rows in fact_job_observation). |
 | `source_count` | whole number | Distinct sources it was seen through. |
 | `meaningful_changes` | whole number | Meaningful posting changes (pay, requirements, location ...); cosmetic edits are not counted. |
 | `evaluations` | whole number | Eligibility decisions made over the job's life (re-evaluations included). |
 | `days_to_decision` | decimal | First seen → latest decision, in days. |
 | `days_listed` | decimal | First seen → closed (or last seen), in days. |
-| `is_dismissed` | 0/1 | You dismissed it (`careeros dismiss`, or Dismiss on the review page). Recorded against this job only; a dismissal of another posting of the same opening is not carried over. |
-| `dismissed_date_key` | whole number | When you last dismissed it. |
-| `dismissal_reason` | text | The reason of your latest dismissal: `pay`, `location`, `remote`, `schedule`, `seniority`, `skills`, `qualifications`, `domain`, `employer`, `duplicate`, `closed`, `applied_elsewhere`, `not_interested`, `other`. The note you may add is not exported. |
+| `is_dismissed` | 0/1 | You dismissed it (`careeros dismiss`, or Dismiss on the review page) and have not reinstated it since: your latest dismissal event is a dismissal. A reinstatement (`careeros dismiss JOB --undo`, or Undo on the review page, 2026-11-01) sets it back to 0. Recorded against this job only; a dismissal of another posting of the same opening is not carried over. |
+| `dismissed_date_key` | whole number | When you dismissed it (the dismissal in force); blank when not dismissed, also after a reinstatement. |
+| `dismissal_reason` | text | The reason of the dismissal in force (blank after a reinstatement): `pay`, `location`, `remote`, `schedule`, `seniority`, `skills`, `qualifications`, `domain`, `employer`, `duplicate`, `closed`, `applied_elsewhere`, `not_interested`, `other`. The note you may add is not exported. |
 
 **A note on scores.** The score columns, and `tier`, are filled only while the job's latest decision is the one the
 score was made under. A job that was scored and later rejected shows no score. A job that was scored and then closed
 keeps its last score, but is not counted as qualified.
 
 **A note on dismissals.** A dismissal is your decision about a job, not a change of the job's state: a dismissed job
-keeps its `current_state`, tier and scores, and stays in every count above. Dismissals are append-only, so
-`is_dismissed` never goes back to 0. To leave dismissed jobs out of a view, filter on `is_dismissed` = 0.
+keeps its `current_state`, tier and scores, and stays in every count above. Dismissals are append-only: a
+reinstatement is a later event, never an edit, and the latest event decides, so `is_dismissed` goes back to 0 after
+one (2026-11-01) and to 1 after a later dismissal. To leave dismissed jobs out of a view, filter on `is_dismissed` = 0.
 
 ### fact_job_observation
 
@@ -435,7 +441,8 @@ Grain: **one row per board verification run**: an initial check, a re-verificati
 ### fact_application
 
 Grain: **one row per application you recorded**, with its current status. Source: `applications` and the
-application workflow's transitions. Demo rows: 4.
+application workflow's transitions. Demo rows: 4. A void application (recorded by mistake and voided with a reason,
+2026-11-01) keeps its row, with state `void`; it is never open, reaches no stage and no measure counts it.
 
 | Column | Type | Description |
 |---|---|---|
@@ -447,8 +454,8 @@ application workflow's transitions. Demo rows: 4.
 | `channel` | text | `direct`, `agency`, `referral`, `other`. |
 | `applied_date_key` | whole number | → dim_date (active). |
 | `last_change_date_key` | whole number | → dim_date (inactive): the latest status change. |
-| `current_state` | text | `applied`, `acknowledged`, `responded`, `screening`, `interviewing`, `final_interview`, `offer`, `accepted`, `declined`, `rejected`, `withdrawn`, `ghosted`, `closed`. |
-| `state_category` | text | `active`, `blocked`, `completed`, `cancelled` (from the application workflow). |
+| `current_state` | text | `applied`, `acknowledged`, `responded`, `screening`, `interviewing`, `final_interview`, `offer`, `accepted`, `declined`, `rejected`, `withdrawn`, `ghosted`, `closed`, `void` (recorded by mistake; reachable only from `applied`, `acknowledged` or `ghosted`, and never after an employer-answer stage, so a void row has no answer flag). |
+| `state_category` | text | `active`, `blocked`, `completed`, `cancelled` (from the application workflow; `void` is `cancelled`). |
 | `is_open` | 0/1 | Active or blocked. |
 | `got_answer` | 0/1 | The employer answered at some point (responded, screening, interview, offer or rejection). |
 | `reached_screening` | 0/1 | Reached screening or later. |
@@ -480,7 +487,7 @@ dashboard spec quotes the demo values; a test checks those quotes.
 | New-board verification rate | Of boards found after verification existed, the share quarantined or active. Equals the application's "share verified". |
 | Scan reliability | Complete scans ÷ all scans. Equals the application's "scan success rate". |
 | NIGHT routed | Jobs whose latest NIGHT decision is eligible. |
-| Applications, open applications, interview rate | Rows of fact_application; `is_open`; `reached_interview` ÷ applications. |
+| Applications, open applications, interview rate | Rows of fact_application other than void ones (`current_state` = `void`, a record made by mistake); `is_open`; `reached_interview` ÷ applications. |
 
 ## 7. Validation
 

@@ -238,7 +238,7 @@ The Functional MVP gate exercises these failures (`functional_mvp_report.md`).
 | Decisions | `gate_results`, `scores`, `transitions`, `careeros explain JOB [--json]` |
 | Integrity | `careeros verify` (hash chain and histories) |
 | Status and metrics | `careeros status`, `careeros metrics`, `careeros funnel` |
-| Logs | `vault\logs\careeros.log` (redacted) and `daily-run.log` |
+| Logs | `vault\logs\careeros.log` and the scheduled run's `daily-run.log`, both redacted (`careeros/core/redact.py`) |
 | Analytics | `careeros export` → Power BI, System quality page |
 
 ## 10. Human review

@@ -17,7 +17,9 @@ from careeros.core import private_sites
 from careeros.core.clock import parse_utc
 from careeros.db.store import Store
 from careeros.qualify import certifications, experience
-from careeros.review.applications import OPEN_STATES
+from careeros.review.applications import COUNTED, OPEN_STATES, VOID, void_refusal
+from careeros.review.dismiss import RECENT_DAYS, is_dismissed, recent
+from careeros.review.labels import label_backlog
 
 TIER_TITLES = {"A": "Tier A: exceptional", "B": "Tier B: strong apply", "near_miss": "Near-miss: manual review"}
 STATE_NOTE = {"CONDITIONAL": "CONDITIONAL: check the flagged unknowns before applying",
@@ -28,6 +30,7 @@ NO_RESPONSE_DAYS = 14
 NIGHT_ONLY = ("(j.source = 'manual_url' AND j.job_id IN (SELECT job_id FROM leads WHERE profile = 'night') "
               "AND j.job_id NOT IN (SELECT job_id FROM leads WHERE profile = 'primary' AND job_id IS NOT NULL))")
 HIDDEN_REJECTIONS = ("employer_excluded",)  # deliberate exclusions are not audited or labelled
+CSP = "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'"   # no script, no request; forms post here only
 CSS = """
 :root{--bg:#fafaf8;--card:#fff;--ink:#1d1d1b;--muted:#6b6b66;--line:#e4e2dc;--a:#1f6f43;--b:#2f5d8a;--n:#9a6b16;--r:#a33a2c;--hi:#eef5ee}
 @media (prefers-color-scheme: dark){:root{--bg:#161615;--card:#1f1f1d;--ink:#ecebe6;--muted:#a3a29b;--line:#34332f;--hi:#1c2a1f}}
@@ -43,6 +46,7 @@ h1{font-size:22px;margin:8px 0}h2{font-size:17px;margin:28px 0 8px;border-bottom
 form{display:inline-block;margin:4px 8px 0 0}button{font:inherit;font-size:13px;padding:3px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
 input[type=text],select{font:inherit;font-size:13px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:100%}
 input[type=text]{width:200px}.labelled{font-size:12px;color:var(--a)}a{color:var(--b)}
+code.jid{user-select:all;font-size:12px}.verdict{font-weight:600;margin:2px 0 4px}
 """
 
 
@@ -79,21 +83,35 @@ def _latest(store: Store, table: str, job_id: str):
     return store.one(f"SELECT * FROM {table} WHERE job_id = ? ORDER BY at DESC, rowid DESC LIMIT 1", (job_id,))
 
 
-def _form(action: str, target: str, token: str, form_keys: dict, body: str) -> str:
-    key = secrets.token_hex(12)
+def _id_code(value: str) -> str:
+    """A job or application id as copyable text (OPP-15, 2026-11-01): `label`, `applied`, `package`, `assist` and
+    `app-status` all need it. One click selects it whole."""
+    return f'<span><code class="jid">{esc(value)}</code></span>'
+
+
+def _form(action: str, target: str, token: str, form_keys: dict, body: str, key: str | None = None) -> str:
+    key = key or secrets.token_hex(12)
     form_keys[key] = (action, target)
     return (f'<form method="post" action="/{action}?t={esc(token)}"><input type="hidden" name="target" value="{esc(target)}">'
             f'<input type="hidden" name="key" value="{key}">{body}</form>')
 
 
-def _label_form(job_id: str, token: str | None, form_keys: dict) -> str:
+def _origin(origin: str) -> str:
+    """The card a form sits on (`sl` the shortlist card, `night` a NIGHT card, `card` a posting's card), so the server
+    returns there after the action (OPP-16, 2026-11-01)."""
+    return f'<input type="hidden" name="from" value="{esc(origin)}">'
+
+
+def _label_form(job_id: str, token: str | None, form_keys: dict, origin: str = "card") -> str:
     if not token:
         return f'<span class="meta">label: <code>careeros label {esc(job_id)} apply|stretch|skip</code></span>'
     buttons = "".join(f'<button name="label" value="{v}">{t}</button> ' for v, t in (("apply", "Apply"), ("stretch", "Stretch"), ("skip", "Skip")))
-    return _form("label", job_id, token, form_keys, f'<input type="text" name="reason" placeholder="label reason (optional)"> {buttons}')
+    return _form("label", job_id, token, form_keys,
+                 f'{_origin(origin)}<input type="text" name="reason" placeholder="label reason (optional)"> {buttons}')
 
 
-def _apply_form(job_id: str, token: str | None, form_keys: dict) -> str:
+def _apply_form(job_id: str, token: str | None, form_keys: dict, origin: str = "card") -> str:
+    """The "I applied" form: the server first shows a confirmation naming the posting; only its Confirm records (OPP-16)."""
     if not token:
         return f'<span class="meta">applied? <code>careeros applied {esc(job_id)} --channel direct</code></span>'
     shortcut = private_sites.agency_shortcut()   # an agency named in the private settings, if any
@@ -101,18 +119,32 @@ def _apply_form(job_id: str, token: str | None, form_keys: dict) -> str:
                ("agency", "via another agency"), ("referral", "by referral")]
     options = "".join(f'<option value="{esc(v)}">{esc(t)}</option>' for v, t in choices)
     return _form("apply", job_id, token, form_keys,
-                 f'<select name="channel">{options}</select> <input type="text" name="agency" placeholder="agency name (if other)"> '
-                 f'<button>I applied</button>')
+                 f'{_origin(origin)}<select name="channel">{options}</select> '
+                 f'<input type="text" name="agency" placeholder="agency name (if other)"> <button>I applied</button>')
 
 
 def _status_form(app, token: str | None, form_keys: dict, app_matrix) -> str:
     if not token or app_matrix is None or app["current_state"] in app_matrix.terminal:
         return ""
-    nexts = sorted(to for (frm, to) in app_matrix.edges if frm == app["current_state"])
+    nexts = sorted(to for (frm, to) in app_matrix.edges if frm == app["current_state"] and to != VOID)   # void: its own control
     options = "".join(f'<option value="{esc(s)}">{esc(s.replace("_", " "))}</option>' for s in nexts)
     return _form("status", app["application_id"], token, form_keys,
                  f'<select name="state">{options}</select> <input type="text" name="notes" placeholder="note (optional)"> '
                  f'<button>Update status</button>')
+
+
+def _void_form(store: Store, app, token: str | None, form_keys: dict, app_matrix) -> str:
+    """The "Void (recorded by mistake)" control, offered only where the writer allows it: before anyone at the employer
+    answered, in the application's whole history (applications.void_refusal). The reason is required, and the server
+    first shows a confirmation naming the posting (ADR 0007, amendment of 2026-11-01)."""
+    if app_matrix is None or void_refusal(store, app_matrix, app["application_id"]):
+        return ""
+    if not token:
+        return (f'<span class="meta">recorded by mistake? <code>careeros app-status {esc(app["application_id"])} void '
+                f'--reason "..."</code></span>')
+    return _form("void", app["application_id"], token, form_keys,
+                 '<input type="text" name="reason" required maxlength="300" placeholder="why it was recorded by mistake"> '
+                 '<button>Void (recorded by mistake)</button>')
 
 
 def _grouped(rows) -> list:
@@ -140,11 +172,13 @@ def _plain_card(store: Store, job, now: str, token: str | None, form_keys: dict,
     gate = _latest(store, "gate_results", job["job_id"])
     label = _latest(store, "labels", job["job_id"])
     from careeros.openings import application_status   # the same check recording uses (role group, history, holds)
+    from .explain import _verdict   # one sentence: why it is in this tier (OPP-03)
     status = application_status(store, job["job_id"])
     app = status["applied"]
     states = json.loads(job["remote_states_json"] or "[]")
     parts = [f'<div class="card{" new" if new else ""}" id="{esc(job["job_id"])}"><h3>{safe_link(job["url"], job["title"])}</h3>',
-             f'<div class="row"><span>{esc(job["employer_name"])}</span><span>{esc(job["location_raw"] or "location unknown")}'
+             *([f'<div class="verdict">{esc(_verdict(store, policy, job["job_id"]))}</div>'] if policy is not None else []),   # OPP-03
+             f'<div class="row">{_id_code(job["job_id"])}<span>{esc(job["employer_name"])}</span><span>{esc(job["location_raw"] or "location unknown")}'
              f' · {esc(job["remote_type"])}{" (" + esc(", ".join(states)) + ")" if states else ""}</span>'
              f'<span>{esc(_comp(job))}</span><span>{esc(job["employment_type"])}</span>'
              + _stale_note(job["posted_at"], now, stale_days) +
@@ -214,19 +248,25 @@ def _applications_section(store: Store, now: str, token, form_keys, app_matrix) 
                         ORDER BY a.applied_at DESC""")
     if not rows:
         return []
-    states = Counter(r["current_state"] for r in rows)
-    out = [f"<h2>Your applications ({len(rows)})</h2><div class=\"meta\">" +
+    counted = [r for r in rows if r["current_state"] != VOID]   # a void one stays listed, and never counts (2026-11-01)
+    states = Counter(r["current_state"] for r in counted)
+    voided = len(rows) - len(counted)
+    out = [f"<h2>Your applications ({len(counted)}{f'; {voided} void' if voided else ''})</h2><div class=\"meta\">" +
            " · ".join(f"{esc(k.replace('_', ' '))}: {v}" for k, v in states.most_common()) + "</div>"]
     for a in rows:
         waiting = _days(a["entered_state_at"], now) or 0
         nudge = (f" — no response in {int(waiting)} days: follow up, or mark it ghosted"
                  if a["current_state"] in ("applied", "acknowledged") and waiting >= NO_RESPONSE_DAYS else "")
+        if a["current_state"] == VOID:   # why: the reason given when it was voided
+            why = store.one("SELECT reason_code FROM transitions WHERE workflow_id = ? AND to_state = ? ORDER BY sequence DESC "
+                            "LIMIT 1", (a["workflow_id"], VOID))
+            nudge = f" (recorded by mistake: {why['reason_code']})" if why and why["reason_code"] else " (recorded by mistake)"
         out.append(f'<div class="card" id="{esc(a["application_id"])}"><h3>{safe_link(a["url"], a["title"] or a["job_id"])}</h3><div class="row">'
-                   f'<span>{esc(a["employer_name"])}</span><span>applied {esc(a["applied_at"][:10])} via {esc(a["channel"])}'
+                   f'{_id_code(a["application_id"])}<span>{esc(a["employer_name"])}</span><span>applied {esc(a["applied_at"][:10])} via {esc(a["channel"])}'
                    f'{" (" + esc(a["agency"]) + ")" if a["agency"] else ""}</span>'
                    f'<span class="{"flag" if nudge else "ok"}">status: {esc(a["current_state"].replace("_", " "))}{esc(nudge)}</span></div>'
                    + (f'<div class="row">note: {esc(a["notes"])}</div>' if a["notes"] else "")
-                   + _status_form(a, token, form_keys, app_matrix) + "</div>")
+                   + _status_form(a, token, form_keys, app_matrix) + _void_form(store, a, token, form_keys, app_matrix) + "</div>")
     return out
 
 
@@ -269,7 +309,7 @@ def _night_label_form(job_id: str, token: str | None, form_keys: dict) -> str:
 
 
 def _night_card(store: Store, r, now: str, token, form_keys, stale_days: int = STALE_DAYS) -> str:
-    app = store.one("SELECT * FROM applications WHERE job_id = ? ORDER BY applied_at DESC LIMIT 1", (r["job_id"],))
+    app = store.one(f"SELECT * FROM applications WHERE job_id = ? AND {COUNTED} ORDER BY applied_at DESC LIMIT 1", (r["job_id"],))
     label = store.one("SELECT * FROM labels WHERE job_id = ? AND profile = 'night' ORDER BY at DESC, rowid DESC LIMIT 1", (r["job_id"],))
     flags = json.loads(r["n_flags"] or "[]")
     extra = json.loads(r["n_components"] or "{}")
@@ -290,7 +330,7 @@ def _night_card(store: Store, r, now: str, token, form_keys, stale_days: int = S
                if label else "")
             + _night_label_form(r["job_id"], token, form_keys)
             + (f'<div class="ok">Applied {esc(app["applied_at"][:10])} via {esc(app["channel"])} — status: '
-               f'{esc(app["current_state"].replace("_", " "))}</div>' if app else _apply_form(r["job_id"], token, form_keys))
+               f'{esc(app["current_state"].replace("_", " "))}</div>' if app else _apply_form(r["job_id"], token, form_keys, "night"))
             + "</div>")
 
 
@@ -335,8 +375,44 @@ def _stale_days(policy) -> int:
     return int(policy.get("discovery", "max_posting_age_days", default=STALE_DAYS) or STALE_DAYS)
 
 
+STALE_RUN_HOURS = 26   # OPP-06: the daily run is due every 24 hours; two hours' grace before the warning
+
+
+def run_health(store: Store, completing: tuple[str, str] | None = None) -> tuple[str, str | None]:
+    """(line, warning) about the daily run, from the `runs` table (OPP-06, 2026-11-01): when the last run completed and how
+    long ago, and a warning when the latest run failed or no run has completed for more than STALE_RUN_HOURS. A vault
+    with no run yet gets no warning. The report header and `careeros status` show both.
+
+    `completing` is (run_id, end time) of the daily run writing this report (Codex CR-2026-11-01-OBS-REVIEW, F5): it
+    counts as completed then. The run writes its report just before it is marked completed, and a report that cannot be
+    written fails the run, so the saved report never shows the previous run's health as its own."""
+    now = store.clock.now()
+    run_id, ended = completing or (None, None)
+    status = "CASE WHEN run_id = :run THEN 'completed' ELSE status END"   # the completing run, as it will be recorded
+    done = store.one(f"SELECT started_at, CASE WHEN run_id = :run THEN :ended ELSE ended_at END AS ended_at FROM runs "
+                     f"WHERE {status} = 'completed' ORDER BY started_at DESC, rowid DESC LIMIT 1", {"run": run_id, "ended": ended})
+    latest = store.one(f"SELECT started_at, {status} AS status FROM runs ORDER BY started_at DESC, rowid DESC LIMIT 1",
+                       {"run": run_id})
+    when = lambda t: f"{t[:16].replace('T', ' ')} UTC"
+    age = None
+    if done:
+        finished = done["ended_at"] or done["started_at"]
+        age = (_days(finished, now) or 0) * 24
+        line = f"last completed run: {when(finished)} ({int(age)} h ago)"
+    else:
+        line = "last completed run: none yet"
+    warning = None
+    if latest and latest["status"] == "failed":
+        warning = f"The latest daily run failed (started {when(latest['started_at'])}). Details are in vault\\logs\\daily-run.log."
+    elif age is not None and age > STALE_RUN_HOURS:
+        warning = f"No daily run has completed for {int(age)} hours. Check Task Scheduler and careeros status."
+    return line, warning
+
+
 def build_report(store: Store, profile, policy, *, token: str | None = None, form_keys: dict | None = None,
-                 seed: int | None = None, since: str | None = None, app_matrix=None) -> str:
+                 seed: int | None = None, since: str | None = None, app_matrix=None,
+                 completing: tuple[str, str] | None = None) -> str:
+    """The review page. `completing`: the daily run writing it, counted as completed in its header (run_health, F5)."""
     now = store.clock.now()
     _card = functools.partial(_plain_card, stale_days=_stale_days(policy), policy=policy)
     form_keys = {} if form_keys is None else form_keys
@@ -347,17 +423,25 @@ def build_report(store: Store, profile, policy, *, token: str | None = None, for
     tiers = Counter(r["tier"] for r in scored)
     open_exc = store.one("SELECT COUNT(*) c FROM exceptions WHERE status != 'resolved'")["c"]
     out = [f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-           f'<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; form-action \'self\'">'
+           f'<meta http-equiv="Content-Security-Policy" content="{CSP}">'
            f'<title>CareerOS review</title><style>{CSS}</style></head><body><main>',
            f'<h1>CareerOS daily review</h1><div class="meta">{esc(now[:16].replace("T", " "))} UTC · policy {esc(policy.fingerprint[:10])} · '
            f'profile {esc(profile.fingerprint[:10])} · {open_exc} open exception(s)</div>']
+    last_run, run_warning = run_health(store, completing)
+    out.append(f'<div class="meta">{esc(last_run)}</div>')
+    if run_warning:
+        out.append(f'<div class="banner"><b>{esc(run_warning)}</b></div>')
     if not profile.approved:
         out.append('<div class="banner"><b>Profile not approved.</b> Scores are provisional until you fill in and approve '
                    '<code>vault/profile/candidate_profile_v0.yaml</code>. Unknown facts are scored as neutral, never as matches.</div>')
+    backlog = label_backlog(store)   # OPP-01: postings close while they wait, so the wait is shown first
+    if backlog:
+        out.append(f'<div class="meta"><b>{esc(backlog["text"])}</b>: label them in the sections below.</div>')
     out.append('<div class="meta">' + " · ".join(f"{esc(k)}: {v}" for k, v in sorted(counts.items())) +
                " | tiers: " + " · ".join(f"{esc(k)}: {v}" for k, v in sorted(tiers.items())) + "</div>")
 
     out.extend(_shortlist_section(store, token, form_keys, policy))
+    out.extend(_dismissed_section(store, token, form_keys))
     out.extend(_applications_section(store, now, token, form_keys, app_matrix))
     out.extend(_funnel_section(store))
     out.extend(_reconsidered_section(store, since))
@@ -435,27 +519,30 @@ DISMISS_REASONS = ("pay", "location", "remote", "schedule", "seniority", "skills
                    "duplicate", "closed", "applied_elsewhere", "not_interested", "other")
 
 
-def _dismiss_form(job_id: str, token: str | None, form_keys: dict) -> str:
+def _dismiss_form(job_id: str, token: str | None, form_keys: dict, origin: str = "sl") -> str:
+    """Dismiss: no reason is preselected and one is required; the server first shows a confirmation naming the posting
+    and the reason, and only its Confirm records (OPP-16, 2026-11-01)."""
     if not token:
         return f'<span class="meta">dismiss: <code>careeros dismiss {esc(job_id)} --reason REASON</code></span>'
     options = "".join(f'<option value="{r}">{esc(r.replace("_", " "))}</option>' for r in DISMISS_REASONS)
     return _form("dismiss", job_id, token, form_keys,
-                 f'<select name="reason">{options}</select> <input type="text" name="note" placeholder="why (optional)"> '
-                 '<button>Dismiss</button>')
+                 f'{_origin(origin)}<select name="reason" required><option value="">dismiss: choose a reason</option>{options}</select> '
+                 '<input type="text" name="note" placeholder="why (optional)"> <button>Dismiss</button>')
 
 
 def _shortlist_section(store: Store, token, form_keys, policy=None) -> list[str]:
-    from .shortlist import shortlist
+    from .shortlist import ageing, shortlist
     items = shortlist(store, policy)
     out = [f'<h2 id="shortlist">Shortlist ({len(items)})</h2><div class="meta">Your Apply / Stretch labels and Tier A/B picks, '
            'with the evidence, open questions and the next useful action. Drafts: <code>careeros draft JOB_ID</code> '
            '(only after you choose to pursue a job). Nothing is ever submitted for you.</div>']
     for i in items:
         bits = [f'<div class="card" id="sl-{esc(i["job_id"])}"><h3>{safe_link(i["apply_url"], i["title"])}</h3>',
-                f'<div class="row"><span>{esc(i["employer"])}</span><span>{esc(i["status"])}</span>'
+                f'<div class="row">{_id_code(i["job_id"])}<span>{esc(i["employer"])}</span><span>{esc(i["status"])}</span>'
                 f'<span>tier {esc(i["tier"] or "-")} · {esc(i["state"] or "-")}</span>'
                 + (f'<span>your label: {esc(i["label"])}</span>' if i["label"] else "")
                 + ('<span class="flag"><b>Stretch</b></span>' if i["stretch"] else "") + '</div>',
+                f'<div class="row">{esc(ageing(i))}</div>',   # the clock: first seen, label age, package (OPP-08 + OPP-17)
                 f'<div class="ok"><b>Next:</b> {esc(i["next_action"])}</div>']
         if i.get("submission"):
             bits.append(f'<div class="flag"><b>{esc(i["submission"])}</b></div>')
@@ -471,10 +558,32 @@ def _shortlist_section(store: Store, token, form_keys, policy=None) -> list[str]
                         f'{esc(i["applied"]["current_state"].replace("_", " "))}</div>')
         elif i["possibly_applied"]:
             bits.append(f'<div class="flag">You applied to a similar opening: {esc(", ".join(i["possibly_applied"][:2]))}</div>')
-        bits.append(_dismiss_form(i["job_id"], token, form_keys) + "</div>")
+        bits.append(_label_form(i["job_id"], token, form_keys, "sl"))   # the same forms and endpoints as the plain card (OPP-75)
+        if not i["applied"] or i["applied"]["current_state"] not in OPEN_STATES:
+            bits.append(_apply_form(i["job_id"], token, form_keys, "sl"))
+        bits.append(_dismiss_form(i["job_id"], token, form_keys, "sl") + "</div>")
         out.append("".join(bits))
     if not items:
         out.append('<div class="meta">none yet: label jobs Apply or Stretch to build it</div>')
+    return out
+
+
+def _dismissed_section(store: Store, token, form_keys) -> list[str]:
+    """Postings you dismissed in the last RECENT_DAYS days and have not reinstated, newest first, each with Undo: a
+    reinstatement, through the same confirmation as Dismiss (ADR 0007, amendment of 2026-11-01). Shown only when
+    there is one."""
+    rows = recent(store)
+    if not rows:
+        return []
+    out = [f'<h2 id="dismissed">Dismissed recently ({len(rows)})</h2><div class="meta">Your dismissals of the last '
+           f'{RECENT_DAYS} days. Undo brings a posting back: a later event, and the dismissal stays in its history.</div>']
+    for r in rows[:30]:
+        undo = (_form("reinstate", r["job_id"], token, form_keys, '<button>Undo</button>') if token
+                else f'<span class="meta">undo: <code>careeros dismiss {esc(r["job_id"])} --undo</code></span>')
+        out.append(f'<div class="card" id="dis-{esc(r["job_id"])}"><h3>{safe_link(r["url"], r["title"])}</h3><div class="row">'
+                   f'{_id_code(r["job_id"])}<span>{esc(r["employer_name"])}</span>'
+                   f'<span>dismissed {esc(r["at"][:10])}: {esc(r["reason_code"].replace("_", " "))}</span>'
+                   + (f'<span>{esc(r["reason_text"])}</span>' if r["reason_text"] else "") + f'</div>{undo}</div>')
     return out
 
 
@@ -485,7 +594,7 @@ def _check_section(store: Store, scored, shortlisted: set, near_min: float) -> l
             continue
         score = store.one("SELECT components_json FROM scores WHERE job_id = ? ORDER BY at DESC, rowid DESC LIMIT 1", (r["job_id"],))
         unknowns = json.loads(score["components_json"]).get("decisive_unknowns") or []
-        if 1 <= len(unknowns) <= 2 and not store.one("SELECT 1 FROM dismissals WHERE job_id = ?", (r["job_id"],)):
+        if 1 <= len(unknowns) <= 2 and not is_dismissed(store, r["job_id"]):   # the latest dismissal event decides
             rows.append((r, unknowns))
     out = [f'<h2 id="check">Check before applying ({len(rows)})</h2><div class="meta">Promising openings held back by one or two '
            'unconfirmed facts. Each line says exactly what to verify.</div>']

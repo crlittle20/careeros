@@ -142,11 +142,11 @@ review by a person or a tool outside this chain is still recommended.
 ## 4. How tests validated behavior
 
 - **Tests come with the change.** Each milestone that changed system behaviour or documentation added or updated tests
-  for the change. The suite has 850 tests on synthetic fixtures, fake transports and fixed clocks, and
+  for the change. The suite has 925 tests on synthetic fixtures, fake transports and fixed clocks, and
   `tools/validate.py` runs it with outbound network refused.
 - **Planted defects check the tests themselves.** `tools/mutate.py` deliberately breaks each safety rule, one at a
-  time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 723
-  such defects. The latest full run (2026-11-01) caught all 723, each by a real failing test with the whole suite
+  time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 749
+  such defects. The latest full run (2026-11-02) caught all 749, each by a real failing test with the whole suite
   loaded (`evidence/mutation-receipt.json`); every full run since the first, with what each survivor exposed, is in
   [testing.md](testing.md). Spot checks made between 2026-10-13 and the first full run (2026-10-14) proved nothing:
   the tool's scratch copies lacked files some tests need, so every defect looked caught. The tool now refuses to run

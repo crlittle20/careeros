@@ -81,7 +81,7 @@ repository root.
 | Defining the measure | Set the goal (quality over volume) and labelled 50 real postings | [case study](case_study.md#ranking-calibration-identify-measure-improve-validate), ranking calibration | The measure is agreement with the job seeker's own Apply, Stretch and Skip labels |
 | Measurement and analysis | Supplied the labels; the analysis was Claude's, for my decision | The same section | Where the process agreed with the labels (hard rules, in-sample) and where it did not (ranking) |
 | Error-proofing | Accepted the controls through the milestone process | [README](../README.md#employer-verification), Employer verification; [case study](case_study.md), "Defects the controls caught" | Impostor job boards rejected, duplicates caught by requisition number, defects caught by controls rather than by chance |
-| Quality of the checks themselves | Set the milestone rule; once held a commit until the full test-of-the-tests run (planted defects) had finished | [README](../README.md#testing), Testing; `evidence/mutation-receipt.json` | Planted defects show the tests catch each of 723 deliberately broken rules |
+| Quality of the checks themselves | Set the milestone rule; once held a commit until the full test-of-the-tests run (planted defects) had finished | [README](../README.md#testing), Testing; `evidence/mutation-receipt.json` | Planted defects show the tests catch each of 749 deliberately broken rules |
 | KPIs and reporting | Approved the milestone that built them. Claude wrote the export and the report generator | [data dictionary](analytics_data_dictionary.md); [dashboard spec](powerbi_dashboard_spec.md) | A validated star schema whose figures reconcile with the application before anything is written |
 
 ## Two-minute tour

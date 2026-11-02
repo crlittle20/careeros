@@ -33,6 +33,7 @@ from careeros.core.fingerprint import fingerprint, text_fingerprint
 from careeros.db.store import Store
 
 from . import answers as answer_lib
+from .dismiss import is_dismissed
 from .shortlist import _latest_label, brief_lines
 
 ROUTES = ("apply", "stretch", "standing")
@@ -122,12 +123,12 @@ def _application_veto(store: Store, job_id: str) -> str | None:
 
 
 def route_for(store: Store, policy, job_id: str) -> tuple[str | None, str]:
-    """(route, basis) a package may be prepared under now, or (None, why not). Your Skip, a dismissal, a posting that
-    closed or that the gate no longer finds eligible, and an application already made always win, and a standing pick
-    never becomes a label."""
+    """(route, basis) a package may be prepared under now, or (None, why not). Your Skip, a dismissal (while it is the
+    latest event: a reinstatement undoes it, 2026-11-01), a posting that closed or that the gate no longer finds
+    eligible, and an application already made always win, and a standing pick never becomes a label."""
     if store.one("SELECT 1 FROM jobs WHERE job_id = ?", (job_id,)) is None:
         raise ValueError("unknown_job")
-    if store.one("SELECT 1 FROM dismissals WHERE job_id = ?", (job_id,)):
+    if is_dismissed(store, job_id):
         return None, "you dismissed it"
     label = _latest_label(store, job_id)
     if label and label["label"] == "skip":

@@ -132,7 +132,7 @@ recommendation for the same job adds a sighting next to it (`openings.py`).
 | `alert_messages` | discovery | append-only | Which alert emails were read (IDs and counts, not content) | Idempotent mail reading |
 | `inbox_issues` | discovery | mutable (closed) | Recommendation issues read and the reply posted | Retries, seen index |
 | `labels` | review | append-only | Your Apply / Stretch / Skip labels with the system's tier at the time | Agreement, funnel, analytics |
-| `dismissals` | review | append-only | Jobs you dismissed, and why | Shortlist, analytics |
+| `dismissals` | review | append-only | Jobs you dismissed, and why; a later `reinstated` row undoes one (2026-11-01: the latest row decides) | Shortlist, packages, report, analytics |
 | `applications` | tracker, transitions | projection (no deletes) | Applications you recorded and their current status | Funnel, analytics (`fact_application`) |
 | `submission_releases` | submission (`careeros release`) | append-only | Your releases of a submission hold, one posting and one channel at a time, and their revocations | Submission permission (`careeros/review/submission.py`), the review card |
 | `packages` | assist (`careeros package prepare`) | append-only | Each version of an application package: route, manifest and its SHA-256 (ADR 0009) | Readiness, approvals, sessions |

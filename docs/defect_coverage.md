@@ -9,14 +9,14 @@ defect is, the run history and ten worked examples are in [testing.md](testing.m
 
 | | |
 |---|---|
-| Run finished | 2026-11-01T21:08:03+00:00 |
-| Source tree | `2e9d1d1000897c78a7b9d0c2ab9a28117017390ae2a5a1d1ee25c161ea74b594` (SHA-256 over every file of the tree the run accepted) |
-| Planted defects | 723 |
-| Caught | 723 (CAUGHT 723) |
-| Source files with a planted defect | 79 |
-| Caught by exactly one test method | 446 (a single point of detection), counted where the receipt kept a name for every failure record; 3 more cannot be told, because the receipt dropped some of their records |
-| Unmutated suite | 850 tests ran in 68.4 s before the first defect went in |
-| Environment | Python 3.12.10, win32, Node.js v24.22.0, 6 workers |
+| Run finished | 2026-11-02T18:48:25+00:00 |
+| Source tree | `449ed5e3f16e4d60b793950a01f3f753d1d04976b778047ec3c2620c15db625e` (SHA-256 over every file of the tree the run accepted) |
+| Planted defects | 749 |
+| Caught | 749 (CAUGHT 749) |
+| Source files with a planted defect | 82 |
+| Caught by exactly one test method | 451 (a single point of detection), counted where the receipt kept a name for every failure record; 5 more cannot be told, because the receipt dropped some of their records |
+| Unmutated suite | 925 tests ran in 87.4 s before the first defect went in |
+| Environment | Python 3.12.10, win32, Node.js v24.22.0, 8 workers |
 
 One table per source file, in path order; the defects keep the receipt's order. "Catching tests" lists the distinct tests
 among the failure names the receipt keeps (at most three per defect), written module::test as the other
@@ -36,7 +36,7 @@ but the receipt dropped some records, so another method may have failed too.
 
 ## `careeros/analytics/export.py`
 
-9 planted defects, 9 caught.
+12 planted defects, 12 caught.
 
 | Planted defect | Result | Catching tests | One test only |
 |---|---|---|---|
@@ -49,10 +49,13 @@ but the receipt dropped some records, so another method may have failed too.
 | drill and test rows exported | CAUGHT | `test_analytics::test_dismissals_are_exported_with_the_latest_reason`, `test_analytics::test_rows_marked_as_drills_or_tests_are_left_out` |  |
 | a board read an alert triggered is credited as the discovery source | CAUGHT | `test_analytics::test_the_committed_sample_is_exactly_this_export` | yes |
 | the job-level fact's link to dim_job neither checked nor modelled | CAUGHT | `test_analytics::test_the_committed_sample_is_exactly_this_export`, `test_demo_mode::test_the_reviewer_walkthrough_shows_what_the_commands_print`, `test_powerbi::test_relationships_follow_the_exports_references` (4 failure/error records) |  |
+| the export ignoring reinstatement (a reinstated job still exported as dismissed) | CAUGHT | `test_analytics::test_a_reinstatement_clears_the_exported_dismissal` | yes |
+| the export's has_application counts a void application | CAUGHT | `test_analytics::test_a_void_application_stays_a_row_but_counts_nowhere` | yes |
+| the export's Applications figure counts a void application | CAUGHT | `test_analytics::test_a_void_application_stays_a_row_but_counts_nowhere` | yes |
 
 ## `careeros/cli.py`
 
-35 planted defects, 35 caught.
+37 planted defects, 37 caught.
 
 | Planted defect | Result | Catching tests | One test only |
 |---|---|---|---|
@@ -71,8 +74,8 @@ but the receipt dropped some records, so another method may have failed too.
 | a different requisition under the same title treated as already tracked | CAUGHT | `test_v25_audit::test_inbox_dedupe_is_requisition_aware` | yes |
 | a suspicious scan closes postings | CAUGHT | `test_v26_discovery::test_failed_and_suspicious_scans_never_close_or_prune` | yes |
 | one restricted scan disables a board | CAUGHT | `test_v26_discovery::test_access_restriction_disables_only_after_repeats` | yes |
-| unverified boards scanned | CAUGHT | `test_analytics::test_a_demo_export_stays_in_the_demo_vault`, `test_analytics::test_a_private_export_never_goes_into_the_code_repository`, `test_analytics::test_a_rate_is_compared_as_the_application_rounds_it` (31 failure/error records) |  |
-| a vanished board keeps its place in the scan | CAUGHT | `test_analytics::test_a_demo_export_stays_in_the_demo_vault`, `test_analytics::test_a_private_export_never_goes_into_the_code_repository`, `test_analytics::test_a_rate_is_compared_as_the_application_rounds_it` (32 failure/error records) |  |
+| unverified boards scanned | CAUGHT | `test_analytics::test_a_demo_export_stays_in_the_demo_vault`, `test_analytics::test_a_private_export_never_goes_into_the_code_repository`, `test_analytics::test_a_rate_is_compared_as_the_application_rounds_it` (33 failure/error records) |  |
+| a vanished board keeps its place in the scan | CAUGHT | `test_analytics::test_a_demo_export_stays_in_the_demo_vault`, `test_analytics::test_a_private_export_never_goes_into_the_code_repository`, `test_analytics::test_a_rate_is_compared_as_the_application_rounds_it` (34 failure/error records) |  |
 | employers penalised for a provider outage | CAUGHT | `test_board_verification::test_t16_many_greenhouse_boards_failing_together_is_a_provider_problem` | yes |
 | board scans follow redirects anywhere | CAUGHT | `test_board_verification::test_the_daily_scan_never_follows_a_board_redirect_off_the_listing_apis` | yes |
 | a rejected board's jobs stay open | CAUGHT | `test_job_lifecycle::test_rejecting_a_board_closes_its_open_jobs_and_keeps_history` | yes |
@@ -85,12 +88,14 @@ but the receipt dropped some records, so another method may have failed too.
 | Demo Mode publishes the seen-jobs index | CAUGHT | `test_demo_mode::test_the_seen_index_is_kept_locally_and_never_published` | yes |
 | careeros gmail runs in Demo Mode | CAUGHT | `test_demo_mode::test_commands_that_read_private_sources_refuse`, `test_demo_mode::test_commands_with_demo_mode_on_use_the_demo_vault`, `test_demo_mode::test_the_reviewer_walkthrough_shows_what_the_commands_print` |  |
 | Demo Mode reads the clipboard | CAUGHT | `test_demo_mode::test_commands_that_read_private_sources_refuse` (2 failure/error records) | yes |
-| commands ignore CAREEROS_DEMO_MODE | CAUGHT | `test_demo_mode::test_commands_with_demo_mode_on_use_the_demo_vault`, `test_demo_mode::test_the_reviewer_walkthrough_shows_what_the_commands_print`, `test_analytics::test_a_demo_export_stays_in_the_demo_vault` (19 failure/error records) |  |
+| commands ignore CAREEROS_DEMO_MODE | CAUGHT | `test_demo_mode::test_commands_with_demo_mode_on_use_the_demo_vault`, `test_demo_mode::test_the_reviewer_walkthrough_shows_what_the_commands_print`, `test_analytics::test_a_demo_export_stays_in_the_demo_vault` (21 failure/error records) |  |
 | a private export written inside the code repository | CAUGHT | `test_analytics::test_a_private_export_never_goes_into_the_code_repository` | yes |
 | a demo export written outside the demo vault | CAUGHT | `test_analytics::test_a_demo_export_stays_in_the_demo_vault` | yes |
 | a Demo Mode refusal ends in a traceback (G6) | CAUGHT | `test_demo_mode::test_commands_with_demo_mode_on_use_the_demo_vault`, `test_demo_mode::test_the_reviewer_walkthrough_shows_what_the_commands_print` |  |
 | eval --scoring opening the live store and taking the lock | CAUGHT | `test_scoring_eval::test_cli_runs_without_the_live_store_the_lock_or_a_log_file` (2 failure/error records) | yes |
 | release view: authorization judged without your current profile | CAUGHT | `test_submission::test_the_release_command` | yes |
+| a daily run held by a stale lock shows no notification | CAUGHT | `test_observability::test_a_held_daily_run_shows_a_notification_and_logs_it_and_leaves_the_lock` | yes |
+| the daily run's saved report shows the previous run's health (none yet, or a stale-run warning, after a success) | CAUGHT | `test_observability::test_a_run_after_a_gap_or_a_failure_saves_no_stale_warning`, `test_observability::test_the_first_successful_run_saves_its_own_health` |  |
 
 ## `careeros/core/credentials.py`
 
@@ -131,7 +136,7 @@ but the receipt dropped some records, so another method may have failed too.
 
 | Planted defect | Result | Catching tests | One test only |
 |---|---|---|---|
-| reason requirement dropped | CAUGHT | `test_core::test_rules` | yes |
+| reason requirement dropped | CAUGHT | `test_applications::test_a_void_application_needs_a_reason_stays_in_the_history_and_counts_nowhere`, `test_applications::test_app_status_void_on_the_command_line_needs_a_reason`, `test_core::test_rules` |  |
 
 ## `careeros/db/readonly.py`
 
@@ -217,7 +222,7 @@ but the receipt dropped some records, so another method may have failed too.
 | any unverified board gets the legacy grace | CAUGHT | `test_board_verification::test_new_boards_from_any_path_wait_for_verification`, `test_board_verification::test_t04_a_guessed_token_never_linked_by_the_employer_stays_a_candidate` |  |
 | boards added after the migration treated as legacy | CAUGHT | `test_board_verification::test_new_boards_from_any_path_wait_for_verification` | yes |
 | a manual approval bypasses a security failure | CAUGHT | `test_board_verification::test_manual_only_and_hard_failures_cannot_be_approved` | yes |
-| manual approvals never expire | CAUGHT | `test_board_verification::test_t25_an_expired_manual_override_returns_the_board_to_verification`, `test_board_verification::test_a_legacy_board_verified_at_its_own_site_becomes_active_without_quarantine`, `test_board_verification::test_site_checks_off_means_no_site_request_and_a_review_case` (33 failure/error records) |  |
+| manual approvals never expire | CAUGHT | `test_board_verification::test_t25_an_expired_manual_override_returns_the_board_to_verification`, `test_board_verification::test_a_legacy_board_verified_at_its_own_site_becomes_active_without_quarantine`, `test_board_verification::test_site_checks_off_means_no_site_request_and_a_review_case` (35 failure/error records) |  |
 | companies with the same name but different websites merged | CAUGHT | `test_board_verification::test_t28_an_acquired_name_is_kept_as_history_and_similar_names_never_merge` | yes |
 | a board taken over by another company keeps being ingested | CAUGHT | `test_board_verification::test_t18_a_changed_board_fingerprint_pauses_before_anything_is_ingested` | yes |
 | the identity baseline never learns from fuller scans | CAUGHT | `test_board_verification::test_t18_a_changed_board_fingerprint_pauses_before_anything_is_ingested` | yes |
@@ -241,10 +246,10 @@ but the receipt dropped some records, so another method may have failed too.
 | an unconfirmed official domain accepted | CAUGHT | `test_board_verification::test_t10_a_high_score_without_the_official_handshake_is_never_admitted` | yes |
 | Board Trust threshold lowered | CAUGHT | `test_board_verification::test_t11_discovery_greenhouse_vs_verifier_lever_needs_review_and_verifies_lever`, `test_board_verification::test_t10_a_high_score_without_the_official_handshake_is_never_admitted` |  |
 | a board naming another company is not a mismatch | CAUGHT | `test_demo_mode::test_boards_cover_every_verification_outcome`, `test_analytics::test_the_committed_sample_is_exactly_this_export`, `test_board_verification::test_t05_a_similar_name_pointing_to_an_unrelated_board_fails_identity` (6 failure/error records) |  |
-| new boards skip quarantine | CAUGHT | `test_board_verification::test_t30_repeated_relevant_hiring_raises_career_fit_and_scan_priority_not_trust`, `test_board_verification::test_t07_a_verified_board_that_disappears_pauses_ingestion`, `test_board_verification::test_t09_no_relevant_roles_lowers_career_fit_never_trust` (48 failure/error records) |  |
+| new boards skip quarantine | CAUGHT | `test_board_verification::test_t30_repeated_relevant_hiring_raises_career_fit_and_scan_priority_not_trust`, `test_board_verification::test_t07_a_verified_board_that_disappears_pauses_ingestion`, `test_board_verification::test_t09_no_relevant_roles_lowers_career_fit_never_trust` (50 failure/error records) |  |
 | a failed validation scan still promotes the board | CAUGHT | `test_board_verification::test_a_validation_scan_that_finds_incomplete_or_duplicate_postings_does_not_promote` | yes |
 | a board the employer's site contradicts is not rejected | CAUGHT | `test_board_verification::test_t03_search_found_greenhouse_but_the_official_site_uses_workday` | yes |
-| an ATS migration leaves the old board active | CAUGHT | `test_analytics::test_a_demo_export_stays_in_the_demo_vault`, `test_analytics::test_a_private_export_never_goes_into_the_code_repository`, `test_analytics::test_a_rate_is_compared_as_the_application_rounds_it` (31 failure/error records) |  |
+| an ATS migration leaves the old board active | CAUGHT | `test_analytics::test_a_demo_export_stays_in_the_demo_vault`, `test_analytics::test_a_private_export_never_goes_into_the_code_repository`, `test_analytics::test_a_rate_is_compared_as_the_application_rounds_it` (33 failure/error records) |  |
 | an unproven legacy board retired on a guess | CAUGHT | `test_board_verification::test_an_unproven_legacy_board_is_never_retired_on_a_guess` | yes |
 | every inconclusive legacy check becomes a review case | CAUGHT | `test_board_verification::test_a_careers_link_to_another_website_is_labelled_as_such_and_quiet_for_legacy_boards`, `test_board_verification::test_an_inconclusive_legacy_check_asks_nothing_of_you_until_a_domain_is_given` |  |
 | a spent page budget counted against the employer's website | CAUGHT | `test_board_verification::test_a_spent_page_budget_is_not_a_website_failure` | yes |
@@ -293,7 +298,7 @@ but the receipt dropped some records, so another method may have failed too.
 | requests not counted against the budget | CAUGHT | `test_v26_discovery::test_backfill_is_idempotent_deduplicated_prioritised_and_resumable`, `test_v26_discovery::test_curated_employers_get_at_most_their_share`, `test_v26_discovery::test_budget_caps_every_request` |  |
 | redirects to other hosts allowed | CAUGHT | `test_board_verification::test_the_daily_scan_never_follows_a_board_redirect_off_the_listing_apis`, `test_v26_discovery::test_redirects_outside_the_allowlist_are_refused` |  |
 | a long Retry-After is slept through | CAUGHT | `test_v26_discovery::test_long_retry_after_is_never_slept_through_and_access_denial_waits_its_window` | yes |
-| the job-board client ignores Demo Mode | CAUGHT | `test_analytics::test_a_demo_export_stays_in_the_demo_vault`, `test_analytics::test_a_private_export_never_goes_into_the_code_repository`, `test_analytics::test_a_rate_is_compared_as_the_application_rounds_it` (31 failure/error records) |  |
+| the job-board client ignores Demo Mode | CAUGHT | `test_analytics::test_a_demo_export_stays_in_the_demo_vault`, `test_analytics::test_a_private_export_never_goes_into_the_code_repository`, `test_analytics::test_a_rate_is_compared_as_the_application_rounds_it` (33 failure/error records) |  |
 | job-board requests follow proxy variables from the environment (R1) | CAUGHT | `test_gmail::test_the_job_board_client_ignores_the_environment` | yes |
 
 ## `careeros/discovery/imap.py`
@@ -338,7 +343,7 @@ but the receipt dropped some records, so another method may have failed too.
 | non-HTML content read | CAUGHT | `test_board_verification::test_robots_size_type_scope_and_page_limits` | yes |
 | connections not pinned to the checked address (DNS rebinding) | CAUGHT | `test_board_verification::test_connections_are_pinned_to_the_checked_address` | yes |
 | job sites and never-automated sites read as employer websites | CAUGHT | `test_board_verification::test_a_job_site_or_a_never_automated_site_is_not_an_official_domain`, `test_private_sites::test_private_domains_are_never_fetched` |  |
-| the website reader ignores Demo Mode | CAUGHT | `test_analytics::test_a_demo_export_stays_in_the_demo_vault`, `test_analytics::test_a_private_export_never_goes_into_the_code_repository`, `test_analytics::test_a_rate_is_compared_as_the_application_rounds_it` (31 failure/error records) |  |
+| the website reader ignores Demo Mode | CAUGHT | `test_analytics::test_a_demo_export_stays_in_the_demo_vault`, `test_analytics::test_a_private_export_never_goes_into_the_code_repository`, `test_analytics::test_a_rate_is_compared_as_the_application_rounds_it` (33 failure/error records) |  |
 | a private never-fetch domain read as an employer website | CAUGHT | `test_board_verification::test_a_job_site_or_a_never_automated_site_is_not_an_official_domain`, `test_private_sites::test_private_domains_are_never_fetched` |  |
 
 ## `careeros/discovery/seen_index.py`
@@ -368,8 +373,8 @@ but the receipt dropped some records, so another method may have failed too.
 
 | Planted defect | Result | Catching tests | One test only |
 |---|---|---|---|
-| adaptive cadence applied while switched off | CAUGHT | `test_analytics::test_a_demo_export_stays_in_the_demo_vault`, `test_analytics::test_a_private_export_never_goes_into_the_code_repository`, `test_analytics::test_a_rate_is_compared_as_the_application_rounds_it` (32 failure/error records) |  |
-| a provider outage is blamed on every employer | CAUGHT | `test_board_verification::test_t16_many_greenhouse_boards_failing_together_is_a_provider_problem` | yes |
+| adaptive cadence applied while switched off | CAUGHT | `test_analytics::test_a_demo_export_stays_in_the_demo_vault`, `test_analytics::test_a_private_export_never_goes_into_the_code_repository`, `test_analytics::test_a_rate_is_compared_as_the_application_rounds_it` (34 failure/error records) |  |
+| a provider outage is blamed on every employer | CAUGHT | `test_board_verification::test_t16_many_greenhouse_boards_failing_together_is_a_provider_problem`, `test_observability::test_a_provider_turning_degraded_shows_one_notice_and_only_when_it_changes` |  |
 | quiet boards scanned daily under adaptive scanning | CAUGHT | `test_v26_discovery::test_adaptive_cadence_follows_career_fit` | yes |
 
 ## `careeros/discovery/sources.py`
@@ -467,13 +472,24 @@ but the receipt dropped some records, so another method may have failed too.
 |---|---|---|---|
 | backup pruning may delete folders it did not create | CAUGHT | `test_ops::test_pruning_keeps_the_newest_and_never_touches_other_folders` | yes |
 
+## `careeros/ops/daily_log.py`
+
+2 planted defects, 2 caught.
+
+| Planted defect | Result | Catching tests | One test only |
+|---|---|---|---|
+| daily-run.log written without redaction (the redacting writer bypassed) | CAUGHT | `test_observability::test_the_file_is_opened_once_for_both_streams`, `test_observability::test_a_failed_run_s_traceback_in_daily_run_log_is_redacted` (9 failure/error records) |  |
+| daily-run.log: a flush writes the held half of a line (a secret split by print(..., flush=True) escapes redaction) | CAUGHT | `test_observability::test_a_flush_in_the_middle_of_a_line_never_writes_half_a_secret` (463 failure/error records) | unknown |
+
 ## `careeros/ops/notify.py`
 
-1 planted defect, 1 caught.
+3 planted defects, 3 caught.
 
 | Planted defect | Result | Catching tests | One test only |
 |---|---|---|---|
 | Demo Mode shows notifications | CAUGHT | `test_demo_mode::test_integrations_with_private_sources_refuse` | yes |
+| the daily summary counts a closed posting you dismissed | CAUGHT | `test_observability::test_a_posting_you_dismissed_is_left_out_until_reinstated` | yes |
+| a void application hides a pursued posting's closure from the daily summary | CAUGHT | `test_observability::test_a_void_application_does_not_hide_a_closure` | yes |
 
 ## `careeros/paths.py`
 
@@ -809,7 +825,7 @@ but the receipt dropped some records, so another method may have failed too.
 
 ## `careeros/review/applications.py`
 
-21 planted defects, 21 caught.
+24 planted defects, 24 caught.
 
 | Planted defect | Result | Catching tests | One test only |
 |---|---|---|---|
@@ -821,7 +837,7 @@ but the receipt dropped some records, so another method may have failed too.
 | a responded application not treated as still in play | CAUGHT | `test_applications::test_a_responded_application_is_still_in_play_everywhere` | yes |
 | an earlier, finished application to the role ignored | CAUGHT | `test_applications::test_every_finished_application_holds_a_new_one_until_you_give_a_reason` (10 failure/error records) | unknown |
 | a possibly duplicate application not held | CAUGHT | `test_applications::test_a_possible_duplicate_or_the_same_title_elsewhere_holds_until_confirmed`, `test_packages::test_an_application_elsewhere_in_the_role_or_a_check_that_cant_finish_stops_preparation` |  |
-| the same title at the same employer (another city) not checked | CAUGHT | `test_applications::test_a_possible_duplicate_or_the_same_title_elsewhere_holds_until_confirmed`, `test_applications::test_same_title_with_a_different_requisition_is_shown_not_held` |  |
+| the same title at the same employer (another city) not checked | CAUGHT | `test_applications::test_a_possible_duplicate_or_the_same_title_elsewhere_holds_until_confirmed`, `test_applications::test_same_title_with_a_different_requisition_is_shown_not_held`, `test_review_page::test_apply_or_dismiss_never_outranks_a_possible_application_an_incompatibility_or_a_hold` |  |
 | an unfinished duplicate search treated as clearance | CAUGHT | `test_applications::test_an_unfinished_duplicate_search_is_never_clearance`, `test_packages::test_an_application_elsewhere_in_the_role_or_a_check_that_cant_finish_stops_preparation` |  |
 | a truncated role search reported as complete | CAUGHT | `test_applications::test_an_unfinished_duplicate_search_is_never_clearance` | yes |
 | a re-application recorded without a reason | CAUGHT | `test_applications::test_every_finished_application_holds_a_new_one_until_you_give_a_reason` (8 failure/error records) | unknown |
@@ -834,6 +850,9 @@ but the receipt dropped some records, so another method may have failed too.
 | recording: a submission hold not asked about | CAUGHT | `test_applications::test_a_submission_hold_needs_your_explanation_and_comes_from_policy_not_a_stored_score`, `test_submission::test_recording_is_history_it_never_releases_or_authorizes` |  |
 | recording: an unidentified employer not asked about | CAUGHT | `test_submission::test_an_unidentified_employer_needs_an_explanation_to_record` | yes |
 | applications: an unknown kind of evidence recorded | CAUGHT | `test_assist::test_evidence_belongs_only_to_a_submission` | yes |
+| \`applied\` accepted while an assistance session is open | CAUGHT | `test_assist::test_applied_refuses_while_a_session_is_open_or_uncertain_and_names_the_close_command`, `test_review_page::test_i_applied_shows_the_assist_close_command_instead_of_confirm_and_recording_checks_again` |  |
+| a void application still treated as an application (preflight: a reason to apply again, no "I applied") | CAUGHT | `test_applications::test_a_void_application_needs_a_reason_stays_in_the_history_and_counts_nowhere`, `test_review_page::test_void_from_the_applications_card_through_the_confirmation` |  |
+| void allowed after an employer-answer stage (only the state now is checked, e.g. responded -\> ghosted -\> void) | CAUGHT | `test_applications::test_void_is_refused_once_an_employer_answered_whatever_the_state_now` (5 failure/error records) | unknown |
 
 ## `careeros/review/approved_facts.py`
 
@@ -857,7 +876,7 @@ but the receipt dropped some records, so another method may have failed too.
 
 ## `careeros/review/assist.py`
 
-19 planted defects, 19 caught.
+20 planted defects, 20 caught.
 
 | Planted defect | Result | Catching tests | One test only |
 |---|---|---|---|
@@ -880,6 +899,7 @@ but the receipt dropped some records, so another method may have failed too.
 | assist: the handoff of a recorded session removed after an interrupt | CAUGHT | `test_assist::test_an_interrupt_after_commit_keeps_the_handoff_of_the_recorded_session` | yes |
 | assist: a replay that hides what became of its session | CAUGHT | `test_assist::test_a_replay_says_what_became_of_the_session`, `test_assist::test_a_repeated_open_or_close_returns_the_first_result_whole` |  |
 | assist: filling turned on without the installed-extension check | CAUGHT | `test_assist::test_greenhouse_filling_stays_off_until_you_turn_it_on_after_the_installed_check`, `test_assist::test_the_check_date_is_a_real_past_date` |  |
+| assist report medians include abandoned sessions | CAUGHT | `test_assist::test_grouped_by_mode_and_destination_with_medians_over_submitted_sessions_only`, `test_assist::test_the_report_labels_a_small_sample` |  |
 
 ## `careeros/review/discovery_metrics.py`
 
@@ -890,32 +910,43 @@ but the receipt dropped some records, so another method may have failed too.
 | boards verification rejected reported as verified | CAUGHT | `test_demo_mode::test_reported_verified_boards_are_the_boards_verification_admitted` | yes |
 | drill rows counted as qualified openings | CAUGHT | `test_analytics::test_rows_marked_as_drills_or_tests_are_left_out` | yes |
 
-## `careeros/review/explain.py`
+## `careeros/review/dismiss.py`
 
 1 planted defect, 1 caught.
 
 | Planted defect | Result | Catching tests | One test only |
 |---|---|---|---|
-| a question that does not apply is left blank instead of saying why | CAUGHT | `test_job_lifecycle::test_every_job_flows_from_source_to_analytics_and_explains_itself` | yes |
+| Undo ignores the dismissal its confirmation showed (a stale Undo page reverses a newer dismissal) | CAUGHT | `test_review_page::test_a_stale_undo_confirmation_never_undoes_a_newer_dismissal` | yes |
 
-## `careeros/review/funnel.py`
-
-3 planted defects, 3 caught.
-
-| Planted defect | Result | Catching tests | One test only |
-|---|---|---|---|
-| automatic confirmations counted as responses | CAUGHT | `test_v22_primary::test_context_is_captured_and_confirmations_never_count_as_responses`, `test_v25_audit::test_recommended_to_hired_with_negatives_and_new_dimensions` |  |
-| negative outcomes not counted | CAUGHT | `test_v25_audit::test_recommended_to_hired_with_negatives_and_new_dimensions` | yes |
-| recommended / approved stages missing | CAUGHT | `test_v25_audit::test_recommended_to_hired_with_negatives_and_new_dimensions` | yes |
-
-## `careeros/review/labels.py`
+## `careeros/review/explain.py`
 
 2 planted defects, 2 caught.
 
 | Planted defect | Result | Catching tests | One test only |
 |---|---|---|---|
+| a question that does not apply is left blank instead of saying why | CAUGHT | `test_job_lifecycle::test_every_job_flows_from_source_to_analytics_and_explains_itself` | yes |
+| verdict line names the wrong binding constraint (only ever the priority) | CAUGHT | `test_review_page::test_a_stretch_and_an_enforced_experience_match`, `test_review_page::test_skill_coverage_below_the_minimum`, `test_review_page::test_the_flag_that_made_it_conditional_or_held` |  |
+
+## `careeros/review/funnel.py`
+
+4 planted defects, 4 caught.
+
+| Planted defect | Result | Catching tests | One test only |
+|---|---|---|---|
+| automatic confirmations counted as responses | CAUGHT | `test_applications::test_the_states_before_an_answer_are_read_from_the_workflow`, `test_v22_primary::test_context_is_captured_and_confirmations_never_count_as_responses`, `test_v25_audit::test_recommended_to_hired_with_negatives_and_new_dimensions` |  |
+| negative outcomes not counted | CAUGHT | `test_v25_audit::test_recommended_to_hired_with_negatives_and_new_dimensions` | yes |
+| recommended / approved stages missing | CAUGHT | `test_v25_audit::test_recommended_to_hired_with_negatives_and_new_dimensions` | yes |
+| the funnel counts a void application | CAUGHT | `test_applications::test_a_void_application_needs_a_reason_stays_in_the_history_and_counts_nowhere` | yes |
+
+## `careeros/review/labels.py`
+
+3 planted defects, 3 caught.
+
+| Planted defect | Result | Catching tests | One test only |
+|---|---|---|---|
 | test rows counted in metrics | CAUGHT | `test_pipeline::test_excluded_fixture_rows_never_count_in_metrics` | yes |
 | NIGHT labels counted toward PRIMARY acceptance | CAUGHT | `test_v22_night::test_two_leaderboards_with_night_labels_measured_separately` | yes |
+| label backlog never shown | CAUGHT | `test_observability::test_one_posting_and_none`, `test_observability::test_only_qualified_unlabelled_open_postings_wait`, `test_observability::test_the_notification_names_a_backlog_once_the_oldest_has_waited_7_days` (6 failure/error records) |  |
 
 ## `careeros/review/packages.py`
 
@@ -924,7 +955,7 @@ but the receipt dropped some records, so another method may have failed too.
 | Planted defect | Result | Catching tests | One test only |
 |---|---|---|---|
 | packages: a package prepared for a job you labelled Skip | CAUGHT | `test_packages::test_nothing_is_prepared_for_a_job_nobody_chose_and_skip_or_dismissal_always_win`, `test_packages::test_standing_preparation_is_off_by_default_and_never_writes_a_label` |  |
-| packages: a package prepared for a job you dismissed | CAUGHT | `test_packages::test_nothing_is_prepared_for_a_job_nobody_chose_and_skip_or_dismissal_always_win` | yes |
+| packages: a package prepared for a job you dismissed | CAUGHT | `test_packages::test_nothing_is_prepared_for_a_job_nobody_chose_and_skip_or_dismissal_always_win`, `test_review_page::test_a_reinstatement_is_a_later_event_and_the_latest_event_decides` |  |
 | packages: an approval covering a later version | CAUGHT | `test_packages::test_a_stretch_package_needs_approval_of_its_exact_version` | yes |
 | packages: a Stretch package ready without approval | CAUGHT | `test_packages::test_a_revoked_approval_no_longer_counts`, `test_packages::test_a_stretch_package_needs_approval_of_its_exact_version` |  |
 | packages: a stale package treated as current | CAUGHT | `test_assist::test_a_session_needs_a_ready_package_and_authorization`, `test_packages::test_the_fallback_panel_holds_only_current_answers_and_they_are_part_of_the_version`, `test_packages::test_a_stretch_package_needs_approval_of_its_exact_version` (5 failure/error records) |  |
@@ -955,11 +986,11 @@ but the receipt dropped some records, so another method may have failed too.
 
 ## `careeros/review/report.py`
 
-8 planted defects, 8 caught.
+10 planted defects, 10 caught.
 
 | Planted defect | Result | Catching tests | One test only |
 |---|---|---|---|
-| report escaping disabled | CAUGHT | `test_pipeline::test_report_escapes_posting_text_and_labels_measure_agreement` | yes |
+| report escaping disabled | CAUGHT | `test_review_page::test_dismiss_names_the_posting_and_reason_and_only_confirm_records`, `test_review_page::test_dismissed_recently_offers_undo_through_the_confirmation`, `test_pipeline::test_report_escapes_posting_text_and_labels_measure_agreement` (6 failure/error records) |  |
 | NIGHT cards label as PRIMARY | CAUGHT | `test_v22_night::test_two_leaderboards_with_night_labels_measured_separately` | yes |
 | NIGHT-only jobs shown in PRIMARY rejections | CAUGHT | `test_v22_night::test_night_only_jobs_stay_out_of_primary_rejection_lists` | yes |
 | follow-up nudge shown immediately | CAUGHT | `test_applications::test_applications_section_offers_only_allowed_next_states_and_nudges_after_14_days` | yes |
@@ -967,6 +998,8 @@ but the receipt dropped some records, so another method may have failed too.
 | the private agency shortcut missing from the review page | CAUGHT | `test_private_sites::test_the_review_page_offers_the_private_agency_shortcut_only_when_set` | yes |
 | a finished application hides the re-application form | CAUGHT | `test_applications::test_the_review_page_asks_for_a_reason_before_recording_a_re_application` | yes |
 | review card: the submission hold not shown | CAUGHT | `test_submission::test_the_card_and_the_shortlist_show_the_hold_apart_from_the_qualification` | yes |
+| stale-run banner never shown (no daily run completed for over 26 hours) | CAUGHT | `test_observability::test_a_warning_once_no_run_has_completed_for_more_than_26_hours` | yes |
+| void offered as an ordinary status change (no reason, no confirmation) | CAUGHT | `test_review_page::test_void_from_the_applications_card_through_the_confirmation` | yes |
 
 ## `careeros/review/role_identity.py`
 
@@ -1030,12 +1063,15 @@ but the receipt dropped some records, so another method may have failed too.
 
 ## `careeros/review/server.py`
 
-2 planted defects, 2 caught.
+5 planted defects, 5 caught.
 
 | Planted defect | Result | Catching tests | One test only |
 |---|---|---|---|
 | review token check disabled | CAUGHT | `test_pipeline::test_token_host_and_form_key_required` | yes |
-| form key not bound to its action and target | CAUGHT | `test_applications::test_review_page_forms_record_applications_status_and_lead_dismissals` | yes |
+| form key not bound to its action and target | CAUGHT | `test_applications::test_review_page_forms_record_applications_status_and_lead_dismissals`, `test_review_page::test_dismissed_recently_offers_undo_through_the_confirmation` |  |
+| Dismiss recorded without the confirmation page | CAUGHT | `test_review_page::test_confirm_records_only_the_choices_its_page_showed`, `test_review_page::test_dismiss_names_the_posting_and_reason_and_only_confirm_records`, `test_v26_discovery::test_paste_and_dismiss_through_the_review_page_without_any_fetch` |  |
+| "I applied" recorded without the confirmation page | CAUGHT | `test_review_page::test_confirm_records_only_the_choices_its_page_showed`, `test_review_page::test_i_applied_shows_the_assist_close_command_instead_of_confirm_and_recording_checks_again`, `test_review_page::test_label_and_i_applied_from_the_shortlist_card_through_the_server` (6 failure/error records) |  |
+| Void recorded without the confirmation page | CAUGHT | `test_review_page::test_confirm_records_only_the_choices_its_page_showed`, `test_review_page::test_no_void_control_or_confirmation_once_an_employer_answered`, `test_review_page::test_void_from_the_applications_card_through_the_confirmation` |  |
 
 ## `careeros/review/shadow_policy.py`
 
@@ -1057,21 +1093,24 @@ but the receipt dropped some records, so another method may have failed too.
 
 ## `careeros/review/shortlist.py`
 
-11 planted defects, 11 caught.
+14 planted defects, 14 caught.
 
 | Planted defect | Result | Catching tests | One test only |
 |---|---|---|---|
 | drafts use screening-only years | CAUGHT | `test_v26_discovery::test_shortlist_next_action_dismissal_and_factual_drafts` | yes |
 | drafts made for jobs you did not choose to pursue | CAUGHT | `test_v26_discovery::test_shortlist_next_action_dismissal_and_factual_drafts` | yes |
-| dismissed jobs stay on the shortlist | CAUGHT | `test_v26_discovery::test_shortlist_next_action_dismissal_and_factual_drafts` | yes |
+| dismissed jobs stay on the shortlist | CAUGHT | `test_review_page::test_a_reinstatement_is_a_later_event_and_the_latest_event_decides`, `test_v26_discovery::test_shortlist_next_action_dismissal_and_factual_drafts` |  |
 | a Skip label leaves a Tier A/B pick on the shortlist | CAUGHT | `test_v26_discovery::test_your_skip_wins_over_a_tier_a_b_pick` | yes |
 | drafts: contradicted evidence shown as confirmed in talking points | CAUGHT | `test_v26_discovery::test_shortlist_next_action_dismissal_and_factual_drafts` | yes |
 | drafts: a held certification listed as an honest gap | CAUGHT | `test_v26_discovery::test_shortlist_next_action_dismissal_and_factual_drafts` | yes |
-| shortlist: "apply" shown beside a submission hold | CAUGHT | `test_submission::test_the_shortlist_says_prepare_only_while_held` | yes |
+| shortlist: "apply" shown beside a submission hold | CAUGHT | `test_review_page::test_apply_or_dismiss_never_outranks_a_possible_application_an_incompatibility_or_a_hold`, `test_submission::test_the_shortlist_says_prepare_only_while_held` |  |
 | drafts: an earlier brief (perhaps edited) overwritten | CAUGHT | `test_v26_discovery::test_shortlist_next_action_dismissal_and_factual_drafts` | yes |
 | drafts: evidence under review presented as confirmed | CAUGHT | `test_v26_discovery::test_shortlist_next_action_dismissal_and_factual_drafts` | yes |
 | drafts: the approved wording not quoted | CAUGHT | `test_approved_facts::test_the_fact_is_quoted_word_for_word_and_the_wording_checked` | yes |
 | drafts: the approved facts section left out | CAUGHT | `test_approved_facts::test_the_fact_is_quoted_word_for_word_and_the_wording_checked` | yes |
+| closed postings back on the shortlist (ticket 1) | CAUGHT | `test_observability::test_a_closed_posting_leaves_the_shortlist_and_stays_in_its_own_sections` | yes |
+| a reinstated posting still treated as dismissed by the shortlist | CAUGHT | `test_review_page::test_a_reinstatement_is_a_later_event_and_the_latest_event_decides`, `test_review_page::test_dismissed_recently_offers_undo_through_the_confirmation`, `test_review_page::test_every_reader_of_dismissals_asks_for_the_latest_event` |  |
+| "apply or dismiss" outranks an incompatibility, an open question and a possible earlier application | CAUGHT | `test_review_page::test_apply_or_dismiss_never_outranks_a_possible_application_an_incompatibility_or_a_hold` | yes |
 
 ## `careeros/review/submission.py`
 
@@ -1085,7 +1124,7 @@ but the receipt dropped some records, so another method may have failed too.
 | submission: a change at the same moment as an older release ignored | CAUGHT | `test_submission::test_a_change_at_the_same_moment_as_the_release_suspends_it` | yes |
 | submission: broken hold settings breaking a page | CAUGHT | `test_submission::test_a_mistyped_hold_never_holds_nothing_in_silence` | yes |
 | submission: a hold name outside the families matched by exact name only | CAUGHT | `test_submission::test_a_hold_name_that_names_no_family_is_matched_like_one`, `test_submission::test_a_hold_on_a_guarded_name_never_lets_its_longer_forms_through` |  |
-| submission: no hold at all until the vault sets one (the gate list ignored) | CAUGHT | `test_applications::test_a_possible_duplicate_or_the_same_title_elsewhere_holds_until_confirmed`, `test_applications::test_a_responded_application_is_still_in_play_everywhere`, `test_applications::test_every_finished_application_holds_a_new_one_until_you_give_a_reason` (83 failure/error records) |  |
+| submission: no hold at all until the vault sets one (the gate list ignored) | CAUGHT | `test_applications::test_a_possible_duplicate_or_the_same_title_elsewhere_holds_until_confirmed`, `test_applications::test_a_responded_application_is_still_in_play_everywhere`, `test_applications::test_a_void_application_needs_a_reason_stays_in_the_history_and_counts_nowhere` (116 failure/error records) |  |
 | submission: an explicit 'no holds' falls back anyway | CAUGHT | `test_submission::test_configured_holds_or_else_the_gate_list` | yes |
 | submission: a malformed hold accepted | CAUGHT | `test_submission::test_configured_holds_or_else_the_gate_list`, `test_submission::test_a_mistyped_hold_never_holds_nothing_in_silence`, `test_submission::test_broken_hold_settings_never_refuse_a_record_of_what_you_did` |  |
 | submission: an unidentified employer authorized | CAUGHT | `test_submission::test_an_identity_correction_suspends_and_an_unresolved_identity_never_authorizes`, `test_submission::test_a_board_alias_to_a_known_agency_never_authorizes`, `test_submission::test_an_agency_signal_name_is_never_authorized_until_the_employer_is_known` (4 failure/error records) |  |
@@ -1122,6 +1161,14 @@ but the receipt dropped some records, so another method may have failed too.
 | LinkedIn made an automatic source | CAUGHT | `test_analytics::test_the_committed_sample_is_exactly_this_export`, `test_config::test_linkedin_indeed_and_glassdoor_are_never_automated`, `test_config::test_only_the_four_ats_and_employer_sites_are_automatic` (4 failure/error records) |  |
 | a misspelt source status (read as manual) goes unnoticed | CAUGHT | `test_config::test_every_source_status_is_a_known_word` | yes |
 | site policy: Greenhouse filling on as shipped | CAUGHT | `test_assist::test_the_documented_switch_loads_from_the_overrides_file`, `test_assist::test_capability_reads_the_nearest_listed_domain`, `test_assist::test_greenhouse_filling_stays_off_until_you_turn_it_on_after_the_installed_check` (4 failure/error records) |  |
+
+## `config/workflows/application.json`
+
+1 planted defect, 1 caught.
+
+| Planted defect | Result | Catching tests | One test only |
+|---|---|---|---|
+| an application voided without a reason | CAUGHT | `test_applications::test_a_void_application_needs_a_reason_stays_in_the_history_and_counts_nowhere`, `test_applications::test_app_status_void_on_the_command_line_needs_a_reason` |  |
 
 ## `extension/fill.js`
 

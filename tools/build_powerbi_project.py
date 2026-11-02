@@ -70,7 +70,9 @@ MEASURES = [
      "        COUNTROWS ( NewBoards )\n    )", RATE),
     ("Scan Reliability", "DIVIDE ( SUM ( fact_board_scan[is_complete] ), COUNTROWS ( fact_board_scan ) )", RATE),
     ("NIGHT Routed", "CALCULATE ( [Jobs Discovered], fact_job_evaluation[night_decision] = \"eligible\" )", COUNT),
-    ("Applications", "COUNTROWS ( fact_application )", COUNT),
+    # KEEPFILTERS: the void exclusion narrows a status filter (Applications by status) instead of replacing it (F4)
+    ("Applications", "CALCULATE ( COUNTROWS ( fact_application ), KEEPFILTERS ( fact_application[current_state] <> \"void\" ) )",
+     COUNT),
     ("Open Applications", "SUM ( fact_application[is_open] )", COUNT),
     ("Interview Rate", "DIVIDE ( SUM ( fact_application[reached_interview] ), [Applications] )", RATE),
     # supporting measures

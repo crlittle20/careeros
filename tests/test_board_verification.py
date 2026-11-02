@@ -430,7 +430,10 @@ class OperationsTests(unittest.TestCase):
     def test_t16_many_greenhouse_boards_failing_together_is_a_provider_problem(self):
         store, ctx = setup()
         self.legacy(store, ["a1", "a2", "a3", "a4"])
-        counts = scan(ctx, FetchError("not_found", 404))
+        shown = []
+        with mock.patch("careeros.ops.notify.toast", lambda title, body, **kw: shown.append(title) or True):   # never a real one
+            counts = scan(ctx, FetchError("not_found", 404))
+        self.assertEqual(shown, ["CareerOS: job-board provider degraded"])   # OPP-54
         self.assertEqual(counts["providers_degraded"], 1)
         self.assertEqual(store.one("SELECT state FROM provider_status WHERE provider = 'greenhouse'")["state"], "degraded")
         self.assertEqual(store.one("SELECT COUNT(*) c FROM board_mappings WHERE paused_reason IS NOT NULL")["c"], 0)

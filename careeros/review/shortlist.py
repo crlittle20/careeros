@@ -1,7 +1,8 @@
 """Shortlist to action (2026-10-12, Part 10).
 
-The shortlist = openings you labelled Apply or Stretch, plus Tier A/B picks, minus those you dismissed, labelled Skip
-(your latest label wins over a Tier A/B pick) or that closed.
+The shortlist = openings you labelled Apply or Stretch, plus Tier A/B picks, minus those you dismissed (your latest
+dismissal event decides: a reinstatement brings one back, 2026-11-01), labelled Skip (your latest label wins over a
+Tier A/B pick) or that closed.
 For each one it shows: evidence-backed reasons it fits, confirmed incompatibilities and open questions (eligibility
 facts), listing status, the direct application link, whether you already applied or dismissed it, and the one next
 useful action.
@@ -19,6 +20,7 @@ from pathlib import Path
 
 from careeros.core.clock import parse_utc
 from careeros.db.store import Store
+from careeros.review.dismiss import dismissed_sql
 
 
 def _latest_label(store: Store, job_id: str):
@@ -26,14 +28,17 @@ def _latest_label(store: Store, job_id: str):
 
 
 def shortlisted_job_ids(store: Store) -> list[str]:
-    rows = store.all("""SELECT j.job_id FROM jobs j
+    """The shortlist, as the module docstring says. A closed posting leaves it (ticket 1, owner decision 2026-11-01: it
+    was a bug); it stays in its own report sections, in `careeros explain` and in the export. A dismissal counts while it
+    is the latest event: a reinstatement brings the posting back (ADR 0007, amendment of 2026-11-01)."""
+    rows = store.all(f"""SELECT j.job_id FROM jobs j
                         LEFT JOIN scores s ON s.score_id = (SELECT score_id FROM scores WHERE job_id = j.job_id ORDER BY at DESC, rowid DESC LIMIT 1)
-                        WHERE j.current_state NOT IN ('duplicate')
+                        WHERE j.current_state NOT IN ('duplicate', 'closed')
                           AND (s.tier IN ('A','B') OR (SELECT label FROM labels l WHERE l.job_id = j.job_id AND l.profile = 'primary'
                                                         ORDER BY at DESC, rowid DESC LIMIT 1) IN ('apply','stretch'))
                           AND COALESCE((SELECT label FROM labels l WHERE l.job_id = j.job_id AND l.profile = 'primary'
                                         ORDER BY at DESC, rowid DESC LIMIT 1), '') != 'skip'
-                          AND NOT EXISTS (SELECT 1 FROM dismissals d WHERE d.job_id = j.job_id)
+                          AND NOT {dismissed_sql('j.job_id')}
                         ORDER BY s.apply_priority DESC""")
     return [r["job_id"] for r in rows]
 
@@ -60,7 +65,35 @@ def fit_reasons(components: dict) -> list[str]:
     return out
 
 
+LABEL_NUDGE_DAYS = 7   # OPP-08: a pursued posting waiting this long since your label gets "apply or dismiss"
+
+
+def _since(at: str | None, now: str) -> int | None:
+    """Whole days from `at` to `now` (never negative), or None."""
+    return None if not at else max(0, int((parse_utc(now) - parse_utc(at)) / timedelta(days=1)))
+
+
+def _ago(days: int) -> str:
+    return "today" if days < 1 else f"{days} day{'s' if days != 1 else ''} ago"
+
+
+def ageing(item: dict) -> str:
+    """How long a shortlist item has waited (OPP-08 + OPP-17, 2026-11-01): days since CareerOS first saw the posting
+    first (a posting's time left runs from it; the employer's posted date predicts little), then your label's age,
+    then the latest package version and its age. The card and `careeros shortlist` show this line."""
+    parts = [f"first seen {_ago(item['seen_days'])}" if item.get("seen_days") is not None else "first seen: not recorded"]
+    if item.get("label_days") is not None:
+        parts.append(f"labelled {_ago(item['label_days'])}")
+    if item.get("package"):
+        parts.append(f"package v{item['package']['version']} made {_ago(item['package']['days'])}")
+    return "; ".join(parts)
+
+
 def next_action(item: dict) -> str:
+    """The one next useful step, in this order: closed, applied (its own clock), a submission hold, an incompatibility,
+    an open question, a possible earlier application to the same role, then the label's age, then apply. "Apply or
+    dismiss" comes after every check (stage 1-2 review, 2026-11-01), so it never nudges you to apply to a posting you
+    may already have applied to, or one that needs a check first."""
     if item["status"] == "closed":
         return "none: the posting is closed"
     if item["applied"]:
@@ -77,6 +110,8 @@ def next_action(item: dict) -> str:
         return "verify before applying: " + item["unknowns"][0]["detail"]
     if item["possibly_applied"]:
         return "check: you applied to a similar opening (" + ", ".join(item["possibly_applied"][:2]) + ")"
+    if item.get("label") in ("apply", "stretch") and (item.get("label_days") or 0) >= LABEL_NUDGE_DAYS:   # the clock (OPP-08)
+        return f"apply or dismiss: labelled {item['label_days']} days ago"
     return "apply: " + (item["apply_url"] or "open the posting")
 
 
@@ -90,9 +125,13 @@ def shortlist(store: Store, policy=None) -> list[dict]:
         comps = json.loads(score["components_json"]) if score else {}
         facts = comps.get("facts") or []
         status = application_status(store, job_id)
+        label = _latest_label(store, job_id)
+        package = store.one("SELECT version, at FROM packages WHERE job_id = ? ORDER BY version DESC LIMIT 1", (job_id,))
         item = {"job_id": job_id, "title": job["title"], "employer": job["employer_name"], "tier": score["tier"] if score else None,
                 "state": score["state"] if score else None, "priority": score["apply_priority"] if score else None,
-                "label": (_latest_label(store, job_id) or {"label": None})["label"], "status": listing_status(job),
+                "label": label["label"] if label else None, "status": listing_status(job),
+                "seen_days": _since(job["first_seen_at"] if job else None, now), "label_days": _since(label["at"], now) if label else None,
+                "package": {"version": package["version"], "days": _since(package["at"], now)} if package else None,
                 "apply_url": job["apply_url"] or job["url"], "fit": fit_reasons(comps),
                 "incompatible": [f for f in facts if f["status"] == "incompatible"],
                 "unknowns": [f for f in facts if f["status"] in ("unknown", "conflicting")],

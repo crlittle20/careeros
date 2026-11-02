@@ -10,8 +10,10 @@
     careeros label JOB apply|stretch|skip [--reason ...]
     careeros applied JOB --channel direct|agency|referral|other [--agency NAME] [--notes ...]
     careeros app-status APPLICATION STATE [--notes ...]   e.g. screening, interviewing, rejected, ghosted
+    careeros app-status APPLICATION void --reason "..."   an application recorded by mistake (kept, never counted)
     careeros release JOB [--hold ID --channel C [--agency NAME] --reason ...]   submission holds: show, or release one
     careeros release --revoke RELEASE_ID --reason ...      withdraw a release
+    careeros dismiss JOB --reason R [--note ...] | careeros dismiss JOB --undo [--note ...]   dismiss, or reinstate
     careeros applications             list your applications and their status
     careeros funnel [--by source|family|profile|tier|channel|domain]   hiring outcomes and conversion rates
     careeros eval                     agreement between your labels and the system (Phase 1 exit check; three-way)
@@ -40,7 +42,7 @@ import httpx
 
 from careeros.core.clock import Clock
 from careeros.core.fingerprint import text_fingerprint
-from careeros.core.locks import LockError, SingleWriterLock, force_unlock
+from careeros.core.locks import LockError, SingleWriterLock, force_unlock, hold
 from careeros.core.policy import load_policy, load_yaml
 from careeros.core.redact import RedactingFilter
 from careeros.core.transitions import load_matrix
@@ -52,10 +54,10 @@ from careeros.normalize.sanitize import clean_text, html_to_text
 from careeros.paths import CONFIG_DIR, vault_paths
 from careeros.pipeline import Context, ingest, process
 from careeros.qualify.profile import load_profile
-from careeros.review.applications import (CONFIRM_CODES, ApplicationConflict, ApplicationHold, application_matrix, applications,
-                                          record_application, update_application)
-from careeros.review.labels import agreement, record_label, three_way
-from careeros.review.report import build_report, last_review_at
+from careeros.review.applications import (CONFIRM_CODES, ApplicationConflict, ApplicationHold, SessionOpen, application_matrix,
+                                          applications, record_application, update_application)
+from careeros.review.labels import agreement, label_backlog, record_label, three_way
+from careeros.review.report import build_report, last_review_at, run_health
 
 log = logging.getLogger("careeros")
 
@@ -117,8 +119,8 @@ def _run_record(ctx: Context, kind: str):
     return run_id
 
 
-def _finish_run(ctx: Context, run_id: str, counts: Counter, status: str = "completed") -> None:
-    ctx.store.writer("runner").update("runs", {"ended_at": ctx.store.clock.now(), "status": status,
+def _finish_run(ctx: Context, run_id: str, counts: Counter, status: str = "completed", ended: str | None = None) -> None:
+    ctx.store.writer("runner").update("runs", {"ended_at": ended or ctx.store.clock.now(), "status": status,
                                                "counts_json": json.dumps(dict(counts))}, "run_id = ?", (run_id,))
 
 
@@ -239,6 +241,7 @@ def cmd_discover(ctx: Context, paths, args) -> Counter:
             print(f"  {r['name']:28} {len(postings):4} postings  " + ("(SUSPICIOUS: kept, nothing closed) " if outcome != "complete" else "")
                   + " ".join(f"{k}={v}" for k, v in sorted(result.items())))
         counts.update(_settle_scan_failures(ctx, failures, attempts))
+        counts["board_scans_attempted"] = sum(attempts.values())
         if ctx.policy.get("scanning", "adaptive", default=False):
             counts.update(_refresh_shortlisted(ctx, client, now))
     finally:
@@ -267,6 +270,7 @@ def _settle_scan_failures(ctx: Context, failures: list, attempts: Counter) -> Co
     from careeros.discovery import source_health as health
     store, counts = ctx.store, Counter()
     degraded = health.degraded_providers(Counter(r["ats"] for r, *_ in failures), attempts, ctx.policy)
+    newly = []
     for provider in attempts:
         failed = sum(1 for r, *_ in failures if r["ats"] == provider)
         if health.set_provider_state(store, provider, "degraded" if provider in degraded else "healthy",
@@ -275,6 +279,10 @@ def _settle_scan_failures(ctx: Context, failures: list, attempts: Counter) -> Co
                                                 "treated as a provider or adapter problem, not as employer failures",
                                                 entity_type="ats_provider", entity_id=provider, error_code="provider_degraded", retryable=True)
             print(f"  ! {provider} looks degraded ({failed} of {attempts[provider]} boards failed): no employer is penalised")
+            newly.append(f"{provider} ({failed} of {attempts[provider]} boards failed)")
+    if newly:   # OPP-54: a day of lost intake if nobody notices; one notice for every provider that turned degraded
+        _problem(ctx, "CareerOS: job-board provider degraded", f"{', '.join(newly)}. No employer is penalised. "
+                                                               "See: careeros sources providers")
     counts["providers_degraded"] = len(degraded)
     for r, code, retryable, requests in failures:
         outage = r["ats"] in degraded
@@ -851,10 +859,12 @@ def cmd_process(ctx: Context, paths, args) -> Counter:
 
 
 def cmd_report(ctx: Context, paths, args) -> Path:
+    """The saved report. `args.completing` (run_id, end time), set by cmd_run: the daily run writing it, shown as completed
+    in its header (Codex CR-2026-11-01-OBS-REVIEW, F5)."""
     paths["reports"].mkdir(parents=True, exist_ok=True)
     path = paths["reports"] / f"report-{ctx.store.clock.now()[:10]}.html"
-    path.write_text(build_report(ctx.store, ctx.profile, ctx.policy, since=last_review_at(ctx.store), app_matrix=application_matrix()),
-                    encoding="utf-8")
+    path.write_text(build_report(ctx.store, ctx.profile, ctx.policy, since=last_review_at(ctx.store), app_matrix=application_matrix(),
+                                 completing=getattr(args, "completing", None)), encoding="utf-8")
     print(f"Report: {path}")
     return path
 
@@ -866,7 +876,11 @@ def cmd_run(ctx: Context, paths, args) -> None:
     try:
         print("Discovering...")
         args.employer = None
-        counts.update(cmd_discover(ctx, paths, args))
+        scanned = cmd_discover(ctx, paths, args)
+        counts.update(scanned)
+        if scanned["board_scans_attempted"] and scanned["board_errors"] >= scanned["board_scans_attempted"]:   # OPP-54
+            _problem(ctx, "CareerOS: every job board failed", f"All {scanned['board_scans_attempted']} boards scanned this run failed "
+                                                              "(no network?). Details are in vault\\logs\\daily-run.log")
         counts.update(_daily_gmail(ctx))
         counts.update(_daily_inbox(ctx))
         counts.update(_daily_discovery(ctx, paths))
@@ -874,8 +888,10 @@ def cmd_run(ctx: Context, paths, args) -> None:
         print(f"Processing... (AI requirement reading: {_ai_status(ctx)})")
         counts.update(cmd_process(ctx, paths, args))
         counts.update(_publish_index(ctx, paths))
+        ended = ctx.store.clock.now()   # F5: the report shows this run as completed then; a report that fails fails it
+        args.completing = (run_id, ended)
         cmd_report(ctx, paths, args)
-        _finish_run(ctx, run_id, counts)
+        _finish_run(ctx, run_id, counts, ended=ended)
     except Exception:
         _finish_run(ctx, run_id, counts, "failed")
         raise
@@ -914,6 +930,13 @@ def _daily_gmail(ctx: Context) -> Counter:
         client.close()
 
 
+def _problem(ctx: Context, title: str, body: str) -> None:
+    """A failure notice (careeros.ops.notify.problem, OPP-54) when operations.notifications is on. Never fails the run."""
+    if ctx.policy.get("operations", "notifications", default=True):
+        from careeros.ops.notify import problem
+        problem(title, body)
+
+
 def _after_run(ctx: Context, paths, started: str) -> None:
     """Backup and notification: housekeeping that must never turn a good run into a failed one."""
     from careeros.ops.backup import backup
@@ -924,6 +947,7 @@ def _after_run(ctx: Context, paths, started: str) -> None:
         log.exception("backup failed")
         ctx.store.writer("runner").exception("system", "medium", f"daily backup failed: {exc}", error_code="backup_failed")
         print(f"  ! backup failed: {exc}")
+        _problem(ctx, "CareerOS: daily backup failed", "Details are in vault\\logs\\careeros.log")
     if ctx.policy.get("operations", "notifications", default=True):
         message = summary(ctx.store, started)
         if message:
@@ -954,6 +978,8 @@ def cmd_applied(ctx: Context, paths, args) -> None:
         app_id = record_application(ctx.store, application_matrix(), args.job_id, args.channel, policy=ctx.policy, agency=args.agency,
                                     notes=args.notes, key=f"cli:{secrets.token_hex(8)}", reapply=args.reapply, confirm=args.confirm,
                                     evidence=getattr(args, "evidence", "owner_attested"))
+    except SessionOpen as exc:   # the open or uncertain session records it when you close it (OPP-77)
+        sys.exit(f"Not recorded: {exc}")
     except ApplicationHold as exc:
         codes = exc.check.codes()
         sys.exit(f"Not recorded yet: {exc}."
@@ -992,7 +1018,7 @@ def cmd_release(ctx: Context, paths, args) -> None:
 def cmd_app_status(ctx: Context, paths, args) -> None:
     try:
         update_application(ctx.store, application_matrix(), args.application_id, args.state, notes=args.notes,
-                           key=f"cli:{secrets.token_hex(8)}")
+                           key=f"cli:{secrets.token_hex(8)}", reason=getattr(args, "reason", None))
     except ValueError as exc:
         sys.exit(f"Not changed: {exc}")
     print(f"{args.application_id} -> {args.state}")
@@ -1202,16 +1228,31 @@ def cmd_export(ctx: Context, paths, args) -> None:
 def cmd_explain(ctx: Context, paths, args) -> None:
     """Why a job is where it is: source, dates, employer, verification, duplicates, eligibility, fit, career value,
     routing, status, reasons and actions, from the recorded decisions only."""
-    from careeros.review.explain import explain_job, render
+    from careeros.review.explain import _verdict, explain_job, render
     try:
         explanation = explain_job(ctx.store, ctx.policy, args.job_id)
     except ValueError as exc:
         sys.exit(str(exc))
-    print(json.dumps(explanation, indent=1, ensure_ascii=False) if args.json else render(explanation, args.job_id))
+    print(json.dumps(explanation, indent=1, ensure_ascii=False) if args.json
+          else render(explanation, args.job_id, _verdict(ctx.store, ctx.policy, args.job_id)))   # the verdict first (OPP-03)
 
 
 def cmd_dismiss(ctx: Context, paths, args) -> None:
-    from careeros.review.dismiss import dismiss
+    """Dismiss a job with a reason, or with --undo reinstate it: a later event, never an edit; the latest event decides
+    (ADR 0007, amendment of 2026-11-01)."""
+    from careeros.review.dismiss import current, dismiss, reinstate
+    if getattr(args, "undo", False):
+        if args.reason:
+            sys.exit("Not changed: --undo takes no --reason (add a --note if you like)")
+        was = current(ctx.store, args.job_id)
+        try:
+            reinstate(ctx.store, args.job_id, args.note)
+        except ValueError as exc:
+            sys.exit(f"Not changed: {exc}")
+        print(f"{args.job_id}: reinstated (the dismissal of {was['at'][:10]}, {was['reason_code'].replace('_', ' ')}, is undone)")
+        return
+    if not args.reason:
+        sys.exit("Not changed: --reason is required (or --undo to reinstate a dismissed job)")
     try:
         dismiss(ctx.store, args.job_id, args.reason, args.note)
     except ValueError as exc:
@@ -1244,12 +1285,14 @@ def cmd_paste(ctx: Context, paths, args) -> None:
 
 
 def cmd_shortlist(ctx: Context, paths, args) -> None:
-    from careeros.review.shortlist import shortlist
+    from careeros.review.shortlist import ageing, shortlist
     items = shortlist(ctx.store, ctx.policy)
     if not items:
         print("Shortlist is empty: label jobs Apply or Stretch (careeros review).")
     for i in items:
-        print(f"- {i['title']} | {i['employer']} | {i['status']} | tier {i['tier']} {i['state']}{' | STRETCH' if i['stretch'] else ''}")
+        print(f"- {i['job_id']} | {i['title']} | {i['employer']} | {i['status']} | tier {i['tier']} {i['state']}"
+              f"{' | STRETCH' if i['stretch'] else ''}")   # the id first: label, package and assist all need it (OPP-15)
+        print(f"    {ageing(i)}")   # first seen, label age, package (OPP-08 + OPP-17)
         print(f"    next: {i['next_action']}")
         if i.get("submission"):
             print(f"    {i['submission']}")
@@ -1386,12 +1429,13 @@ def cmd_assist(ctx: Context, paths, args) -> None:
                   f"{out['session_id']} --outcome submitted|not_submitted|uncertain")
             return
         if not args.target or not args.outcome:
-            sys.exit("Give the SESSION_ID and --outcome submitted|not_submitted|uncertain.")
-        out = assist.close_session(ctx.store, application_matrix(), ctx.policy, args.target, args.outcome,
+            sys.exit("Give the SESSION_ID (or the JOB_ID) and --outcome submitted|not_submitted|uncertain.")
+        session_id = assist.session_for(ctx.store, args.target)   # a JOB_ID names its role's one open session (OPP-77)
+        out = assist.close_session(ctx.store, application_matrix(), ctx.policy, session_id, args.outcome,
                                    key=f"cli:{secrets.token_hex(8)}", evidence=args.evidence, minutes=args.minutes,
                                    corrections=args.corrections, custom_questions=args.custom_questions,
                                    login_steps=args.login_steps, notes=args.notes, reapply=args.reapply, confirm=args.confirm)
-        print(f"closed {args.target}: {args.outcome}" + (f"; application {out['application_id']} recorded" if out["application_id"] else "")
+        print(f"closed {session_id}: {args.outcome}" + (f"; application {out['application_id']} recorded" if out["application_id"] else "")
               + ("; this reconciles an uncertain session" if out["reconciled"] else ""))
     except ApplicationHold as exc:
         sys.exit(f"Not closed yet: {exc}. Add --reapply or --confirm with your explanation, as for 'careeros applied'.")
@@ -1459,6 +1503,14 @@ def cmd_status(ctx: Context, paths, args) -> None:
                          (SELECT score_id FROM scores WHERE job_id = j.job_id ORDER BY at DESC, rowid DESC LIMIT 1)
                          WHERE j.current_state = 'scored' GROUP BY s.tier""")
     runs = store.one("SELECT * FROM runs ORDER BY started_at DESC LIMIT 1")
+    held = hold(paths["lock"])   # OPP-05: every daily run waits until you act; only read here, never removed
+    if held:
+        print(f"HELD since {held[0]}: " + ("the writer lock's process is gone (a stopped run?). Once no CareerOS run is "
+                                           "active, run: careeros unlock" if held[1] == "stale" else
+                                           "the writer lock is unreadable; inspect it and remove it by hand"))
+    last_run, run_warning = run_health(store)   # OPP-06
+    if run_warning:
+        print(f"!! {run_warning}")
     print("profile:", "approved" if ctx.profile.approved else "DRAFT (scores provisional)")
     from careeros.qualify import certifications as certification_mod
     for warning in certification_mod.profile_warnings(ctx.profile, ctx.policy):
@@ -1470,6 +1522,8 @@ def cmd_status(ctx: Context, paths, args) -> None:
                                        "AND substr(occurred_at,1,10)=?", (store.clock.now()[:10],))["c"])
     print("jobs:", ", ".join(f"{r['current_state']}={r['c']}" for r in states) or "none")
     print("tiers:", ", ".join(f"{r['tier']}={r['c']}" for r in tiers) or "none")
+    backlog = label_backlog(store)
+    print("label backlog:", backlog["text"] if backlog else "none")
     print("open exceptions:", store.one("SELECT COUNT(*) c FROM exceptions WHERE status != 'resolved'")["c"])
     from careeros.qualify import night
     if night.enabled(ctx.policy):
@@ -1481,6 +1535,7 @@ def cmd_status(ctx: Context, paths, args) -> None:
         print("NIGHT profile: off (turned on in vault overrides once its pay settings are approved)")
     if runs:
         print(f"last run: {runs['started_at']} {runs['status']}")
+    print(last_run)
 
 
 def cmd_verify(ctx: Context, paths, args) -> None:
@@ -1561,10 +1616,11 @@ def main(argv=None) -> None:
     p.add_argument("--agency", help="with --channel agency: the agency")
     p.add_argument("--reason", help="why you release it (required with --hold or --revoke)")
     p.add_argument("--revoke", metavar="RELEASE_ID", help="withdraw a release")
-    p = sub.add_parser("app-status", help="update an application's status")
+    p = sub.add_parser("app-status", help="update an application's status; void (recorded by mistake) needs --reason")
     p.add_argument("application_id")
     p.add_argument("state")
     p.add_argument("--notes")
+    p.add_argument("--reason", help="why: required for void, an application recorded by mistake (it stays in the history)")
     sub.add_parser("applications")
     p = sub.add_parser("funnel", help="recommended -> approved -> applied -> ... -> hired, by a dimension")
     p.add_argument("--by", choices=["source", "family", "profile", "tier", "channel", "domain", "night_mode", "employment_type",
@@ -1616,10 +1672,11 @@ def main(argv=None) -> None:
     p = sub.add_parser("explain", help="why a job is where it is (all recorded decisions, in plain text or --json)")
     p.add_argument("job_id")
     p.add_argument("--json", action="store_true")
-    p = sub.add_parser("dismiss", help="dismiss a job, with the reason")
+    p = sub.add_parser("dismiss", help="dismiss a job, with the reason; --undo reinstates a dismissed job")
     p.add_argument("job_id")
-    p.add_argument("--reason", required=True)
+    p.add_argument("--reason", help="why (required unless --undo): pay, location, remote, schedule, seniority, skills, ...")
     p.add_argument("--note")
+    p.add_argument("--undo", action="store_true", help="reinstate it: a later event undoes the dismissal in force")
     p = sub.add_parser("paste", help="grade a posting you opened yourself (text + link; the link is never fetched)")
     p.add_argument("--url")
     p.add_argument("--file")
@@ -1638,7 +1695,7 @@ def main(argv=None) -> None:
     p.add_argument("--batch", help="with approve: a name for packages approved together")
     p = sub.add_parser("assist", help="assistance sessions: open one to apply, close it with what happened, list, report")
     p.add_argument("action", choices=["open", "close", "list", "report"])
-    p.add_argument("target", nargs="?", help="JOB_ID (open, list) or SESSION_ID (close)")
+    p.add_argument("target", nargs="?", help="JOB_ID (open, list), or SESSION_ID or JOB_ID (close: its role's one open session)")
     p.add_argument("--mode", choices=["manual", "native", "assisted"], default="manual")
     p.add_argument("--outcome", choices=["submitted", "not_submitted", "uncertain"])
     p.add_argument("--evidence", choices=["owner_attested", "confirmation_observed"], help="with --outcome submitted")
@@ -1670,6 +1727,28 @@ def main(argv=None) -> None:
         sys.exit(2)
 
 
+def _notifications_on(paths) -> bool:
+    """operations.notifications, for a notice given before the run has its context. A policy that cannot be read
+    counts as the default (on): the notice is about a run that cannot start."""
+    try:
+        return bool(load_policy(CONFIG_DIR / "policy" / "defaults.yaml", paths["overrides"]).get("operations", "notifications", default=True))
+    except Exception:  # noqa: BLE001 - never hides the notice it gates
+        return True
+
+
+def _held_run(paths) -> None:
+    """A stale writer lock holds every later daily run, and the scheduled run has no window (OPP-05, 2026-11-01): one
+    killed run must not silently stop the next ones. Logged, and a notification; the lock itself is left as it is."""
+    try:
+        since = (hold(paths["lock"]) or ("an unknown time",))[0]
+    except OSError:
+        since = "an unknown time"
+    log.warning("daily run held: the writer lock left since %s belongs to a process that is gone; run careeros unlock", since)
+    if _notifications_on(paths):
+        from careeros.ops.notify import problem
+        problem("CareerOS: daily run held", "Run: careeros unlock")
+
+
 def _dispatch(args) -> None:
     from careeros.demo import sandbox
     if args.command == "demo":  # Demo Mode: synthetic world, throwaway vault, no credentials, no real network
@@ -1696,8 +1775,8 @@ def _dispatch(args) -> None:
             print(f"marked {count} interrupted run(s) as failed")
         return
     if getattr(args, "output_file", None):  # scheduled runs: no console window, so output goes to a log file
-        handle = open(args.output_file, "a", encoding="utf-8", buffering=1)
-        sys.stdout = sys.stderr = handle
+        from careeros.ops import daily_log
+        daily_log.redirect(args.output_file)   # already done when `python -m careeros` started the run (OPP-52)
         print(f"=== {Clock().now()} careeros {args.command} ===")
     if args.command == "eval" and args.scoring:  # read-only: a snapshot copy, no lock, no Store, no log file
         from careeros.review import scoring_eval
@@ -1726,6 +1805,8 @@ def _dispatch(args) -> None:
         handlers[args.command](ctx, paths, args)
     except LockError as exc:
         print(f"CareerOS is busy: {exc}")
+        if args.command == "run" and str(exc).startswith("stale_lock_held"):
+            _held_run(paths)
         sys.exit(1)
     except sandbox.DemoModeViolation:
         raise  # main() reports it in one line

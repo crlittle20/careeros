@@ -34,6 +34,7 @@ import re
 import uuid
 from datetime import date, timedelta
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from careeros.core.clock import parse_utc
 from careeros.core.policy import load_yaml
@@ -143,6 +144,22 @@ def role_sessions(store: Store, job_id: str) -> list[dict]:
     marks = ",".join("?" * len(group))
     rows = store.all(f"SELECT * FROM assist_sessions WHERE job_id IN ({marks}) ORDER BY opened_at, rowid", tuple(group))
     return [{**dict(r), "state": session_state(store, r["session_id"])} for r in rows]
+
+
+def session_for(store: Store, target: str) -> str:
+    """The session `careeros assist close` acts on (OPP-77, 2026-11-01): a session id as given, or a job id whose role has
+    exactly one session open or uncertain."""
+    if store.one("SELECT 1 FROM assist_sessions WHERE session_id = ?", (target,)):
+        return target
+    if store.one("SELECT 1 FROM jobs WHERE job_id = ?", (target,)) is None:
+        raise ValueError("unknown_session")
+    waiting = [s for s in role_sessions(store, target) if s["state"] in ("open", "uncertain")]
+    if len(waiting) == 1:
+        return waiting[0]["session_id"]
+    if not waiting:
+        raise ValueError(f"no_open_session: no session is open or uncertain for {target}'s role")
+    raise ValueError("several_sessions: " + ", ".join(f"{s['session_id']} ({s['state']})" for s in waiting)
+                     + " are open or uncertain for this role: close one by its SESSION_ID")
 
 
 def open_session(store: Store, policy, profile, job_id: str, mode: str, *, facts: list, library: dict, vault_root: Path,
@@ -295,21 +312,41 @@ def close_session(store: Store, matrix, policy, session_id: str, outcome: str, *
     return {"outcome_id": outcome_id, "application_id": app_id, "reconciled": state == "uncertain"}
 
 
+MEASURES = ("minutes", "corrections", "custom_questions", "login_steps")
+
+
+def _host(session) -> str:
+    """The destination host the session's package was prepared for (its manifest), else the session's own address."""
+    try:
+        host = ((json.loads(session["manifest_json"] or "{}").get("destination") or {}).get("host") or "")
+    except ValueError:
+        host = ""
+    return (host or urlsplit(session["destination"] or "").hostname or "unknown").lower()
+
+
 def report(store: Store) -> dict:
-    """Measured assistance (P3 and P6): sessions by mode and outcome, with the minutes, corrections, custom questions and
-    login steps you recorded. Medians only over sessions that recorded them; small samples are labelled as such."""
-    rows = store.all("SELECT s.session_id, s.mode FROM assist_sessions s")
-    by_mode: dict = {}
+    """Measured assistance (P3 and P6; OPP-04, 2026-11-01): sessions by mode and by the destination host their package was
+    prepared for, each with its counts by outcome. Medians are over SUBMITTED sessions only: one not submitted (abandoned)
+    or uncertain is counted apart and never in a median. Beside the minutes you reported, the session span: the minutes
+    from opening the session to its first close. Each median is over the sessions that recorded the measure; small samples
+    are labelled as such."""
+    rows = store.all("SELECT s.session_id, s.mode, s.opened_at, s.destination, p.manifest_json FROM assist_sessions s "
+                     "LEFT JOIN packages p ON p.package_id = s.package_id")
+    groups: dict = {}
     for r in rows:
         latest = _latest_outcome(store, r["session_id"])
-        entry = by_mode.setdefault(r["mode"], {"sessions": 0, "open": 0, "submitted": 0, "not_submitted": 0, "uncertain": 0,
-                                               "minutes": [], "corrections": [], "custom_questions": [], "login_steps": []})
+        state = latest["outcome"] if latest else "open"
+        entry = groups.setdefault((r["mode"], _host(r)), {"sessions": 0, "open": 0, "submitted": 0, "not_submitted": 0,
+                                                          "uncertain": 0, "span_minutes": [], **{m: [] for m in MEASURES}})
         entry["sessions"] += 1
-        entry[latest["outcome"] if latest else "open"] += 1
-        if latest:
-            for name in ("minutes", "corrections", "custom_questions", "login_steps"):
+        entry[state] += 1
+        if state == "submitted":   # medians: submitted sessions only (OPP-04)
+            for name in MEASURES:
                 if latest[name] is not None:
                     entry[name].append(latest[name])
+            first = store.one("SELECT at FROM assist_outcomes WHERE session_id = ? ORDER BY at, rowid LIMIT 1",
+                              (r["session_id"],)) or latest   # its first close (an uncertain one, if reconciled later)
+            entry["span_minutes"].append((parse_utc(first["at"]) - parse_utc(r["opened_at"])) / timedelta(minutes=1))
 
     def median(values: list) -> float | None:
         values = sorted(values)
@@ -318,11 +355,13 @@ def report(store: Store) -> dict:
         mid = len(values) // 2
         return float(values[mid]) if len(values) % 2 else (values[mid - 1] + values[mid]) / 2
 
-    out = {}
-    for mode, entry in sorted(by_mode.items()):
-        out[mode] = {k: entry[k] for k in ("sessions", "open", "submitted", "not_submitted", "uncertain")}
-        for name in ("minutes", "corrections", "custom_questions", "login_steps"):
-            out[mode][f"median_{name}"] = median(entry[name])
-            out[mode][f"measured_{name}"] = len(entry[name])
-        out[mode]["sample"] = "too small to compare (fewer than 5 measured)" if len(entry["minutes"]) < 5 else "measured"
+    out: dict = {}
+    for (mode, host), entry in sorted(groups.items()):
+        row = {k: entry[k] for k in ("sessions", "open", "submitted", "not_submitted", "uncertain")}
+        out.setdefault(mode, {})[host] = row
+        for name in ("minutes", "span_minutes", *MEASURES[1:]):   # the span beside the minutes you reported
+            value = median(entry[name])
+            row[f"median_{name}"] = round(value, 1) if value is not None else None
+            row[f"measured_{name}"] = len(entry[name])
+        row["sample"] = "too small to compare (fewer than 5 measured)" if len(entry["minutes"]) < 5 else "measured"
     return out

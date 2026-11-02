@@ -720,8 +720,12 @@ class ReviewPageTests(unittest.TestCase):
                 record_label(store, job_id, "apply", None, "k1")
                 dismiss_target, dismiss_key = next((t, k) for a, t, k in forms(httpx.get(f"{base}/?t={token}").text) if a == "dismiss")
                 self.assertEqual(dismiss_target, job_id)
-                self.assertEqual(httpx.post(f"{base}/dismiss?t={token}", data={"target": dismiss_target, "key": dismiss_key,
-                                                                               "reason": "pay", "note": "too low"}).status_code, 303)
+                ask = httpx.post(f"{base}/dismiss?t={token}", data={"target": dismiss_target, "key": dismiss_key,
+                                                                     "reason": "pay", "note": "too low"})
+                self.assertEqual(ask.status_code, 200)   # the confirmation first (OPP-16)
+                confirm_key = next(k for a, t, k in forms(ask.text) if a == "confirm_dismiss")
+                self.assertEqual(httpx.post(f"{base}/confirm_dismiss?t={token}", data={"target": dismiss_target, "key": confirm_key,
+                                                                                       "reason": "pay", "note": "too low"}).status_code, 303)
                 self.assertEqual(store.one("SELECT reason_code FROM dismissals")["reason_code"], "pay")
             finally:
                 server.shutdown()

@@ -15,7 +15,7 @@ leaves the machine.
 | Alert-email leads: links, titles, the text beside each link, sender and subject | The job seeker's mailbox, read-only | `vault\data\careeros.db` (message bodies are never stored) |
 | Reusable answers and the documents they name | Written by the job seeker | `vault\profile\answers.yaml`, `vault\documents\` |
 | Application packages and assistance handoff files | Built from the above (ADR 0009) | `vault\packages\`, `vault\handoff\` |
-| Reports, logs, backups, analytics exports | Built from the above | `vault\reports`, `logs` (redacted), `backups`, `exports` |
+| Reports, logs, backups, analytics exports | Built from the above | `vault\reports`, `logs` (redacted: `careeros.log` and the scheduled run's `daily-run.log`), `backups`, `exports` |
 
 The vault sits **outside the code repository**, and CareerOS refuses to run with a vault inside it. Nothing from the
 vault is ever written into the repository. Since 2026-10-14 the job seeker's own settings (employer families, sites

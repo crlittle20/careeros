@@ -19,21 +19,23 @@ seeker" is Chris on the private system and a fictional person in Demo Mode.
 
 **Results**
 
-- 850 automated tests pass locally with outbound network refused. The public repository's CI runs the same
+- 925 automated tests pass locally with outbound network refused. The public repository's CI runs the same
   validation; this version's CI result comes with its publication.
-- 723 planted defects: the latest full run (2026-11-01) caught every one with a failing test
+- 749 planted defects: the latest full run (2026-11-02) caught all 749, each with a failing test
   (`evidence/mutation-receipt.json`).
 - Chris labelled 50 real postings (2026-10-16): the hard rules agreed with all 50 (in-sample), the ranking did not;
   ranking effectiveness is not demonstrated ([limitations](#limitations)).
 
-### Project status (2026-11-01)
+### Project status (2026-11-02)
 
-- First published 2026-10-15 (UTC). This version publishes the code as of 2026-10-31; the code published before it
-  was the snapshot of 2026-10-16 (UTC; Experience Match and certifications), with documentation and dependency locks
-  updated on 2026-10-29 ([limitations](#limitations)).
-- New since then: assisted applications ([ADR 0009](docs/adr/0009-assisted-applications.md)) with the browser
-  extension, which fills nothing until a destination passes its installed-extension check, and dismissal fields in
-  the analytics export (schema revision 2; [data dictionary](docs/analytics_data_dictionary.md)).
+- First published 2026-10-15 (UTC). This version publishes the code as of 2026-11-02; the code published before it
+  was the snapshot of 2026-10-31 (published 2026-11-01: assisted applications with the browser extension, and
+  dismissal fields in the analytics export).
+- New since then: the review page confirms each action on a page naming the posting, can undo a dismissal and can
+  void an application the employer never answered ([ADR 0007](docs/adr/0007-human-approval-at-selected-stages.md),
+  amended 2026-11-01); the shortlist leaves out closed postings and shows each job's id and how long it has waited;
+  `careeros explain` opens with a one-sentence verdict; the daily run keeps a redacted log, and `careeros status` and
+  the saved report show the last completed run and the label backlog.
 - The 50 labelled postings behind the calibration and the owner's Power BI report on real data stay private.
 
 ### For technical reviewers
@@ -53,7 +55,7 @@ seeker" is Chris on the private system and a fictional person in Demo Mode.
 | What | A local, single-user Python application: a daily pipeline, a command line, a local review page and a Power BI report |
 | For | One real job search. Designed for healthcare operations and business-systems roles, including claims and pharmacy-benefit work. It runs daily on the owner's machine. |
 | Shown publicly through | Demo Mode: the same production code on fictional employers, offline, with no credentials |
-| Size | About 19,800 lines of Python in the engine and 13,700 in tests; 43 database tables; 36 commands |
+| Size | About 20,700 lines of Python in the engine and 15,700 in tests; 43 database tables; 36 commands |
 | Documented by | 119 numbered requirements (107 requirements and 12 acceptance criteria), consolidated from the specifications and the built system and traced to code and tests ([business requirements](docs/business_requirements.md), [traceability](docs/requirements_traceability.md)), and 9 architecture decision records ([ADRs](docs/adr/README.md)) |
 | Built with | A human-directed, AI-assisted workflow: the owner directed and decided, ChatGPT helped design and challenge, Claude implemented ([how](docs/ai_assisted_development.md)) |
 | Status | Phase 1 (discovery and qualification) is in daily private use. The public repository's code is a generated snapshot of the private development repository; its documentation and dependency locks were also updated directly in the public repository on 2026-10-29, and the private repository carries the same corrections ([limitations](#limitations)). |
@@ -241,8 +243,8 @@ Every control in the threat model is tied to a test and to a planted defect that
 
 | Layer | What it shows |
 |---|---|
-| 850 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`) |
-| 723 planted defects | `tools/mutate.py` breaks each safety rule in a scratch copy, and the test suite must then fail. A defect that survives is an untested rule. |
+| 925 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`) |
+| 749 planted defects | `tools/mutate.py` breaks each safety rule in a scratch copy, and the test suite must then fail. A defect that survives is an untested rule. |
 | Functional MVP gate | `tools/mvp_gate.py` runs the real command line in Demo Mode and makes 92 checks against expectations written from the postings and the policy, not read back from the system. Result: no requirement fails. Of 13, 10 are PASS and 3 are PARTIAL, with the gaps listed in the [report](docs/functional_mvp_report.md). |
 | Documentation tests | The documents' named files, tests, tables and commands must exist |
 | Static checks | ruff (pyflakes, bugbear and security rules), mypy against a recorded baseline of older errors, configuration checks |

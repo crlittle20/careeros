@@ -6,11 +6,37 @@ precision or false-reject rate, and vice versa.
 from __future__ import annotations
 
 import uuid
+from datetime import timedelta
 
+from careeros.core.clock import parse_utc
 from careeros.db.store import Store
+from careeros.review.dismiss import dismissed_sql
 
 LABELS = ("apply", "stretch", "skip")
 PROFILES = ("primary", "night")
+
+
+def label_backlog(store: Store) -> dict | None:
+    """Qualified postings that await your label (OPP-01, 2026-11-01): scored, latest tier A, B or near-miss, not a variant
+    or duplicate of another posting, no PRIMARY label, not dismissed (the latest dismissal event decides; a reinstated
+    posting waits again) and not closed (a closed or duplicate posting is no
+    longer 'scored'). The one query behind the report header, `careeros status` and the daily notification, so the three
+    always agree. None when nothing waits; else the count, the days the oldest has waited since CareerOS first saw it,
+    and the line to show."""
+    rows = store.all(f"""SELECT j.first_seen_at FROM jobs j JOIN scores s ON s.score_id =
+                          (SELECT score_id FROM scores WHERE job_id = j.job_id ORDER BY at DESC, rowid DESC LIMIT 1)
+                        WHERE j.current_state = 'scored' AND s.tier IN ('A','B','near_miss')
+                          AND j.variant_of IS NULL AND j.duplicate_of IS NULL
+                          AND NOT EXISTS (SELECT 1 FROM labels l WHERE l.job_id = j.job_id AND l.profile = 'primary')
+                          AND NOT {dismissed_sql('j.job_id')}
+                        ORDER BY j.first_seen_at""")
+    if not rows:
+        return None
+    count = len(rows)
+    oldest = max(0, int((parse_utc(store.clock.now()) - parse_utc(rows[0]["first_seen_at"])) / timedelta(days=1)))
+    text = (f"{count} qualified posting{'s' if count != 1 else ''} await{'s' if count == 1 else ''} your label; "
+            f"oldest {oldest} day{'s' if oldest != 1 else ''}")
+    return {"count": count, "oldest_days": oldest, "text": text}
 
 
 def record_label(store: Store, job_id: str, label: str, reason: str | None, key: str, profile: str = "primary") -> str:

@@ -137,7 +137,11 @@ Scan Reliability = DIVIDE ( SUM ( fact_board_scan[is_complete] ), COUNTROWS ( fa
 
 NIGHT Routed = CALCULATE ( [Jobs Discovered], fact_job_evaluation[night_decision] = "eligible" )
 
-Applications = COUNTROWS ( fact_application )
+-- a void application (recorded by mistake, 2026-11-01) keeps its row and is never counted. KEEPFILTERS: the exclusion
+-- narrows a status filter (Applications by status, a status slicer) instead of replacing it (Codex F4, 2026-11-01).
+-- A void row never carries an answer flag (void is refused once anyone at the employer answered), so the rates
+-- over [Applications] need no exclusion in their numerators.
+Applications = CALCULATE ( COUNTROWS ( fact_application ), KEEPFILTERS ( fact_application[current_state] <> "void" ) )
 Open Applications = SUM ( fact_application[is_open] )
 Interview Rate = DIVIDE ( SUM ( fact_application[reached_interview] ), [Applications] )
 ```

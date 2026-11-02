@@ -99,7 +99,8 @@ of that form's question or choices is shown by `careeros package prepare` and in
 
 Which packages are prepared, and when they need you:
 - **Routes.** A package is prepared for a job you labelled Apply or Stretch, or one the standing policy picks. Skip, a
-  dismissal or an application already made always win.
+  dismissal or an application already made always win. A dismissal you undid (`careeros dismiss JOB --undo`) no longer
+  counts: the latest event decides (2026-11-01).
 - **Closed or no longer eligible postings.** A posting that closed, or that the gate's latest decision no longer finds
   eligible (the posting, the rules or your profile changed), is never prepared, whatever its label or approval: every
   session there would be refused. Its package shows as withdrawn with the reason, and comes back if the posting reopens
@@ -129,12 +130,20 @@ Which packages are prepared, and when they need you:
 3. **Review the whole form, attach your files, and submit it yourself.**
 4. **Close the session** with what happened:
    - `careeros assist close SESSION --outcome submitted`, adding `--evidence confirmation_observed` if you saw the
-     employer's confirmation. This records the application.
+     employer's confirmation. This records the application. `careeros assist close JOB ...` works too when the role
+     has exactly one session open or uncertain.
+   - While a session is open or uncertain, `careeros applied` and the review page's "I applied" refuse and print the
+     exact `careeros assist close SESSION --outcome submitted` command, so the application keeps the session's evidence
+     and measurements. On the review page the confirmation step shows that command instead of Confirm, and recording
+     checks again (2026-11-01).
+   - A session closed as submitted by mistake leaves an application you can void (`careeros app-status APP void
+     --reason "..."`, while no one at the employer has ever answered). The void application stays in the history and no
+     longer stops preparation or a new session for the role (2026-11-01).
    - `--outcome not_submitted`.
    - `--outcome uncertain` if the page closed or errored around Submit. That blocks a new session for the role until
      you close it again with what really happened.
    - Add `--minutes`, `--corrections`, `--custom-questions` and `--login-steps` to measure the work.
-     `careeros assist report` compares the modes.
+     `careeros assist report` compares the modes, by destination.
 
 ## 4. The browser extension (CareerOS Assist)
 
@@ -230,9 +239,11 @@ Where filling may happen once it's on:
 ## 6. Measuring before expanding (plan P3 and P6)
 
 Do your next 5–10 applications in `manual` or `native` mode and record the minutes and corrections when you close
-each session. Then try `assisted` on Greenhouse forms. `careeros assist report` shows the medians by mode, and marks
-fewer than five measured sessions as too small to compare. Another destination's adapter is worth building only when
-the report shows time saved there.
+each session. Then try `assisted` on Greenhouse forms. `careeros assist report` groups the sessions by mode and by the
+destination host their package was prepared for (2026-11-01). Its medians are over submitted sessions only; sessions
+not submitted (abandoned) or uncertain are counted apart. Beside the minutes you recorded it shows the session span,
+from opening the session to its first close. It marks fewer than five measured sessions as too small to compare.
+Another destination's adapter is worth building only when the report shows time saved there.
 
 ## Limits
 

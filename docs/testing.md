@@ -1,7 +1,7 @@
 # Testing with planted defects
 
 CareerOS has several layers of tests; the README's [Testing](../README.md#testing) section lists them. This page
-explains one of them, planted defects, because its result ("723 of 723 caught") means little without knowing what was
+explains one of them, planted defects, because its result ("749 of 749 caught") means little without knowing what was
 planted, what counts as caught, and what the run cannot show. The full list, one table per source file with the tests
 that caught each defect, is generated from the run's receipt: [defect_coverage.md](defect_coverage.md).
 
@@ -54,7 +54,8 @@ were stopped part-way (one was voided by standby) and count for nothing.
 | 2026-10-27 | 723 / 723 | 7b64924 | Run on d6b0d1f. |
 | 2026-10-28 | 723 / 723 | f75a2b1 | Run on 569a668. |
 | 2026-10-29 | 723 / 723 | 845fbdc | Run on 0d1be18. |
-| 2026-11-01 | 723 / 723 | this public snapshot | Run inside this public snapshot of the code published on 2026-11-01 (dismissal fields in the export, the testing pages, the snapshot guards). This is the receipt in the repository; [defect_coverage.md](defect_coverage.md) is generated from it. |
+| 2026-11-01 | 723 / 723 | 77e9cda | Run inside the public snapshot of the code published on 2026-11-01 (dismissal fields in the export, the testing pages, the snapshot guards). |
+| 2026-11-02 | 749 / 749 | this public snapshot | Run inside this public snapshot of the code published on 2026-11-02: the observability and review-page batch after Codex's two passes (the batch added 22 planted defects and the corrections of Codex's first pass four more). This is the receipt in the repository; [defect_coverage.md](defect_coverage.md) is generated from it. |
 
 Receipts committed before 2026-10-14 (95 to 259 defects, every one reported caught) are void: the tool's scratch
 copies lacked files some tests need, so every defect looked caught. The tool now refuses to run unless an unmutated
@@ -105,8 +106,8 @@ starts from zero. The run writes `evidence/mutation-receipt.json`. Then:
 A caught defect proves that some test notices that one break, made in that one place; it does not prove the rule is
 right, or that a different break of the same rule would be noticed. The defects were written by the same people and
 tools that wrote the code and the tests, so they cover the rules their authors thought of; a rule nobody thought of
-has neither a test nor a planted defect. 446 of the 723 are caught by exactly one test method (the last column of
-[defect_coverage.md](defect_coverage.md)): weaken that test and the defect survives. For 3 more the receipt cannot
+has neither a test nor a planted defect. 451 of the 749 are caught by exactly one test method (the last column of
+[defect_coverage.md](defect_coverage.md)): weaken that test and the defect survives. For 5 more the receipt cannot
 tell, because it keeps at most three failure names per defect and one test with subtests can fail more than once.
 The run was made on one machine by the project's one owner, and its receipt is committed, not reproduced by anyone
 else. And none of this measures

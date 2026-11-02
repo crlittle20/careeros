@@ -23,6 +23,8 @@ from pathlib import Path
 from careeros.core.clock import parse_utc
 from careeros.discovery import sources
 from careeros.paths import CONFIG_DIR
+from careeros.review.applications import VOID
+from careeros.review.dismiss import REINSTATED
 
 SCHEMA_VERSION = "analytics-1"
 SCHEMA_REVISION = 2     # raised by each column added within a version: 1 = 2026-10-13; 2 = dismissals (2026-10-30)
@@ -310,7 +312,9 @@ def build(store, policy) -> dict[str, list[dict]]:
     scores = latest("SELECT * FROM scores ORDER BY at, rowid")
     nights = latest("SELECT * FROM night_results ORDER BY at, rowid")
     labels = latest("SELECT * FROM labels WHERE profile = 'primary' ORDER BY at, rowid")
-    dismissals = latest("SELECT job_id, reason_code, at FROM dismissals ORDER BY at, rowid")   # as review/dismiss.latest
+    # Your latest dismissal event per job, as review/dismiss.current: a later reinstatement undoes a dismissal (2026-11-01)
+    dismissals = {jid: d for jid, d in latest("SELECT job_id, reason_code, at FROM dismissals ORDER BY at, rowid").items()
+                  if d["reason_code"] != REINSTATED}
     last_reason = {r["entity_id"]: r["reason_code"] for r in q("SELECT entity_id, reason_code FROM transitions "
                                                                  "WHERE entity_type = 'job' ORDER BY entity_id, sequence")}
     count = lambda sql: {r["job_id"]: r["c"] for r in q(sql)}  # noqa: E731
@@ -319,7 +323,7 @@ def build(store, policy) -> dict[str, list[dict]]:
     links = count("SELECT job_id, COUNT(*) c FROM opening_links GROUP BY job_id")
     applications = [a for a in q("SELECT * FROM applications WHERE COALESCE(exclude_from_kpi, 0) = 0 ORDER BY applied_at, rowid")
                     if a["job_id"] in job_by_id]
-    applied = {a["job_id"] for a in applications}
+    applied = {a["job_id"] for a in applications if a["current_state"] != VOID}   # a void application is none (2026-11-01)
     # A job's sightings in the order they happened. At the same moment, the alert, recommendation or paste that led
     # CareerOS to a posting comes before the single board read it triggered (recorded first, but caused by it).
     order = lambda o: (o["observed_at"] or "", 1 if o["source_kind"] == "ats_scan" else 0, o["rowid"])  # noqa: E731
@@ -454,6 +458,7 @@ def kpis(tables: dict[str, list[dict]], *, exact: bool = False) -> dict:
     """As the manifest records them; exact=True leaves rates and averages unrounded (for reconcile())."""
     jobs, boards = tables["fact_job_evaluation"], [b for b in tables["dim_board"] if b["board_key"] != NONE]
     scans, apps = tables["fact_board_scan"], tables["fact_application"]
+    counted = [a for a in apps if a["current_state"] != VOID]   # a void row (recorded by mistake) stays, but never counts
     total = lambda rows, column: sum(r[column] or 0 for r in rows)  # noqa: E731
     places = lambda value, digits: value if exact else round(value, digits)  # noqa: E731
     rate = lambda a, b: places(a / b, 3) if b else None  # noqa: E731
@@ -477,9 +482,9 @@ def kpis(tables: dict[str, list[dict]], *, exact: bool = False) -> dict:
         "new_board_verification_rate": rate(sum(1 for b in new if b["verification_status"] in ("quarantined", "active")), len(new)),
         "scan_reliability": rate(total(scans, "is_complete"), len(scans)),
         "night_routed": sum(1 for j in jobs if j["night_decision"] == "eligible"),
-        "applications": len(apps),
-        "applications_open": total(apps, "is_open"),
-        "interview_rate": rate(total(apps, "reached_interview"), len(apps)),
+        "applications": len(counted),
+        "applications_open": total(counted, "is_open"),
+        "interview_rate": rate(total(counted, "reached_interview"), len(counted)),
     }
 
 
@@ -566,7 +571,8 @@ def reconcile(tables: dict[str, list[dict]], store, policy) -> list[dict]:
     _check(checks, "jobs by state match the application", dict(Counter(j["current_state"] for j in jobs)) == app_states, app_states)
     dismissed = {r["reason_code"]: r["c"] for r in store.all(
         "SELECT reason_code, COUNT(*) c FROM (SELECT reason_code, ROW_NUMBER() OVER (PARTITION BY job_id ORDER BY at DESC, rowid DESC) n "
-        f"FROM dismissals WHERE job_id IN (SELECT job_id FROM jobs WHERE {included})) WHERE n = 1 GROUP BY 1")}
+        f"FROM dismissals WHERE job_id IN (SELECT job_id FROM jobs WHERE {included})) WHERE n = 1 AND reason_code != ? GROUP BY 1",
+        (REINSTATED,))}
     _check(checks, "dismissed jobs (by their latest reason) match the application",
            dict(Counter(j["dismissal_reason"] for j in jobs if j["is_dismissed"])) == dismissed, dismissed)
     scopes = {r["remote_scope"] or "unknown": r["c"] for r in store.all(f"SELECT remote_scope, COUNT(*) c FROM jobs WHERE {included} GROUP BY 1")}

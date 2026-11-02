@@ -42,6 +42,7 @@ from careeros.qualify.gate import GateResult, state_for
 from careeros.qualify.profile import Profile
 
 from . import role_identity, sampling, shadow_policy
+from .dismiss import dismissed_sql
 from .preferences import detect, load_preferences
 
 EVALUATOR_VERSION = "scoring-eval-v1-2026-10-16"
@@ -232,7 +233,7 @@ def evaluate_jobs(ro: ReadOnlyStore, policy, profile: Profile, cfg: dict, prefs:
     labelled job the gate judged. Returns the evaluations and counts of what was left out (and why)."""
     from careeros.pipeline import job_view, load_requirements
     gates, scores, history, reasons = _latest(ro, "gate_results"), _latest(ro, "scores"), _label_history(ro), _label_reasons(ro)
-    dismissed = {r["job_id"] for r in ro.all("SELECT DISTINCT job_id FROM dismissals")}
+    dismissed = {r["job_id"] for r in ro.all(f"SELECT j.job_id FROM jobs j WHERE {dismissed_sql('j.job_id')}")}   # latest event
     primary = cfg["primary"]
     configs = [f"{core}/{d}" for core in shadow_policy.CORE_ALTERNATIVES for d in DURATIONS]
     out: list[JobEval] = []

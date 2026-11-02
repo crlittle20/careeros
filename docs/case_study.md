@@ -101,7 +101,7 @@ list. The details are in `architecture.md`.
 
 - **Stack:** Python 3.12 and the standard library, SQLite, httpx and PyYAML. The anthropic SDK backs an optional
   requirement reader that must quote the posting word for word and falls back to the rules.
-- **Size:** about 19,800 lines of engine code and 13,700 lines of tests, 43 tables, 14 forward-only migrations and 36
+- **Size:** about 20,700 lines of engine code and 15,700 lines of tests, 43 tables, 14 forward-only migrations and 36
   commands.
 - **Order of work:**
   1. Phase 1: board scanning, normalisation, the eligibility gate, scoring and the review page.
@@ -153,8 +153,8 @@ command, the same command as the CI workflow.
 
 | Measure | Result |
 |---|---|
-| Automated tests | 850, all passing; repeated full runs on 2026-10-13, including a fresh clone, showed no flaky test |
-| Planted defects | 723 defined. The latest full run (2026-11-01) caught all 723, each by a real failing test with the whole suite loaded (`evidence/mutation-receipt.json`). Every full run since the first, with the survivors each one exposed and the fixes that followed (the first survivor, a weak test, is in the table below), is in [testing.md](testing.md); every defect and the tests that caught it are in [defect_coverage.md](defect_coverage.md). |
+| Automated tests | 925, all passing; repeated full runs on 2026-10-13, including a fresh clone, showed no flaky test |
+| Planted defects | 749 defined. The latest full run (2026-11-02) caught all 749, each by a real failing test with the whole suite loaded (`evidence/mutation-receipt.json`). Every full run since the first, with the survivors each one exposed and the fixes that followed (the first survivor, a weak test, is in the table below), is in [testing.md](testing.md); every defect and the tests that caught it are in [defect_coverage.md](defect_coverage.md). |
 | Functional MVP gate | 92 checks: no requirement fails; 10 PASS, 3 PARTIAL (5 small gaps, listed in `functional_mvp_report.md`) |
 | Release scan | No secret in the files or the Git history. Anyone can repeat the public repository's scan (`python tools/release_scan.py --history`); the private repository's result is reported, not inspectable. |
 | Dependency audit | At release, the first CI run's pip-audit, in the public repository (2026-10-15), found no known vulnerabilities in either lock. Advisories published afterwards affected three pinned packages, which were raised to fixed versions with hashes checked against PyPI: certifi on 2026-10-20, filelock on 2026-10-23 and msgpack on 2026-10-29. After the last update, pip-audit of both locks (2026-10-29) found no known vulnerabilities. Two of the fixed releases were under 14 days old; the lock's header records them as exceptions the owner approved. |

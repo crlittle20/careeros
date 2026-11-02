@@ -117,14 +117,20 @@ tier: near_miss
 apply_priority: 80.7
 ```
 
+Its first line is the verdict: what keeps the job below the next tier, against the current threshold:
+
+```
+Verdict: Near-miss: priority 80.7 vs 85 for Tier B (4.3 short).
+```
+
 The job's **SOURCE** names the alert email that brought it in first; its sightings list every channel that saw it.
 
 ### 9. Observe routing
 
-`careeros shortlist` lists the jobs worth applying to, each with its tier and next step, for example:
+`careeros shortlist` lists the jobs worth applying to, each with its id, tier and next step, for example:
 
 ```
-Pharmacy Claims Analyst | Meridian Rx | open | tier B ELIGIBLE
+greenhouse:meridianrx:108 | Pharmacy Claims Analyst | Meridian Rx | open | tier B ELIGIBLE
 ```
 
 The `careeros status` line in step 5 shows the separate overnight and part-time profile (NIGHT). `careeros review` shows

@@ -1,9 +1,9 @@
 {
- "at": "2026-11-01T17:58:15+00:00",
+ "at": "2026-11-02T13:33:35+00:00",
  "commit": "",
  "uncommitted_changes": false,
  "private_vault": "decoy",
- "seconds": 22,
+ "seconds": 20,
  "overall": "PARTIAL",
  "grades": {
   "fresh demo initialization": "PASS",
@@ -548,13 +548,13 @@
     "check": "the GitHub inbox is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "Local\\Temp\\careeros-mvp-gate-a5msspsy\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
+    "evidence": "Local\\Temp\\careeros-mvp-gate-6o3kyqgj\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
    },
    {
     "check": "the clipboard is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-a5msspsy\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
+    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-6o3kyqgj\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
    },
    {
     "check": "Gmail is refused in Demo Mode",

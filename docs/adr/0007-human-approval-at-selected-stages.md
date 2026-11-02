@@ -25,11 +25,11 @@ CareerOS **prepares and explains**. A person decides:
 | Stage | The person's role | Safeguard |
 |---|---|---|
 | Applying and messaging | Does it themselves, outside CareerOS | No code exists that submits an application or sends a message to an employer or recruiter |
-| Recording an application | `careeros applied`, or the review page | One shared check (`preflight`, 2026-10-16) for the review page, the shortlist, NIGHT and recording: one application per role across variants, duplicates, reposts and same-opening links; a second channel needs an explicit flag; applying again to a role you applied to before (any outcome) needs a reason; a possible duplicate (a linked posting, or the same title at the same employer with no conflicting requisition), an unfinished duplicate search or the employer hold needs a confirmation reason. Your Skip removes a job from the shortlist. Each record is marked as your statement |
+| Recording an application | `careeros applied`, or the review page | One shared check (`preflight`, 2026-10-16) for the review page, the shortlist, NIGHT and recording: one application per role across variants, duplicates, reposts and same-opening links; a second channel needs an explicit flag; applying again to a role you applied to before (any outcome) needs a reason; a possible duplicate (a linked posting, or the same title at the same employer with no conflicting requisition), an unfinished duplicate search or the employer hold needs a confirmation reason. Your Skip removes a job from the shortlist. Each record is marked as your statement. On the review page a confirmation naming the posting comes first; a record made by mistake is voided with a reason, never deleted (2026-11-01) |
 | Labels | Apply, stretch or skip | Labels are measured against the system's tiers (the 50-label exit test) |
 | Boards in the review band (trust 65-84) and review cases | Approve with a reason, reject, or resolve | An approval expires (90 days). It can never override an identity mismatch, an unsafe address, a contradicting official site or a manual-only system. |
 | Near-miss jobs and decisive unknowns | Check before applying | Shown as "manual review" and "check before applying" |
-| Dismissals | With a reason | Recorded, never silent |
+| Dismissals | With a reason | Recorded, never silent. On the review page a confirmation naming the posting comes first; a later reinstatement undoes one, and the latest event decides (2026-11-01) |
 | Policy and profile | Edits files in the vault; the profile must be approved | A change re-evaluates the affected jobs, with history kept |
 | New collection or outward actions | Explicit authorisation (new sources, scheduled tasks, publishing) | Off by default in the engine's policy |
 
@@ -78,3 +78,32 @@ CareerOS **prepares and explains**. A person decides:
   and are held only for submission. The gate keeps its generic employer-level eligibility hold, now unused; NIGHT's
   same-employer-family check uses the shared family lookup
   (`test_qualification_no_longer_holds_the_employer_but_submission_still_does`).
+- **2026-11-01, the owner's decision "Confirmation plus undo"** (the observability and review-page batch, item 10). The
+  stages a person decides do not change: how a decision is confirmed on the review page, and how a mistaken one is
+  corrected, do. Records stay append-only: a correction is a later record, never an update or a deletion.
+  - **What a person confirms.** Dismiss and "I applied" on the review page (a posting's card, the shortlist card, the
+    NIGHT card) first show a confirmation page naming the posting: its title, employer and job id, with the channel
+    for "I applied" and the chosen reason for Dismiss. The dismiss reason has no preselected value; one must be chosen.
+    Only Confirm records; Cancel records nothing. While an assistance session for the role is open or uncertain,
+    "I applied" shows the `careeros assist close ...` command instead of Confirm (ADR 0009), and recording checks again.
+    The command line (`careeros dismiss`, `careeros applied`) names the job explicitly and asks nothing more.
+  - **Reinstating a dismissal.** A dismissal is undone by a later event, a reinstatement (`careeros dismiss JOB_ID
+    --undo`, or Undo in the review page's "Dismissed recently" section, through the same confirmation). It is a new
+    row in the append-only dismissals table; the latest event decides. Everything that reads dismissals (the
+    shortlist, package routing, the report, the label backlog, the daily summary and the analytics export) treats a
+    reinstated posting as not dismissed, and a later dismissal dismisses it again. The earlier dismissal stays in the
+    history (`careeros explain`).
+  - **Void applications.** An application recorded by mistake is voided: `void`, a state of the application workflow,
+    reachable only from the states no person at the employer has answered (`applied`, `acknowledged`, `ghosted`),
+    with a required reason (`careeros app-status APP void --reason "..."`, or "Void (recorded by mistake)" on the
+    application's card, through the same confirmation). A void application stays in the audit trail, the
+    applications list and the export's application rows. It leaves the funnel, the follow-up nudges,
+    `has_application`, the application counts and every "did I already apply?" check, so applying to the role
+    afterwards needs no re-application reason. A void is final.
+    *Note, 2026-11-01 (Codex CR-2026-11-01-OBS-REVIEW, F2):* "no person at the employer has answered" means never,
+    in the application's whole history, not only in its state now: an application that was ever responded,
+    screening, interviewing, final_interview or offer is never voided, even after it becomes `ghosted` (or
+    `acknowledged` after that). The writer, the confirmation and the Void control apply that one rule
+    (`void_refusal`); the states before an answer are read from the workflow's own void edges.
+  - **Unchanged.** Every record is the person's own statement; a reinstatement or a void is never made automatically;
+    nothing is deleted; no code submits an application.

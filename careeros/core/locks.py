@@ -9,6 +9,7 @@ import json
 import os
 import secrets
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -79,6 +80,26 @@ class SingleWriterLock:
 
     def __exit__(self, *_exc):
         self.release()
+
+
+def hold(path: Path) -> tuple[str, str] | None:
+    """(since, why) when the lock holds every later writer until you act (OPP-05, 2026-11-01): 'stale' when its process
+    is gone, the test `acquire` uses (cleared with `careeros unlock`), or 'unreadable' (inspect it by hand). `since` is the
+    lock file's time, UTC. None when there is no lock or its process still runs. Only reads: no lock is removed here."""
+    path = Path(path)
+    try:
+        taken = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+    except FileNotFoundError:
+        return None
+    since = taken.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    try:
+        owner = json.loads(path.read_text(encoding="utf-8"))
+        pid = int(owner.get("pid", 0))
+    except FileNotFoundError:   # released while it was read
+        return None
+    except (ValueError, OSError, AttributeError):
+        return since, "unreadable"
+    return None if pid_alive(pid) else (since, "stale")
 
 
 def force_unlock(path: Path) -> bool:

@@ -26,7 +26,7 @@ from pathlib import Path
 from unittest import mock
 
 from careeros import cli
-from careeros.analytics.export import SCHEMA_REVISION, SCHEMA_VERSION, TABLES, build, reconcile, validate
+from careeros.analytics.export import SCHEMA_REVISION, SCHEMA_VERSION, TABLES, build, kpis, reconcile, validate
 from careeros.demo import runner, sandbox
 from careeros.paths import ENGINE_ROOT
 
@@ -260,6 +260,59 @@ class DemoExportTest(unittest.TestCase):
         from careeros.review.dismiss import REASONS
         documented = next(line for line in DICTIONARY.read_text(encoding="utf-8").splitlines() if line.startswith("| `dismissal_reason` |"))
         self.assertEqual(re.findall(r"`(\w+)`", documented)[1:], list(REASONS))
+
+    def test_a_reinstatement_clears_the_exported_dismissal(self):
+        """The latest event decides (ADR 0007, amendment of 2026-11-01): after a reinstatement `is_dismissed` is 0 and its
+        date and reason are blank; a later dismissal sets them again. Same columns, so the same contract revision."""
+        from careeros.review.dismiss import dismiss, reinstate
+        from tests.test_job_lifecycle import jid, world
+        store, ctx = world()
+        dismiss(store, jid(1), "pay")
+        store.clock.advance(days=1)
+        reinstate(store, jid(1), "I misread the pay")
+        dismiss(store, jid(2), "location")
+        store.clock.advance(days=1)
+        reinstate(store, jid(2))
+        store.clock.advance(days=1)
+        dismiss(store, jid(2), "seniority")
+        tables = build(store, ctx.policy)
+        self.assertEqual([c for c in validate(tables) + reconcile(tables, store, ctx.policy) if not c["ok"]], [])
+        rows = {r["job_key"]: r for r in tables["fact_job_evaluation"]}
+        self.assertEqual((rows[jid(1)]["is_dismissed"], rows[jid(1)]["dismissed_date_key"], rows[jid(1)]["dismissal_reason"]),
+                         (0, None, None))
+        self.assertEqual((rows[jid(2)]["is_dismissed"], rows[jid(2)]["dismissal_reason"], rows[jid(2)]["dismissed_date_key"]),
+                         (1, "seniority", int(store.clock.now()[:10].replace("-", ""))))
+        self.assertNotIn("reinstated", json.dumps(tables))   # a reinstatement is never exported as a reason
+        documented = next(line for line in DICTIONARY.read_text(encoding="utf-8").splitlines() if line.startswith("| `is_dismissed` |"))
+        self.assertIn("reinstat", documented)
+
+    def test_a_void_application_stays_a_row_but_counts_nowhere(self):
+        """ADR 0007, amendment of 2026-11-01: fact_application keeps a void application (state void, never open, no
+        stage reached), and it counts nowhere an application counts: has_application, the Applications KPI and the
+        rates over it. Same columns, so the same contract revision; the dictionary lists the state."""
+        from careeros.review.applications import VOID, application_matrix, record_application, update_application
+        from tests.test_job_lifecycle import jid, world
+        store, ctx = world()
+        app = application_matrix()
+        mistaken = record_application(store, app, jid(1), "direct", policy=ctx.policy, key="a1")
+        record_application(store, app, jid(6), "direct", policy=ctx.policy, key="a2")   # another role
+        update_application(store, app, mistaken, VOID, reason="recorded on the wrong posting", key="v1")
+        tables = build(store, ctx.policy)
+        self.assertEqual([c for c in validate(tables) + reconcile(tables, store, ctx.policy) if not c["ok"]], [])
+        rows = {r["job_key"]: r for r in tables["fact_application"]}
+        self.assertEqual(len(tables["fact_application"]), 2)   # the void row is kept
+        void = rows[jid(1)]
+        self.assertEqual((void["current_state"], void["state_category"], void["is_open"], void["got_answer"],
+                          void["reached_interview"]), ("void", "cancelled", 0, 0, 0))
+        jobs = {r["job_key"]: r for r in tables["fact_job_evaluation"]}
+        self.assertEqual((jobs[jid(1)]["has_application"], jobs[jid(6)]["has_application"]), (0, 1))
+        figures = kpis(tables)
+        self.assertEqual((figures["applications"], figures["applications_open"]), (1, 1))
+        documented = next(line for line in DICTIONARY.read_text(encoding="utf-8").splitlines() if line.startswith("| `current_state` | text | `applied`"))
+        self.assertIn("`void`", documented)
+        spec = SPEC.read_text(encoding="utf-8")   # the Power BI measure counts the same way
+        self.assertIn('Applications = CALCULATE ( COUNTROWS ( fact_application ), KEEPFILTERS ( fact_application[current_state] <> "void" ) )',
+                      spec)
 
     def test_rows_marked_as_drills_or_tests_are_left_out(self):
         from tests.test_job_lifecycle import jid, world

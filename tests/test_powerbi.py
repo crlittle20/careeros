@@ -122,6 +122,22 @@ class PowerBIProjectTest(unittest.TestCase):
                 documented.add(match.group(1).strip())
         self.assertEqual(documented, {name for name, _, _ in pbi.MEASURES})
 
+    def test_applications_keeps_the_status_filter_of_its_chart(self):
+        """Codex CR-2026-11-01-OBS-REVIEW, F4: a Boolean filter in CALCULATE replaces any filter on the same column, so
+        "Applications by status" (fact_application[current_state] on its axis) and a status slicer would get every
+        non-void application on each status. The void exclusion is inside KEEPFILTERS, which narrows that filter
+        instead. (DAX is not run here: Power BI Desktop is not available to the tests.)"""
+        expected = 'CALCULATE ( COUNTROWS ( fact_application ), KEEPFILTERS ( fact_application[current_state] <> "void" ) )'
+        built = {name: expr for name, expr, _ in pbi.MEASURES}
+        committed = {m["name"]: m["expression"] for t in self.model["tables"] for m in t.get("measures", [])}
+        self.assertEqual((built["Applications"], committed["Applications"]), (expected, expected))
+        self.assertIn(f"Applications = {expected}", SPEC.read_text(encoding="utf-8"))
+        chart = next(v["visual"]["query"]["queryState"] for v in self.visuals if v["name"] == "pipe_apps")
+        self.assertEqual([p["field"]["Column"]["Property"] for p in chart["Category"]["projections"]], ["current_state"])
+        self.assertEqual([p["field"]["Measure"]["Property"] for p in chart["Y"]["projections"]], ["Applications"])
+        status_filters = re.findall(r"(KEEPFILTERS \( )?fact_application\[current_state\]", built["Applications"])
+        self.assertEqual(status_filters, ["KEEPFILTERS ( "])   # no filter on the chart's own column outside KEEPFILTERS
+
     def test_every_page_and_table_of_the_spec_is_built(self):
         self.assertEqual([p[1] for p in pbi.PAGES], ["Executive overview", "Employer intelligence", "Job pipeline", "Role intelligence",
                                                      "System quality"])

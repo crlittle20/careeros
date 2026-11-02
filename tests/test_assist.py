@@ -128,7 +128,7 @@ class SessionTests(Base):
         self.assertEqual(app["channel"], "direct")
         with self.assertRaisesRegex(assist.SessionRefused, "session_closed"):
             self.close(session["session_id"], "not_submitted", key="c2")
-        self.assertEqual(assist.report(self.store)["manual"]["median_minutes"], 12.5)
+        self.assertEqual(assist.report(self.store)["manual"]["job-boards.greenhouse.io"]["median_minutes"], 12.5)
 
     def test_evidence_belongs_only_to_a_submission(self):
         session = self.open()
@@ -151,8 +151,10 @@ class SessionTests(Base):
         for i in range(2):
             s = self.open(key=f"o{i}")
             self.close(s["session_id"], "not_submitted", key=f"c{i}", minutes=10 + i)
-        report = assist.report(self.store)["manual"]
-        self.assertEqual((report["sessions"], report["median_minutes"], report["measured_minutes"]), (2, 10.5, 2))
+        report = assist.report(self.store)["manual"]["job-boards.greenhouse.io"]
+        # OPP-04: abandoned sessions are counted, never measured (the medians are over submitted sessions only)
+        self.assertEqual((report["sessions"], report["not_submitted"], report["median_minutes"], report["measured_minutes"]),
+                         (2, 2, None, 0))
         self.assertIn("too small", report["sample"])
 
 
@@ -359,7 +361,7 @@ class CommandTests(Base):
         self.assertIn("1 session(s)", run("list", JOB))
         closed = run("close", session_id, outcome="submitted", evidence="confirmation_observed", minutes=9)
         self.assertIn("application app:", closed)
-        self.assertEqual(json.loads(run("report"))["manual"]["median_minutes"], 9.0)
+        self.assertEqual(json.loads(run("report"))["manual"]["job-boards.greenhouse.io"]["median_minutes"], 9.0)
 
 
 class CodexBatchReviewTests(Base):
@@ -582,6 +584,150 @@ class CodexPass2Tests(Base):
                                               f"you answer: {question['label']} (sensitive")) for r in data["review"]),
                             (question["label"], data["review"]))
         self.assertTrue(any(r.startswith("you answer: Do you need relocation assistance? (sensitive") for r in data["review"]))
+
+
+class SessionGuardTests(Base):
+    """OPP-77 (2026-11-01): while the role has a session open or uncertain, `careeros applied` and the review page's
+    "I applied" refuse and name the exact `careeros assist close SESSION --outcome submitted`, so the application is
+    recorded through the session with its evidence and measurements; `assist close` also takes the JOB_ID when its role
+    has exactly one session open or uncertain."""
+
+    def applied(self, job_id=JOB) -> str:
+        import argparse
+        from careeros.cli import cmd_applied
+        args = argparse.Namespace(job_id=job_id, channel="direct", agency=None, notes=None, reapply=None, confirm=None,
+                                  evidence="owner_attested")
+        with self.assertRaises(SystemExit) as refused:
+            cmd_applied(self.ctx, {}, args)
+        return str(refused.exception.code)
+
+    def test_applied_refuses_while_a_session_is_open_or_uncertain_and_names_the_close_command(self):
+        from careeros.review.applications import SessionOpen
+        from tests.helpers import add_job
+        sid = self.open()["session_id"]
+        command = f"careeros assist close {sid} --outcome submitted"
+        message = self.applied()
+        self.assertTrue(message.startswith(f"Not recorded: session_open: session {sid} (manual, opened "), message)
+        self.assertTrue(message.endswith(f"If you applied, record it by closing the session: {command}"), message)
+        add_job(self.store, "greenhouse:synth:1-variant", variant_of=JOB)   # the same role in another city
+        self.assertTrue(self.applied("greenhouse:synth:1-variant").endswith(command))
+        self.close(sid, "uncertain", notes="the page froze after Submit")
+        with self.assertRaisesRegex(SessionOpen, f"submission_uncertain: session {sid} .* ended uncertain") as caught:
+            record_application(self.store, APP, JOB, "direct", policy=POLICY, key="direct-1")
+        self.assertEqual(caught.exception.command, command)
+        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM applications")["c"], 0)
+        out = self.close(sid, "submitted", key="c2", minutes=11)   # the session records it, with its measurements
+        self.assertIsNotNone(out["application_id"])
+        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM applications")["c"], 1)
+
+    def test_a_session_closed_not_submitted_no_longer_holds_applied(self):
+        sid = self.open()["session_id"]
+        self.close(sid, "not_submitted")
+        self.assertTrue(record_application(self.store, APP, JOB, "direct", policy=POLICY, key="direct-1").startswith("app:"))
+
+    def test_the_review_page_i_applied_refuses_while_a_session_is_open(self):
+        import tempfile
+        import threading
+        from http.server import HTTPServer
+        from pathlib import Path
+
+        import httpx
+
+        from careeros.review.server import make_handler
+        from tests.test_applications import forms
+        sid = self.open()["session_id"]
+        token = "session-guard-token"
+        with tempfile.TemporaryDirectory() as tmp:
+            server = HTTPServer(("127.0.0.1", 0), make_handler(self.store, MID, POLICY, token, Path(tmp) / "writer.lock", {}))
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            base = f"http://127.0.0.1:{server.server_address[1]}"
+            try:
+                page = httpx.get(f"{base}/?t={token}").text
+                card = page[page.index(f'id="sl-{JOB}"'):]
+                target, key = next((t, k) for a, t, k in forms(card) if a == "apply")   # the shortlist card's "I applied"
+                reply = httpx.post(f"{base}/apply?t={token}", data={"target": target, "key": key, "channel": "direct", "agency": ""})
+                self.assertEqual(reply.status_code, 409)
+                self.assertIn(f"careeros assist close {sid} --outcome submitted</p>", reply.text)
+                self.assertEqual(self.store.one("SELECT COUNT(*) c FROM applications")["c"], 0)
+            finally:
+                server.shutdown()
+                server.server_close()
+
+    def test_assist_close_takes_the_job_id_when_its_role_has_exactly_one_open_session(self):
+        import argparse
+        import io
+        from contextlib import redirect_stdout
+
+        from careeros.cli import cmd_assist
+        with self.assertRaisesRegex(ValueError, "no_open_session"):
+            assist.session_for(self.store, JOB)
+        with self.assertRaisesRegex(ValueError, "unknown_session"):
+            assist.session_for(self.store, "ses:nope")
+        sid = self.open()["session_id"]
+        self.assertEqual((assist.session_for(self.store, JOB), assist.session_for(self.store, sid)), (sid, sid))
+        self.store.writer("assist").insert("assist_sessions", {   # a second open session in the role (never opened this way)
+            "session_id": "ses:second", "job_id": JOB, "package_id": self.store.one("SELECT package_id FROM packages")["package_id"],
+            "manifest_sha256": "0" * 64, "mode": "native", "role_json": "[]", "opened_at": self.store.clock.now(), "actor": "user"})
+        with self.assertRaisesRegex(ValueError, f"several_sessions: {sid} \\(open\\), ses:second \\(open\\)"):
+            assist.session_for(self.store, JOB)
+        self.close("ses:second", "not_submitted", key="c-second")
+        args = argparse.Namespace(action="close", target=JOB, mode="manual", outcome="submitted", evidence=None, minutes=8,
+                                  corrections=None, custom_questions=None, login_steps=None, notes=None, reapply=None, confirm=None)
+        out = io.StringIO()
+        with redirect_stdout(out):
+            cmd_assist(self.ctx, {}, args)
+        self.assertTrue(out.getvalue().startswith(f"closed {sid}: submitted; application app:"), out.getvalue())
+        self.assertEqual(assist.session_state(self.store, sid), "submitted")
+
+
+class ReportTests(Base):
+    """OPP-04 (2026-11-01): `careeros assist report` groups sessions by mode and by the destination host of their package,
+    takes its medians over submitted sessions only (not submitted and uncertain are counted apart), and shows the session
+    span, from opening to the first close, beside the minutes you reported."""
+
+    def session(self, job_id: str, mode: str, host: str, opened_minutes_ago: float, *closes) -> None:
+        """A session on a job of its own (one application per role), its package made for `host`, then its closes:
+        (outcome, minutes after opening, reported minutes)."""
+        from careeros.core.clock import format_utc
+        from tests.helpers import add_job
+        now = parse_utc(self.store.clock.now())
+        at = lambda minutes: format_utc(now - timedelta(minutes=opened_minutes_ago - minutes))
+        add_job(self.store, job_id)
+        manifest = json.dumps({"destination": {"host": host, "url": f"https://{host}/jobs/{job_id}"}})
+        writer = self.store.writer("assist")
+        writer.insert("packages", {"package_id": f"pkg:{job_id}", "job_id": job_id, "version": 1, "route": "apply",
+                                   "basis": "label", "manifest_sha256": "0" * 64, "manifest_json": manifest, "folder": "p",
+                                   "at": at(-60), "actor": "user"})
+        writer.insert("assist_sessions", {"session_id": f"ses:{job_id}", "job_id": job_id, "package_id": f"pkg:{job_id}",
+                                          "manifest_sha256": "0" * 64, "mode": mode, "role_json": "[]", "opened_at": at(0),
+                                          "actor": "user"})
+        for n, (outcome, after, minutes) in enumerate(closes):
+            writer.insert("assist_outcomes", {"outcome_id": f"aso:{job_id}:{n}", "session_id": f"ses:{job_id}",
+                                              "outcome": outcome, "evidence": "owner_attested" if outcome == "submitted" else None,
+                                              "minutes": minutes, "at": at(after), "actor": "user"})
+
+    def test_grouped_by_mode_and_destination_with_medians_over_submitted_sessions_only(self):
+        gh, lever = "job-boards.greenhouse.io", "jobs.lever.co"
+        self.session("gh:r:1", "manual", gh, 300, ("submitted", 20, 15))
+        self.session("gh:r:2", "manual", gh, 300, ("submitted", 30, 25))
+        self.session("gh:r:3", "manual", gh, 300, ("not_submitted", 5, 90))          # abandoned: counted, never in a median
+        self.session("gh:r:4", "manual", gh, 300, ("uncertain", 50, 60))             # uncertain: likewise
+        self.session("gh:r:5", "manual", gh, 300, ("uncertain", 40, None), ("submitted", 200, 35))   # reconciled later
+        self.session("gh:r:6", "manual", gh, 300)                                    # still open
+        self.session("gh:r:7", "manual", lever, 300, ("submitted", 12, 10))
+        self.session("gh:r:8", "assisted", gh, 300, ("submitted", 9, None))
+        report = assist.report(self.store)
+        self.assertEqual(sorted((mode, host) for mode in report for host in report[mode]),
+                         [("assisted", gh), ("manual", gh), ("manual", lever)])
+        manual = report["manual"][gh]
+        self.assertEqual({k: manual[k] for k in ("sessions", "open", "submitted", "not_submitted", "uncertain")},
+                         {"sessions": 6, "open": 1, "submitted": 3, "not_submitted": 1, "uncertain": 1})
+        self.assertEqual((manual["median_minutes"], manual["measured_minutes"]), (25.0, 3))         # 15, 25, 35
+        self.assertEqual((manual["median_span_minutes"], manual["measured_span_minutes"]), (30.0, 3))   # 20, 30 and 40 (first close)
+        self.assertIn("too small", manual["sample"])
+        self.assertEqual((report["manual"][lever]["median_minutes"], report["manual"][lever]["median_span_minutes"]), (10.0, 12.0))
+        assisted = report["assisted"][gh]
+        self.assertEqual((assisted["median_minutes"], assisted["measured_minutes"], assisted["median_span_minutes"]), (None, 0, 9.0))
 
 
 if __name__ == "__main__":

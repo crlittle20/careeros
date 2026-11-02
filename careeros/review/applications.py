@@ -13,6 +13,14 @@ cities) and at whether the duplicate search finished.
 Recording is history, not permission (R2, 2026-10-16): what you already did is never refused. A conflict, a possible
 duplicate, a submission hold (careeros.review.submission) or an unidentified employer only asks for your explanation and
 is kept with the record. Recording never releases a hold; `submission.authorize` decides whether anything may submit.
+
+A record made by mistake is voided, never deleted (ADR 0007, amendment of 2026-11-01): `void`, a state of the
+application workflow reachable before anyone at the employer answered (applied, acknowledged, ghosted), with your
+reason. The whole history decides, not only the state now: an application that was ever in an employer-answer stage
+(responded, screening, interviewing and later) is never voided, even once it is ghosted (`void_refusal`, 2026-11-01).
+A void application stays in the history and the applications list, and counts nowhere an application counts:
+`preflight` (so every "did I already apply?" check, and applying again needs no reason), the funnel, the follow-up
+nudges, `has_application` and the counts of the export, and the daily summary. Each of them asks through COUNTED.
 """
 from __future__ import annotations
 
@@ -35,6 +43,20 @@ class ApplicationConflict(ValueError):
     pass
 
 
+class SessionOpen(ApplicationConflict):
+    """The role has an assistance session still open or ended uncertain (OPP-77, 2026-11-01). If you applied through it,
+    closing it records the application with its evidence and measurements, so `careeros applied` and the review page's
+    "I applied" refuse and name the exact command (`command`)."""
+
+    def __init__(self, session: dict):
+        self.session_id = session["session_id"]
+        self.command = f"careeros assist close {self.session_id} --outcome submitted"
+        how = "session_open: session {} ({}, opened {}) is still open" if session["state"] == "open" else \
+            "submission_uncertain: session {} ({}, opened {}) ended uncertain"
+        super().__init__(how.format(self.session_id, session["mode"], session["opened_at"][:16]) +
+                         f" for this role. If you applied, record it by closing the session: {self.command}")
+
+
 class ApplicationHold(ApplicationConflict):
     """Recording needs an explicit acknowledgement: a re-application reason or a confirmation reason."""
 
@@ -54,6 +76,8 @@ def open_states(matrix: Matrix | None = None) -> tuple[str, ...]:
 
 
 OPEN_STATES = open_states()
+VOID = "void"   # recorded by mistake: kept, never counted (2026-11-01)
+COUNTED = f"current_state != '{VOID}'"   # SQL: an application that counts (every state but void)
 
 
 def role_group_resolved(store: Store, job_id: str, limit: int = 200) -> tuple[list[str], bool]:
@@ -89,7 +113,7 @@ class Preflight:
     job_id: str
     group: list[str]
     complete: bool
-    applications: list                       # every application in the role group, newest first, any state
+    applications: list                       # every application in the role group, newest first, any state but void
     open_applications: list                  # those still in play
     possible: list[str]                      # jobs outside the group that may be the same role and carry an application
     distinct: list[str] = field(default_factory=list)   # same-title postings with a different known requisition (shown only)
@@ -128,7 +152,7 @@ def _possible_matches(store: Store, job, group: list[str]) -> tuple[list[str], l
     possible: list[str] = []
     distinct: list[str] = []
     for other in sorted(linked - set(group)):
-        if not store.one("SELECT 1 FROM applications WHERE job_id = ? LIMIT 1", (other,)):
+        if not store.one(f"SELECT 1 FROM applications WHERE job_id = ? AND {COUNTED} LIMIT 1", (other,)):
             continue
         row = store.one("SELECT requisition_id FROM jobs WHERE job_id = ?", (other,))
         req = row["requisition_id"] if row else None
@@ -146,7 +170,8 @@ def preflight(store: Store, job_id: str, channel: str | None = None, agency: str
         raise ValueError("unknown_job")
     group, complete = role_group_resolved(store, job_id)
     marks = ",".join("?" * len(group))
-    apps = store.all(f"SELECT * FROM applications WHERE job_id IN ({marks}) ORDER BY applied_at DESC, rowid DESC", tuple(group))
+    apps = store.all(f"SELECT * FROM applications WHERE job_id IN ({marks}) AND {COUNTED} ORDER BY applied_at DESC, rowid DESC",
+                     tuple(group))   # a void application (a record made by mistake) is no application
     live = set(OPEN_STATES)
     open_apps = [a for a in apps if a["current_state"] in live]
     possible, distinct = _possible_matches(store, job, group)
@@ -217,11 +242,21 @@ def application_context(store: Store, job_id: str) -> dict:
 EVIDENCE = ("owner_attested", "confirmation_observed")   # your statement; you saw the employer's confirmation (ADR 0009)
 
 
+def sessions_waiting(store: Store, job_id: str, session: str | None = None) -> list[dict]:
+    """Assistance sessions in the role still open or ended uncertain, other than `session` (OPP-77): while there is one,
+    "I applied" records nothing and names its `assist close` command. The review page's confirmation checks this before
+    it offers Confirm, and recording checks it again (ADR 0007, amendment of 2026-11-01)."""
+    from .assist import role_sessions
+    return [s for s in role_sessions(store, job_id) if s["state"] in ("open", "uncertain") and s["session_id"] != session]
+
+
 def record_application(store: Store, matrix: Matrix, job_id: str, channel: str, *, policy, agency: str | None = None,
                        notes: str | None = None, key: str, reapply: str | None = None, confirm: str | None = None,
                        evidence: str = "owner_attested", session: str | None = None) -> str:
     """Record that you applied (your statement: evidence owner_attested, or confirmation_observed when you saw the
-    employer's confirmation; `session` names the assistance session it closes). Never refused for what already happened: it
+    employer's confirmation; `session` names the assistance session it closes). While another session in the role is open
+    or uncertain it refuses (SessionOpen) and names the `assist close` command that records it. Never refused for what
+    already happened: it
     waits for your reason when you applied to the role before (`reapply`), and for your explanation (`confirm`) when the
     role already has an application through this or another channel, it may duplicate another application, the duplicate
     check could not finish, a submission hold covers it or its employer isn't identified. Holds are read from `policy`
@@ -245,6 +280,9 @@ def record_application(store: Store, matrix: Matrix, job_id: str, channel: str, 
             payload["evidence"] = evidence
         if writer.receipt("record_application", key, payload, actor_id="user") == "replay":
             return "replay"
+        waiting = sessions_waiting(store, job_id, session)   # a session in progress is closed instead, never bypassed (OPP-77)
+        if waiting:
+            raise SessionOpen(waiting[-1])
         check = preflight(store, job_id, channel, agency)
         from .submission import HoldSettingsInvalid, agency_key, status as submission_status
         try:
@@ -285,14 +323,52 @@ def record_application(store: Store, matrix: Matrix, job_id: str, channel: str, 
     return app_id
 
 
-def update_application(store: Store, matrix: Matrix, app_id: str, to_state: str, *, notes: str | None = None, key: str) -> str:
+def unanswered_states(matrix: Matrix | None = None) -> frozenset[str]:
+    """The states before anyone at the employer answered, read from the workflow (config/workflows/application.json):
+    those it lets you void from (applied, acknowledged and ghosted). Every other state is an employer-answer stage or an
+    outcome after one (responded, screening, interviewing, final_interview, offer and the rest), so a workflow change is
+    never missed here."""
+    matrix = matrix or application_matrix()
+    return frozenset(frm for (frm, to) in matrix.edges if to == VOID)
+
+
+def void_refusal(store: Store, matrix: Matrix, app_id: str) -> str | None:
+    """Why the application can't be voided, or None when it can: the one rule for the writer (update_application), the
+    review page's confirmation and its Void control (Codex CR-2026-11-01-OBS-REVIEW, F2). Void is for a record made by
+    mistake, before anyone at the employer answered (ADR 0007, amendment of 2026-11-01): the current state must allow
+    it, and the application must never have been in an employer-answer stage. The current state alone is not enough:
+    ghosted, and acknowledged after it, are reached again after an answer."""
+    app = store.one("SELECT workflow_id, current_state FROM applications WHERE application_id = ?", (app_id,))
+    if app is None:
+        return "unknown_application"
+    if (app["current_state"], VOID) not in matrix.edges:
+        return f"transition_not_allowed: an application in state {app['current_state']} can't be voided"
+    entered = {r["to_state"] for r in store.all("SELECT to_state FROM transitions WHERE workflow_id = ?", (app["workflow_id"],))}
+    answered = sorted(entered - unanswered_states(matrix))
+    if answered:   # an employer answered at some point: ghosted or acknowledged now does not make it a mistake
+        return ("employer_answered: this application was " + ", ".join(s.replace("_", " ") for s in answered)
+                + " before; void is only for a record made before anyone at the employer answered")
+    return None
+
+
+def update_application(store: Store, matrix: Matrix, app_id: str, to_state: str, *, notes: str | None = None, key: str,
+                       reason: str | None = None) -> str:
+    """Move an application to its next state through the workflow. A move that needs a reason (`void`) takes it in
+    `reason`: kept as the transition's reason, checked again by `careeros verify`. Void also follows void_refusal: never
+    after an employer answered, whatever the state now."""
+    reason = (reason or "").strip()[:300] or None
     writer = store.writer("tracker")
     with store.tx():
-        if writer.receipt("update_application", key, {"app_id": app_id, "to": to_state, "notes": notes or ""}, actor_id="user") == "replay":
+        payload = {"app_id": app_id, "to": to_state, "notes": notes or "", **({"reason": reason} if reason else {})}
+        if writer.receipt("update_application", key, payload, actor_id="user") == "replay":
             return "replay"
+        if to_state == VOID:
+            refusal = void_refusal(store, matrix, app_id)
+            if refusal:
+                raise ValueError(refusal)
         try:
             writer.transition(matrix, app_id, to_state, entity="application", trigger_type="human", trigger_id="user",
-                              notes=(notes or "").strip()[:300] or None)
+                              reason_code=reason, notes=(notes or "").strip()[:300] or None)
         except TransitionRejected as exc:
             raise ValueError(exc.code) from exc
     return "new"

@@ -27,9 +27,9 @@ Prompt 4.
 | 8 | Fit | Weighted skill coverage, experience, seniority, education. | `qualify/scores.py` | `scores.candidate_fit`, `components_json` |
 | 9 | Career value | Pay against your target, progression, domain, stability. | `qualify/scores.py` | `scores.career_value` |
 | 10 | Route | A, B, near-miss or archive (A / B need an eligible state and minimum coverage); conditional / held states; the separate NIGHT profile. | `qualify/scores.py`, `qualify/night.py` | `scores.tier`, `scores.state`, `night_results` |
-| 11 | Action | You label (Apply / Stretch / Skip), dismiss with a reason, draft, or apply. | `review/*` | `labels`, `dismissals`, `applications` |
-| 12 | Status | The application moves through its own workflow (`config/workflows/application.json`). | `review/applications.py` | application transitions |
-| 13 | Outcome | Responded, screening, interviews, offer, accepted / declined, rejected, withdrawn, ghosted. | same | application state |
+| 11 | Action | You label (Apply / Stretch / Skip), dismiss with a reason, draft, or apply. On the review page, Dismiss and "I applied" record only after a confirmation naming the posting; a dismissal is undone by a later reinstatement, and the latest event decides (2026-11-01). | `review/*` | `labels`, `dismissals`, `applications` |
+| 12 | Status | The application moves through its own workflow (`config/workflows/application.json`). One recorded by mistake is voided with a reason (`void`, only if no one at the employer ever answered): kept in the history, never counted (2026-11-01). | `review/applications.py` | application transitions |
+| 13 | Outcome | Responded, screening, interviews, offer, accepted / declined, rejected, withdrawn, ghosted; or void (recorded by mistake). | same | application state |
 | 14 | Analytics | Funnel by source, metrics, label agreement. | `review/funnel.py`, `discovery_metrics.py`, `labels.py` | derived (read-only) |
 
 ## 2. The job state machine
@@ -87,7 +87,7 @@ whose current state disagrees with its history fails closed.
 | `process` with nothing new | Nothing changes: no transition, decision, score, NIGHT result or event. Each decision is keyed by the policy, profile and extraction fingerprints it was made under. |
 | The same postings scanned again | Only `last_seen_at` moves. Content is compared by fingerprint, so an unchanged posting is not re-read, re-judged or re-recorded. |
 | The same alert email or recommendation | Recognised by message / issue identity and canonical link. Never a second lead or job. |
-| A double click (label, application, status change) | Recorded once (idempotency receipts); a different payload under the same key is refused. |
+| A double click (label, application, status change, a confirmed dismissal) | Recorded once (idempotency receipts); a different payload under the same key is refused. |
 | `careeros explain` | Read-only. |
 | A policy, profile or rule-code change | **Intended** re-evaluation: every affected job goes back through screening and the rules once. Old decisions are kept as history. |
 
@@ -140,3 +140,7 @@ whose current state disagrees with its history fails closed.
 
 A question that does not apply says so and why ("not applicable: …"), so an explanation is never silently
 incomplete. The explanation reads recorded decisions only; it recomputes nothing.
+
+The text form starts with a verdict line (`review/explain.py: _verdict`, 2026-11-01), which is also the first line of
+the review card: a rejection's hard-failure codes, or the binding constraint for a scored job's tier with its value
+against the policy's current threshold (for example `Near-miss: priority 80.7 vs 85 for Tier B (4.3 short).`).

@@ -174,9 +174,83 @@ def _actions(store, job, state, score) -> dict:
             "next_action": nxt}
 
 
-def render(explanation: dict, job_id: str) -> str:
-    """Plain text for the command line: one block per question."""
-    lines = [f"Why {job_id} is where it is"]
+TIER_NAMES = {"A": "Tier A", "B": "Tier B", "near_miss": "near-miss", "archive": "archive"}
+
+
+def _num(value: float | None) -> str:
+    return "unset" if value is None else f"{round(value, 1):g}"   # a priority keeps its decimal (80.7); 85.0 reads 85
+
+
+def _verdict(store, policy, job_id: str) -> str:
+    """One sentence (OPP-03, 2026-11-01), first in `careeros explain` and on the review card, from the stored gate result
+    and score and the policy's current thresholds; nothing is recomputed. A rejection names every hard-failure code. A
+    scored job names the binding constraint for its tier, what keeps it from the next tier: the flag that made it
+    CONDITIONAL (or HOLD), skill coverage below the minimum, a stretch, Experience Match when enforced, or the priority
+    short of the next tier's threshold, each with its value against the threshold."""
+    job = store.one("SELECT job_id, current_state, duplicate_of FROM jobs WHERE job_id = ?", (job_id,))
+    if job is None:
+        raise ValueError(f"unknown job: {job_id}")
+    gate = store.one("SELECT * FROM gate_results WHERE job_id = ? ORDER BY at DESC, rowid DESC LIMIT 1", (job_id,))
+    score = store.one("SELECT * FROM scores WHERE job_id = ? ORDER BY at DESC, rowid DESC LIMIT 1", (job_id,))
+    state = job["current_state"]
+
+    def reason(to_state: str) -> str | None:
+        row = store.one("SELECT reason_code FROM transitions WHERE entity_id = ? AND to_state = ? ORDER BY sequence DESC LIMIT 1",
+                        (job_id, to_state))
+        return row["reason_code"] if row else None
+
+    if state == "rejected" or (gate is not None and gate["decision"] == "rejected"):
+        codes = [f.get("code") or "unnamed" for f in _loads(gate["hard_failures_json"], [])] if gate is not None else []
+        return "Rejected: " + ", ".join(dict.fromkeys(codes or [reason("rejected") or "no reason recorded"])) + "."
+    if score is None:
+        if state == "duplicate":
+            return f"Duplicate of {job['duplicate_of']}: judged with that posting, never on its own."
+        if state == "needs_review":
+            return f"Not scored: parked for your review ({reason('needs_review') or 'no reason recorded'})."
+        return f"Not scored yet (state {state})."
+    comps = _loads(score["components_json"], {})
+    tiers = policy.get("tiers", default={}) or {}
+    need = {k: (tiers.get(k) or {}).get("priority") for k in ("A", "B", "near_miss")}
+    minimum = tiers.get("skill_coverage_min", 0.0) or 0.0
+    tier, priority = score["tier"], score["apply_priority"] or 0.0
+    standing = score["state"] or comps.get("state")
+    name = TIER_NAMES.get(tier, tier)
+    if tier == "A":
+        return f"Tier A: priority {_num(priority)} meets the Tier A threshold of {_num(need['A'])}."
+    nxt = "A" if tier == "B" else "near_miss" if tier == "archive" else "B"
+    blockers = []
+    if nxt in ("A", "B"):   # Tier A/B also need state ELIGIBLE, the skill minimum and no stretch; near-miss needs priority only
+        if standing in ("CONDITIONAL", "HOLD"):
+            flags = [f.get("code") for f in _loads(gate["flags_json"], [])] if gate is not None else []
+            material = set(policy.get("eligibility_states", "material_unknowns", default=[]) or [])
+            named = [c for c in flags if (c == "held_d13" if standing == "HOLD" else c in material)] or flags
+            blockers.append(f"{standing} on {', '.join(dict.fromkeys(named)) or 'an unconfirmed fact'}, which keeps a posting "
+                            "out of Tier A/B")
+        coverage = comps.get("skill_coverage")
+        if coverage is not None and coverage < minimum:
+            blockers.append(f"skill coverage {coverage:.0%} vs the {minimum:.0%} minimum for Tier A/B")
+        if comps.get("stretch"):
+            blockers.append("a stretch (" + ("experience gap" if comps.get("stretch_reason") == "experience" else "degree required")
+                            + ") is shown with the near-misses, never as a top pick")
+        lowered = comps.get("experience") or {}
+        if lowered.get("enforced") and lowered.get("tier") not in (None, tier) and comps.get("stretch_reason") != "experience":
+            blockers.append(f"Experience Match (enforced) lowered it from {TIER_NAMES.get(lowered['tier'], lowered['tier'])} "
+                            f"({str(lowered.get('gap_class', '')).replace('_', ' ')})")
+    target = need.get(nxt)
+    if target is not None and priority < target:
+        blockers.append(f"priority {_num(priority)} vs {_num(target)} for {TIER_NAMES[nxt]} ({_num(target - priority)} short)")
+    elif blockers:   # priority alone would carry it up: say how far
+        reach = "A" if need["A"] is not None and priority >= need["A"] else nxt
+        blockers[-1] += f" (priority {_num(priority)} would reach {TIER_NAMES[reach]} at {_num(need[reach])})"
+    if not blockers:   # the stored tier predates the current thresholds
+        return (f"{name[0].upper() + name[1:]}: priority {_num(priority)} now meets {TIER_NAMES[nxt]}'s "
+                f"{_num(target or 0)}; it was scored under earlier thresholds.")
+    return f"{name[0].upper() + name[1:]}: " + "; ".join(blockers) + "."
+
+
+def render(explanation: dict, job_id: str, verdict: str | None = None) -> str:
+    """Plain text for the command line: the verdict line first (OPP-03), then one block per question."""
+    lines = ([f"Verdict: {verdict}"] if verdict else []) + [f"Why {job_id} is where it is"]
     for field in FIELDS:
         value = explanation[field]
         lines.append(f"\n{field.replace('_', ' ').upper()}")

@@ -3235,7 +3235,7 @@
           },
           {
             "name": "Applications",
-            "expression": "COUNTROWS ( fact_application )",
+            "expression": "CALCULATE ( COUNTROWS ( fact_application ), KEEPFILTERS ( fact_application[current_state] <> \"void\" ) )",
             "formatString": "#,0",
             "lineageTag": "092f49b1-130d-5169-ad07-7b848fe1d1f8"
           },

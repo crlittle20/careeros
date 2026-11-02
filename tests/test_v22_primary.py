@@ -58,8 +58,9 @@ class StateTests(unittest.TestCase):
                 "components_json": json.dumps({"eligibility": {"matched_skills": [], "missing_skills": []},
                                                "candidate_fit": {"matched_skills": []}, "state": state})})
         page = build_report(store, PROFILE, POLICY)
-        conditional = page[page.index("Conditional priority"):page.index("On hold")]
-        hold = page[page.index("On hold"):page.index("Near-miss")]
+        # by the section headings: a card's verdict line (OPP-03) may name a tier, e.g. "Near-miss: CONDITIONAL on ..."
+        conditional = page[page.index("<h2>Conditional priority"):page.index("<h2>On hold")]
+        hold = page[page.index("<h2>On hold"):page.index("<h2>Near-miss")]
         self.assertIn("Claims Analyst One", conditional)
         self.assertIn("Claims Analyst Two", hold)
         self.assertIn("Tier A: exceptional (0)", page)

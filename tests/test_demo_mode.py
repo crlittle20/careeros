@@ -307,8 +307,9 @@ class DemoTourTest(unittest.TestCase):
                   ("sources", "explain", "greenhouse:quillon"): ["status=rejected", "identity=mismatch",
                                                                  "board names another company: Quillon Logistics"],
                   ("explain", "greenhouse:meridianrx:102"): ["decision: duplicate", "of: greenhouse:meridianrx:101", "reason: same_requisition"],
-                  ("explain", "greenhouse:meridianrx:101"): ["tier: near_miss", "apply_priority: 80.7"],
-                  ("shortlist",): ["Pharmacy Claims Analyst | Meridian Rx | open | tier B ELIGIBLE"],
+                  ("explain", "greenhouse:meridianrx:101"): ["tier: near_miss", "apply_priority: 80.7",
+                                                         "Verdict: Near-miss: priority 80.7 vs 85 for Tier B (4.3 short)."],
+                  ("shortlist",): ["greenhouse:meridianrx:108 | Pharmacy Claims Analyst | Meridian Rx | open | tier B ELIGIBLE"],
                   ("verify",): ['"event_chain_breaks": []'],
                   ("export",): ["all 81 checks passed"]}
         flat = lambda text: " ".join(text.split())

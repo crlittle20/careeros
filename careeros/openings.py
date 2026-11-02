@@ -131,7 +131,10 @@ def application_status(store: Store, job_id: str) -> dict:
     check = preflight(store, job_id)
     group = check.group or [job_id]
     marks = ",".join("?" * len(group))
-    dismissed = store.one(f"SELECT * FROM dismissals WHERE job_id IN ({marks}) ORDER BY at DESC LIMIT 1", tuple(group))
+    # the latest dismissal in force in the role group: a posting whose latest event is a reinstatement is not dismissed
+    from careeros.review.dismiss import dismissed_sql
+    dismissed = store.one(f"SELECT * FROM dismissals x WHERE x.job_id IN ({marks}) AND {dismissed_sql('x.job_id')} "
+                          "ORDER BY x.at DESC, x.rowid DESC LIMIT 1", tuple(group))
     return {"applied": check.applications[0] if check.applications else None,
             "possibly_applied": sorted(check.possible + check.distinct), "dismissed": dismissed, "complete": check.complete,
             "checks": check.reasons}

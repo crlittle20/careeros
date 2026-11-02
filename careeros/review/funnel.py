@@ -5,6 +5,7 @@ recommended (Tier A/B/near-miss in PRIMARY or NIGHT) -> approved (your Apply/Str
 rejected / closed / withdrawn / ghosted / declined. Every application's furthest stage is read from its audited history.
 Automatic confirmations ("acknowledged") never count as a response; "responded" or any later stage does. Rates use
 applications as the denominator. Small samples are labelled as such: one result is an observation, not a trend.
+A void application (recorded by mistake, 2026-11-01) is no application: it never enters the funnel.
 Nothing here changes a rule: the funnel informs your decisions, it never tunes CareerOS by itself.
 """
 from __future__ import annotations
@@ -29,8 +30,9 @@ SMALL_SAMPLE = 10
 
 
 def applications_with_stages(store: Store) -> list[dict]:
+    from .applications import COUNTED
     out = []
-    for app in store.all("SELECT * FROM applications ORDER BY applied_at"):
+    for app in store.all(f"SELECT * FROM applications WHERE {COUNTED} ORDER BY applied_at"):
         seen = {r["to_state"] for r in store.all("SELECT to_state FROM transitions WHERE workflow_id = ?", (app["workflow_id"],))}
         seen.add(app["current_state"])
         context = json.loads(app["context_json"] or "{}")
