@@ -4,7 +4,7 @@ from __future__ import annotations
 import unittest
 from types import SimpleNamespace
 
-from careeros.discovery.posting_evidence import verify_posting
+from careeros.discovery.posting_evidence import board_mapping_trusted, verify_posting
 
 CHECKED_AT = "2026-11-08T15:00:00Z"
 
@@ -45,6 +45,26 @@ class PostingEvidenceTests(unittest.TestCase):
         self.assertEqual(self.evidence(explicitly_accepting_applications=active).state, "active_verified")
         self.assertEqual(self.evidence(trusted=False, explicitly_accepting_applications=active).state,
                          "listed_board_unverified")
+        verified = {
+            "ats": "greenhouse", "board_token": "synth", "collection": "allowed",
+            "verification_status": "active", "identity_status": "verified", "paused_reason": None,
+        }
+        self.assertTrue(board_mapping_trusted(verified, "greenhouse", "synth"))
+        self.assertTrue(board_mapping_trusted(verified, "greenhouse", "SYNTH"))
+        self.assertFalse(board_mapping_trusted(None, "greenhouse", "synth"))
+        self.assertFalse(board_mapping_trusted(verified, "workday", "synth"))
+        self.assertFalse(board_mapping_trusted(verified, "lever", "synth"))
+        self.assertFalse(board_mapping_trusted(verified, "greenhouse", "different-company"))
+        for field, bad in (
+            ("verification_status", "candidate"),
+            ("verification_status", "verification_required"),
+            ("identity_status", "unresolved"),
+            ("collection", "manual_only"),
+            ("paused_reason", "identity changed"),
+        ):
+            with self.subTest(field=field, bad=bad):
+                untrusted = {**verified, field: bad}
+                self.assertFalse(board_mapping_trusted(untrusted, "greenhouse", "synth"))
 
     def test_unrecognized_platform_remains_unverified(self):
         self.assertEqual(self.evidence(url="https://workday/demo/123").state, "needs_manual_verification")
