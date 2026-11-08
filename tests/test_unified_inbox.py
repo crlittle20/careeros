@@ -77,6 +77,51 @@ class NeutralIntakeTests(unittest.TestCase):
             fixture.tearDown()
 
 
+    @mock.patch("careeros.discovery.posting_evidence.board_mapping_trusted", return_value=True)
+    def test_unified_night_only_posting_reaches_independent_night_assessment(self, _trust):
+        import httpx
+
+        from careeros.discovery.http import HttpClient
+        from careeros.pipeline import process
+        from tests import postings
+        from tests.test_pipeline import gh_job
+
+        fixture = PullTests(methodName="test_issue_is_graded_answered_closed_and_never_reread")
+        fixture.setUp()
+        transport = httpx.MockTransport(
+            lambda request: httpx.Response(
+                200, json=gh_job(555, "Night Auditor", postings.GOOD_FIT, req="N-555")
+            )
+        )
+        client = HttpClient(transport=transport, min_interval=0, sleep=lambda secs: None)
+        try:
+            body = (
+                "Night Auditor | Synthetic Health | Remote (US) | "
+                "https://job-boards.greenhouse.io/synth/jobs/555 | source=test"
+            )
+            row = issue(number=781, body=body)
+            row["title"] = "INTAKE Job recommendations 2026-11-08"
+            gh = FakeGh([row])
+            with mock.patch.object(inbox, "gh_path", lambda: "gh"), \\
+                 mock.patch("careeros.qualify.night.enabled", return_value=True):
+                counts = _inbox_pull(fixture.ctx, client, REPO, runner=gh)
+                self.assertEqual(counts["inbox_issues"], 1)
+                process(fixture.ctx)
+            job = fixture.store.one(
+                "SELECT job_id, title FROM jobs WHERE external_id = '555'"
+            )
+            self.assertIsNotNone(job)
+            self.assertEqual(job["title"], "Night Auditor")
+            assessment = fixture.store.one(
+                "SELECT decision, family FROM night_results WHERE job_id = ? ORDER BY at DESC LIMIT 1",
+                (job["job_id"],),
+            )
+            self.assertIsNotNone(assessment)
+            self.assertEqual(assessment["family"], "back_office_operations")
+        finally:
+            client.close()
+            fixture.tearDown()
+
     def test_unified_unverified_ats_remains_review_lead(self):
         fixture = PullTests(methodName="test_issue_is_graded_answered_closed_and_never_reread")
         fixture.setUp()
