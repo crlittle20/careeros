@@ -476,8 +476,20 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
             title_norm = norm(link.text)
             if profile == "night":
                 family = None if excluded_term(title_norm, excluded) else night_family(title_norm, ctx.policy)
+                storage_profile = "night"
+            elif profile == "unified":
+                # Route once for intake storage; the independent NIGHT processor
+                # evaluates all tracked jobs when enabled.
+                if excluded_term(title_norm, excluded):
+                    primary_family = night_only_family = None
+                else:
+                    primary_family = classify_family(title_norm, families)
+                    night_only_family = night_family(title_norm, ctx.policy)
+                family = primary_family or night_only_family
+                storage_profile = "night" if night_only_family and not primary_family else "primary"
             else:
                 family = None if excluded_term(title_norm, excluded) else classify_family(title_norm, families)
+                storage_profile = "primary"
             if not (link.job_like or family):  # navigation, settings and other links that are not postings
                 note(link, "not_a_job_link")
                 continue
@@ -488,7 +500,7 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
                 continue
             row = {"lead_id": lid, "url": link.url, "site": link.site, "title": link.text, "title_norm": title_norm, "family": family,
                    "context": link.context or None, "sender": alert.sender or None, "subject": alert.subject or None,
-                   "received_at": alert.received_at, "first_seen_at": now, "status": "new", "job_id": None, "profile": profile}
+                   "received_at": alert.received_at, "first_seen_at": now, "status": "new", "job_id": None, "profile": storage_profile}
             from careeros.discovery import sources
             known = _known_job(ctx, link.url)
             parsed = parse_job_url(link.url)
@@ -526,7 +538,8 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
                                url=link.url, requisition_id=fields.get("req"), title=link.text, company=_company_name(link.context),
                                pay_text=fields.get("pay"), published_at=None)
             counts["lead_ingested" if row["status"] == "ingested" else ("lead_new" if family else "lead_other_family")] += 1
-            note(link, outcome or ("lead" if family else "outside_target_families"))
+            note(link, outcome or ("review_lead" if profile == "unified" and not family
+                                   else "lead" if family else "outside_target_families"))
         except Exception as exc:  # noqa: BLE001 - recorded for you to see in status
             writer.exception("data_quality", "medium", f"alert line not processed: {type(exc).__name__}: {exc}",
                              error_code="alert_line_failed")
@@ -676,10 +689,11 @@ def _inbox_pull(ctx: Context, client: HttpClient, repo: str, runner=None) -> Cou
         if ctx.store.one("SELECT 1 FROM inbox_issues WHERE repo = ? AND number = ?", (repo, issue["number"])):
             continue
         profile = inbox.issue_profile(issue)
-        if profile == "night" and not night.enabled(ctx.policy):
-            # Never graded with PRIMARY rules: left open and untouched until the NIGHT profile is switched on.
+        if profile in ("night", "unified") and not night.enabled(ctx.policy):
+            # A neutral intake may contain NIGHT-only jobs. Never silently
+            # treat it as PRIMARY when the NIGHT evaluator is unavailable.
             counts["inbox_night_waiting"] += 1
-            print(f"  issue #{issue['number']} is a NIGHT issue: left open (NIGHT profile is off)")
+            print(f"  issue #{issue['number']} needs NIGHT evaluation: left open (NIGHT profile is off)")
             continue
         try:  # one unreadable issue never stops the others; it stays open and is retried next run
             alert, outcomes = inbox.issue_alert(issue), []
