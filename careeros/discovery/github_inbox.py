@@ -31,6 +31,7 @@ OUTCOME_TEXT = {
     "lead": "lead: CareerOS does not open this site, so it is listed for the owner to open",
     "outside_target_families": "outside target families",
     "review_lead": "ungraded lead for owner review",
+    "board_unverified": "lead: employer-to-ATS board ownership not yet verified",
     "seen_before": "seen before",
     "unreadable_kept_as_lead": "could not read the posting (kept as a lead)",
     "no_title": "skipped: no job title on the line",
