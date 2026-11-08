@@ -76,5 +76,43 @@ class NeutralIntakeTests(unittest.TestCase):
             fixture.tearDown()
 
 
+    def test_unified_malformed_row_left_open_then_retried(self):
+        fixture = PullTests(methodName="test_issue_is_graded_answered_closed_and_never_reread")
+        fixture.setUp()
+        try:
+            good = (
+                "Pharmacy Benefits Systems Analyst | Synthetic Health | Remote (US) | "
+                "https://job-boards.greenhouse.io/synth/jobs/555 | source=test"
+            )
+            bad = (
+                "Claims Data Analyst | Example Company | Remote | "
+                "https://[invalid]/jobs/999 | source=test"
+            )
+            row = issue(number=779, body=good + "\n" + bad)
+            row["title"] = "INTAKE Job recommendations 2026-11-08"
+            gh = FakeGh([row])
+            with mock.patch.object(inbox, "gh_path", lambda: "gh"), \\
+                 mock.patch("careeros.qualify.night.enabled", return_value=True):
+                first = _inbox_pull(fixture.ctx, fixture.client, REPO, runner=gh)
+                self.assertEqual(first["inbox_unresolved_rows"], 1)
+                self.assertEqual(first["inbox_issues"], 0)
+                self.assertFalse(row.get("closed"))
+                self.assertEqual(len(fixture.fetched), 1)
+                self.assertEqual(
+                    fixture.store.one("SELECT COUNT(*) AS c FROM leads")["c"], 1
+                )
+                # The owner fixes the bad line. Existing good rows must not
+                # generate duplicate network fetches or duplicate lead rows.
+                row["body"] = good
+                second = _inbox_pull(fixture.ctx, fixture.client, REPO, runner=gh)
+                self.assertEqual(second["inbox_issues"], 1)
+                self.assertEqual(len(fixture.fetched), 1)
+                self.assertTrue(row.get("closed"))
+                self.assertEqual(
+                    fixture.store.one("SELECT COUNT(*) AS c FROM leads")["c"], 1
+                )
+        finally:
+            fixture.tearDown()
+
 if __name__ == "__main__":
     unittest.main()
