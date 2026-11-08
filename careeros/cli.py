@@ -515,12 +515,18 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
                 # leave a lead for employer/board verification.
                 from careeros.discovery.board_registry import mapping_for_board
                 from careeros.discovery.posting_evidence import board_mapping_trusted
-                board_ats, board_token, _ = parse_job_url(board_url)
-                mapping = mapping_for_board(ctx.store, board_ats, board_token)
-                if not board_mapping_trusted(dict(mapping) if mapping else None, board_ats, board_token):
-                    counts["unified_board_unverified"] += 1
+                board_parts = parse_job_url(board_url)
+                if board_parts is None:
                     unverified_board = True
                     board_url = None
+                    counts["unified_board_unverified"] += 1
+                else:
+                    board_ats, board_token, _ = board_parts
+                    mapping = mapping_for_board(ctx.store, board_ats, board_token)
+                    if not board_mapping_trusted(dict(mapping) if mapping else None, board_ats, board_token):
+                        counts["unified_board_unverified"] += 1
+                        unverified_board = True
+                        board_url = None
             if not known and not board_url:
                 known = _ledger_match(ctx, link, title_norm)
                 if not known and _ledger_lead(ctx, link, title_norm):
