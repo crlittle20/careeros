@@ -698,6 +698,16 @@ def _inbox_pull(ctx: Context, client: HttpClient, repo: str, runner=None) -> Cou
         try:  # one unreadable issue never stops the others; it stays open and is retried next run
             alert, outcomes = inbox.issue_alert(issue), []
             counts.update(_record_alert(ctx, alert, client, outcomes, profile=profile))
+            if profile == "unified":
+                # A malformed or failed row was never safely recorded. Keep the
+                # neutral issue open so it can be corrected/retried; any valid
+                # rows already received are idempotently recognized next time.
+                unresolved = sum(outcome in ("malformed_row", "row_error", "no_title")
+                                 for _, outcome in outcomes)
+                if unresolved:
+                    counts["inbox_unresolved_rows"] += unresolved
+                    print(f"  ! issue #{issue['number']} has {unresolved} unresolved row(s): kept open for retry")
+                    continue
             gmail = inbox.gmail_status(issue.get("body") or "")
             reply = inbox.reply_text(ctx.store.clock.now()[:10], outcomes, gmail)
             writer.insert("inbox_issues", {"repo": repo, "number": issue["number"], "processed_at": ctx.store.clock.now(),
