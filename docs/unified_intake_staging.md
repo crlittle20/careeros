@@ -6,7 +6,9 @@ Status: **unmerged experimental branch**. Do **not** enable neutral INTAKE publi
 
 - `careeros/discovery/github_inbox.py` recognizes explicit `INTAKE ...` and `TEST INTAKE ...` titles while keeping legacy PRIMARY/NIGHT interpretation.
 - `careeros/cli.py` handles neutral issue rows using both PRIMARY and NIGHT title-family detection. An issue stays open when NIGHT is disabled; no silent fallback to PRIMARY.
-- `careeros/discovery/posting_evidence.py` defines conservative source-evidence states, with provider fetcher and employer-board trust injected by the eventual integration. It makes **no network calls** and is **not wired** to ingestion.
+- Malformed or failed neutral job rows keep the issue open for correction and retry; successfully accepted rows remain idempotent on subsequent pulls.
+- Neutral issues only auto-fetch supported ATS postings if `board_mappings` already has an active, independently identity-verified, unpaused employer-to-ATS mapping. Other links become review leads. The legacy intake path is unchanged.
+- `careeros/discovery/posting_evidence.py` defines conservative source-evidence states and the strict board-mapping trust predicate. The evidence checker itself makes **no network calls** and is **not yet wired** to full posting-activity verification.
 - `tests/test_unified_inbox.py` and `tests/test_posting_evidence.py` cover the staged behavior using fake GitHub/ATS sources.
 
 ## Architecture and rollout
