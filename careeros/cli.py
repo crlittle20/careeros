@@ -507,6 +507,20 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
             board_url = link.url if parsed else greenhouse_candidate(link.url)
             if board_url and sources.status(parse_job_url(board_url)[0]) != "allowed":
                 board_url = None  # the source is manual or blocked under the current site policy: list it, never fetch it
+            unverified_board = False
+            if profile == "unified" and board_url:
+                # A working ATS API does not prove that this is the named
+                # employer's board. Only a separately approved active mapping
+                # can authorize automatic neutral-intake fetching; otherwise
+                # leave a lead for employer/board verification.
+                from careeros.discovery.board_registry import mapping_for_board
+                from careeros.discovery.posting_evidence import board_mapping_trusted
+                board_ats, board_token, _ = parse_job_url(board_url)
+                mapping = mapping_for_board(ctx.store, board_ats, board_token)
+                if not board_mapping_trusted(dict(mapping) if mapping else None, board_ats, board_token):
+                    counts["unified_board_unverified"] += 1
+                    unverified_board = True
+                    board_url = None
             if not known and not board_url:
                 known = _ledger_match(ctx, link, title_norm)
                 if not known and _ledger_lead(ctx, link, title_norm):
@@ -538,7 +552,8 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
                                url=link.url, requisition_id=fields.get("req"), title=link.text, company=_company_name(link.context),
                                pay_text=fields.get("pay"), published_at=None)
             counts["lead_ingested" if row["status"] == "ingested" else ("lead_new" if family else "lead_other_family")] += 1
-            note(link, outcome or ("review_lead" if profile == "unified" and not family
+            note(link, outcome or ("board_unverified" if unverified_board
+                                   else "review_lead" if profile == "unified" and not family
                                    else "lead" if family else "outside_target_families"))
         except Exception as exc:  # noqa: BLE001 - recorded for you to see in status
             writer.exception("data_quality", "medium", f"alert line not processed: {type(exc).__name__}: {exc}",
