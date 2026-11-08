@@ -102,7 +102,7 @@ class NeutralIntakeTests(unittest.TestCase):
             row = issue(number=781, body=body)
             row["title"] = "INTAKE Job recommendations 2026-11-08"
             gh = FakeGh([row])
-            with mock.patch.object(inbox, "gh_path", lambda: "gh"), \\
+            with mock.patch.object(inbox, "gh_path", lambda: "gh"), \
                  mock.patch("careeros.qualify.night.enabled", return_value=True):
                 counts = _inbox_pull(fixture.ctx, client, REPO, runner=gh)
                 self.assertEqual(counts["inbox_issues"], 1)
@@ -133,7 +133,7 @@ class NeutralIntakeTests(unittest.TestCase):
             row = issue(number=780, body=body)
             row["title"] = "INTAKE Job recommendations 2026-11-08"
             gh = FakeGh([row])
-            with mock.patch.object(inbox, "gh_path", lambda: "gh"), \\
+            with mock.patch.object(inbox, "gh_path", lambda: "gh"), \
                  mock.patch("careeros.qualify.night.enabled", return_value=True):
                 counts = _inbox_pull(fixture.ctx, fixture.client, REPO, runner=gh)
             self.assertEqual(counts["unified_board_unverified"], 1)
@@ -166,7 +166,7 @@ class NeutralIntakeTests(unittest.TestCase):
             row = issue(number=779, body=good + "\n" + bad)
             row["title"] = "INTAKE Job recommendations 2026-11-08"
             gh = FakeGh([row])
-            with mock.patch.object(inbox, "gh_path", lambda: "gh"), \\
+            with mock.patch.object(inbox, "gh_path", lambda: "gh"), \
                  mock.patch("careeros.qualify.night.enabled", return_value=True):
                 first = _inbox_pull(fixture.ctx, fixture.client, REPO, runner=gh)
                 self.assertEqual(first["inbox_unresolved_rows"], 1)
