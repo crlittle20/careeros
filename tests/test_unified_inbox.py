@@ -117,7 +117,7 @@ class NeutralIntakeTests(unittest.TestCase):
                 (job["job_id"],),
             )
             self.assertIsNotNone(assessment)
-            self.assertEqual(assessment["family"], "back_office_operations")
+            self.assertEqual(assessment["family"], "quality_audit")  # NIGHT family precedence
         finally:
             client.close()
             fixture.tearDown()
