@@ -11,7 +11,7 @@ One ChatGPT discovery **task** obtains permitted fresh job facts once, deduplica
 ## One extraction, two routing outputs
 
 1. Fetch the newest `README.md`, `intake_status.json`, full or sharded `seen_jobs` index and all relevant repo issue history before processing. Respect current GitHub read pagination. Cache/aggregate issue history within the run instead of re-fetching it for each candidate. Read issue comments where required to check the full delivery/ingestion history; a closed issue is not proof the job was ingested. `SUPERVISOR` is a shared review category, not a third issue transport.
-2. Search only the Gmail job-alert providers, subjects and allowed fields already authorized. Never read private recruiter conversations, individual application acknowledgments, interview invitations or other correspondence. Process all discovered permitted messages, all eligible email bodies and every identifiable posting card. **25-job issue caps are not raw email-card extraction limits.** Count and report incomplete units accurately.
+2. Search only the Gmail job-alert providers, subjects and allowed fields already authorized. Never read private recruiter conversations, individual application acknowledgments, interview invitations or other correspondence. Process all discovered permitted messages, all eligible email bodies and every identifiable posting card. **Delivery caps are not raw email-card extraction limits.** Count and report incomplete units accurately.
 3. Use one shared collection of job identities, titles, employers, requisition IDs, schedule statements, pay evidence, location and URLs. Do not invent a requisition ID, shift, salary, active posting status or employer trust.
 4. Route each job into PRIMARY, NIGHT or both based on **objective factual rules**. PRIMARY covers roles that satisfy the user's privately configured country, state, remote-work and job-family rules; never disclose private state or role preferences in public code or docs. NIGHT covers jobs meeting the separately authorized location and schedule profile, including uncertain schedules for conditional review under existing private policy. Classify NIGHT-SUPPLEMENTAL versus NIGHT-REPLACEMENT only from affirmative schedule + employment evidence; otherwise identify uncertainty, not certainty. Candidate fit/tier and final decision belong solely to CareerOS.
 5. Preserve **all** privately configured employer/application restrictions, including named excluded employers, existing employer-family holds, recruiter/RTR conflicts, excluded job categories, and privacy rules. Never publish these private values or their reasons. Unverified home-state eligibility, unknown work hours and unposted pay are not evidence to invent a rejection.
@@ -25,7 +25,7 @@ One ChatGPT discovery **task** obtains permitted fresh job facts once, deduplica
 - PRIMARY title: `PRIMARY Job recommendations YYYY-MM-DD`.
 - NIGHT title: `NIGHT Job recommendations YYYY-MM-DD`.
 - Body starts with the approved immutable `<!-- careeros-batch-id: ... -->` comment and has only the established `Title | Company | Location | Link | Note` rows, with every job row among the first 200 lines, plus exactly one `Gmail status: ok|partial|unavailable` line. Each row uses the established allowed source/mode/schedule/pay/requisition note fields. No private score, identity, compensation floor explanation, raw email, message ID, sender address, personal profile or task diagnostics in the repo.
-- Enforce the existing PRIMARY maximum of **25** at the previously authorized delivery boundary and the actual NIGHT limit from its policy. Do not assume NIGHT has the same quota or that multiple issues permit unlimited jobs.
+- Enforce the existing private PRIMARY maximum at its authorized delivery boundary and the actual private NIGHT limit from its policy. Do not assume NIGHT has the same quota or that multiple issues permit unlimited jobs.
 - Freeze each batch ID, list of rows, target profile and issue title before the write. If creation returns uncertainty, search GitHub for the frozen batch ID and exact contents *before* retrying; never duplicate an uncertain issue. Read the newly created issue back, verify title, batch marker, row count and content. Report only the verified published count. A published issue does **not** imply CareerOS consumed or approved it.
 
 ## Execution-limit and Gmail recovery
@@ -38,7 +38,7 @@ One ChatGPT discovery **task** obtains permitted fresh job facts once, deduplica
 
 ## Scheduling caveat
 
-One **task** does not necessarily mean one **run**. The current automations cover NIGHT 6:30 AM, PRIMARY 8:30 AM and PRIMARY PM 8 PM America/Chicago. A single daily run will reduce coverage/freshness. Decide the new cadence with the owner; ensure tasks can actually represent it and that the desktop CareerOS consumption window still makes sense. Do not modify schedules until explicitly authorized.
+One **task** does not necessarily mean one **run**. The existing automation schedules cover multiple independent morning/evening windows; do not publish exact user schedules in public documentation. A single daily run will reduce coverage/freshness. Decide the new cadence with the owner; ensure tasks can actually represent it and that the desktop CareerOS consumption window still makes sense. Do not modify schedules until explicitly authorized.
 
 ## Mandatory acceptance tests
 
@@ -51,6 +51,6 @@ One **task** does not necessarily mean one **run**. The current automations cove
 7. NIGHT supplemental and replacement classification is factual and never substitutes for CareerOS scoring.
 8. Never process recruiter correspondence or expose private mail/individual candidate information to GitHub.
 9. The desktop reports consumer receipt and separate PRIMARY/NIGHT assessment after a real supported-source intake.
-10. Run one test with zero jobs, one with more than 25 extracted candidates, one with unavailable Gmail, and one with overloaded GitHub history.
+10. Run one test with zero jobs, one with more extracted candidates than the configured delivery cap, one with unavailable Gmail, and one with overloaded GitHub history.
 
 Do **not** activate as-is. Preserve all existing task policies as source-of-truth and obtain a final full-policy diff and owner-controlled cutover.
