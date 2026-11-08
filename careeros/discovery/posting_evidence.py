@@ -12,6 +12,25 @@ from typing import Any, Callable
 SUPPORTED = frozenset({"greenhouse", "lever", "ashby", "workable"})
 
 
+def board_mapping_trusted(mapping: dict | None, ats: str, token: str) -> bool:
+    """Require an independently approved employer↔ATS mapping, not just an API response.
+
+    An existing board can be marked active through an authorized override, but
+    must still have verified identity and no suspension. A legacy board granted
+    scanning grace is never automatically trusted as independently verified.
+    """
+    if not mapping or ats not in SUPPORTED:
+        return False
+    return bool(
+        mapping.get("verification_status") == "active"
+        and mapping.get("identity_status") == "verified"
+        and mapping.get("collection") == "allowed"
+        and not mapping.get("paused_reason")
+        and str(mapping.get("ats") or "").lower() == ats.lower()
+        and str(mapping.get("board_token") or "").lower() == token.lower()
+    )
+
+
 @dataclass(frozen=True)
 class PostingEvidence:
     source_url: str
