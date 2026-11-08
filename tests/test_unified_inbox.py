@@ -45,7 +45,8 @@ class NeutralIntakeTests(unittest.TestCase):
         finally:
             fixture.tearDown()
 
-    def test_unified_retains_night_only_leads(self):
+    @mock.patch("careeros.discovery.posting_evidence.board_mapping_trusted", return_value=True)
+    def test_unified_retains_night_only_leads(self, _trusted_board):
         fixture = PullTests(methodName="test_issue_is_graded_answered_closed_and_never_reread")
         fixture.setUp()
         try:
@@ -76,7 +77,36 @@ class NeutralIntakeTests(unittest.TestCase):
             fixture.tearDown()
 
 
-    def test_unified_malformed_row_left_open_then_retried(self):
+    def test_unified_unverified_ats_remains_review_lead(self):
+        fixture = PullTests(methodName="test_issue_is_graded_answered_closed_and_never_reread")
+        fixture.setUp()
+        try:
+            body = (
+                "Pharmacy Benefits Systems Analyst | Synthetic Health | Remote (US) | "
+                "https://job-boards.greenhouse.io/synth/jobs/555 | source=test"
+            )
+            row = issue(number=780, body=body)
+            row["title"] = "INTAKE Job recommendations 2026-11-08"
+            gh = FakeGh([row])
+            with mock.patch.object(inbox, "gh_path", lambda: "gh"), \\
+                 mock.patch("careeros.qualify.night.enabled", return_value=True):
+                counts = _inbox_pull(fixture.ctx, fixture.client, REPO, runner=gh)
+            self.assertEqual(counts["unified_board_unverified"], 1)
+            self.assertEqual(counts["inbox_issues"], 1)
+            self.assertEqual(fixture.fetched, [])
+            self.assertEqual(
+                fixture.store.one("SELECT status FROM leads WHERE site = 'greenhouse'")["status"],
+                "new",
+            )
+            self.assertIsNone(fixture.store.one("SELECT * FROM jobs"))
+            comment = next(x[2] for x in gh.calls if x[:2] == ("issue", "comment"))
+            self.assertIn("ownership not yet verified", comment)
+            self.assertTrue(row.get("closed"))
+        finally:
+            fixture.tearDown()
+
+    @mock.patch("careeros.discovery.posting_evidence.board_mapping_trusted", return_value=True)
+    def test_unified_malformed_row_left_open_then_retried(self, _trusted_board):
         fixture = PullTests(methodName="test_issue_is_graded_answered_closed_and_never_reread")
         fixture.setUp()
         try:
