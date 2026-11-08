@@ -210,7 +210,7 @@ MUTATIONS = [
      "NIGHT runs while switched off"),
     ("careeros/pipeline.py", "            if latest.get(job[\"job_id\"]) == fp:\n                continue\n", "",
      "NIGHT re-assesses every job every run"),
-    ("careeros/cli.py", 'if profile == "night" and not night.enabled(ctx.policy):', "if False:",
+    ("careeros/cli.py", 'if profile in ("night", "unified") and not night.enabled(ctx.policy):', "if False:",
      "NIGHT issues graded with PRIMARY rules while NIGHT is off"),
     ("careeros/review/report.py", "f\"AND t.sequence = j.state_sequence WHERE j.current_state = 'rejected' AND NOT {NIGHT_ONLY} \"",
      "f\"AND t.sequence = j.state_sequence WHERE j.current_state = 'rejected' \"", "NIGHT-only jobs shown in PRIMARY rejections"),
