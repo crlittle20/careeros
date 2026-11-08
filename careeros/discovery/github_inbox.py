@@ -30,6 +30,7 @@ OUTCOME_TEXT = {
     "already_tracked": "already tracked by CareerOS",
     "lead": "lead: CareerOS does not open this site, so it is listed for the owner to open",
     "outside_target_families": "outside target families",
+    "review_lead": "ungraded lead for owner review",
     "seen_before": "seen before",
     "unreadable_kept_as_lead": "could not read the posting (kept as a lead)",
     "no_title": "skipped: no job title on the line",
@@ -145,11 +146,16 @@ def issue_alert(issue: dict) -> AlertEmail:
 
 
 _NIGHT_TITLE = re.compile(r"^\s*(?:test\s+)?night\b", re.I)
+# Explicit, versioned neutral intake. Existing PRIMARY and NIGHT titles retain their meaning.
+_UNIFIED_TITLE = re.compile(r"^\s*(?:test\s+)?intake\b", re.I)
 
 
 def issue_profile(issue: dict) -> str:
-    """'night' for issues titled "NIGHT ..." (or "TEST NIGHT ..."); everything else is PRIMARY."""
-    return "night" if _NIGHT_TITLE.match(issue.get("title") or "") else "primary"
+    """Determine issue transport: neutral INTAKE, legacy NIGHT, or default PRIMARY."""
+    title = issue.get("title") or ""
+    if _UNIFIED_TITLE.match(title):
+        return "unified"
+    return "night" if _NIGHT_TITLE.match(title) else "primary"
 
 
 # The Gmail line every scheduled issue carries (prompts v2.5): "Gmail status: ok" / "unavailable" / "partial". The
