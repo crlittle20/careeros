@@ -74,7 +74,7 @@ class PostingEvidenceTests(unittest.TestCase):
     def test_network_and_rate_limit_errors_do_not_close(self):
         for code in ("forbidden", "rate_limited", "timeout", "server_error"):
             with self.subTest(code=code):
-                failing = lambda *_: (_ for _ in ()).throw(FakeFetchError(code))
+                failing = lambda *_, failure_code=code: (_ for _ in ()).throw(FakeFetchError(failure_code))
                 self.assertEqual(self.evidence(fetcher=failing).state, "needs_manual_verification")
 
     def test_unknown_application_state_is_not_active(self):
