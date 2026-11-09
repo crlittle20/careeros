@@ -153,7 +153,7 @@ command, the same command as the CI workflow.
 
 | Measure | Result |
 |---|---|
-| Automated tests | 949, all passing; repeated full runs on 2026-10-13, including a fresh clone, showed no flaky test |
+| Automated tests | 957, all passing; repeated full runs on 2026-10-13, including a fresh clone, showed no flaky test |
 | Planted defects | 749 defined. The latest full run (2026-11-02) caught all 749, each by a real failing test with the whole suite loaded (`evidence/mutation-receipt.json`). Every full run since the first, with the survivors each one exposed and the fixes that followed (the first survivor, a weak test, is in the table below), is in [testing.md](testing.md); every defect and the tests that caught it are in [defect_coverage.md](defect_coverage.md). |
 | Functional MVP gate | 92 checks: no requirement fails; 10 PASS, 3 PARTIAL (5 small gaps, listed in `functional_mvp_report.md`) |
 | Release scan | No secret in the files or the Git history. Anyone can repeat the public repository's scan (`python tools/release_scan.py --history`); the private repository's result is reported, not inspectable. |
