@@ -137,6 +137,31 @@ class PullTests(unittest.TestCase):
         everything = " ".join(str(v) for t in ("leads", "alert_messages", "events") for r in self.store.all(f"SELECT * FROM {t}") for v in r)
         self.assertNotIn("candidate@example.com", everything)  # the recipient never lands in the database
 
+    def test_native_gmail_recognizes_primary_night_and_dual_titles(self):
+        from tests.test_alerts import alert_email
+
+        google = FakeGoogle()
+        html = (
+            '<a href="https://www.linkedin.com/jobs/view/4012345678">'
+            'Pharmacy Benefits Systems Analyst</a> Synthetic Health · Remote'
+            '<a href="https://www.linkedin.com/jobs/view/4012345679">'
+            'Night Auditor</a> Synthetic Health · Remote'
+            '<a href="https://www.linkedin.com/jobs/view/4012345680">'
+            'Claims Analyst</a> Synthetic Health · Remote'
+        )
+        google.messages = {"m1": alert_email(html_body=html), "m2": alert_email(html_body=html)}
+        with unittest.mock.patch("careeros.qualify.night.enabled", return_value=True):
+            first = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+            again = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+        self.assertEqual(first["gmail_messages"], 2)
+        self.assertEqual(again["gmail_messages"], 0)
+        leads = {row["title"]: row for row in self.store.all("SELECT title, profile, family FROM leads")}
+        self.assertEqual(len(leads), 3)
+        self.assertEqual(leads["Pharmacy Benefits Systems Analyst"]["profile"], "primary")
+        self.assertEqual(leads["Night Auditor"]["profile"], "night")
+        self.assertEqual(leads["Claims Analyst"]["profile"], "primary")
+        self.assertEqual(self.store.one("SELECT COUNT(*) AS n FROM alert_messages")["n"], 2)
+
     def test_unreadable_message_is_retried_not_credited_as_processed(self):
         from careeros.discovery.alerts import AlertEmailError, parse_eml_bytes
 
