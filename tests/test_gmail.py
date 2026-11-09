@@ -137,6 +137,61 @@ class PullTests(unittest.TestCase):
         everything = " ".join(str(v) for t in ("leads", "alert_messages", "events") for r in self.store.all(f"SELECT * FROM {t}") for v in r)
         self.assertNotIn("candidate@example.com", everything)  # the recipient never lands in the database
 
+    def test_unreadable_message_is_retried_not_credited_as_processed(self):
+        from careeros.discovery.alerts import AlertEmailError, parse_eml_bytes
+
+        google = FakeGoogle()
+        calls = 0
+
+        def flaky_parse(raw):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                raise AlertEmailError("synthetic malformed alert")
+            return parse_eml_bytes(raw)
+
+        with unittest.mock.patch("careeros.discovery.alerts.parse_eml_bytes", side_effect=flaky_parse):
+            first = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+        self.assertEqual(first["gmail_unresolved"], 1)
+        self.assertEqual(first["gmail_messages"], 1)
+        self.assertEqual(
+            [row["message_id"] for row in self.store.all("SELECT message_id FROM alert_messages")],
+            ["m2"],
+        )
+        next_run = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+        self.assertEqual(next_run["gmail_messages"], 1)
+        self.assertEqual(
+            [row["message_id"] for row in self.store.all("SELECT message_id FROM alert_messages ORDER BY message_id")],
+            ["m1", "m2"],
+        )
+
+    def test_partly_failed_message_is_retried(self):
+        from collections import Counter
+
+        google = FakeGoogle()
+
+        def broken_record(_ctx, alert, _client, outcomes):
+            outcomes.append((alert.links[0], "row_error"))
+            return Counter()
+
+        with unittest.mock.patch("careeros.cli._record_alert", side_effect=broken_record):
+            first = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+        self.assertEqual(first["gmail_unresolved"], 2)
+        self.assertEqual(first["gmail_unresolved_rows"], 2)
+        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM alert_messages")["c"], 0)
+        second = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+        self.assertEqual(second["gmail_messages"], 2)
+        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM alert_messages")["c"], 2)
+
+    def test_search_limit_is_reported_not_silently_truncated(self):
+        reader = self.reader(FakeGoogle())
+        try:
+            with self.assertRaises(gmail.GmailError) as caught:
+                reader.search("newer_than:3d", limit=1)
+            self.assertEqual(caught.exception.code, "search_limit_reached")
+        finally:
+            reader.close()
+
     def test_expired_access_asks_you_to_reconnect(self):
         with self.assertRaises(gmail.GmailError) as ctx:
             _gmail_pull(self.ctx, self.boards, "q", gmail=self.reader(FakeGoogle(refresh_ok=False)))
