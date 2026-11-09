@@ -161,7 +161,7 @@ hosted or multi-user deployment.
 | The AI-assisted development disclosure now quotes the owner's own account of the process (given 2026-10-13), and the case study and README follow it | `docs/ai_assisted_development.md`, `docs/case_study.md`, `README.md` | `test_portfolio_docs` |
 | Gate evidence regenerated after the G6 fix: 10 PASS, 3 PARTIAL, 0 FAIL | `evidence/functional_mvp.json`, `docs/functional_mvp_report.md` (section 8) | `test_portfolio_docs`, `tools/validate.py` |
 
-After these changes and the refactor of 2026-10-14: 957 automated tests pass. There are 749 planted defects. The spot checks reported at this gate proved
+After these changes and the refactor of 2026-10-14: 958 automated tests pass. There are 749 planted defects. The spot checks reported at this gate proved
 nothing at the time: the tool's scratch copies lacked files some tests need, so every defect looked caught. After the
 fix (2026-10-14), full runs followed. The latest full run (2026-11-02) caught all 749, each by a real failing test with the whole suite loaded
 (`evidence/mutation-receipt.json`); the run history, with each run's survivors and what was fixed, is in [testing.md](testing.md).
