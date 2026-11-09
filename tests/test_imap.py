@@ -130,7 +130,7 @@ class ImapTests(unittest.TestCase):
             ("failed", "imap_metadata_failed"),
         ):
             with self.subTest(mode=mode):
-                client = imap.ImapGmailClient(stored(), connect=lambda: MetadataImap(mode))
+                client = imap.ImapGmailClient(stored(), connect=lambda selected=mode: MetadataImap(selected))
                 with self.assertRaises(gmail.GmailError) as caught:
                     client.search("q")
                 self.assertEqual(caught.exception.code, expected)
