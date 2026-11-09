@@ -214,7 +214,7 @@ class PullTests(unittest.TestCase):
 
         google = FakeGoogle()
 
-        def broken_record(_ctx, alert, _client, outcomes):
+        def broken_record(_ctx, alert, _client, outcomes, **_kwargs):
             outcomes.append((alert.links[0], "row_error"))
             return Counter()
 
