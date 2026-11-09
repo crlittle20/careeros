@@ -680,21 +680,22 @@ def _gmail_pull(ctx: Context, client: HttpClient, query: str | None = None, cred
                 counts["failed"] += 1
                 counts["gmail_unresolved"] += 1
                 continue
-            if is_correspondence(alert.subject):  # e.g. a LinkedIn application update from the alert sender
-                counts["correspondence_skipped"] += 1
-                links = 0
             else:
-                outcomes = []
-                counts.update(_record_alert(ctx, alert, client, outcomes))
-                unresolved = sum(status in ("row_error", "malformed_row") for _, status in outcomes)
-                if unresolved:
-                    counts["gmail_unresolved"] += 1
-                    counts["gmail_unresolved_rows"] += unresolved
-                    continue  # do not mark a partly processed email complete; leads are idempotent
-                links = len(alert.links)
-            writer.insert("alert_messages", {"message_id": message_id, "source": "gmail", "processed_at": ctx.store.clock.now(),
-                                              "links": links})
-            counts["gmail_messages"] += 1
+                if is_correspondence(alert.subject):  # e.g. a LinkedIn application update from the alert sender
+                    counts["correspondence_skipped"] += 1
+                    links = 0
+                else:
+                    outcomes: list[tuple[object, str]] = []
+                    counts.update(_record_alert(ctx, alert, client, outcomes))
+                    unresolved = sum(status in ("row_error", "malformed_row") for _, status in outcomes)
+                    if unresolved:
+                        counts["gmail_unresolved"] += 1
+                        counts["gmail_unresolved_rows"] += unresolved
+                        continue  # do not mark a partly processed email complete; leads are idempotent
+                    links = len(alert.links)
+                writer.insert("alert_messages", {"message_id": message_id, "source": "gmail", "processed_at": ctx.store.clock.now(),
+                                                  "links": links})
+                counts["gmail_messages"] += 1
     finally:
         gmail.close()
     return counts
