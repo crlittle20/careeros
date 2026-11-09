@@ -654,6 +654,7 @@ def _gmail_pull(ctx: Context, client: HttpClient, query: str | None = None, cred
     """New job-alert emails from Gmail since the last pull. Raises GmailError (e.g. reconnect_needed)."""
     from careeros.discovery.alerts import AlertEmailError, is_correspondence, parse_eml_bytes
     from careeros.discovery.gmail import GmailError
+    from careeros.discovery.gmail_recovery import search_all
     from careeros.qualify import night
     query = query or ctx.policy.get("operations", "gmail_query")
     # The legacy PRIMARY path remains unchanged when NIGHT is disabled.
@@ -667,7 +668,7 @@ def _gmail_pull(ctx: Context, client: HttpClient, query: str | None = None, cred
             raise GmailError("not_connected", "Gmail is not set up (see GMAIL_SETUP.md)")
     counts, writer = Counter(), ctx.store.writer("discovery")
     try:
-        for message_id in gmail.search(query):
+        for message_id in search_all(gmail, query, ctx.store.clock.now()):
             if ctx.store.one("SELECT 1 FROM alert_messages WHERE message_id = ?", (message_id,)):
                 continue
             try:
