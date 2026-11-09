@@ -655,12 +655,12 @@ def _gmail_pull(ctx: Context, client: HttpClient, query: str | None = None, cred
     from careeros.discovery.alerts import AlertEmailError, is_correspondence, parse_eml_bytes
     from careeros.discovery.gmail import GmailError
     from careeros.discovery.gmail_recovery import search_all
-    from careeros.qualify import night
     query = query or ctx.policy.get("operations", "gmail_query")
-    # The legacy PRIMARY path remains unchanged when NIGHT is disabled.
-    # Otherwise retain NIGHT-only families and let CareerOS assess both
-    # profiles independently after ingestion.
-    intake_profile = "unified" if night.enabled(ctx.policy) else "primary"
+    # Gmail always retains both title families and uses the strict
+    # employer-board ownership gate. When NIGHT evaluation is disabled,
+    # NIGHT-only opportunities remain leads until the owner enables it;
+    # they must not be silently reclassified or scored as PRIMARY.
+    intake_profile = "unified"
     if gmail is None:
         from careeros.core.credentials import WindowsCredentials
         gmail = _gmail_reader(credentials or WindowsCredentials())
