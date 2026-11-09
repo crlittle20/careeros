@@ -97,6 +97,45 @@ class ImapTests(unittest.TestCase):
             imap.ImapGmailClient(stored(user="CareerOS"), connect=FakeImap)
         self.assertEqual(ctx.exception.code, "imap_user_missing")
 
+    def test_imap_limit_does_not_discard_older_matches(self):
+        fake = FakeImap()
+        client = imap.ImapGmailClient(stored(), connect=lambda: fake)
+        with self.assertRaises(gmail.GmailError) as caught:
+            client.search("q", limit=1)
+        self.assertEqual(caught.exception.code, "search_limit_reached")
+        self.assertFalse(any(call[0] == "FETCH" for call in fake.calls))
+        client.close()
+
+    def test_imap_incomplete_metadata_and_oversize_are_errors(self):
+        class MetadataImap(FakeImap):
+            def __init__(self, mode):
+                super().__init__()
+                self.mode = mode
+
+            def uid(self, command, *args):
+                if command == "FETCH" and args[1] == "(X-GM-MSGID RFC822.SIZE)":
+                    if self.mode == "incomplete":
+                        return "OK", [b"1 (UID 11 X-GM-MSGID 1278455344230334865 RFC822.SIZE 2048)"]
+                    if self.mode == "oversize":
+                        return "OK", [
+                            b"1 (UID 11 X-GM-MSGID 1278455344230334865 RFC822.SIZE 5242881)",
+                            b"2 (UID 12 X-GM-MSGID 1278455344230334866 RFC822.SIZE 2048)",
+                        ]
+                    return "NO", [b"temporary failure"]
+                return super().uid(command, *args)
+
+        for mode, expected in (
+            ("incomplete", "imap_metadata_incomplete"),
+            ("oversize", "message_too_large"),
+            ("failed", "imap_metadata_failed"),
+        ):
+            with self.subTest(mode=mode):
+                client = imap.ImapGmailClient(stored(), connect=lambda: MetadataImap(mode))
+                with self.assertRaises(gmail.GmailError) as caught:
+                    client.search("q")
+                self.assertEqual(caught.exception.code, expected)
+                client.close()
+
     def test_method_choice_prefers_google_sign_in(self):
         creds = stored()
         self.assertEqual(_gmail_method(creds), "imap")
