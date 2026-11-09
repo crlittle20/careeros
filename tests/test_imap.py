@@ -136,10 +136,12 @@ class ImapTests(unittest.TestCase):
                 self.assertEqual(caught.exception.code, expected)
                 client.close()
 
-    def test_method_choice_prefers_google_sign_in(self):
+    def test_method_choice_prefers_imap_app_password(self):
         creds = stored()
         self.assertEqual(_gmail_method(creds), "imap")
         creds.write(gmail.CREDENTIAL_TARGET, json.dumps({"client_id": "c", "client_secret": "s", "refresh_token": "r"}))
+        self.assertEqual(_gmail_method(creds), "imap")
+        creds.delete(imap.CREDENTIAL_TARGET)
         self.assertEqual(_gmail_method(creds), "api")
         self.assertIsNone(_gmail_method(MemoryCredentials()))
         self.assertIsNone(_gmail_reader(MemoryCredentials()))
