@@ -402,7 +402,10 @@ MUTATIONS = [
     ("careeros/cli.py", '        closed, failed = close_open_jobs(ctx, employer["employer_id"], "board_retired", notes=f"board rejected: {args.note or \'\'}"[:200],',
      '        closed, failed = (0, 0) if True else close_open_jobs(ctx, employer["employer_id"], "board_retired", notes=f"board rejected: {args.note or \'\'}"[:200],',
      "a rejected board's jobs stay open"),
-    ("careeros/normalize/posting.py", '    return (family == "service_operations_supervision"\n            and contains_term(title_norm, "supervisor")\n            and not contains_term(title_norm, "manager"))',
+    ("careeros/normalize/posting.py",
+     '    return (family == "service_operations_supervision"\n'
+     '            and contains_term(title_norm, "supervisor")\n'
+     '            and not contains_term(title_norm, "manager"))',
      "    return True", "manager roles counted as relevant"),
     ("careeros/qualify/gate.py", '                        source=pay_quote(job.get("description_text"))\n', "                        source=None\n",
      "a pay rejection carries no quote"),
