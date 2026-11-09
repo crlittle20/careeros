@@ -458,7 +458,7 @@ def build_report(store: Store, profile, policy, *, token: str | None = None, for
 
     if since:
         fresh = [r for r in scored if r["first_seen_at"] > since]
-        out.append(f"<h2>New graded postings since your last review ({len(_grouped(fresh))})</h2>"
+        out.append(f"<h2>New since your last review ({len(_grouped(fresh))})</h2>"
                    f'<div class="meta">Graded postings first seen after {esc(since[:16].replace("T", " "))} UTC. '
                    'Unverified Gmail and GitHub alert leads are counted separately below, not in this total.</div>')
         out.extend(_card(store, r, now, token, form_keys, n, new=True) for r, n in _grouped(fresh)[:30])
