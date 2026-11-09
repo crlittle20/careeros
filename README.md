@@ -19,7 +19,7 @@ seeker" is Chris on the private system and a fictional person in Demo Mode.
 
 **Results**
 
-- 957 automated tests pass locally with outbound network refused. The public repository's CI runs the same
+- 958 automated tests pass locally with outbound network refused. The public repository's CI runs the same
   validation; this version's CI result comes with its publication.
 - 749 planted defects: the latest full run (2026-11-02) caught all 749, each with a failing test
   (`evidence/mutation-receipt.json`).
@@ -243,7 +243,7 @@ Every control in the threat model is tied to a test and to a planted defect that
 
 | Layer | What it shows |
 |---|---|
-| 957 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`) |
+| 958 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`) |
 | 749 planted defects | `tools/mutate.py` breaks each safety rule in a scratch copy, and the test suite must then fail. A defect that survives is an untested rule. |
 | Functional MVP gate | `tools/mvp_gate.py` runs the real command line in Demo Mode and makes 92 checks against expectations written from the postings and the policy, not read back from the system. Result: no requirement fails. Of 13, 10 are PASS and 3 are PARTIAL, with the gaps listed in the [report](docs/functional_mvp_report.md). |
 | Documentation tests | The documents' named files, tests, tables and commands must exist |
