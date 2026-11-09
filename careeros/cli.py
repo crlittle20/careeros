@@ -872,11 +872,15 @@ def cmd_gmail(ctx: Context, paths, args) -> None:
             print(f"Gmail search used: {ctx.policy.get('operations', 'gmail_query')}")
         elif args.action == "disconnect":
             from careeros.discovery import imap
-            if gmail.disconnect(credentials):
+            # If both credential methods exist, remove both. Otherwise IMAP
+            # would silently fall back to the unused OAuth token afterwards.
+            oauth_removed = gmail.disconnect(credentials)
+            imap_removed = credentials.delete(imap.CREDENTIAL_TARGET)
+            if oauth_removed:
                 print("Google sign-in disconnected and token revoked.")
-            elif credentials.delete(imap.CREDENTIAL_TARGET):
-                print("App password removed from this PC. Also delete it at https://myaccount.google.com/apppasswords")
-            else:
+            if imap_removed:
+                print("App password removed from this PC. Also revoke it at https://myaccount.google.com/apppasswords")
+            if not (oauth_removed or imap_removed):
                 print("Gmail was not set up.")
         elif args.action == "status":
             method = _gmail_method(credentials)
