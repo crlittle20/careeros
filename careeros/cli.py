@@ -654,7 +654,12 @@ def _gmail_pull(ctx: Context, client: HttpClient, query: str | None = None, cred
     """New job-alert emails from Gmail since the last pull. Raises GmailError (e.g. reconnect_needed)."""
     from careeros.discovery.alerts import AlertEmailError, is_correspondence, parse_eml_bytes
     from careeros.discovery.gmail import GmailError
+    from careeros.qualify import night
     query = query or ctx.policy.get("operations", "gmail_query")
+    # The legacy PRIMARY path remains unchanged when NIGHT is disabled.
+    # Otherwise retain NIGHT-only families and let CareerOS assess both
+    # profiles independently after ingestion.
+    intake_profile = "unified" if night.enabled(ctx.policy) else "primary"
     if gmail is None:
         from careeros.core.credentials import WindowsCredentials
         gmail = _gmail_reader(credentials or WindowsCredentials())
@@ -686,7 +691,7 @@ def _gmail_pull(ctx: Context, client: HttpClient, query: str | None = None, cred
                     links = 0
                 else:
                     outcomes: list[tuple[object, str]] = []
-                    counts.update(_record_alert(ctx, alert, client, outcomes))
+                    counts.update(_record_alert(ctx, alert, client, outcomes, profile=intake_profile))
                     unresolved = sum(status in ("row_error", "malformed_row") for _, status in outcomes)
                     if unresolved:
                         counts["gmail_unresolved"] += 1
