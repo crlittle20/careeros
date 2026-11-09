@@ -836,12 +836,12 @@ def cmd_seen_index(ctx: Context, paths, args) -> None:
 
 
 def _gmail_method(credentials) -> str | None:
-    """'api' (Google Cloud sign-in) or 'imap' (app password), whichever is stored; the API route wins if both are."""
+    """Select IMAP App Password when configured, falling back to legacy API OAuth."""
     from careeros.discovery import gmail, imap
-    if credentials.read(gmail.CREDENTIAL_TARGET):
-        return "api"
     if credentials.read_entry(imap.CREDENTIAL_TARGET):
         return "imap"
+    if credentials.read(gmail.CREDENTIAL_TARGET):
+        return "api"
     return None
 
 
