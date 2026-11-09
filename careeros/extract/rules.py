@@ -10,7 +10,8 @@ from careeros.normalize.posting import contains_term, norm
 
 from .model import Extraction, Requirement
 
-EXTRACTOR_ID = "rules-v10"  # v10 (2026-10-15): one record per certification, by sentence; v9: a years figure per area
+EXTRACTOR_ID = "rules-v11"  # v11: helpful qualifications are preferred, not required-with-equivalency
+# v10 (2026-10-15): one record per certification, by sentence; v9: a years figure per area
 
 _HEADINGS = [
     ("preferred", ["preferred qualifications", "preferred skills", "preferred experience", "nice to have", "nice to haves",
@@ -57,7 +58,7 @@ _DEGREES = [("doctorate", r"\b(ph\.?d|doctorate|doctoral)\b"), ("master", r"\b(m
             ("bachelor", r"\b(bachelor'?s|ba/bs|bs/ba|b\.s\.|b\.a\.|four[- ]year degree|undergraduate degree|college degree)\b"),
             ("associate", r"\bassociate'?s degree\b"), ("high_school", r"\b(high school|ged)\b")]
 _EQUIVALENCY = re.compile(r"or (an )?equivalent|equivalent (combination|experience|work experience)|or related experience|in lieu of", re.I)
-_PREFERRED_CUES = re.compile(r"\b(preferred|nice to have|a plus|is a plus|bonus|ideally|desired|desirable|advantageous)\b", re.I)
+_PREFERRED_CUES = re.compile(r"\b(preferred|nice to have|a plus|is a plus|bonus|ideally|desired|desirable|advantageous|helpful)\b", re.I)
 _REQUIRED_CUES = re.compile(r"\b(required|must|minimum|mandatory|at least)\b", re.I)
 _BULLET = re.compile(r"^\s*(?:-|•|\*|·|▪|\d+[.)])\s+")
 
