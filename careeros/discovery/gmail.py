@@ -183,6 +183,11 @@ class GmailClient:
             page = data.get("nextPageToken")
             if not page:
                 break
+        if page:
+            # Never silently report a partial Gmail search as complete.
+            # The caller can narrow its query or explicitly recover by date.
+            raise GmailError("search_limit_reached",
+                             f"More than {limit} matching Gmail messages; narrow the date range before retrying")
         return ids
 
     def raw(self, message_id: str) -> bytes:
