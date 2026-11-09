@@ -107,7 +107,14 @@ def relevant_role(title_norm: str, family: str | None, remote_type: str, country
         return False
     if country == "non_US" or remote_type not in ("remote", "unknown"):
         return False
-    return seniority(title_norm, policy.get("seniority_terms", default={}) or {}) != "manager"
+    level = seniority(title_norm, policy.get("seniority_terms", default={}) or {})
+    if level != "manager":
+        return True
+    # Supervisors in a narrowly targeted operational family are discoverable
+    # for CONDITIONAL leadership-scope review, never a manager-wide override.
+    return (family == "service_operations_supervision"
+            and contains_term(title_norm, "supervisor")
+            and not contains_term(title_norm, "manager"))
 
 
 def detect_remote(location: str, workplace_hint: str | None, text: str) -> str:
