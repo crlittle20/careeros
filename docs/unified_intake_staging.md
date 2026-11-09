@@ -19,6 +19,17 @@ Status: **unmerged experimental branch**. Do **not** enable neutral INTAKE publi
 
 **Release B**: a universal `INTAKE` transport, after validating the current private local CareerOS tree. Ingest each posting once; assess PRIMARY and NIGHT independently. The NIGHT processor already records results in `night_results` without overwriting PRIMARY scores. Legacy issues must remain supported. Do not start publishing neutral issues before confirming end-to-end desktop ingestion.
 
+## November 9 synthetic report-quality fixes (staging only)
+
+- Mail parser discards LinkedIn/Indeed/Glassdoor search-page and newsletter-header links, but retains real individual job links including LinkedIn search URLs carrying a specific job ID. Existing stored leads are **not automatically deleted**.
+- Focused contact-center, claims, and service-operation supervisor titles can now be recognized as target families. When a supervisor title exceeds the current-level threshold, it receives a `supervisor_scope_review` **CONDITIONAL** flag; manager roles still trigger the original hard seniority gate. Nothing is automatically approved for submission.
+- Generic `QA Analyst` and call-quality roles can be recognized. Generic QA titles require relevant operational/healthcare evidence; generic software QA must not pass the context gate by title alone.
+- Qualifications stating a certification is "helpful" are marked `preferred`, not mandatory, with extractor revision `rules-v11`. Explicit required certifications and equivalencies preserve their established treatment.
+- NIGHT report explicitly separates unknown-hour conditional jobs from scheduled near-misses; hours not stated remain **unknown**, never confirmed overnight work. The fresh-results heading counts **graded postings**, not unverified email leads.
+- All tests use synthetic employers/job postings and emails; no private report or mailbox was committed to GitHub.
+
+These code changes are **not retroactive** to the already imported Gmail-message ledger. Existing ungraded leads still require a controlled local review/reconciliation after the public branch is merged into the owner's private engine. Never delete that ledger or disable the existing tasks to force a backfill. The daily-run failure banner must be investigated separately using the private Windows log and scheduler output, not inferred from a successful Gmail fetch.
+
 ## Important cautions before activation
 
 1. The main code snapshot's `config/policy/defaults.yaml` defaults to `night.enabled: false`; only the private local override can establish actual state. Neutral issues stay open while disabled.
