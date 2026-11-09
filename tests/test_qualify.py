@@ -211,7 +211,7 @@ class GateTests(unittest.TestCase):
 
     def test_generic_qa_analyst_requires_relevant_context(self):
         cases = (
-            ("Selenium, Playwright and software regression testing", True),
+            ("Selenium, Playwright and software regression testing. " * 6, True),
             ("Claims quality review and call monitoring in a healthcare contact center", False),
         )
         for description, should_reject in cases:
