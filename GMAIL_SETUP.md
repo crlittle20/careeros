@@ -25,7 +25,7 @@
 .\.venv-dev\Scripts\python.exe -m careeros gmail fetch --days 3
 ```
 
-These commands never require `careeros gmail connect`: that command belongs to the **alternative OAuth** route and is deliberately not the selected setup. If both an OAuth token and IMAP credential are present, current code prefers OAuth; revoke the old OAuth token only after checking whether it is used elsewhere.
+These commands never require `careeros gmail connect`: that command belongs to the **alternative OAuth** route and is deliberately not the selected setup. The staged code **prefers IMAP** if both an App Password and an older OAuth token exist. Explicit `careeros gmail disconnect` removes both local methods (and attempts to revoke OAuth); separately revoke the App Password in Google's account settings.
 
 ## Local workflow, recovery, and validation
 
