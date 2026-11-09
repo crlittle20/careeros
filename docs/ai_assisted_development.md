@@ -142,7 +142,7 @@ review by a person or a tool outside this chain is still recommended.
 ## 4. How tests validated behavior
 
 - **Tests come with the change.** Each milestone that changed system behaviour or documentation added or updated tests
-  for the change. The suite has 957 tests on synthetic fixtures, fake transports and fixed clocks, and
+  for the change. The suite has 958 tests on synthetic fixtures, fake transports and fixed clocks, and
   `tools/validate.py` runs it with outbound network refused.
 - **Planted defects check the tests themselves.** `tools/mutate.py` deliberately breaks each safety rule, one at a
   time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 749
