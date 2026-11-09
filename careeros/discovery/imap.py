@@ -82,22 +82,33 @@ class ImapGmailClient:
         status, data = self.conn.uid("SEARCH", "X-GM-RAW", _quote(query))
         if status != "OK":
             raise GmailError("imap_search_failed", "Gmail search failed")
-        uids = (data[0] or b"").split()[-limit:]
+        uids = (data[0] or b"").split()
         if not uids:
             return []
+        if limit < 1 or len(uids) > limit:
+            # Never silently drop older messages from an overflowing search.
+            # Partition the date range and retry rather than dropping cards.
+            raise GmailError("search_limit_reached", "IMAP search returned too many matching alerts; narrow the date range")
         status, data = self.conn.uid("FETCH", b",".join(uids).decode(), "(X-GM-MSGID RFC822.SIZE)")
+        if status != "OK":
+            raise GmailError("imap_metadata_failed", "could not read all Gmail message identities")
         ids = []
-        for item in data if status == "OK" else []:
+        for item in data:
             line = item[0] if isinstance(item, tuple) else item
             if not isinstance(line, bytes):
                 continue
             found = {}
             for uid, msgid, size in _META.findall(line):
                 found.update({k: v for k, v in (("uid", uid), ("msgid", msgid), ("size", size)) if v})
-            if "uid" in found and "msgid" in found and int(found.get("size", b"0")) <= MAX_BYTES:
-                message_id = format(int(found["msgid"]), "x")
-                self._uids[message_id] = found["uid"]
-                ids.append(message_id)
+            if "uid" not in found or "msgid" not in found or "size" not in found:
+                continue
+            if int(found["size"]) > MAX_BYTES:
+                raise GmailError("message_too_large", "a matching email exceeds the safe 5 MB parsing limit")
+            message_id = format(int(found["msgid"]), "x")
+            self._uids[message_id] = found["uid"]
+            ids.append(message_id)
+        if len(ids) != len(uids) or len(set(ids)) != len(uids):
+            raise GmailError("imap_metadata_incomplete", "Gmail returned incomplete message identities; retry later")
         return ids
 
     def raw(self, message_id: str) -> bytes:
