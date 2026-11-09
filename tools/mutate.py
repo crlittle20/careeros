@@ -210,7 +210,7 @@ MUTATIONS = [
      "NIGHT runs while switched off"),
     ("careeros/pipeline.py", "            if latest.get(job[\"job_id\"]) == fp:\n                continue\n", "",
      "NIGHT re-assesses every job every run"),
-    ("careeros/cli.py", 'if profile == "night" and not night.enabled(ctx.policy):', "if False:",
+    ("careeros/cli.py", 'if profile in ("night", "unified") and not night.enabled(ctx.policy):', "if False:",
      "NIGHT issues graded with PRIMARY rules while NIGHT is off"),
     ("careeros/review/report.py", "f\"AND t.sequence = j.state_sequence WHERE j.current_state = 'rejected' AND NOT {NIGHT_ONLY} \"",
      "f\"AND t.sequence = j.state_sequence WHERE j.current_state = 'rejected' \"", "NIGHT-only jobs shown in PRIMARY rejections"),
@@ -402,7 +402,10 @@ MUTATIONS = [
     ("careeros/cli.py", '        closed, failed = close_open_jobs(ctx, employer["employer_id"], "board_retired", notes=f"board rejected: {args.note or \'\'}"[:200],',
      '        closed, failed = (0, 0) if True else close_open_jobs(ctx, employer["employer_id"], "board_retired", notes=f"board rejected: {args.note or \'\'}"[:200],',
      "a rejected board's jobs stay open"),
-    ("careeros/normalize/posting.py", '    return seniority(title_norm, policy.get("seniority_terms", default={}) or {}) != "manager"',
+    ("careeros/normalize/posting.py",
+     '    return (family == "service_operations_supervision"\n'
+     '            and contains_term(title_norm, "supervisor")\n'
+     '            and not contains_term(title_norm, "manager"))',
      "    return True", "manager roles counted as relevant"),
     ("careeros/qualify/gate.py", '                        source=pay_quote(job.get("description_text"))\n', "                        source=None\n",
      "a pay rejection carries no quote"),

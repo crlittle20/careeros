@@ -476,8 +476,20 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
             title_norm = norm(link.text)
             if profile == "night":
                 family = None if excluded_term(title_norm, excluded) else night_family(title_norm, ctx.policy)
+                storage_profile = "night"
+            elif profile == "unified":
+                # Route once for intake storage; the independent NIGHT processor
+                # evaluates all tracked jobs when enabled.
+                if excluded_term(title_norm, excluded):
+                    primary_family = night_only_family = None
+                else:
+                    primary_family = classify_family(title_norm, families)
+                    night_only_family = night_family(title_norm, ctx.policy)
+                family = primary_family or night_only_family
+                storage_profile = "night" if night_only_family and not primary_family else "primary"
             else:
                 family = None if excluded_term(title_norm, excluded) else classify_family(title_norm, families)
+                storage_profile = "primary"
             if not (link.job_like or family):  # navigation, settings and other links that are not postings
                 note(link, "not_a_job_link")
                 continue
@@ -488,13 +500,33 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
                 continue
             row = {"lead_id": lid, "url": link.url, "site": link.site, "title": link.text, "title_norm": title_norm, "family": family,
                    "context": link.context or None, "sender": alert.sender or None, "subject": alert.subject or None,
-                   "received_at": alert.received_at, "first_seen_at": now, "status": "new", "job_id": None, "profile": profile}
+                   "received_at": alert.received_at, "first_seen_at": now, "status": "new", "job_id": None, "profile": storage_profile}
             from careeros.discovery import sources
             known = _known_job(ctx, link.url)
             parsed = parse_job_url(link.url)
             board_url = link.url if parsed else greenhouse_candidate(link.url)
             if board_url and sources.status(parse_job_url(board_url)[0]) != "allowed":
                 board_url = None  # the source is manual or blocked under the current site policy: list it, never fetch it
+            unverified_board = False
+            if profile == "unified" and board_url:
+                # A working ATS API does not prove that this is the named
+                # employer's board. Only a separately approved active mapping
+                # can authorize automatic neutral-intake fetching; otherwise
+                # leave a lead for employer/board verification.
+                from careeros.discovery.board_registry import mapping_for_board
+                from careeros.discovery.posting_evidence import board_mapping_trusted
+                board_parts = parse_job_url(board_url)
+                if board_parts is None:
+                    unverified_board = True
+                    board_url = None
+                    counts["unified_board_unverified"] += 1
+                else:
+                    board_ats, board_token, _ = board_parts
+                    mapping = mapping_for_board(ctx.store, board_ats, board_token)
+                    if not board_mapping_trusted(dict(mapping) if mapping else None, board_ats, board_token):
+                        counts["unified_board_unverified"] += 1
+                        unverified_board = True
+                        board_url = None
             if not known and not board_url:
                 known = _ledger_match(ctx, link, title_norm)
                 if not known and _ledger_lead(ctx, link, title_norm):
@@ -526,7 +558,9 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
                                url=link.url, requisition_id=fields.get("req"), title=link.text, company=_company_name(link.context),
                                pay_text=fields.get("pay"), published_at=None)
             counts["lead_ingested" if row["status"] == "ingested" else ("lead_new" if family else "lead_other_family")] += 1
-            note(link, outcome or ("lead" if family else "outside_target_families"))
+            note(link, outcome or ("board_unverified" if unverified_board
+                                   else "review_lead" if profile == "unified" and not family
+                                   else "lead" if family else "outside_target_families"))
         except Exception as exc:  # noqa: BLE001 - recorded for you to see in status
             writer.exception("data_quality", "medium", f"alert line not processed: {type(exc).__name__}: {exc}",
                              error_code="alert_line_failed")
@@ -620,7 +654,13 @@ def _gmail_pull(ctx: Context, client: HttpClient, query: str | None = None, cred
     """New job-alert emails from Gmail since the last pull. Raises GmailError (e.g. reconnect_needed)."""
     from careeros.discovery.alerts import AlertEmailError, is_correspondence, parse_eml_bytes
     from careeros.discovery.gmail import GmailError
+    from careeros.discovery.gmail_recovery import search_all
     query = query or ctx.policy.get("operations", "gmail_query")
+    # Gmail always retains both title families and uses the strict
+    # employer-board ownership gate. When NIGHT evaluation is disabled,
+    # NIGHT-only opportunities remain leads until the owner enables it;
+    # they must not be silently reclassified or scored as PRIMARY.
+    intake_profile = "unified"
     if gmail is None:
         from careeros.core.credentials import WindowsCredentials
         gmail = _gmail_reader(credentials or WindowsCredentials())
@@ -628,7 +668,7 @@ def _gmail_pull(ctx: Context, client: HttpClient, query: str | None = None, cred
             raise GmailError("not_connected", "Gmail is not set up (see GMAIL_SETUP.md)")
     counts, writer = Counter(), ctx.store.writer("discovery")
     try:
-        for message_id in gmail.search(query):
+        for message_id in search_all(gmail, query, ctx.store.clock.now()):
             if ctx.store.one("SELECT 1 FROM alert_messages WHERE message_id = ?", (message_id,)):
                 continue
             try:
@@ -636,24 +676,32 @@ def _gmail_pull(ctx: Context, client: HttpClient, query: str | None = None, cred
             except (AlertEmailError, UnicodeError, LookupError) as exc:
                 writer.exception("validation", "low", f"Gmail alert not readable: {exc}", error_code="alert_email_unreadable")
                 counts["failed"] += 1
-                links = 0
+                counts["gmail_unresolved"] += 1
+                continue  # not committed as complete; retry this message on the next pull
             except GmailError:
                 raise  # Gmail itself is down: stop, report, and let the rest of the daily run carry on
             except Exception as exc:  # noqa: BLE001 - one odd message never stops the others
                 writer.exception("validation", "low", f"Gmail alert not readable: {type(exc).__name__}",
                                  error_code="alert_email_unreadable")
                 counts["failed"] += 1
-                links = 0
+                counts["gmail_unresolved"] += 1
+                continue
             else:
                 if is_correspondence(alert.subject):  # e.g. a LinkedIn application update from the alert sender
                     counts["correspondence_skipped"] += 1
                     links = 0
                 else:
-                    counts.update(_record_alert(ctx, alert, client))
+                    outcomes: list[tuple[object, str]] = []
+                    counts.update(_record_alert(ctx, alert, client, outcomes, profile=intake_profile))
+                    unresolved = sum(status in ("row_error", "malformed_row") for _, status in outcomes)
+                    if unresolved:
+                        counts["gmail_unresolved"] += 1
+                        counts["gmail_unresolved_rows"] += unresolved
+                        continue  # do not mark a partly processed email complete; leads are idempotent
                     links = len(alert.links)
-            writer.insert("alert_messages", {"message_id": message_id, "source": "gmail", "processed_at": ctx.store.clock.now(),
-                                              "links": links})
-            counts["gmail_messages"] += 1
+                writer.insert("alert_messages", {"message_id": message_id, "source": "gmail", "processed_at": ctx.store.clock.now(),
+                                                  "links": links})
+                counts["gmail_messages"] += 1
     finally:
         gmail.close()
     return counts
@@ -676,14 +724,25 @@ def _inbox_pull(ctx: Context, client: HttpClient, repo: str, runner=None) -> Cou
         if ctx.store.one("SELECT 1 FROM inbox_issues WHERE repo = ? AND number = ?", (repo, issue["number"])):
             continue
         profile = inbox.issue_profile(issue)
-        if profile == "night" and not night.enabled(ctx.policy):
-            # Never graded with PRIMARY rules: left open and untouched until the NIGHT profile is switched on.
+        if profile in ("night", "unified") and not night.enabled(ctx.policy):
+            # A neutral intake may contain NIGHT-only jobs. Never silently
+            # treat it as PRIMARY when the NIGHT evaluator is unavailable.
             counts["inbox_night_waiting"] += 1
-            print(f"  issue #{issue['number']} is a NIGHT issue: left open (NIGHT profile is off)")
+            print(f"  issue #{issue['number']} needs NIGHT evaluation: left open (NIGHT profile is off)")
             continue
         try:  # one unreadable issue never stops the others; it stays open and is retried next run
             alert, outcomes = inbox.issue_alert(issue), []
             counts.update(_record_alert(ctx, alert, client, outcomes, profile=profile))
+            if profile == "unified":
+                # A malformed or failed row was never safely recorded. Keep the
+                # neutral issue open so it can be corrected/retried; any valid
+                # rows already received are idempotently recognized next time.
+                unresolved = sum(outcome in ("malformed_row", "row_error", "no_title")
+                                 for _, outcome in outcomes)
+                if unresolved:
+                    counts["inbox_unresolved_rows"] += unresolved
+                    print(f"  ! issue #{issue['number']} has {unresolved} unresolved row(s): kept open for retry")
+                    continue
             gmail = inbox.gmail_status(issue.get("body") or "")
             reply = inbox.reply_text(ctx.store.clock.now()[:10], outcomes, gmail)
             writer.insert("inbox_issues", {"repo": repo, "number": issue["number"], "processed_at": ctx.store.clock.now(),
@@ -777,12 +836,12 @@ def cmd_seen_index(ctx: Context, paths, args) -> None:
 
 
 def _gmail_method(credentials) -> str | None:
-    """'api' (Google Cloud sign-in) or 'imap' (app password), whichever is stored; the API route wins if both are."""
+    """Select IMAP App Password when configured, falling back to legacy API OAuth."""
     from careeros.discovery import gmail, imap
-    if credentials.read(gmail.CREDENTIAL_TARGET):
-        return "api"
     if credentials.read_entry(imap.CREDENTIAL_TARGET):
         return "imap"
+    if credentials.read(gmail.CREDENTIAL_TARGET):
+        return "api"
     return None
 
 
@@ -813,11 +872,15 @@ def cmd_gmail(ctx: Context, paths, args) -> None:
             print(f"Gmail search used: {ctx.policy.get('operations', 'gmail_query')}")
         elif args.action == "disconnect":
             from careeros.discovery import imap
-            if gmail.disconnect(credentials):
+            # If both credential methods exist, remove both. Otherwise IMAP
+            # would silently fall back to the unused OAuth token afterwards.
+            oauth_removed = gmail.disconnect(credentials)
+            imap_removed = credentials.delete(imap.CREDENTIAL_TARGET)
+            if oauth_removed:
                 print("Google sign-in disconnected and token revoked.")
-            elif credentials.delete(imap.CREDENTIAL_TARGET):
-                print("App password removed from this PC. Also delete it at https://myaccount.google.com/apppasswords")
-            else:
+            if imap_removed:
+                print("App password removed from this PC. Also revoke it at https://myaccount.google.com/apppasswords")
+            if not (oauth_removed or imap_removed):
                 print("Gmail was not set up.")
         elif args.action == "status":
             method = _gmail_method(credentials)

@@ -128,7 +128,9 @@ class PullTests(unittest.TestCase):
         counts = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
         self.assertEqual(counts["gmail_messages"], 2)
         self.assertEqual(counts["lead_new"], 4)  # linkedin, indeed, nhg + the unreadable greenhouse link
-        self.assertEqual(counts["lead_fetch_failed"], 1)  # the Greenhouse link (simulated 404) is kept as a lead
+        self.assertEqual(counts["unified_board_unverified"], 1)  # unknown board ownership: no automatic fetch
+        self.assertEqual(counts["lead_fetch_failed"], 0)
+        self.assertEqual(self.board_requests, [])
         self.assertEqual([tuple(r) for r in self.store.all("SELECT message_id, source FROM alert_messages ORDER BY message_id")],
                          [("m1", "gmail"), ("m2", "gmail")])
         again = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
@@ -136,6 +138,103 @@ class PullTests(unittest.TestCase):
         self.assertEqual(self.store.one("SELECT COUNT(*) c FROM leads")["c"], 5)
         everything = " ".join(str(v) for t in ("leads", "alert_messages", "events") for r in self.store.all(f"SELECT * FROM {t}") for v in r)
         self.assertNotIn("candidate@example.com", everything)  # the recipient never lands in the database
+
+    def test_native_gmail_recognizes_primary_night_and_dual_titles(self):
+        from tests.test_alerts import alert_email
+
+        google = FakeGoogle()
+        html = (
+            '<a href="https://www.linkedin.com/jobs/view/4012345678">'
+            'Pharmacy Benefits Systems Analyst</a> Synthetic Health · Remote'
+            '<a href="https://www.linkedin.com/jobs/view/4012345679">'
+            'Night Auditor</a> Synthetic Health · Remote'
+            '<a href="https://www.linkedin.com/jobs/view/4012345680">'
+            'Claims Analyst</a> Synthetic Health · Remote'
+        )
+        google.messages = {"m1": alert_email(html_body=html), "m2": alert_email(html_body=html)}
+        with unittest.mock.patch("careeros.qualify.night.enabled", return_value=True):
+            first = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+            again = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+        self.assertEqual(first["gmail_messages"], 2)
+        self.assertEqual(again["gmail_messages"], 0)
+        leads = {row["title"]: row for row in self.store.all("SELECT title, profile, family FROM leads")}
+        self.assertEqual(len(leads), 3)
+        self.assertEqual(leads["Pharmacy Benefits Systems Analyst"]["profile"], "primary")
+        self.assertEqual(leads["Night Auditor"]["profile"], "night")
+        self.assertEqual(leads["Claims Analyst"]["profile"], "primary")
+        self.assertEqual(self.store.one("SELECT COUNT(*) AS n FROM alert_messages")["n"], 2)
+
+    def test_native_gmail_keeps_night_lead_even_if_night_assessment_disabled(self):
+        from tests.test_alerts import alert_email
+
+        google = FakeGoogle()
+        html = (
+            '<a href="https://www.linkedin.com/jobs/view/4012345699">'
+            'Night Auditor</a> Synthetic Health · Remote'
+        )
+        google.messages = {"m1": alert_email(html_body=html), "m2": alert_email(html_body=html)}
+        with unittest.mock.patch("careeros.qualify.night.enabled", return_value=False):
+            counts = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+        self.assertEqual(counts["gmail_messages"], 2)
+        lead = self.store.one("SELECT profile, family FROM leads WHERE site = 'linkedin'")
+        self.assertIsNotNone(lead)
+        self.assertEqual(lead["profile"], "night")
+        self.assertIsNone(self.store.one("SELECT * FROM jobs"))
+
+    def test_unreadable_message_is_retried_not_credited_as_processed(self):
+        from careeros.discovery.alerts import AlertEmailError, parse_eml_bytes
+
+        google = FakeGoogle()
+        calls = 0
+
+        def flaky_parse(raw):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                raise AlertEmailError("synthetic malformed alert")
+            return parse_eml_bytes(raw)
+
+        with unittest.mock.patch("careeros.discovery.alerts.parse_eml_bytes", side_effect=flaky_parse):
+            first = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+        self.assertEqual(first["gmail_unresolved"], 1)
+        self.assertEqual(first["gmail_messages"], 1)
+        self.assertEqual(
+            [row["message_id"] for row in self.store.all("SELECT message_id FROM alert_messages")],
+            ["m2"],
+        )
+        next_run = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+        self.assertEqual(next_run["gmail_messages"], 1)
+        self.assertEqual(
+            [row["message_id"] for row in self.store.all("SELECT message_id FROM alert_messages ORDER BY message_id")],
+            ["m1", "m2"],
+        )
+
+    def test_partly_failed_message_is_retried(self):
+        from collections import Counter
+
+        google = FakeGoogle()
+
+        def broken_record(_ctx, alert, _client, outcomes, **_kwargs):
+            outcomes.append((alert.links[0], "row_error"))
+            return Counter()
+
+        with unittest.mock.patch("careeros.cli._record_alert", side_effect=broken_record):
+            first = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+        self.assertEqual(first["gmail_unresolved"], 2)
+        self.assertEqual(first["gmail_unresolved_rows"], 2)
+        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM alert_messages")["c"], 0)
+        second = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+        self.assertEqual(second["gmail_messages"], 2)
+        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM alert_messages")["c"], 2)
+
+    def test_search_limit_is_reported_not_silently_truncated(self):
+        reader = self.reader(FakeGoogle())
+        try:
+            with self.assertRaises(gmail.GmailError) as caught:
+                reader.search("newer_than:3d", limit=1)
+            self.assertEqual(caught.exception.code, "search_limit_reached")
+        finally:
+            reader.close()
 
     def test_expired_access_asks_you_to_reconnect(self):
         with self.assertRaises(gmail.GmailError) as ctx:

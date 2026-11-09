@@ -48,6 +48,13 @@ def judged(profile, *lines):
 
 
 class ExtractionTests(unittest.TestCase):
+    def test_helpful_coding_certification_is_preferred_not_a_hard_requirement(self):
+        line = "Experience or certification in coding/billing is helpful."
+        self.assertEqual(mentions(line), [("unspecified certification", "preferred")])
+        self.assertEqual(mentions("PMP required"), [("pmp", "hard_required")])
+        self.assertEqual(mentions("PMP or equivalent experience required"),
+                         [("pmp", "required_with_equivalency")])
+
     def test_named_credentials_and_their_strength(self):
         self.assertEqual(mentions("PMP required"), [("pmp", "hard_required")])
         self.assertEqual(mentions("PMP preferred"), [("pmp", "preferred")])

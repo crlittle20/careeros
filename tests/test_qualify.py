@@ -48,6 +48,28 @@ class NormalizeTests(unittest.TestCase):
         self.assertIsNone(classify_family(norm("Software Engineer II"), fam))
         self.assertEqual(excluded_term(norm("Director, Business Systems"), POLICY.get("title_exclude")), "director")
 
+    def test_supervisor_quality_and_claims_titles_are_recognised_conservatively(self):
+        from careeros.normalize.posting import relevant_role
+
+        family = POLICY.get("families")
+        expected = {
+            "Supervisor, Contact Center Operations": "service_operations_supervision",
+            "Supervisor Insurance/Billing/Collection": "service_operations_supervision",
+            "Supervisor, Call Center": "service_operations_supervision",
+            "Customer Care Team Lead": "service_operations_supervision",
+            "Claims Manager": "service_operations_supervision",
+            "QA Analyst": "data_reporting",
+            "Call Quality Auditor": "data_reporting",
+        }
+        for title, want in expected.items():
+            with self.subTest(title=title):
+                self.assertEqual(classify_family(norm(title), family), want)
+        self.assertTrue(relevant_role(norm("Supervisor, Contact Center Operations"),
+                                      "service_operations_supervision", "remote", "US", POLICY))
+        self.assertFalse(relevant_role(norm("Claims Manager"),
+                                       "service_operations_supervision", "remote", "US", POLICY))
+        self.assertIsNone(classify_family(norm("Software QA Engineer"), family))
+
     def test_remote_states_country_comp_type(self):
         self.assertEqual(remote_states("Remote - US", postings.GOOD_FIT, "remote"), ["AZ", "FL", "GA", "TX"])
         self.assertEqual(detect_country("Remote - US", "", "remote"), "US")
@@ -173,6 +195,32 @@ class GateTests(unittest.TestCase):
         g = evaluate(j, reqs, direct, POLICY)
         self.assertEqual(eligibility(j, reqs, direct, g, POLICY)["dims"]["skills_coverage"]["value"], 1.0)
         self.assertEqual(eligibility(j, reqs, trained, g, POLICY)["dims"]["skills_coverage"]["value"], 0.7)
+
+    def test_targeted_supervisor_is_conditional_but_manager_remains_rejected(self):
+        from careeros.qualify.profile import Profile
+        from careeros.qualify.gate import state_for
+
+        mid = Profile({**PROFILE.data, "current_level": "mid"}, "mid")
+        reqs = extract(postings.GOOD_FIT, POLICY).requirements
+        supervisor = evaluate(job("Supervisor, Contact Center Operations", postings.GOOD_FIT), reqs, mid, POLICY)
+        self.assertNotIn("seniority_gap", {f["code"] for f in supervisor.hard_failures})
+        self.assertIn("supervisor_scope_review", {f["code"] for f in supervisor.flags})
+        self.assertEqual(state_for(supervisor, POLICY), "CONDITIONAL")
+        manager = evaluate(job("Manager, Contact Center Operations", postings.GOOD_FIT), reqs, mid, POLICY)
+        self.assertIn("seniority_gap", {f["code"] for f in manager.hard_failures})
+
+    def test_generic_qa_analyst_requires_relevant_context(self):
+        cases = (
+            ("Selenium, Playwright and software regression testing. " * 6, True),
+            ("Claims quality review and call monitoring in a healthcare contact center", False),
+        )
+        for description, should_reject in cases:
+            with self.subTest(description=description):
+                j = job("QA Analyst", description, location="Remote")
+                self.assertEqual(j["family"], "data_reporting")
+                _reqs, gate = run(j)
+                codes = {f["code"] for f in gate.hard_failures}
+                self.assertEqual("generic_title_no_context" in codes, should_reject)
 
     def test_manager_roles_rejected_for_mid_level_profile(self):
         from careeros.qualify.profile import Profile

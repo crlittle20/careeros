@@ -90,6 +90,38 @@ class ParseTests(unittest.TestCase):
         self.assertNotIn("javascript:alert(1)", links)
         self.assertNotIn("color:red", " ".join(l.text + l.context for l in alert.links))
 
+    def test_job_alert_search_headers_are_not_saved_as_job_leads(self):
+        html = (
+            '<a href="https://www.linkedin.com/jobs/search/?keywords=Data%20Analyst">'
+            'Your job alert for Data Analyst</a>'
+            '<a href="https://www.linkedin.com/jobs/view/4488484632?trk=alert">'
+            'Data Analyst Claims</a> Mercury Insurance - Remote'
+            '<a href="https://www.indeed.com/jobs?q=claims+analyst">'
+            'See more jobs</a>'
+            '<a href="https://www.indeed.com/viewjob?jk=3074d70a34bee345">'
+            'Business Systems Analyst</a> Sample Employer - Remote'
+            '<a href="https://www.glassdoor.com/Job/jobs.htm?sc.keyword=analyst">'
+            'Your job alert</a>'
+        )
+        alert = parse_eml(self.write(alert_email(html_body=html)))
+        self.assertEqual(
+            {link.url for link in alert.links},
+            {"https://www.linkedin.com/jobs/view/4488484632",
+             "https://www.indeed.com/viewjob?jk=3074d70a34bee345"},
+        )
+        self.assertTrue(all(link.job_like for link in alert.links))
+
+    def test_targeted_linkedin_search_result_with_specific_job_id_is_kept(self):
+        html = (
+            '<a href="https://www.linkedin.com/jobs/search/?currentJobId=4488484632">'
+            'Data Analyst Claims</a>'
+        )
+        alert = parse_eml(self.write(alert_email(html_body=html)))
+        self.assertEqual(
+            [(link.url, link.text) for link in alert.links],
+            [("https://www.linkedin.com/jobs/view/4488484632", "Data Analyst Claims")],
+        )
+
     def test_plain_text_alerts_use_the_line_before_the_link(self):
         body = "New jobs for you\n\nPBM Claims Analyst\nPayer Co - Remote\nhttps://www.indeed.com/viewjob?jk=0a1b2c3d4e5f6a7b\n"
         alert = parse_eml(self.write(alert_email(html_body=None, text_body=body)))

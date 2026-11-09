@@ -197,6 +197,13 @@ def parse_eml_bytes(data: bytes) -> AlertEmail:
         if canonical is None:
             continue
         url, site, job_like = canonical
+        # LinkedIn/Indeed/Glassdoor newsletter headers often point to job
+        # search pages (e.g. "Your job alert for Data Analyst"). These are
+        # navigation links, never individual postings; keep the actual job
+        # cards but do not manufacture leads from the headers. Other sites
+        # retain their existing conservative manual-lead handling.
+        if site in ("linkedin", "indeed", "glassdoor") and not job_like:
+            continue
         meaningful = text if text and not GENERIC_TEXT.match(text) else ""
         link = by_url.setdefault(url, Link(url=url, site=site, job_like=job_like))
         if meaningful and not link.text:

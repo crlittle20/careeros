@@ -19,7 +19,8 @@ from . import experience as experience_mod
 from .profile import DEGREE_RANK, Profile, alternatives
 
 # Bump when gate logic changes: results recorded under an older version are re-evaluated automatically.
-RULES_VERSION = "gate-2026-10-18a"  # 10-18a: certification alternatives only when "or" joins them; unknown kinds and
+RULES_VERSION = "gate-2026-11-08-supervisor-review"  # explicit supervisor-scope flag is conditional, not an automatic pass
+# 10-18a: certification alternatives only when "or" joins them; unknown kinds and
 # courses never count; a course and a certification of one name kept apart; issuer requirements by issuer only
 _PREVIOUS_RULES = "gate-2026-10-16a"  # 10-16a: certification status must be explicit (missing = unknown), courses never count
 # 10-15b: certifications named, matched by status, alternatives honoured; 10-15a: Experience Match
@@ -135,8 +136,18 @@ def evaluate(job: dict, requirements: list, profile: Profile, policy) -> GateRes
     mine = profile.level_rank()
     max_gap = gate.get("max_seniority_gap", 2)
     if mine is not None and SENIORITY_RANK[posting_level] - mine > max_gap:
-        result.fail("seniority_gap", f"{posting_level}-level role; more than {max_gap} levels above your current level",
-                    job.get("title"), profile=f"current level: {profile.data.get('current_level')}")
+        if (job.get("family") == "service_operations_supervision"
+                and contains_term(title_norm, "supervisor")
+                and not contains_term(title_norm, "manager")):
+            # The owner targets contact-center/claims supervisors. The
+            # role stays CONDITIONAL until leadership scope and experience
+            # are reviewed; no manager-level or other hard gate is waived.
+            result.flag("supervisor_scope_review",
+                        "supervisor role exceeds stated level; verify people-management scope and experience",
+                        job.get("title"))
+        else:
+            result.fail("seniority_gap", f"{posting_level}-level role; more than {max_gap} levels above your current level",
+                        job.get("title"), profile=f"current level: {profile.data.get('current_level')}")
 
     principal_rule(result, job, policy)
 

@@ -351,13 +351,23 @@ def _night_section(store: Store, now: str, token, form_keys, policy) -> list[str
            'Labels here measure NIGHT only.</div>']
     for mode, title in (("supplemental", "NIGHT · Supplemental"), ("replacement", "NIGHT · Replacement")):
         mine = [r for r in rows if r["n_mode"] == mode]
+        # A high NIGHT score is not evidence of hours. Keep the unknown-hour
+        # jobs visible but in a distinct manual schedule-verification group;
+        # they must not look like confirmed supplemental/replacement shifts.
+        unconfirmed = [r for r in mine if r["n_state"] == "CONDITIONAL"
+                       and r["n_schedule"] in ("unknown", "daytime_likely")
+                       and r["n_priority"] >= near_min]
+        unconfirmed_ids = {r["job_id"] for r in unconfirmed}
         groups = [
             ("Tier A", [r for r in mine if r["n_tier"] == "A"]),
             ("Tier B", [r for r in mine if r["n_tier"] == "B"]),
-            ("Conditional priority", [r for r in mine if r["n_state"] == "CONDITIONAL" and r["n_priority"] >= conditional_min]),
+            ("Conditional priority", [r for r in mine if r["n_state"] == "CONDITIONAL"
+                                      and r["n_priority"] >= conditional_min and r["job_id"] not in unconfirmed_ids]),
             ("On hold", [r for r in mine if r["n_state"] == "HOLD" and r["n_priority"] >= near_min]),
             ("Near-miss", [r for r in mine if r["n_tier"] == "near_miss" and r["n_state"] != "HOLD"
+                           and r["job_id"] not in unconfirmed_ids
                            and not (r["n_state"] == "CONDITIONAL" and r["n_priority"] >= conditional_min)]),
+            ("Unconfirmed hours — check before considering", unconfirmed),
         ]
         shown = sum(len(items) for _, items in groups)
         out.append(f'<h2 id="night-{mode}">{title} ({shown})</h2><div class="meta">'
@@ -449,7 +459,8 @@ def build_report(store: Store, profile, policy, *, token: str | None = None, for
     if since:
         fresh = [r for r in scored if r["first_seen_at"] > since]
         out.append(f"<h2>New since your last review ({len(_grouped(fresh))})</h2>"
-                   f'<div class="meta">Found after {esc(since[:16].replace("T", " "))} UTC, best first.</div>')
+                   f'<div class="meta">Graded postings first seen after {esc(since[:16].replace("T", " "))} UTC. '
+                   'Unverified Gmail and GitHub alert leads are counted separately below, not in this total.</div>')
         out.extend(_card(store, r, now, token, form_keys, n, new=True) for r, n in _grouped(fresh)[:30])
         if not fresh:
             out.append('<div class="meta">none</div>')

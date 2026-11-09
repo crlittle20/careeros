@@ -31,8 +31,8 @@
   },
   "dim_role_family": {
    "file": "dim_role_family.csv",
-   "rows": 6,
-   "sha256": "b2d65d5b0d07e49324d6c99b9f5496eae21447abb641c3a6a33db16f9bf06446"
+   "rows": 7,
+   "sha256": "d0fa8402b2855759ae1b45045d5bc24bbbb59cc9cb93f570f20346e0a1cd06cf"
   },
   "dim_location": {
    "file": "dim_location.csv",
@@ -126,7 +126,7 @@
   {
    "check": "dim_role_family: the primary key role_family_key is present and unique",
    "ok": true,
-   "detail": "6 rows"
+   "detail": "7 rows"
   },
   {
    "check": "dim_location: the primary key location_key is present and unique",
