@@ -128,7 +128,9 @@ class PullTests(unittest.TestCase):
         counts = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
         self.assertEqual(counts["gmail_messages"], 2)
         self.assertEqual(counts["lead_new"], 4)  # linkedin, indeed, nhg + the unreadable greenhouse link
-        self.assertEqual(counts["lead_fetch_failed"], 1)  # the Greenhouse link (simulated 404) is kept as a lead
+        self.assertEqual(counts["unified_board_unverified"], 1)  # unknown board ownership: no automatic fetch
+        self.assertEqual(counts["lead_fetch_failed"], 0)
+        self.assertEqual(self.board_requests, [])
         self.assertEqual([tuple(r) for r in self.store.all("SELECT message_id, source FROM alert_messages ORDER BY message_id")],
                          [("m1", "gmail"), ("m2", "gmail")])
         again = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
@@ -161,6 +163,23 @@ class PullTests(unittest.TestCase):
         self.assertEqual(leads["Night Auditor"]["profile"], "night")
         self.assertEqual(leads["Claims Analyst"]["profile"], "primary")
         self.assertEqual(self.store.one("SELECT COUNT(*) AS n FROM alert_messages")["n"], 2)
+
+    def test_native_gmail_keeps_night_lead_even_if_night_assessment_disabled(self):
+        from tests.test_alerts import alert_email
+
+        google = FakeGoogle()
+        html = (
+            '<a href="https://www.linkedin.com/jobs/view/4012345699">'
+            'Night Auditor</a> Synthetic Health · Remote'
+        )
+        google.messages = {"m1": alert_email(html_body=html), "m2": alert_email(html_body=html)}
+        with unittest.mock.patch("careeros.qualify.night.enabled", return_value=False):
+            counts = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
+        self.assertEqual(counts["gmail_messages"], 2)
+        lead = self.store.one("SELECT profile, family FROM leads WHERE site = 'linkedin'")
+        self.assertIsNotNone(lead)
+        self.assertEqual(lead["profile"], "night")
+        self.assertIsNone(self.store.one("SELECT * FROM jobs"))
 
     def test_unreadable_message_is_retried_not_credited_as_processed(self):
         from careeros.discovery.alerts import AlertEmailError, parse_eml_bytes
