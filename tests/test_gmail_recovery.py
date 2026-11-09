@@ -1,7 +1,7 @@
 """Gmail API and IMAP search overflow recovery. All tests use synthetic IDs; no network."""
 import re
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime
 
 from careeros.discovery.gmail import GmailError
 from careeros.discovery.gmail_recovery import search_all
