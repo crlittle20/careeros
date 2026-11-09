@@ -38,13 +38,26 @@ families:
     title_any: [reporting analyst, report analyst, data analyst, business intelligence, bi analyst, analytics analyst,
                 power bi, data quality analyst, data analytics, business insights, data operations analyst,
                 data validation analyst, data integrity analyst, data governance analyst, data reconciliation analyst,
-                quality analyst, quality assurance analyst, audit analyst]
+                quality analyst, quality assurance analyst, audit analyst, qa analyst, qa auditor,
+                call quality analyst, call quality auditor, contact center quality analyst, claims quality auditor]
   process_analyst:
     label: Business process analyst
     title_any: [process analyst, business process, process improvement, process optimization, operations analyst,
                 process excellence, continuous improvement analyst, workflow analyst, operational excellence,
                 implementation consultant,
                 implementation manager]   # 2026-10-12: an individual-contributor role (see seniority _IC_MANAGER)
+  service_operations_supervision:
+    label: Contact center / claims / service supervision (manual scope review)
+    # Explicitly targeted operations leadership, not a blanket manager exception.
+    # Supervisor scope is CONDITIONAL when above the candidate's stated level.
+    # Manager roles keep the established seniority hard gate.
+    title_any: [supervisor contact center, contact center supervisor, supervisor call center, call center supervisor,
+                supervisor customer service, customer service supervisor, supervisor provider,
+                provider data operations supervisor, supervisor insurance, insurance billing supervisor,
+                supervisor billing, billing supervisor, supervisor claims, claims supervisor, claims manager,
+                manager claims, contact center manager, manager contact center, call center manager,
+                customer care team lead, operations team lead, helpdesk shift lead, service desk shift lead,
+                supervisor quality assurance, quality assurance supervisor]
 
 # Second review of title-screen rejects (2026-10-12, Part 3). Deterministic, no model calls. A title that matched no
 # family but holds an ambiguous role word is rescued only with strong evidence from the posting itself; every decision
@@ -443,17 +456,18 @@ domain_levels:
 eligibility_states:
   material_unknowns: [remote_unknown, home_state_unknown, commute_unknown, education_unknown, work_authorization_unknown,
                       citizenship_check, years_unknown, low_confidence_requirement, license_check, clearance_check,
-                      certification_check, generic_title_unverified, pay_untrusted_below_floor]
+                      certification_check, generic_title_unverified, pay_untrusted_below_floor, supervisor_scope_review]
 
 # Prompts v2.2: generic titles do not qualify on the title alone; the title or posting must show relevant context.
 generic_titles:
-  titles: [business analyst, data analyst, operations analyst, quality analyst, systems analyst, reporting analyst,
+  titles: [business analyst, data analyst, operations analyst, quality analyst, qa analyst, systems analyst, reporting analyst,
            process analyst, analytics analyst, quality assurance analyst, application analyst, applications analyst,
            functional analyst, requirements analyst, test analyst, testing analyst, audit analyst, business systems analyst,
            business system analyst, implementation consultant]
   context_terms: [claims, claim, pharmacy, pbm, healthcare, health care, health plan, benefits, eligibility, reimbursement,
                   provider, payer, medicare, medicaid, member, patient, operations, validation, reconciliation, reporting,
-                  implementation, configuration, enrollment, insurance]
+                  implementation, configuration, enrollment, insurance, call center, contact center, call quality,
+                  call monitoring, member service, customer care]
 
 industries:
   preferred: [healthcare, health, pbm, pharmacy, payer, health plan, insurance, medicare, medicaid, clinical, hospital, digital health]
