@@ -19,6 +19,7 @@ from __future__ import annotations
 import re
 from decimal import ROUND_HALF_UP, Decimal
 
+from . import role_years
 from .profile import Profile, alternatives
 
 YEARS_CATEGORIES = ("skill", "years_experience", "experience", "domain")
@@ -101,9 +102,14 @@ def _range_upper(source_text: str, years: float) -> float | None:
 
 def score_requirement(req, profile: Profile, cfg: dict) -> dict:
     """One requirement record: what was asked, the item counted, and the score (None when your years are unknown)."""
-    match = best_match(profile, req.name)
-    item = {"area": req.name, "category": req.category, "strength": req.requirement_type, "required_years": req.years,
-            "required_upper": _range_upper(req.source_text, req.years)}
+    return _scored(req, best_match(profile, req.name), cfg)
+
+
+def _scored(req, match: dict | None, cfg: dict, reading=None) -> dict:
+    item = {"area": reading.area if reading else req.name, "category": "years_experience" if reading else req.category,
+            "strength": req.requirement_type, "required_years": req.years, "required_upper": _range_upper(req.source_text, req.years)}
+    if reading:
+        item["reading"] = reading.kind
     if match is None:
         return {**item, "matched_item": None, "score": None, "gap_class": "unknown"}
     kind = evidence_kind(match)
@@ -112,27 +118,76 @@ def score_requirement(req, profile: Profile, cfg: dict) -> dict:
             **score_years(req.years, match["years"], kind, cfg)}
 
 
-def gate_line(records: list, profile: Profile, policy) -> dict | None:
-    """The Experience Match kept with a years rejection: the gate judges a line on your best alternative, so this is
-    the best-scoring record of the line (None when none can be scored)."""
+def _best(items: list) -> dict:
+    return max(items, key=lambda i: (i["score"], i["counted_years"]))
+
+
+def line_members(records: list, profile: Profile, policy, cfg: dict, occurrence: int | None = None) -> tuple[list, str | None]:
+    """The scored members of one line, and its structure when the line is read as a role, a function or an activity
+    (OPP-43): such a line is one member, judged on years in it only, as the gate judges it (its first member). A figure
+    stated twice for two demands ("8+ years as a BSA and 8+ years of healthcare experience", D120) is scored as both
+    demands, each on the records its own words name, the strictest counting (AND), unless one `occurrence` of it is asked
+    for: the demand the gate judged. Demands an "or" may make alternatives are scored as AND too (D123 R4)."""
+    from .gate import demand_occurrences   # the gate's own grouping of figures joined by "or"
+    found = demand_occurrences(records[0].source_text, records[0].years)
+    if occurrence is None and len(found) > 1:
+        members: list = []
+        for n in found:
+            each, structure = line_members(records, profile, policy, cfg, n)
+            known = [m for m in each if m["score"] is not None]
+            if structure is None:
+                members.append(_best(known) if known else each[0])
+            else:
+                members += each
+        return members, "and"
+    occurrence, text = occurrence or 0, records[0].source_text
+    if len(found) > 1:   # one demand of several: the records its own words name
+        records = role_years.demand_records(records, text, records[0].years, occurrence, policy)
+    reading = role_years.read(text, records[0].years, policy, occurrence)
+    if reading is None:
+        return [score_requirement(r, profile, cfg) for r in records], None
+    members = [_scored(records[0], role_years.line_credit(records, reading, profile, policy), cfg, reading)]
+    # "as a business systems analyst in healthcare": years in that role in that domain are at most your years in the
+    # domain, so the domain is scored beside the role and the line keeps its AND reading (the strictest counts). The
+    # place is one condition however many domains it names ("in healthcare or PBM"): your best of them counts
+    # (pre-review #6, 2026-11-04), and an "or" inside it never makes the line an OR-list.
+    places = [score_requirement(r, profile, cfg) for r in records
+              if r.category == "domain" and reading.place and role_years.names_domain(r, reading.place, policy)]
+    if places:
+        known = [p for p in places if p["score"] is not None]
+        return [*members, _best(known) if known else places[0]], "and"
+    return members, "or" if len(reading.alternatives) > 1 else "single"
+
+
+def gate_line(records: list, profile: Profile, policy, occurrence: int = 0) -> dict | None:
+    """The Experience Match kept with a years rejection: what the gate judged. A line read as a role, a function or an
+    activity is judged on years in it, never on the domain it names (pre-review #6, 2026-11-04); any other line on your
+    best alternative, the best-scoring record of the line. `occurrence`: which demand of a figure stated twice the gate
+    rejected on (D120). None when none can be scored."""
     cfg = settings(policy)
-    known = [m for m in (score_requirement(r, profile, cfg) for r in records) if m["score"] is not None]
-    return max(known, key=lambda i: (i["score"], i["counted_years"])) if known else None
+    members, structure = line_members(records, profile, policy, cfg, occurrence)
+    if structure is not None:
+        return members[0] if members[0]["score"] is not None else None
+    known = [m for m in members if m["score"] is not None]
+    return _best(known) if known else None
 
 
 def _strictest(items: list) -> dict:
     return min(items, key=lambda i: (i["score"], -i["shortfall_months"]))
 
 
-def _line(source_text: str, members: list) -> dict:
+def _line(source_text: str, members: list, structure: str | None = None) -> dict:
     """One requirement line (one source line and one years figure). An OR-list is judged on your best alternative, an
-    AND-list on the strictest item; items with unknown years are listed but never scored."""
+    AND-list on the strictest item; items with unknown years are listed but never scored. A line read as a role, a
+    function or an activity comes with its structure: one member already judged on its best alternative, and its place
+    beside it when the line names one."""
     known = [m for m in members if m["score"] is not None]
-    structure = "or" if _OR_LINE.search(source_text or "") else "and" if len(members) > 1 else "single"
+    if structure is None:
+        structure = "or" if _OR_LINE.search(source_text or "") else "and" if len(members) > 1 else "single"
     if not known:
         chosen = members[0]
     elif structure == "or":
-        chosen = max(known, key=lambda i: (i["score"], i["counted_years"]))
+        chosen = _best(known)
     else:
         chosen = _strictest(known)
     return {"source_text": (source_text or "")[:200], "structure": structure, **chosen,
@@ -165,12 +220,12 @@ def evaluate(requirements: list, profile: Profile, policy, gate=None, tier: str 
     groups: dict = {}
     for r in requirements:
         if r.years is not None and r.category in YEARS_CATEGORIES and r.requirement_type != "responsibility":
-            groups.setdefault((r.source_text, r.years, r.requirement_type), []).append(score_requirement(r, profile, cfg))
+            groups.setdefault((r.source_text, r.years, r.requirement_type), []).append(r)
     rejected = {((f.get("source_text") or "")[:200], f.get("required_years")) for f in (gate.hard_failures if gate else [])
                 if f.get("code") == "years_far_short"}
     lines = []
-    for (source, _years, _type), members in groups.items():
-        line = _line(source, members)
+    for (source, _years, _type), records in groups.items():
+        line = _line(source, *line_members(records, profile, policy, cfg))
         line["effect"] = _effect(line, cfg, rejected)
         lines.append(line)
 
@@ -195,13 +250,14 @@ def evaluate(requirements: list, profile: Profile, policy, gate=None, tier: str 
 
 
 def conflicts(requirements: list) -> list:
-    """The same area asked for with different years on separate hard-required lines: the higher figure counts."""
+    """The same area asked for with different years on separate hard-required lines: the higher figure counts. Two
+    figures on one line are the gate's to judge ("5+ years as a BA or 3+ years as a PO": alternatives), not a conflict."""
     seen: dict = {}
     for r in requirements:
         if r.years is not None and r.category in YEARS_CATEGORIES and r.requirement_type == "hard_required":
             seen.setdefault((r.category, r.name), {})[r.years] = r.source_text
     return [{"area": name, "years": sorted(found), "counted": max(found), "source_text": (found[max(found)] or "")[:200]}
-            for (_category, name), found in sorted(seen.items()) if len(found) > 1]
+            for (_category, name), found in sorted(seen.items()) if len(set(found.values())) > 1]
 
 
 def rejection_block(failure: dict) -> dict | None:
@@ -223,6 +279,7 @@ def _duration(months_short: float) -> str:
 
 STRENGTH_WORDS = {"hard_required": "hard required", "required_with_equivalency": "required, or equivalent",
                   "ambiguous": "required (unclear wording)", "preferred": "preferred"}
+READING_WORDS = {"role": "as a role", "function": "in a function", "activity": "doing an activity"}
 EFFECT_WORDS = {"none": "none", "cap_b": "cap at Tier B", "stretch": "stretch (Tier A/B lowered to near-miss)",
                 "reject_by_existing_gate": "rejected by the existing gate rule"}
 
@@ -253,6 +310,9 @@ def explain(block: dict) -> list[str]:
     out.append(f"Shortfall: {_duration(line['shortfall_months'])}. Coverage: {_num(line['coverage_pct'])}%.")
     out.append(f"Points: shortfall {line['absolute_points']}/10, coverage {line['coverage_points']}/6, "
                f"relevance {line['relevance_points']}/4.")
+    if line.get("reading"):
+        out.append(f"Read as years {READING_WORDS.get(line['reading'], line['reading'])}: only a role title, function or skill "
+                   "that names it counts, never your domain or total years.")
     if line.get("structure") in ("or", "and"):
         out.append(f"Judged on {'the best alternative' if line['structure'] == 'or' else 'the strictest item'} of the line.")
     effect = EFFECT_WORDS.get(block["effect"], block["effect"])

@@ -1,0 +1,5500 @@
+{
+ "what": "Planted by hand, each with the whole suite, in place of a new full run (D111): every defect of this revision in a file changed since the base, every defect added or re-anchored since, and every defect the base's receipt saw caught only by a test module changed since. The owner's decision D111 (2026-11-04): the pre-review's High and Medium findings fixed before the Codex review, with this hand check in place of a new full run.",
+ "base": "f30a638b8bff70a519be568aea43aea52980912b",
+ "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+ "tree": "ebed6e6636c55908796501f26f4d0bddfc0e7566e2bd5d5e1aaa710add61b87e",
+ "python": "3.14.10",
+ "node_version": "v24.22.1",
+ "defined": 1030,
+ "checked": 272,
+ "by_result": {
+  "CAUGHT": 271,
+  "SURVIVED": 1
+ },
+ "baseline": {
+  "exit": 0,
+  "ran": 1096,
+  "skipped": 8,
+  "seconds": 163.5
+ },
+ "workers": 7,
+ "minutes": 128.7,
+ "results": [
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 5,
+   "file": "careeros/extract/rules.py",
+   "mutation": "ambiguous requirements downgraded to preferred",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 59,
+   "errors": 14,
+   "skipped": 8,
+   "failing": [
+    "tests.test_certifications.MatchingTests.test_a_missing_status_is_unknown_never_held",
+    "tests.test_certifications.MatchingTests.test_a_planned_credential_is_never_held",
+    "tests.test_certifications.MatchingTests.test_an_unnamed_certification_is_a_check_with_the_wording_quoted"
+   ],
+   "seconds": 232.4,
+   "at": "2026-11-05T01:39:56+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 38,
+   "file": "careeros/cli.py",
+   "mutation": "alert links on non-board sites fetched",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 16,
+   "errors": 4,
+   "skipped": 8,
+   "failing": [
+    "tests.test_demo_mode.DemoTourTest.test_boards_cover_every_verification_outcome",
+    "tests.test_demo_mode.DemoTourTest.test_jobs_cover_every_outcome",
+    "tests.test_github_inbox.PullTests.test_issue_is_graded_answered_closed_and_never_reread"
+   ],
+   "seconds": 234.1,
+   "at": "2026-11-05T01:39:58+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 41,
+   "file": "careeros/cli.py",
+   "mutation": "GitHub inbox issues re-read every run",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.PartialFailureTests.test_an_issue_is_read_once_even_while_its_close_keeps_failing"
+   ],
+   "seconds": 238.8,
+   "at": "2026-11-05T01:40:02+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 42,
+   "file": "careeros/cli.py",
+   "mutation": "GitHub inbox issues never answered or closed",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 4,
+   "errors": 4,
+   "skipped": 8,
+   "failing": [
+    "tests.test_github_inbox.PullTests.test_careers_page_links_resolve_to_greenhouse_or_known_jobs_and_bad_guesses_add_nothing",
+    "tests.test_github_inbox.PullTests.test_issue_is_graded_answered_closed_and_never_reread",
+    "tests.test_v25_audit.GmailRecoveryTests.test_a_reported_outage_asks_the_next_run_for_a_seven_day_lookback_without_any_gmail_data"
+   ],
+   "seconds": 235.7,
+   "at": "2026-11-05T01:39:59+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 43,
+   "file": "careeros/cli.py",
+   "mutation": "recommended jobs CareerOS already tracks fetched again as new",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 4,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_github_inbox.PullTests.test_careers_page_links_resolve_to_greenhouse_or_known_jobs_and_bad_guesses_add_nothing",
+    "tests.test_lead_resolution.AlertArrivalTests.test_an_alert_line_is_linked_on_arrival_only_by_the_lead_resolution_rules",
+    "tests.test_v22_primary.LedgerTests.test_same_job_through_another_site_is_recognised"
+   ],
+   "seconds": 238.2,
+   "at": "2026-11-05T01:40:02+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 44,
+   "file": "careeros/cli.py",
+   "mutation": "unresolvable links leave employers behind",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_github_inbox.PullTests.test_careers_page_links_resolve_to_greenhouse_or_known_jobs_and_bad_guesses_add_nothing",
+    "tests.test_v25_audit.HandoffFindingsTests.test_a_new_board_found_through_the_inbox_takes_the_company_name_and_parent"
+   ],
+   "seconds": 235.2,
+   "at": "2026-11-05T01:39:59+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 47,
+   "file": "careeros/cli.py",
+   "mutation": "a failed daily run stays silent",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ops.RunFailureNoticeTests.test_a_failed_daily_run_shows_a_notification"
+   ],
+   "seconds": 240.0,
+   "at": "2026-11-05T01:40:03+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 59,
+   "file": "careeros/cli.py",
+   "mutation": "links on non-allowed sources fetched",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v22_primary.SourceStatusTests.test_a_source_that_is_not_allowed_is_never_fetched"
+   ],
+   "seconds": 302.4,
+   "at": "2026-11-05T01:44:58+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 60,
+   "file": "careeros/cli.py",
+   "mutation": "same job through another site not recognised",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_lead_resolution.AlertArrivalTests.test_an_alert_line_is_linked_on_arrival_only_by_the_lead_resolution_rules",
+    "tests.test_v22_primary.LedgerTests.test_same_job_through_another_site_is_recognised",
+    "tests.test_v25_audit.SeenIndexTests.test_inbox_dedupe_is_requisition_aware"
+   ],
+   "seconds": 300.8,
+   "at": "2026-11-05T01:44:58+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 61,
+   "file": "careeros/cli.py",
+   "mutation": "duplicate leads across sites kept",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v22_primary.LedgerTests.test_same_job_through_another_site_is_recognised",
+    "tests.test_v25_audit.SeenIndexTests.test_inbox_dedupe_is_requisition_aware"
+   ],
+   "seconds": 300.3,
+   "at": "2026-11-05T01:44:59+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 68,
+   "file": "careeros/cli.py",
+   "mutation": "leads from excluded employers kept",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v21_policy.ExclusionTests.test_alert_and_inbox_leads_from_excluded_employers_are_suppressed",
+    "tests.test_v25_audit.AcceptanceTests.test_employers"
+   ],
+   "seconds": 297.8,
+   "at": "2026-11-05T01:44:57+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 92,
+   "file": "careeros/cli.py",
+   "mutation": "NIGHT issues graded with PRIMARY rules while NIGHT is off",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v21_policy.NightInboxTests.test_night_issues_wait_untouched_while_night_is_off"
+   ],
+   "seconds": 303.5,
+   "at": "2026-11-05T01:45:05+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 101,
+   "file": "careeros/qualify/gate.py",
+   "mutation": "Principal strategic/leadership scope never rejected",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.PrincipalTests.test_people_leadership_alone_rejects_a_principal_title_and_one_strategy_term_only_flags_it",
+    "tests.test_v25_audit.PrincipalTests.test_principal_with_ten_years_and_strategic_architecture_ownership_is_ineligible"
+   ],
+   "seconds": 306.4,
+   "at": "2026-11-05T01:45:09+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 102,
+   "file": "careeros/qualify/gate.py",
+   "mutation": "every Principal title rejected",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.PrincipalTests.test_people_leadership_alone_rejects_a_principal_title_and_one_strategy_term_only_flags_it",
+    "tests.test_v25_audit.PrincipalTests.test_principal_with_modest_individual_contributor_requirements_is_evaluated_normally"
+   ],
+   "seconds": 307.9,
+   "at": "2026-11-05T01:45:11+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 103,
+   "file": "config/policy/defaults.yaml",
+   "mutation": "VP abbreviations not rejected",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.PrincipalTests.test_director_vp_head_and_chief_titles_stay_automatic_rejections"
+   ],
+   "seconds": 291.0,
+   "at": "2026-11-05T01:49:48+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 106,
+   "file": "careeros/qualify/scores.py",
+   "mutation": "a skill named in the job title is not promoted to core",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.WeightedCoverageTests.test_title_and_duties_promote_importance"
+   ],
+   "seconds": 290.9,
+   "at": "2026-11-05T01:49:49+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 108,
+   "file": "careeros/qualify/night.py",
+   "mutation": "Supplemental hours overlapping the day job accepted",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.WorkloadTests.test_workload_is_informational_but_overlapping_hours_make_supplemental_incompatible"
+   ],
+   "seconds": 294.9,
+   "at": "2026-11-05T01:49:53+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 111,
+   "file": "careeros/discovery/note.py",
+   "mutation": "Note values not validated",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.NoteTests.test_bad_values_are_dropped_never_stored_and_free_text_still_works"
+   ],
+   "seconds": 294.6,
+   "at": "2026-11-05T01:49:54+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 112,
+   "file": "careeros/discovery/seen_index.py",
+   "mutation": "tracking parameters kept in the seen index",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.SeenIndexTests.test_tracking_parameters_never_create_a_new_fingerprint"
+   ],
+   "seconds": 304.5,
+   "at": "2026-11-05T01:50:10+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 113,
+   "file": "careeros/discovery/seen_index.py",
+   "mutation": "different requisitions merged under one title",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.SeenIndexTests.test_large_indexes_are_sharded",
+    "tests.test_v25_audit.SeenIndexTests.test_one_fingerprint_per_requisition_across_sites_and_a_new_requisition_stays_distinct",
+    "tests.test_v25_audit.SeenIndexTests.test_publishing_writes_a_local_copy_and_a_github_failure_never_stops_the_run"
+   ],
+   "seconds": 304.8,
+   "at": "2026-11-05T01:50:13+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 114,
+   "file": "careeros/discovery/seen_index.py",
+   "mutation": "the same requisition on different sites not merged",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.SeenIndexTests.test_one_fingerprint_per_requisition_across_sites_and_a_new_requisition_stays_distinct"
+   ],
+   "seconds": 308.6,
+   "at": "2026-11-05T01:50:20+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 115,
+   "file": "careeros/discovery/seen_index.py",
+   "mutation": "an email address can reach the seen index",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.SeenIndexTests.test_job_facts_only"
+   ],
+   "seconds": 246.6,
+   "at": "2026-11-05T01:53:55+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 116,
+   "file": "careeros/discovery/github_inbox.py",
+   "mutation": "an unchanged index is committed again",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.SeenIndexTests.test_rebuilds_are_identical_and_publishing_is_idempotent"
+   ],
+   "seconds": 245.6,
+   "at": "2026-11-05T01:53:55+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 117,
+   "file": "careeros/discovery/seen_index.py",
+   "mutation": "a Gmail outage never widens the next lookback",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.GmailRecoveryTests.test_a_reported_outage_asks_the_next_run_for_a_seven_day_lookback_without_any_gmail_data"
+   ],
+   "seconds": 248.5,
+   "at": "2026-11-05T01:54:02+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 118,
+   "file": "careeros/discovery/github_inbox.py",
+   "mutation": "a reported Gmail outage read as ok",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.GmailRecoveryTests.test_a_reported_outage_asks_the_next_run_for_a_seven_day_lookback_without_any_gmail_data",
+    "tests.test_v25_audit.GmailRecoveryTests.test_status_line"
+   ],
+   "seconds": 248.0,
+   "at": "2026-11-05T01:54:02+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 119,
+   "file": "careeros/cli.py",
+   "mutation": "a malformed inbox line stored as a lead",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.PartialFailureTests.test_one_malformed_github_row_does_not_kill_the_batch"
+   ],
+   "seconds": 241.9,
+   "at": "2026-11-05T01:54:12+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 121,
+   "file": "careeros/review/funnel.py",
+   "mutation": "negative outcomes not counted",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.FunnelTests.test_recommended_to_hired_with_negatives_and_new_dimensions"
+   ],
+   "seconds": 240.1,
+   "at": "2026-11-05T01:54:14+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 122,
+   "file": "careeros/review/funnel.py",
+   "mutation": "recommended / approved stages missing",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.FunnelTests.test_recommended_to_hired_with_negatives_and_new_dimensions"
+   ],
+   "seconds": 241.4,
+   "at": "2026-11-05T01:54:21+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 132,
+   "file": "careeros/cli.py",
+   "mutation": "a suspicious scan closes postings",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v26_discovery.SourceHealthTests.test_failed_and_suspicious_scans_never_close_or_prune"
+   ],
+   "seconds": 197.8,
+   "at": "2026-11-05T01:57:12+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 133,
+   "file": "careeros/cli.py",
+   "mutation": "one restricted scan disables a board",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v26_discovery.SourceHealthTests.test_access_restriction_disables_only_after_repeats"
+   ],
+   "seconds": 197.1,
+   "at": "2026-11-05T01:57:12+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 179,
+   "file": "careeros/cli.py",
+   "mutation": "unverified boards scanned",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 35,
+   "errors": 2,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest",
+    "tests.test_demo_mode.DemoTourTest",
+    "tests.test_analytics.DemoExportTest.test_a_demo_export_stays_in_the_demo_vault"
+   ],
+   "seconds": 191.8,
+   "at": "2026-11-05T01:57:13+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 180,
+   "file": "careeros/cli.py",
+   "mutation": "a vanished board keeps its place in the scan",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 36,
+   "errors": 2,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest",
+    "tests.test_demo_mode.DemoTourTest",
+    "tests.test_analytics.DemoExportTest.test_a_demo_export_stays_in_the_demo_vault"
+   ],
+   "seconds": 191.8,
+   "at": "2026-11-05T01:57:13+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 181,
+   "file": "careeros/cli.py",
+   "mutation": "employers penalised for a provider outage",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_board_verification.OperationsTests.test_t16_many_greenhouse_boards_failing_together_is_a_provider_problem"
+   ],
+   "seconds": 199.9,
+   "at": "2026-11-05T01:57:31+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 182,
+   "file": "careeros/cli.py",
+   "mutation": "board scans follow redirects anywhere",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_board_verification.GateTests.test_the_daily_scan_never_follows_a_board_redirect_off_the_listing_apis"
+   ],
+   "seconds": 197.0,
+   "at": "2026-11-05T01:57:31+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 190,
+   "file": "careeros/cli.py",
+   "mutation": "a rejected board's jobs stay open",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_job_lifecycle.BoardClosureTests.test_rejecting_a_board_closes_its_open_jobs_and_keeps_history"
+   ],
+   "seconds": 201.2,
+   "at": "2026-11-05T01:57:43+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 199,
+   "file": "careeros/cli.py",
+   "mutation": "setting a domain leaves its case open",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_board_verification.OperationsTests.test_setting_a_domain_closes_the_domain_case"
+   ],
+   "seconds": 197.3,
+   "at": "2026-11-05T02:00:29+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 203,
+   "file": "careeros/extract/rules.py",
+   "mutation": "\"Who We Are Looking For\" read as the company blurb",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.HandoffFindingsTests.test_lever_style_headings_are_read"
+   ],
+   "seconds": 191.5,
+   "at": "2026-11-05T02:00:24+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 204,
+   "file": "careeros/extract/rules.py",
+   "mutation": "\"What You Will Work On\" duties not read",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.HandoffFindingsTests.test_lever_style_headings_are_read"
+   ],
+   "seconds": 195.0,
+   "at": "2026-11-05T02:00:28+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 205,
+   "file": "careeros/extract/rules.py",
+   "mutation": "\"About <company>\" blurbs read as requirements",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.HandoffFindingsTests.test_lever_style_headings_are_read"
+   ],
+   "seconds": 196.5,
+   "at": "2026-11-05T02:00:30+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 206,
+   "file": "careeros/extract/rules.py",
+   "mutation": "benefits and interview sections read as requirements",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.HandoffFindingsTests.test_lever_style_headings_are_read"
+   ],
+   "seconds": 194.6,
+   "at": "2026-11-05T02:00:45+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 207,
+   "file": "careeros/extract/rules.py",
+   "mutation": "long OR-lists of roles cut at 60 characters",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.DecisionTests.test_a_long_or_list_of_roles_reaches_its_last_alternative"
+   ],
+   "seconds": 194.3,
+   "at": "2026-11-05T02:00:46+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 208,
+   "file": "careeros/qualify/profile.py",
+   "mutation": "exact role titles spill into specific titles (data analyst)",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.ExperienceTests.test_the_role_is_counted_not_the_domain",
+    "tests.test_scoring_loop.GateTests.test_a_role_line_never_takes_a_skill",
+    "tests.test_v25_audit.DecisionTests.test_exact_role_titles_never_spill_into_specific_titles"
+   ],
+   "seconds": 195.0,
+   "at": "2026-11-05T02:00:58+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 209,
+   "file": "careeros/qualify/gate.py",
+   "mutation": "PBM product roles rejected for the degree again",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.DecisionTests.test_pbm_product_roles_are_a_stretch_instead_of_a_degree_rejection"
+   ],
+   "seconds": 196.0,
+   "at": "2026-11-05T02:03:40+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 210,
+   "file": "careeros/qualify/gate.py",
+   "mutation": "degree stretch applied to product roles outside PBM",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.DecisionTests.test_pbm_product_roles_are_a_stretch_instead_of_a_degree_rejection"
+   ],
+   "seconds": 192.7,
+   "at": "2026-11-05T02:03:41+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 211,
+   "file": "careeros/qualify/scores.py",
+   "mutation": "a degree stretch can reach Tier A/B",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.DecisionTests.test_pbm_product_roles_are_a_stretch_instead_of_a_degree_rejection"
+   ],
+   "seconds": 191.9,
+   "at": "2026-11-05T02:03:41+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 213,
+   "file": "careeros/normalize/posting.py",
+   "mutation": "\"Analyst, X\" titles not tried as \"X Analyst\"",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.FollowUpTests.test_inverted_titles_and_adjacent_families"
+   ],
+   "seconds": 194.0,
+   "at": "2026-11-05T02:03:44+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 214,
+   "file": "config/policy/defaults.yaml",
+   "mutation": "adjacent payer / claims-product families missing",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.FollowUpTests.test_inverted_titles_and_adjacent_families"
+   ],
+   "seconds": 192.3,
+   "at": "2026-11-05T02:03:57+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 215,
+   "file": "config/policy/defaults.yaml",
+   "mutation": "individual-contributor implementation managers outside every family",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.FollowUpTests.test_inverted_titles_and_adjacent_families"
+   ],
+   "seconds": 195.3,
+   "at": "2026-11-05T02:04:01+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 216,
+   "file": "careeros/qualify/scores.py",
+   "mutation": "coverage judged on generic items alone",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.FollowUpTests.test_coverage_is_not_judged_on_generic_items_alone"
+   ],
+   "seconds": 195.1,
+   "at": "2026-11-05T02:04:13+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 217,
+   "file": "careeros/qualify/profile.py",
+   "mutation": "confirmed role titles ignored for years",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 9,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.GateTests.test_an_analyst_role_uses_the_analyst_wording_you_confirmed",
+    "tests.test_scoring_loop.ExperienceTests.test_a_role_in_a_domain_keeps_the_strictest",
+    "tests.test_scoring_loop.ExperienceTests.test_a_years_rejection_keeps_what_the_gate_judged"
+   ],
+   "seconds": 191.9,
+   "at": "2026-11-05T02:06:52+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 218,
+   "file": "careeros/review/report.py",
+   "mutation": "stale flag ignores discovery.max_posting_age_days",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.FollowUpTests.test_the_stale_flag_follows_the_policy_setting"
+   ],
+   "seconds": 190.9,
+   "at": "2026-11-05T02:06:52+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 219,
+   "file": "careeros/cli.py",
+   "mutation": "new boards named after their URL slug",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.HandoffFindingsTests.test_a_new_board_found_through_the_inbox_takes_the_company_name_and_parent"
+   ],
+   "seconds": 190.4,
+   "at": "2026-11-05T02:06:51+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 220,
+   "file": "careeros/cli.py",
+   "mutation": "a new board's parent (held employer) not mapped",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.HandoffFindingsTests.test_a_new_board_found_through_the_inbox_takes_the_company_name_and_parent"
+   ],
+   "seconds": 190.4,
+   "at": "2026-11-05T02:06:54+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 221,
+   "file": "careeros/cli.py",
+   "mutation": "application mail from an alert sender read for jobs",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.HandoffFindingsTests.test_gmail_skips_correspondence_from_an_alert_sender"
+   ],
+   "seconds": 195.4,
+   "at": "2026-11-05T02:07:13+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 222,
+   "file": "careeros/discovery/alerts.py",
+   "mutation": "correspondence check disabled",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.HandoffFindingsTests.test_application_and_recruiter_mail_is_never_read_for_jobs",
+    "tests.test_v25_audit.HandoffFindingsTests.test_gmail_skips_correspondence_from_an_alert_sender"
+   ],
+   "seconds": 193.1,
+   "at": "2026-11-05T02:07:14+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 233,
+   "file": "careeros/cli.py",
+   "mutation": "the daily run reads the GitHub inbox in Demo Mode",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_demo_mode.DemoBoundaryTest.test_the_daily_run_skips_mail_and_the_github_inbox"
+   ],
+   "seconds": 191.8,
+   "at": "2026-11-05T02:07:25+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 234,
+   "file": "careeros/cli.py",
+   "mutation": "the daily run reads mail in Demo Mode",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_demo_mode.DemoBoundaryTest.test_the_daily_run_skips_mail_and_the_github_inbox"
+   ],
+   "seconds": 193.5,
+   "at": "2026-11-05T02:10:05+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 235,
+   "file": "careeros/cli.py",
+   "mutation": "Demo Mode publishes the seen-jobs index",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_demo_mode.DemoTourTest.test_the_seen_index_is_kept_locally_and_never_published"
+   ],
+   "seconds": 192.9,
+   "at": "2026-11-05T02:10:05+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 239,
+   "file": "careeros/cli.py",
+   "mutation": "careeros gmail runs in Demo Mode",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 3,
+   "skipped": 8,
+   "failing": [
+    "tests.test_demo_mode.DemoBoundaryTest.test_commands_that_read_private_sources_refuse",
+    "tests.test_demo_mode.DemoTourTest.test_commands_with_demo_mode_on_use_the_demo_vault",
+    "tests.test_demo_mode.DemoTourTest.test_the_reviewer_walkthrough_shows_what_the_commands_print"
+   ],
+   "seconds": 193.6,
+   "at": "2026-11-05T02:10:05+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 240,
+   "file": "careeros/cli.py",
+   "mutation": "Demo Mode reads the clipboard",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_demo_mode.DemoBoundaryTest.test_commands_that_read_private_sources_refuse",
+    "tests.test_demo_mode.DemoBoundaryTest.test_commands_that_read_private_sources_refuse"
+   ],
+   "seconds": 196.0,
+   "at": "2026-11-05T02:10:10+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 243,
+   "file": "careeros/cli.py",
+   "mutation": "commands ignore CAREEROS_DEMO_MODE",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 19,
+   "errors": 3,
+   "skipped": 8,
+   "failing": [
+    "tests.test_demo_mode.DemoTourTest.test_commands_with_demo_mode_on_use_the_demo_vault",
+    "tests.test_demo_mode.DemoTourTest.test_every_store_is_closed_never_left_to_the_garbage_collector",
+    "tests.test_demo_mode.DemoTourTest.test_the_reviewer_walkthrough_shows_what_the_commands_print"
+   ],
+   "seconds": 185.9,
+   "at": "2026-11-05T02:10:19+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 254,
+   "file": "careeros/cli.py",
+   "mutation": "a private export written inside the code repository",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository"
+   ],
+   "seconds": 192.7,
+   "at": "2026-11-05T02:10:27+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 255,
+   "file": "careeros/cli.py",
+   "mutation": "a demo export written outside the demo vault",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_demo_export_stays_in_the_demo_vault"
+   ],
+   "seconds": 193.5,
+   "at": "2026-11-05T02:10:38+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 270,
+   "file": "careeros/cli.py",
+   "mutation": "a Demo Mode refusal ends in a traceback (G6)",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 2,
+   "skipped": 8,
+   "failing": [
+    "tests.test_demo_mode.DemoTourTest.test_commands_with_demo_mode_on_use_the_demo_vault",
+    "tests.test_demo_mode.DemoTourTest.test_the_reviewer_walkthrough_shows_what_the_commands_print"
+   ],
+   "seconds": 407.6,
+   "at": "2026-11-05T02:16:47+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 284,
+   "file": "careeros/qualify/experience.py",
+   "mutation": "experience coverage ignored",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 10,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_experience.ExplanationTests.test_identical_blocks_give_identical_text_from_stored_numbers",
+    "tests.test_experience.LineTests.test_an_and_list_is_judged_on_the_strictest_item",
+    "tests.test_experience.LineTests.test_the_decisive_line_is_the_strictest_required_line_and_preferred_never_overrides_it"
+   ],
+   "seconds": 408.0,
+   "at": "2026-11-05T02:16:47+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 285,
+   "file": "careeros/qualify/experience.py",
+   "mutation": "experience shortfall ignored",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 15,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_experience.ExplanationTests.test_identical_blocks_give_identical_text_from_stored_numbers",
+    "tests.test_experience.LineTests.test_an_and_list_is_judged_on_the_strictest_item",
+    "tests.test_experience.LineTests.test_preferred_lines_are_scored_but_never_have_an_effect"
+   ],
+   "seconds": 406.8,
+   "at": "2026-11-05T02:16:47+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 286,
+   "file": "careeros/qualify/experience.py",
+   "mutation": "adjacent experience scored as direct",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_experience.ProfileFactsTests.test_adjacent_and_missing_evidence_and_domains"
+   ],
+   "seconds": 404.5,
+   "at": "2026-11-05T02:16:49+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 287,
+   "file": "careeros/qualify/experience.py",
+   "mutation": "the experience cap at Tier B never applied",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_experience.EffectTests.test_hypothetical_tiers_never_rise",
+    "tests.test_experience.ShadowModeTests.test_tier_a_with_a_medium_gap_stays_a_but_would_be_b"
+   ],
+   "seconds": 405.0,
+   "at": "2026-11-05T02:16:58+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 288,
+   "file": "careeros/qualify/experience.py",
+   "mutation": "preferred and equivalency experience treated as hard",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_experience.EffectTests.test_effects_follow_requirement_strength",
+    "tests.test_experience.ShadowModeTests.test_a_degree_equivalency_line_is_not_penalised_twice"
+   ],
+   "seconds": 411.8,
+   "at": "2026-11-05T02:17:13+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 289,
+   "file": "careeros/qualify/experience.py",
+   "mutation": "an AND-list of experience judged as an OR-list",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_experience.LineTests.test_an_and_list_is_judged_on_the_strictest_item"
+   ],
+   "seconds": 407.6,
+   "at": "2026-11-05T02:17:20+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 290,
+   "file": "careeros/qualify/experience.py",
+   "mutation": "the most lenient experience line made decisive",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 8,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_experience.ExplanationTests.test_identical_blocks_give_identical_text_from_stored_numbers",
+    "tests.test_experience.LineTests.test_conflicting_figures_for_one_area",
+    "tests.test_experience.LineTests.test_two_figures_on_one_line_are_two_requirements"
+   ],
+   "seconds": 185.9,
+   "at": "2026-11-05T02:19:52+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 292,
+   "file": "careeros/extract/rules.py",
+   "mutation": "the lowest years figure applied to every area on a line",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_experience.LineTests.test_two_figures_on_one_line_are_two_requirements",
+    "tests.test_experience.ParsingTests.test_each_area_takes_its_own_figure"
+   ],
+   "seconds": 183.5,
+   "at": "2026-11-05T02:19:50+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 294,
+   "file": "careeros/extract/rules.py",
+   "mutation": "a deadline in months read as experience",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_experience.ParsingTests.test_months_only_in_an_experience_phrase"
+   ],
+   "seconds": 184.5,
+   "at": "2026-11-05T02:19:52+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 298,
+   "file": "careeros/extract/rules.py",
+   "mutation": "certification aliases written PL-300 not recognised",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 6,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_certifications.DemandTests.test_demand_counts_observed_jobs_only",
+    "tests.test_certifications.ExplanationTests.test_deterministic_lines_from_the_records",
+    "tests.test_certifications.ExtractionTests.test_aliases_normalise_to_one_identity"
+   ],
+   "seconds": 187.0,
+   "at": "2026-11-05T02:19:56+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 299,
+   "file": "careeros/extract/rules.py",
+   "mutation": "pay text and 'certified as' read as certification requirements",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_certifications.FalsePositiveTests.test_wording_that_asks_for_no_credential"
+   ],
+   "seconds": 187.9,
+   "at": "2026-11-05T02:20:06+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 301,
+   "file": "careeros/extract/rules.py",
+   "mutation": "example certifications (e.g. PMP) read as hard requirements",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_certifications.ExtractionTests.test_examples_make_one_family_requirement"
+   ],
+   "seconds": 185.4,
+   "at": "2026-11-05T02:20:18+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 302,
+   "file": "careeros/extract/rules.py",
+   "mutation": "a certification to earn after hire read as a requirement",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_certifications.DemandTests.test_demand_counts_observed_jobs_only",
+    "tests.test_certifications.FalsePositiveTests.test_training_after_hire_is_not_a_requirement"
+   ],
+   "seconds": 183.8,
+   "at": "2026-11-05T02:20:24+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 303,
+   "file": "careeros/extract/rules.py",
+   "mutation": "'certification is not required' read as required",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_certifications.FalsePositiveTests.test_not_required_is_not_a_requirement"
+   ],
+   "seconds": 192.4,
+   "at": "2026-11-05T02:23:02+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 304,
+   "file": "careeros/extract/rules.py",
+   "mutation": "ambiguous short names (CSM, ITIL) read as certifications without context",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_certifications.FalsePositiveTests.test_wording_that_asks_for_no_credential"
+   ],
+   "seconds": 201.4,
+   "at": "2026-11-05T02:23:13+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 441,
+   "file": "tools/mutate.py",
+   "mutation": "mutation runner: an import failure or a shorter suite counted as caught",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_only_a_real_test_failure_counts_as_caught",
+    "tests.test_ci.MutationToolTest.test_the_suite_summary_is_read_from_unittest_itself"
+   ],
+   "seconds": 197.0,
+   "at": "2026-11-05T02:23:09+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 442,
+   "file": "tools/mutate.py",
+   "mutation": "mutation runner: a timed-out suite not reported as a timeout",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_only_a_real_test_failure_counts_as_caught"
+   ],
+   "seconds": 207.8,
+   "at": "2026-11-05T02:23:24+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 445,
+   "file": "careeros/cli.py",
+   "mutation": "eval --scoring opening the live store and taking the lock",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_eval.IsolationTests.test_cli_runs_without_the_live_store_the_lock_or_a_log_file",
+    "tests.test_scoring_eval.IsolationTests.test_cli_runs_without_the_live_store_the_lock_or_a_log_file"
+   ],
+   "seconds": 205.3,
+   "at": "2026-11-05T02:23:31+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 516,
+   "file": "careeros/cli.py",
+   "mutation": "release view: authorization judged without your current profile",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_submission.DisplayTests.test_the_release_command"
+   ],
+   "seconds": 206.5,
+   "at": "2026-11-05T02:23:45+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 670,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a stopped run's result other than CAUGHT carried over",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_short_copy_baseline_still_allows_five_minutes",
+    "tests.test_ci.MutationRunTest.test_a_stopped_run_resumes_with_only_its_clean_catches",
+    "tests.test_ci.MutationToolTest.test_a_stopped_run_carries_over_only_clean_catches_of_the_same_defect"
+   ],
+   "seconds": 203.3,
+   "at": "2026-11-05T02:23:47+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 671,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a catch the machine slept through carried over",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_stopped_run_resumes_with_only_its_clean_catches",
+    "tests.test_ci.MutationToolTest.test_a_stopped_run_carries_over_only_clean_catches_of_the_same_defect"
+   ],
+   "seconds": 187.2,
+   "at": "2026-11-05T02:26:10+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 672,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: results carried over to changed code",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_results_carry_over_only_to_exactly_the_same_tree_in_the_same_environment"
+   ],
+   "seconds": 184.3,
+   "at": "2026-11-05T02:26:14+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 673,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a defect the machine slept through not run again",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_stopped_run_resumes_with_only_its_clean_catches",
+    "tests.test_ci.MutationToolTest.test_a_defect_the_machine_slept_through_runs_again_and_is_never_caught_while_asleep"
+   ],
+   "seconds": 187.6,
+   "at": "2026-11-05T02:26:21+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 674,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a defect still slept through counted as caught",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_stopped_run_resumes_with_only_its_clean_catches",
+    "tests.test_ci.MutationToolTest.test_a_defect_the_machine_slept_through_runs_again_and_is_never_caught_while_asleep"
+   ],
+   "seconds": 188.5,
+   "at": "2026-11-05T02:26:32+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 675,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: time asleep never read on Windows",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_time_asleep_is_read_from_the_system_counters"
+   ],
+   "seconds": 184.8,
+   "at": "2026-11-05T02:26:36+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 676,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a sleep during a defect not marked",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_ci.MutationRunTest.test_a_stopped_run_resumes_with_only_its_clean_catches",
+    "tests.test_ci.MutationToolTest.test_a_sleep_is_read_around_each_defect_and_kept_with_its_result"
+   ],
+   "seconds": 181.6,
+   "at": "2026-11-05T02:26:46+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 677,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: the sleep clock read only after the defect ran",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_stopped_run_resumes_with_only_its_clean_catches",
+    "tests.test_ci.MutationToolTest.test_a_sleep_is_read_around_each_defect_and_kept_with_its_result"
+   ],
+   "seconds": 178.6,
+   "at": "2026-11-05T02:26:46+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 678,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a result from a changed tree kept",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_change_to_the_folder_during_a_run_stops_it_and_never_carries_over",
+    "tests.test_ci.MutationToolTest.test_a_result_counts_only_for_a_copy_of_the_tree_the_run_started_on"
+   ],
+   "seconds": 173.8,
+   "at": "2026-11-05T02:29:04+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 679,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a changed tree or environment does not stop the run",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_change_to_the_environment_during_a_run_stops_it",
+    "tests.test_ci.MutationRunTest.test_a_change_to_the_folder_during_a_run_stops_it_and_never_carries_over",
+    "tests.test_ci.MutationToolTest.test_a_result_counts_only_for_a_copy_of_the_tree_the_run_started_on"
+   ],
+   "seconds": 175.7,
+   "at": "2026-11-05T02:29:09+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 680,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a scratch copy's tree not reported",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_a_result_counts_only_for_a_copy_of_the_tree_the_run_started_on"
+   ],
+   "seconds": 177.5,
+   "at": "2026-11-05T02:29:18+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 681,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a scratch copy hashed after the defect went in",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_a_result_counts_only_for_a_copy_of_the_tree_the_run_started_on"
+   ],
+   "seconds": 174.6,
+   "at": "2026-11-05T02:29:27+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 682,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a renamed file leaves the tree hash unchanged",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_results_carry_over_only_to_exactly_the_same_tree_in_the_same_environment"
+   ],
+   "seconds": 175.1,
+   "at": "2026-11-05T02:29:31+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 683,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: results carried over to another environment",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 4,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_change_after_the_checks_writes_no_receipt_even_when_every_result_carries_over",
+    "tests.test_ci.MutationRunTest.test_a_change_to_the_environment_during_a_run_stops_it",
+    "tests.test_ci.MutationToolTest.test_a_result_counts_only_for_a_copy_of_the_tree_the_run_started_on"
+   ],
+   "seconds": 177.0,
+   "at": "2026-11-05T02:29:43+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 684,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: one progress file for every environment",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_ci.MutationToolTest.test_the_environment_covers_python_its_packages_and_node"
+   ],
+   "seconds": 174.8,
+   "at": "2026-11-05T02:29:41+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 685,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a progress line from another tree or environment carried over",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_a_stopped_run_carries_over_only_clean_catches_of_the_same_defect"
+   ],
+   "seconds": 187.7,
+   "at": "2026-11-05T02:32:11+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 686,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a result with no time carried over",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_a_stopped_run_carries_over_only_clean_catches_of_the_same_defect"
+   ],
+   "seconds": 186.9,
+   "at": "2026-11-05T02:32:16+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 687,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a progress line written onto the end of a cut-short one",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_a_line_cut_short_by_a_power_loss_costs_nothing_after_it"
+   ],
+   "seconds": 198.0,
+   "at": "2026-11-05T02:32:36+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 688,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: two runs on one tree at once",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_one_run_per_tree_and_fresh_starts_from_zero"
+   ],
+   "seconds": 196.1,
+   "at": "2026-11-05T02:32:43+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 689,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a stop request ignored",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_stop_request_ends_the_run_and_the_next_run_carries_on"
+   ],
+   "seconds": 196.6,
+   "at": "2026-11-05T02:32:48+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 690,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a change during the baselines not noticed",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_change_while_the_baselines_run_is_refused",
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository"
+   ],
+   "seconds": 193.1,
+   "at": "2026-11-05T02:32:54+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 691,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a sleep during the copy baseline loosens the time limit",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_stopped_run_resumes_with_only_its_clean_catches"
+   ],
+   "seconds": 194.1,
+   "at": "2026-11-05T02:32:57+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 692,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: no time limit on carrying over",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_stopped_run_resumes_with_only_its_clean_catches"
+   ],
+   "seconds": 192.3,
+   "at": "2026-11-05T02:35:24+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 693,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: defects carried over run again anyway",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 6,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_change_after_the_checks_writes_no_receipt_even_when_every_result_carries_over",
+    "tests.test_ci.MutationRunTest.test_a_change_after_the_checks_writes_no_receipt_even_when_every_result_carries_over",
+    "tests.test_ci.MutationRunTest.test_a_change_to_the_folder_during_a_run_stops_it_and_never_carries_over"
+   ],
+   "seconds": 191.3,
+   "at": "2026-11-05T02:35:28+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 694,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: the receipt hides results carried over",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_change_to_the_folder_during_a_run_stops_it_and_never_carries_over",
+    "tests.test_ci.MutationRunTest.test_a_stopped_run_resumes_with_only_its_clean_catches"
+   ],
+   "seconds": 194.3,
+   "at": "2026-11-05T02:35:51+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 695,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: progress deleted before every defect is caught",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_short_copy_baseline_still_allows_five_minutes",
+    "tests.test_ci.MutationRunTest.test_a_stopped_run_resumes_with_only_its_clean_catches"
+   ],
+   "seconds": 190.3,
+   "at": "2026-11-05T02:35:54+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 696,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a survivor run again until it is caught",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_stopped_run_resumes_with_only_its_clean_catches",
+    "tests.test_ci.MutationRunTest.test_a_short_copy_baseline_still_allows_five_minutes",
+    "tests.test_ci.MutationRunTest.test_one_run_per_tree_and_fresh_starts_from_zero"
+   ],
+   "seconds": 187.4,
+   "at": "2026-11-05T02:35:55+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 698,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: an environment change during a run not noticed",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_ci.MutationRunTest.test_a_change_to_the_environment_during_a_run_stops_it",
+    "tests.test_ci.MutationToolTest.test_a_result_counts_only_for_a_copy_of_the_tree_the_run_started_on"
+   ],
+   "seconds": 189.0,
+   "at": "2026-11-05T02:36:03+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 699,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: defects keep starting after the run had to stop",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_a_result_counts_only_for_a_copy_of_the_tree_the_run_started_on"
+   ],
+   "seconds": 188.2,
+   "at": "2026-11-05T02:36:05+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 700,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a stopped run does not stop the other workers",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_a_result_counts_only_for_a_copy_of_the_tree_the_run_started_on"
+   ],
+   "seconds": 177.0,
+   "at": "2026-11-05T02:38:21+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 701,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a copy known to be changed still runs its suite",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_a_result_counts_only_for_a_copy_of_the_tree_the_run_started_on"
+   ],
+   "seconds": 179.1,
+   "at": "2026-11-05T02:38:27+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 702,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a defect planted into text the run never hashed",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_a_result_counts_only_for_a_copy_of_the_tree_the_run_started_on"
+   ],
+   "seconds": 181.8,
+   "at": "2026-11-05T02:38:52+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 703,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: the live folder hashed instead of the scratch copy",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_a_result_counts_only_for_a_copy_of_the_tree_the_run_started_on"
+   ],
+   "seconds": 181.4,
+   "at": "2026-11-05T02:38:55+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 704,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: the copy baseline's copy not checked",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_change_while_the_baselines_run_is_refused"
+   ],
+   "seconds": 184.8,
+   "at": "2026-11-05T02:39:00+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 705,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a stop request made while the baselines ran ignored",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_only_a_stop_request_made_after_the_run_started_counts",
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository"
+   ],
+   "seconds": 184.5,
+   "at": "2026-11-05T02:39:08+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 706,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a stop request left from an earlier run stops the next",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 11,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_stopped_run_resumes_with_only_its_clean_catches",
+    "tests.test_ci.MutationRunTest.test_a_change_after_the_checks_writes_no_receipt_even_when_every_result_carries_over",
+    "tests.test_ci.MutationRunTest.test_a_change_after_the_checks_writes_no_receipt_even_when_every_result_carries_over"
+   ],
+   "seconds": 184.9,
+   "at": "2026-11-05T02:39:10+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 707,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: the Node.js version left out of the environment",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_the_environment_covers_python_its_packages_and_node"
+   ],
+   "seconds": 182.5,
+   "at": "2026-11-05T02:41:23+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 708,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: installed packages left out of the environment",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_the_environment_covers_python_its_packages_and_node"
+   ],
+   "seconds": 183.6,
+   "at": "2026-11-05T02:41:30+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 709,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: no floor under the carry-over time limit",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_short_copy_baseline_still_allows_five_minutes"
+   ],
+   "seconds": 182.0,
+   "at": "2026-11-05T02:41:54+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 710,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a different spelling of the same Node.js path starts from zero",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationToolTest.test_the_same_node_spelled_differently_is_the_same_environment"
+   ],
+   "seconds": 177.9,
+   "at": "2026-11-05T02:41:53+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 711,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a file added during a run not named",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 4,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_change_after_the_checks_writes_no_receipt_even_when_every_result_carries_over",
+    "tests.test_ci.MutationRunTest.test_a_change_to_the_folder_during_a_run_stops_it_and_never_carries_over",
+    "tests.test_ci.MutationRunTest.test_a_change_while_the_baselines_run_is_refused"
+   ],
+   "seconds": 181.1,
+   "at": "2026-11-05T02:42:01+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 713,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a source read without checking it against the tree the run accepted",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_ci.MutationRunTest.test_a_change_after_the_checks_writes_no_receipt_even_when_every_result_carries_over"
+   ],
+   "seconds": 179.4,
+   "at": "2026-11-05T02:42:07+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 714,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a source read with its line endings, so it is not the text a copy holds",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_stopped_run_resumes_with_only_its_clean_catches"
+   ],
+   "seconds": 182.8,
+   "at": "2026-11-05T02:42:13+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 715,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a defect file the tree does not hold, as spelled, read anyway",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_the_defect_list_that_runs_is_the_one_in_the_tree_and_every_defect_file_is_one_it_holds"
+   ],
+   "seconds": 177.7,
+   "at": "2026-11-05T02:44:21+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 716,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a defect file the tree does not hold, as spelled, passes the anchor check",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_the_defect_list_that_runs_is_the_one_in_the_tree_and_every_defect_file_is_one_it_holds"
+   ],
+   "seconds": 180.8,
+   "at": "2026-11-05T02:44:31+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 717,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: no last look at the tree before a receipt",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_change_after_the_checks_writes_no_receipt_even_when_every_result_carries_over"
+   ],
+   "seconds": 180.7,
+   "at": "2026-11-05T02:44:54+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 718,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: no last look at the environment before a receipt",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_a_change_after_the_checks_writes_no_receipt_even_when_every_result_carries_over"
+   ],
+   "seconds": 182.3,
+   "at": "2026-11-05T02:44:57+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 719,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: a defect list saved at startup runs and is certified",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_the_defect_list_that_runs_is_the_one_in_the_tree_and_every_defect_file_is_one_it_holds"
+   ],
+   "seconds": 181.7,
+   "at": "2026-11-05T02:45:03+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 720,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: the tool's own file not checked against the tree it accepted",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_ci.MutationRunTest.test_the_defect_list_that_runs_is_the_one_in_the_tree_and_every_defect_file_is_one_it_holds"
+   ],
+   "seconds": 184.2,
+   "at": "2026-11-05T02:45:11+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 721,
+   "file": "tools/mutate.py",
+   "mutation": "mutate: the defect list in the tree not compared with the one loaded",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_ci.MutationRunTest.test_the_defect_list_that_runs_is_the_one_in_the_tree_and_every_defect_file_is_one_it_holds"
+   ],
+   "seconds": 188.3,
+   "at": "2026-11-05T02:45:21+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 724,
+   "file": "careeros/cli.py",
+   "mutation": "a daily run held by a stale lock shows no notification",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_observability.HeldRunTests.test_a_held_daily_run_shows_a_notification_and_logs_it_and_leaves_the_lock"
+   ],
+   "seconds": 181.8,
+   "at": "2026-11-05T02:47:23+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 728,
+   "file": "careeros/review/explain.py",
+   "mutation": "verdict line names the wrong binding constraint (only ever the priority)",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.VerdictTests.test_a_stretch_and_an_enforced_experience_match",
+    "tests.test_review_page.VerdictTests.test_skill_coverage_below_the_minimum",
+    "tests.test_review_page.VerdictTests.test_the_flag_that_made_it_conditional_or_held"
+   ],
+   "seconds": 181.9,
+   "at": "2026-11-05T02:47:33+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 732,
+   "file": "careeros/review/server.py",
+   "mutation": "\"I applied\" recorded without the confirmation page",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 3,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.ConfirmationTests.test_confirm_records_only_the_choices_its_page_showed",
+    "tests.test_review_page.ConfirmationTests.test_i_applied_shows_the_assist_close_command_instead_of_confirm_and_recording_checks_again",
+    "tests.test_review_page.ShortlistFormTests.test_label_and_i_applied_from_the_shortlist_card_through_the_server"
+   ],
+   "seconds": 177.1,
+   "at": "2026-11-05T02:47:51+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 733,
+   "file": "careeros/review/shortlist.py",
+   "mutation": "a reinstated posting still treated as dismissed by the shortlist",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.DismissalUndoTests.test_a_reinstatement_is_a_later_event_and_the_latest_event_decides",
+    "tests.test_review_page.DismissalUndoTests.test_dismissed_recently_offers_undo_through_the_confirmation",
+    "tests.test_review_page.DismissalUndoTests.test_every_reader_of_dismissals_asks_for_the_latest_event"
+   ],
+   "seconds": 177.0,
+   "at": "2026-11-05T02:47:54+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 737,
+   "file": "careeros/review/server.py",
+   "mutation": "Void recorded without the confirmation page",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 2,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.ConfirmationTests.test_confirm_records_only_the_choices_its_page_showed",
+    "tests.test_review_page.VoidApplicationTests.test_no_void_control_or_confirmation_once_an_employer_answered",
+    "tests.test_review_page.VoidApplicationTests.test_void_from_the_applications_card_through_the_confirmation"
+   ],
+   "seconds": 180.2,
+   "at": "2026-11-05T02:48:03+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 738,
+   "file": "careeros/review/report.py",
+   "mutation": "void offered as an ordinary status change (no reason, no confirmation)",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_review_page.VoidApplicationTests.test_void_from_the_applications_card_through_the_confirmation"
+   ],
+   "seconds": 178.3,
+   "at": "2026-11-05T02:48:10+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 744,
+   "file": "careeros/review/shortlist.py",
+   "mutation": "\"apply or dismiss\" outranks an incompatibility, an open question and a possible earlier application",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.AgeingTests.test_apply_or_dismiss_never_outranks_a_possible_application_an_incompatibility_or_a_hold"
+   ],
+   "seconds": 180.2,
+   "at": "2026-11-05T02:48:21+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 747,
+   "file": "careeros/review/dismiss.py",
+   "mutation": "Undo ignores the dismissal its confirmation showed (a stale Undo page reverses a newer dismissal)",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.DismissalUndoTests.test_a_stale_undo_confirmation_never_undoes_a_newer_dismissal"
+   ],
+   "seconds": 181.3,
+   "at": "2026-11-05T02:50:24+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 748,
+   "file": "careeros/cli.py",
+   "mutation": "the daily run's saved report shows the previous run's health (none yet, or a stale-run warning, after a success)",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_observability.SavedReportHealthTests.test_a_run_after_a_gap_or_a_failure_saves_no_stale_warning",
+    "tests.test_observability.SavedReportHealthTests.test_the_first_successful_run_saves_its_own_health"
+   ],
+   "seconds": 183.5,
+   "at": "2026-11-05T02:50:36+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 775,
+   "file": "careeros/cli.py",
+   "mutation": "leads never matched again after a scan",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 14,
+   "errors": 6,
+   "skipped": 8,
+   "failing": [
+    "tests.test_lead_resolution.CorrectionTests.test_an_unlink_is_recorded_once_for_one_key",
+    "tests.test_lead_resolution.LikelyMatchTests.test_a_rejected_likely_match_is_never_proposed_or_linked_for_that_lead_again",
+    "tests.test_lead_resolution.LikelyMatchTests.test_two_near_identical_postings_stay_ambiguous_and_other_differences_are_no_match"
+   ],
+   "seconds": 182.7,
+   "at": "2026-11-05T02:50:53+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 776,
+   "file": "careeros/cli.py",
+   "mutation": "lead matching reads a suspicious scan as complete",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_lead_resolution.RematchTests.test_an_incomplete_scan_never_sets_no_match_or_closed"
+   ],
+   "seconds": 184.4,
+   "at": "2026-11-05T02:50:58+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 778,
+   "file": "careeros/cli.py",
+   "mutation": "leads not matched when you activate a board",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_lead_resolution.RematchTests.test_when_you_activate_or_approve_a_board_its_employers_open_leads_are_matched"
+   ],
+   "seconds": 178.4,
+   "at": "2026-11-05T02:51:01+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 779,
+   "file": "careeros/cli.py",
+   "mutation": "leads not matched when your approval admits a board",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_lead_resolution.RematchTests.test_when_you_activate_or_approve_a_board_its_employers_open_leads_are_matched"
+   ],
+   "seconds": 178.7,
+   "at": "2026-11-05T02:51:08+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 780,
+   "file": "careeros/cli.py",
+   "mutation": "a lead's failed fetch keeps no reason",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_lead_resolution.IntakeAndFetchTests.test_a_lead_whose_link_cannot_be_read_keeps_the_reason"
+   ],
+   "seconds": 179.9,
+   "at": "2026-11-05T02:51:21+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 781,
+   "file": "careeros/cli.py",
+   "mutation": "a pasted posting never links its lead (careeros paste)",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_lead_resolution.IntakeAndFetchTests.test_pasting_or_adding_the_same_posting_links_its_lead"
+   ],
+   "seconds": 175.4,
+   "at": "2026-11-05T02:53:19+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 782,
+   "file": "careeros/cli.py",
+   "mutation": "an added posting never links its lead (careeros add-url)",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_lead_resolution.IntakeAndFetchTests.test_pasting_or_adding_the_same_posting_links_its_lead"
+   ],
+   "seconds": 177.0,
+   "at": "2026-11-05T02:53:33+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 794,
+   "file": "careeros/cli.py",
+   "mutation": "a website you set not recorded as yours (a lead's hint before it stays strict)",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_lead_resolution.DomainRouteTests.test_a_domain_you_set_is_checked_as_before"
+   ],
+   "seconds": 177.4,
+   "at": "2026-11-05T02:53:51+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 818,
+   "file": "careeros/cli.py",
+   "mutation": "F2: an alert line linked on arrival to a job of any board or employer (no admission or identity check)",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_lead_resolution.AlertArrivalTests.test_an_alert_line_is_linked_on_arrival_only_by_the_lead_resolution_rules",
+    "tests.test_lead_resolution.AlertArrivalTests.test_an_alert_line_is_linked_on_arrival_only_by_the_lead_resolution_rules",
+    "tests.test_v22_primary.LedgerTests.test_same_job_through_another_site_is_recognised"
+   ],
+   "seconds": 177.4,
+   "at": "2026-11-05T02:53:56+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 819,
+   "file": "careeros/cli.py",
+   "mutation": "F2: an alert line linked on arrival to the employer's first job, without the lead matcher",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_lead_resolution.AlertArrivalTests.test_an_alert_line_is_linked_on_arrival_only_by_the_lead_resolution_rules",
+    "tests.test_v25_audit.SeenIndexTests.test_inbox_dedupe_is_requisition_aware"
+   ],
+   "seconds": 174.9,
+   "at": "2026-11-05T02:53:56+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 823,
+   "file": "careeros/cli.py",
+   "mutation": "F5: careeros leads prints a confirm command that names no job",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_lead_resolution.LikelyMatchTests.test_a_near_identical_title_is_a_likely_match_linked_only_when_you_confirm",
+    "tests.test_lead_resolution.StaleProposalTests.test_a_printed_command_acts_only_on_the_job_it_names"
+   ],
+   "seconds": 175.1,
+   "at": "2026-11-05T02:54:03+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 883,
+   "file": "careeros/cli.py",
+   "mutation": "a command leaves its store open for the garbage collector",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_demo_mode.DemoTourTest.test_every_store_is_closed_never_left_to_the_garbage_collector"
+   ],
+   "seconds": 175.7,
+   "at": "2026-11-05T02:54:17+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 889,
+   "file": "careeros/cli.py",
+   "mutation": "a command without the writer lock migrates the database",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_resilience.SchemaCommandTests.test_a_read_only_command_refuses_and_migrate_backs_up_first"
+   ],
+   "seconds": 209.5,
+   "at": "2026-11-05T02:56:49+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 890,
+   "file": "careeros/cli.py",
+   "mutation": "careeros migrate migrates after a backup that does not verify",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_resilience.SchemaCommandTests.test_migrate_migrates_nothing_when_its_backup_does_not_verify"
+   ],
+   "seconds": 208.7,
+   "at": "2026-11-05T02:57:02+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 891,
+   "file": "careeros/cli.py",
+   "mutation": "careeros verify passes a damaged file or broken foreign keys",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_resilience.SchemaCommandTests.test_verify_checks_the_file_and_its_foreign_keys"
+   ],
+   "seconds": 214.2,
+   "at": "2026-11-05T02:57:25+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 894,
+   "file": "careeros/cli.py",
+   "mutation": "a failed daily run makes no backup",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_resilience.RestoreDrillTests.test_a_failed_daily_run_still_gets_its_backup_and_its_drill",
+    "tests.test_resilience.RestoreDrillTests.test_the_drills_own_trouble_never_fails_the_run_nor_hides_its_error"
+   ],
+   "seconds": 205.7,
+   "at": "2026-11-05T02:57:21+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 895,
+   "file": "careeros/cli.py",
+   "mutation": "a failed daily run sends the run-finished summary",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_resilience.RestoreDrillTests.test_a_failed_daily_run_still_gets_its_backup_and_its_drill"
+   ],
+   "seconds": 205.6,
+   "at": "2026-11-05T02:57:22+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 896,
+   "file": "careeros/cli.py",
+   "mutation": "a failed restore drill is neither recorded nor notified",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_resilience.RestoreDrillTests.test_a_failed_drill_is_recorded_and_notified",
+    "tests.test_resilience.RestoreDrillTests.test_the_drills_own_trouble_never_fails_the_run_nor_hides_its_error"
+   ],
+   "seconds": 208.9,
+   "at": "2026-11-05T02:57:32+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 900,
+   "file": "careeros/review/report.py",
+   "mutation": "the status form preselects the first status, so one click or Enter records it",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.SafeFormTests.test_no_status_is_preselected_and_enter_in_a_note_records_nothing"
+   ],
+   "seconds": 215.5,
+   "at": "2026-11-05T02:57:52+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 901,
+   "file": "careeros/review/report.py",
+   "mutation": "Enter in a label reason records Apply",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.SafeFormTests.test_no_status_is_preselected_and_enter_in_a_note_records_nothing"
+   ],
+   "seconds": 175.4,
+   "at": "2026-11-05T02:59:44+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 902,
+   "file": "careeros/review/report.py",
+   "mutation": "Enter in a NIGHT label reason records Apply",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.SafeFormTests.test_no_status_is_preselected_and_enter_in_a_note_records_nothing"
+   ],
+   "seconds": 173.7,
+   "at": "2026-11-05T02:59:56+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 903,
+   "file": "careeros/review/server.py",
+   "mutation": "a form already used drops the connection instead of answering 409",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.SafeFormTests.test_a_form_already_used_answers_409_and_records_nothing_more"
+   ],
+   "seconds": 176.4,
+   "at": "2026-11-05T03:00:18+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 904,
+   "file": "careeros/review/server.py",
+   "mutation": "an unexpected error drops the connection instead of showing a page",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 2,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.SafeFormTests.test_an_error_after_part_of_a_form_was_saved_never_says_not_recorded",
+    "tests.test_review_page.SafeFormTests.test_an_error_nothing_else_answers_gets_a_page_not_a_dropped_connection"
+   ],
+   "seconds": 173.7,
+   "at": "2026-11-05T03:00:16+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 905,
+   "file": "careeros/review/server.py",
+   "mutation": "error pages carry no Content-Security-Policy header",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 4,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.SafeFormTests.test_every_response_carries_the_content_security_policy_header",
+    "tests.test_review_page.SafeFormTests.test_every_response_carries_the_content_security_policy_header",
+    "tests.test_review_page.SafeFormTests.test_every_response_carries_the_content_security_policy_header"
+   ],
+   "seconds": 175.7,
+   "at": "2026-11-05T03:00:21+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 911,
+   "file": "careeros/review/report.py",
+   "mutation": "the applications card ignores a recorded follow-up",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_review_page.FollowUpRuleTests.test_a_second_follow_up_records_and_the_latest_one_counts",
+    "tests.test_review_page.FollowUpRuleTests.test_the_card_and_the_shortlist_agree_and_a_follow_up_restarts_the_count"
+   ],
+   "seconds": 175.1,
+   "at": "2026-11-05T03:00:27+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 912,
+   "file": "careeros/review/shortlist.py",
+   "mutation": "the shortlist ignores a recorded follow-up",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.FollowUpRuleTests.test_a_second_follow_up_records_and_the_latest_one_counts",
+    "tests.test_review_page.FollowUpRuleTests.test_the_card_and_the_shortlist_agree_and_a_follow_up_restarts_the_count"
+   ],
+   "seconds": 172.1,
+   "at": "2026-11-05T03:00:44+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 913,
+   "file": "careeros/review/report.py",
+   "mutation": "the applications card never says the posting closed",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.FollowUpRuleTests.test_the_card_says_when_the_posting_closed_and_the_reminder_stays"
+   ],
+   "seconds": 165.1,
+   "at": "2026-11-05T03:02:29+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 914,
+   "file": "careeros/cli.py",
+   "mutation": "app-status --followed-up with a status records the follow-up and drops the status without a word",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_applications.ApplicationLogicTests.test_app_status_followed_up_on_the_command_line",
+    "tests.test_applications.ApplicationLogicTests.test_app_status_followed_up_on_the_command_line"
+   ],
+   "seconds": 169.5,
+   "at": "2026-11-05T03:02:45+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 922,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "the offsite passphrase goes to gpg on its command line",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_the_passphrase_never_reaches_a_command_line"
+   ],
+   "seconds": 162.1,
+   "at": "2026-11-05T03:02:58+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 923,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "the offsite archive is encrypted with AES-128, not AES-256",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_an_archive_is_encrypted_complete_and_only_it_reaches_the_folder"
+   ],
+   "seconds": 166.1,
+   "at": "2026-11-05T03:03:04+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 924,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "the offsite passphrase gets a weak key derivation",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 6,
+   "errors": 6,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_an_archive_is_encrypted_complete_and_only_it_reaches_the_folder",
+    "tests.test_offsite.ArchiveTests.test_pruning_keeps_the_newest_and_touches_only_careeros_archives",
+    "tests.test_offsite.ArchiveTests.test_the_calibration_lists_and_the_power_bi_folder_are_kept_and_daily_reports_are_not"
+   ],
+   "seconds": 153.5,
+   "at": "2026-11-05T03:02:54+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 925,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "a failed offsite archive leaves its partial file in the offsite folder",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 5,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails",
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails"
+   ],
+   "seconds": 166.3,
+   "at": "2026-11-05T03:03:14+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 926,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "the unencrypted zip stays in the vault after the offsite archive",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 6,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_an_archive_is_encrypted_complete_and_only_it_reaches_the_folder",
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails",
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails"
+   ],
+   "seconds": 161.8,
+   "at": "2026-11-05T03:03:26+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 927,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "an unencrypted copy is accepted as an offsite archive",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 4,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails",
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails",
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails"
+   ],
+   "seconds": 165.2,
+   "at": "2026-11-05T03:05:14+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 928,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "an offsite archive that decrypts to other bytes is accepted",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails",
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails",
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails"
+   ],
+   "seconds": 163.1,
+   "at": "2026-11-05T03:05:29+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 929,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "offsite pruning may remove files that are not CareerOS's archives",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_pruning_keeps_the_newest_and_touches_only_careeros_archives"
+   ],
+   "seconds": 163.4,
+   "at": "2026-11-05T03:05:38+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 930,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "offsite pruning with keep 0 removes every archive",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_pruning_keeps_the_newest_and_touches_only_careeros_archives"
+   ],
+   "seconds": 163.5,
+   "at": "2026-11-05T03:05:41+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 931,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "offsite pruning keeps one archive fewer than set",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_pruning_keeps_the_newest_and_touches_only_careeros_archives"
+   ],
+   "seconds": 165.0,
+   "at": "2026-11-05T03:05:49+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 932,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "an offsite archive is made of a backup that does not verify",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails"
+   ],
+   "seconds": 165.2,
+   "at": "2026-11-05T03:05:59+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 933,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "the offsite archive leaves out your documents",
+   "why": [
+    "file changed",
+    "re-anchored",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 5,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_an_archive_is_encrypted_complete_and_only_it_reaches_the_folder",
+    "tests.test_offsite.ArchiveTests.test_the_calibration_lists_and_the_power_bi_folder_are_kept_and_daily_reports_are_not",
+    "tests.test_offsite.ConfirmTests.test_status_warns_until_the_copy_kept_off_this_pc_opens_the_newest_archive"
+   ],
+   "seconds": 165.0,
+   "at": "2026-11-05T03:06:11+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 934,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "the offsite drill never compares the files with the manifest",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.DrillTests.test_the_drill_checks_every_file_against_the_manifest"
+   ],
+   "seconds": 163.7,
+   "at": "2026-11-05T03:07:58+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 935,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "the offsite drill ignores a failed decryption",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.DrillTests.test_the_drill_reads_the_newest_archive_back_and_catches_damage"
+   ],
+   "seconds": 163.3,
+   "at": "2026-11-05T03:08:12+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 936,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "a passphrase with a line break is used cut at the break",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 7,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails",
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails",
+    "tests.test_offsite.ArchiveTests.test_nothing_is_left_in_the_folder_when_anything_fails"
+   ],
+   "seconds": 160.7,
+   "at": "2026-11-05T03:08:18+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 937,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "a new offsite attempt forgets the latest drill",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.DailyRunTests.test_the_daily_run_writes_records_drills_weekly_and_status_says_so"
+   ],
+   "seconds": 162.1,
+   "at": "2026-11-05T03:08:23+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 938,
+   "file": "careeros/cli.py",
+   "mutation": "the offsite archive is written in Demo Mode",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.DailyRunTests.test_off_until_a_folder_is_set_and_never_in_demo_mode"
+   ],
+   "seconds": 161.1,
+   "at": "2026-11-05T03:08:30+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 939,
+   "file": "careeros/cli.py",
+   "mutation": "a failed offsite archive is not recorded as an exception",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 2,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.DailyRunTests.test_a_failure_is_recorded_notified_and_shown_and_the_run_goes_on",
+    "tests.test_offsite.DailyRunTests.test_a_record_that_cannot_be_saved_is_recorded_and_notified",
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository"
+   ],
+   "seconds": 161.8,
+   "at": "2026-11-05T03:08:41+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 940,
+   "file": "careeros/cli.py",
+   "mutation": "a failed offsite archive is not notified",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.DailyRunTests.test_a_failure_is_recorded_notified_and_shown_and_the_run_goes_on",
+    "tests.test_offsite.DailyRunTests.test_a_record_that_cannot_be_saved_is_recorded_and_notified"
+   ],
+   "seconds": 161.4,
+   "at": "2026-11-05T03:08:53+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 941,
+   "file": "careeros/cli.py",
+   "mutation": "the offsite drill runs every day instead of weekly",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.DailyRunTests.test_the_daily_run_writes_records_drills_weekly_and_status_says_so"
+   ],
+   "seconds": 162.1,
+   "at": "2026-11-05T03:10:40+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 942,
+   "file": "careeros/cli.py",
+   "mutation": "a failed offsite drill is not recorded as an exception",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.DailyRunTests.test_a_failed_drill_is_recorded_notified_and_shown"
+   ],
+   "seconds": 161.5,
+   "at": "2026-11-05T03:10:53+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 943,
+   "file": "careeros/cli.py",
+   "mutation": "status hides a failed offsite archive",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.DailyRunTests.test_a_failure_is_recorded_notified_and_shown_and_the_run_goes_on"
+   ],
+   "seconds": 162.3,
+   "at": "2026-11-05T03:11:01+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 944,
+   "file": "careeros/cli.py",
+   "mutation": "status does not flag an offsite archive days old",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.DailyRunTests.test_the_daily_run_writes_records_drills_weekly_and_status_says_so"
+   ],
+   "seconds": 162.7,
+   "at": "2026-11-05T03:11:06+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 945,
+   "file": "careeros/cli.py",
+   "mutation": "careeros backup --offsite exits 0 when the offsite archive failed",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.DailyRunTests.test_backup_offsite_on_the_command_line"
+   ],
+   "seconds": 162.7,
+   "at": "2026-11-05T03:11:13+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 946,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "\"N years as a <role>\" no longer read as years in that role",
+   "why": [
+    "file changed",
+    "re-anchored",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 5,
+   "errors": 5,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.ExperienceTests.test_a_years_rejection_keeps_what_the_gate_judged",
+    "tests.test_scoring_loop.GateTests.test_preferred_lines_only_lower_the_score",
+    "tests.test_scoring_loop.GateTests.test_the_role_title_counts_over_a_smaller_function_of_the_same_name"
+   ],
+   "seconds": 161.9,
+   "at": "2026-11-05T03:11:23+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 947,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "\"N years in a <role> role\" no longer read as years in that role",
+   "why": [
+    "file changed",
+    "re-anchored",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.GateTests.test_an_analyst_role_uses_the_analyst_wording_you_confirmed",
+    "tests.test_scoring_loop.ExperienceTests.test_the_role_is_counted_not_the_domain",
+    "tests.test_scoring_loop.ReadingTests.test_roles"
+   ],
+   "seconds": 161.6,
+   "at": "2026-11-05T03:11:34+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 948,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "a role named anywhere later on the line read as the requirement (\"healthcare experience, preferably as a BSA\")",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.GateTests.test_a_role_named_after_the_area_never_rejects",
+    "tests.test_scoring_loop.ReadingTests.test_a_role_is_read_only_where_the_area_starts",
+    "tests.test_scoring_loop.ReadingTests.test_such_as_and_as_well_as_name_no_role"
+   ],
+   "seconds": 162.2,
+   "at": "2026-11-05T03:13:22+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 949,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "\"in a similar role as a <role>\" no longer read as years in that role",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.ReadingTests.test_a_role_is_read_only_where_the_area_starts"
+   ],
+   "seconds": 165.1,
+   "at": "2026-11-05T03:13:38+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 950,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "a role read past \"preferably\", \"ideally\" or \"including\"",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.ReadingTests.test_a_role_is_read_only_where_the_area_starts"
+   ],
+   "seconds": 163.2,
+   "at": "2026-11-05T03:13:44+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 951,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "long OR-lists of roles cut at 60 characters by the years reader",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.DecisionTests.test_a_long_or_list_of_roles_reaches_its_last_alternative"
+   ],
+   "seconds": 163.2,
+   "at": "2026-11-05T03:13:49+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 952,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "\"or in a health plan environment\" read as the place, not as an alternative",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.GateTests.test_a_domain_alone_can_answer_the_line",
+    "tests.test_scoring_loop.ReadingTests.test_or_in_offers_an_alternative_and_in_names_the_place"
+   ],
+   "seconds": 163.0,
+   "at": "2026-11-05T03:13:56+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 953,
+   "file": "careeros/qualify/experience.py",
+   "mutation": "a years rejection keeps the Experience Match of the domain the line names, not of the role the gate judged",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.ExperienceTests.test_a_years_rejection_keeps_what_the_gate_judged",
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository"
+   ],
+   "seconds": 164.1,
+   "at": "2026-11-05T03:14:07+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 954,
+   "file": "careeros/qualify/experience.py",
+   "mutation": "an \"or\" inside the place makes a role line an OR-list in Experience Match",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.ExperienceTests.test_a_years_rejection_keeps_what_the_gate_judged",
+    "tests.test_scoring_loop.ExperienceTests.test_a_role_in_a_domain_keeps_the_strictest"
+   ],
+   "seconds": 163.1,
+   "at": "2026-11-05T03:14:17+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 955,
+   "file": "careeros/qualify/experience.py",
+   "mutation": "a place that names two domains counts the weaker one",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.ExperienceTests.test_a_role_in_a_domain_keeps_the_strictest"
+   ],
+   "seconds": 160.8,
+   "at": "2026-11-05T03:16:03+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 956,
+   "file": "careeros/qualify/skill_groups.py",
+   "mutation": "\"one of\", \"any of\" or \"either\" anywhere before a list read as opening it",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillAlternativeTests.test_what_does_not"
+   ],
+   "seconds": 157.9,
+   "at": "2026-11-05T03:16:16+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 957,
+   "file": "careeros/qualify/skill_groups.py",
+   "mutation": "a semicolon read as a comma between alternatives",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillAlternativeTests.test_what_counts_as_alternatives"
+   ],
+   "seconds": 161.7,
+   "at": "2026-11-05T03:16:26+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 958,
+   "file": "careeros/extract/rules.py",
+   "mutation": "\"all Facets modules\" no longer read as the Facets system",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillWordTests.test_the_facets_system_is_still_read"
+   ],
+   "seconds": 161.6,
+   "at": "2026-11-05T03:16:31+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 959,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "\"in this role\" read as a role named \"this\"",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "SURVIVED",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [],
+   "seconds": 161.5,
+   "at": "2026-11-05T03:16:37+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 960,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "\"or similar roles\" kept as an alternative of its own",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_scoring_loop.ReadingTests.test_roles"
+   ],
+   "seconds": 160.4,
+   "at": "2026-11-05T03:16:47+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 961,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "an activity that names only a domain is read as an activity",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.ReadingTests.test_lines_that_name_no_role_function_or_activity_are_left_alone"
+   ],
+   "seconds": 161.1,
+   "at": "2026-11-05T03:16:58+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 962,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "a domain the line offers as an alternative no longer answers it",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 5,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured",
+    "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+    "tests.test_demo_mode.DemoTourTest.test_the_reviewer_walkthrough_shows_what_the_commands_print"
+   ],
+   "seconds": 161.6,
+   "at": "2026-11-05T03:18:45+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 963,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "a skill named on a role line counts as years in that role",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.GateTests.test_a_role_line_never_takes_a_skill"
+   ],
+   "seconds": 164.8,
+   "at": "2026-11-05T03:19:01+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 964,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "a skill named anywhere on the line counts for the function it asks for",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.GateTests.test_a_tool_named_elsewhere_on_the_line_does_not"
+   ],
+   "seconds": 163.7,
+   "at": "2026-11-05T03:19:09+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 965,
+   "file": "careeros/qualify/role_years.py",
+   "mutation": "words from different items of a list match one profile item",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.GateTests.test_the_items_of_a_list_are_matched_one_by_one"
+   ],
+   "seconds": 165.4,
+   "at": "2026-11-05T03:19:16+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 966,
+   "file": "careeros/qualify/experience.py",
+   "mutation": "Experience Match ignores the role reading the gate uses",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 3,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.ExperienceTests.test_a_years_rejection_keeps_what_the_gate_judged",
+    "tests.test_scoring_loop.ExperienceTests.test_the_role_is_counted_not_the_domain",
+    "tests.test_scoring_loop.GateTests.test_a_known_small_credit_far_short_is_still_rejected_and_explained"
+   ],
+   "seconds": 163.7,
+   "at": "2026-11-05T03:19:21+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 967,
+   "file": "careeros/qualify/experience.py",
+   "mutation": "a role in a domain no longer counts the domain beside it in Experience Match",
+   "why": [
+    "file changed",
+    "re-anchored"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 4,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_experience.ExplanationTests.test_identical_blocks_give_identical_text_from_stored_numbers",
+    "tests.test_experience.ShadowModeTests.test_tier_b_with_a_large_gap_is_only_shown_as_a_future_stretch"
+   ],
+   "seconds": 163.9,
+   "at": "2026-11-05T03:19:31+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 968,
+   "file": "careeros/qualify/gate.py",
+   "mutation": "years lines never read as a role, function or activity (domain and total years stand in again)",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 11,
+   "errors": 3,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.ExperienceTests.test_a_years_rejection_keeps_what_the_gate_judged",
+    "tests.test_scoring_loop.GateTests.test_an_analyst_role_uses_the_analyst_wording_you_confirmed",
+    "tests.test_scoring_loop.GateTests.test_the_role_title_counts_over_a_smaller_function_of_the_same_name"
+   ],
+   "seconds": 164.5,
+   "at": "2026-11-05T03:19:43+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 969,
+   "file": "careeros/qualify/gate.py",
+   "mutation": "the old domain or total years still count beside the role reading",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 3,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.ExperienceTests.test_a_years_rejection_keeps_what_the_gate_judged",
+    "tests.test_scoring_loop.GateTests.test_preferred_lines_only_lower_the_score",
+    "tests.test_scoring_loop.GateTests.test_the_role_title_counts_over_a_smaller_function_of_the_same_name"
+   ],
+   "seconds": 194.4,
+   "at": "2026-11-05T03:21:59+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 970,
+   "file": "careeros/qualify/gate.py",
+   "mutation": "an unconfirmed role is reported as an ordinary unknown",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 7,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.GateTests.test_a_role_line_never_takes_a_skill",
+    "tests.test_scoring_loop.GateTests.test_a_tool_named_elsewhere_on_the_line_does_not",
+    "tests.test_scoring_loop.GateTests.test_activities"
+   ],
+   "seconds": 192.1,
+   "at": "2026-11-05T03:22:13+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 971,
+   "file": "careeros/qualify/gate.py",
+   "mutation": "a role your record does not mention rejects the posting",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 8,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.GateTests.test_a_role_line_never_takes_a_skill",
+    "tests.test_scoring_loop.GateTests.test_a_tool_named_elsewhere_on_the_line_does_not",
+    "tests.test_scoring_loop.GateTests.test_activities"
+   ],
+   "seconds": 192.9,
+   "at": "2026-11-05T03:22:22+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 972,
+   "file": "careeros/qualify/profile.py",
+   "mutation": "years as a role take a smaller function of the same name over the role title",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 6,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.ExperienceTests.test_a_role_in_a_domain_keeps_the_strictest",
+    "tests.test_scoring_loop.ExperienceTests.test_a_years_rejection_keeps_what_the_gate_judged",
+    "tests.test_scoring_loop.GateTests.test_a_known_small_credit_far_short_is_still_rejected_and_explained"
+   ],
+   "seconds": 193.6,
+   "at": "2026-11-05T03:22:30+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 974,
+   "file": "careeros/qualify/scores.py",
+   "mutation": "an unconfirmed role counts as full years in the eligibility score",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.GateTests.test_the_card_says_which_line_to_verify"
+   ],
+   "seconds": 193.4,
+   "at": "2026-11-05T03:22:34+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 975,
+   "file": "careeros/qualify/facts.py",
+   "mutation": "the card does not say which role or function to verify",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_scoring_loop.GateTests.test_the_card_says_which_line_to_verify"
+   ],
+   "seconds": 195.5,
+   "at": "2026-11-05T03:22:46+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 976,
+   "file": "config/policy/defaults.yaml",
+   "mutation": "an unconfirmed role leaves the posting ELIGIBLE",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.GateTests.test_domain_years_never_stand_in_for_a_function"
+   ],
+   "seconds": 198.2,
+   "at": "2026-11-05T03:23:01+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 977,
+   "file": "careeros/review/labels.py",
+   "mutation": "a closed posting rejected before it closed is not judged",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.DisagreementTests.test_a_closed_posting_is_judged_by_its_last_decision"
+   ],
+   "seconds": 196.2,
+   "at": "2026-11-05T03:25:15+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 978,
+   "file": "careeros/review/labels.py",
+   "mutation": "a near-miss without a stretch flag counts as agreeing with your label",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.DisagreementTests.test_a_closed_posting_is_judged_by_its_last_decision",
+    "tests.test_scoring_loop.DisagreementTests.test_the_classes_and_their_order"
+   ],
+   "seconds": 194.9,
+   "at": "2026-11-05T03:25:28+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 979,
+   "file": "careeros/review/labels.py",
+   "mutation": "a reinstated posting is listed as dismissed",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.DisagreementTests.test_a_dismissal_in_force_disagrees_while_the_system_still_ranks_it"
+   ],
+   "seconds": 190.6,
+   "at": "2026-11-05T03:25:33+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 980,
+   "file": "careeros/review/labels.py",
+   "mutation": "the disagreements read your first label instead of your latest",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.DisagreementTests.test_the_latest_label_counts"
+   ],
+   "seconds": 193.5,
+   "at": "2026-11-05T03:25:43+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 981,
+   "file": "careeros/review/labels.py",
+   "mutation": "test rows counted in the disagreements",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.DisagreementTests.test_test_rows_are_left_out"
+   ],
+   "seconds": 194.0,
+   "at": "2026-11-05T03:25:48+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 982,
+   "file": "careeros/review/labels.py",
+   "mutation": "a wanted posting the system rejects is not listed first",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_scoring_loop.DisagreementTests.test_the_classes_and_their_order"
+   ],
+   "seconds": 190.1,
+   "at": "2026-11-05T03:25:57+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 983,
+   "file": "careeros/extract/rules.py",
+   "mutation": "\"several facets of the role\" read as the Facets system",
+   "why": [
+    "file changed",
+    "re-anchored",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillWordTests.test_facets_of_the_role_is_not_the_facets_system"
+   ],
+   "seconds": 188.0,
+   "at": "2026-11-05T03:26:09+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 984,
+   "file": "careeros/extract/rules.py",
+   "mutation": "an excluded phrase hides the skill everywhere on its line",
+   "why": [
+    "file changed",
+    "re-anchored",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillWordTests.test_the_facets_system_is_still_read"
+   ],
+   "seconds": 184.1,
+   "at": "2026-11-05T03:28:20+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 985,
+   "file": "careeros/extract/rules.py",
+   "mutation": "the policy's skill-word exclusions never reach the reader",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillWordTests.test_facets_of_the_role_is_not_the_facets_system"
+   ],
+   "seconds": 181.2,
+   "at": "2026-11-05T03:28:29+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 986,
+   "file": "config/policy/defaults.yaml",
+   "mutation": "no exclusion for \"facets of\"",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillWordTests.test_facets_of_the_role_is_not_the_facets_system"
+   ],
+   "seconds": 180.7,
+   "at": "2026-11-05T03:28:34+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 987,
+   "file": "careeros/pipeline.py",
+   "mutation": "a new skill-word exclusion never re-reads postings",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillWordTests.test_a_new_exclusion_re_reads_postings"
+   ],
+   "seconds": 179.0,
+   "at": "2026-11-05T03:28:42+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 988,
+   "file": "careeros/qualify/skill_groups.py",
+   "mutation": "\"SQL/Python\" read as alternatives",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillAlternativeTests.test_what_does_not"
+   ],
+   "seconds": 179.3,
+   "at": "2026-11-05T03:28:48+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 989,
+   "file": "careeros/qualify/skill_groups.py",
+   "mutation": "\"SQL and Excel\" read as alternatives",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 6,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_analytics.DemoExportTest.test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured",
+    "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export"
+   ],
+   "seconds": 180.4,
+   "at": "2026-11-05T03:28:57+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 990,
+   "file": "careeros/qualify/skill_groups.py",
+   "mutation": "a comma list with no \"or\" read as alternatives",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillAlternativeTests.test_what_does_not"
+   ],
+   "seconds": 179.2,
+   "at": "2026-11-05T03:29:08+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 991,
+   "file": "careeros/qualify/skill_groups.py",
+   "mutation": "\"Excel, SQL, Tableau, Power BI, or similar tools\" not read as alternatives",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillAlternativeTests.test_what_counts_as_alternatives"
+   ],
+   "seconds": 180.4,
+   "at": "2026-11-05T03:31:20+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 992,
+   "file": "careeros/qualify/skill_groups.py",
+   "mutation": "\"one of SQL, Python\" not read as alternatives",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillAlternativeTests.test_what_counts_as_alternatives"
+   ],
+   "seconds": 180.3,
+   "at": "2026-11-05T03:31:30+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 993,
+   "file": "careeros/qualify/skill_groups.py",
+   "mutation": "a set of alternatives counted as the weakest member",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 7,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured",
+    "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+    "tests.test_demo_mode.DemoTourTest.test_the_tour_produces_exactly_the_recorded_result"
+   ],
+   "seconds": 183.2,
+   "at": "2026-11-05T03:31:37+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 994,
+   "file": "careeros/qualify/skill_groups.py",
+   "mutation": "a tie between alternatives goes to the last named",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillAlternativeTests.test_evidence_decides_then_importance"
+   ],
+   "seconds": 183.2,
+   "at": "2026-11-05T03:31:45+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 995,
+   "file": "careeros/qualify/skill_groups.py",
+   "mutation": "a skill also asked for on its own elsewhere dropped as a lesser alternative",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 3,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured",
+    "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+    "tests.test_scoring_loop.SkillAlternativeTests.test_a_member_asked_for_on_its_own_elsewhere_still_counts"
+   ],
+   "seconds": 181.6,
+   "at": "2026-11-05T03:31:49+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 998,
+   "file": "careeros/qualify/scores.py",
+   "mutation": "the card lists every alternative as missing",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_scoring_loop.SkillAlternativeTests.test_the_card_names_a_missing_group_with_its_alternatives"
+   ],
+   "seconds": 181.6,
+   "at": "2026-11-05T03:31:59+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 999,
+   "file": "careeros/qualify/scores.py",
+   "mutation": "a missing set of alternatives named as one skill",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_scoring_loop.SkillAlternativeTests.test_the_card_names_a_missing_group_with_its_alternatives"
+   ],
+   "seconds": 183.2,
+   "at": "2026-11-05T03:32:11+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1001,
+   "file": "careeros/cli.py",
+   "mutation": "F1: unlock marks runs and migrates without the writer lock",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_resilience.SchemaCommandTests.test_unlock_writes_only_holding_the_writer_lock"
+   ],
+   "seconds": 176.5,
+   "at": "2026-11-05T03:34:16+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1002,
+   "file": "careeros/cli.py",
+   "mutation": "F1: a second unlock leaves the runs a busy one could not mark",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_resilience.SchemaCommandTests.test_unlock_writes_only_holding_the_writer_lock"
+   ],
+   "seconds": 178.7,
+   "at": "2026-11-05T03:34:28+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1004,
+   "file": "careeros/cli.py",
+   "mutation": "F2: careeros status crashes on a damaged drill record",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 5,
+   "skipped": 8,
+   "failing": [
+    "tests.test_resilience.RestoreDrillTests.test_a_damaged_drill_record_makes_the_drill_due_and_status_says_so",
+    "tests.test_resilience.RestoreDrillTests.test_a_damaged_drill_record_makes_the_drill_due_and_status_says_so",
+    "tests.test_resilience.RestoreDrillTests.test_a_damaged_drill_record_makes_the_drill_due_and_status_says_so"
+   ],
+   "seconds": 178.0,
+   "at": "2026-11-05T03:34:35+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1005,
+   "file": "careeros/cli.py",
+   "mutation": "F2: the restore drill's own trouble fails the daily run",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_resilience.RestoreDrillTests.test_the_drills_own_trouble_never_fails_the_run_nor_hides_its_error"
+   ],
+   "seconds": 176.3,
+   "at": "2026-11-05T03:34:42+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1006,
+   "file": "careeros/cli.py",
+   "mutation": "F2: a drill result that cannot be saved is neither recorded nor notified",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_resilience.RestoreDrillTests.test_the_drills_own_trouble_never_fails_the_run_nor_hides_its_error"
+   ],
+   "seconds": 176.7,
+   "at": "2026-11-05T03:34:46+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1007,
+   "file": "careeros/cli.py",
+   "mutation": "F2: a run summary that cannot be made fails the run",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_resilience.RestoreDrillTests.test_the_drills_own_trouble_never_fails_the_run_nor_hides_its_error",
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository"
+   ],
+   "seconds": 178.3,
+   "at": "2026-11-05T03:34:57+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1008,
+   "file": "careeros/cli.py",
+   "mutation": "F2: housekeeping trouble that cannot be recorded fails the run",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_resilience.RestoreDrillTests.test_the_drills_own_trouble_never_fails_the_run_nor_hides_its_error"
+   ],
+   "seconds": 175.1,
+   "at": "2026-11-05T03:35:07+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1009,
+   "file": "careeros/review/server.py",
+   "mutation": "F3: an error after part of a form was saved says \"Not recorded\"",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.SafeFormTests.test_a_refusal_after_part_of_a_form_was_saved_never_says_not_recorded",
+    "tests.test_review_page.SafeFormTests.test_an_error_after_part_of_a_form_was_saved_never_says_not_recorded"
+   ],
+   "seconds": 179.5,
+   "at": "2026-11-05T03:37:16+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1011,
+   "file": "careeros/review/server.py",
+   "mutation": "F3 (Pass 2): a refusal after part of a form was saved says \"Not recorded\"",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.SafeFormTests.test_a_refusal_after_part_of_a_form_was_saved_never_says_not_recorded"
+   ],
+   "seconds": 181.4,
+   "at": "2026-11-05T03:37:30+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1012,
+   "file": "careeros/review/server.py",
+   "mutation": "F3: the page after a partial paste does not name the posting saved",
+   "why": [
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.SafeFormTests.test_a_refusal_after_part_of_a_form_was_saved_never_says_not_recorded",
+    "tests.test_review_page.SafeFormTests.test_an_error_after_part_of_a_form_was_saved_never_says_not_recorded"
+   ],
+   "seconds": 181.0,
+   "at": "2026-11-05T03:37:36+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1013,
+   "file": "careeros/cli.py",
+   "mutation": "N1: careeros migrate's backup is the day's, replaced by the next backup",
+   "why": [
+    "file changed"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_resilience.SchemaCommandTests.test_a_read_only_command_refuses_and_migrate_backs_up_first"
+   ],
+   "seconds": 180.9,
+   "at": "2026-11-05T03:37:43+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1014,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "F2 (offsite): an offsite record without an attempt's fields is trusted",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 5,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.RecordTests.test_a_damaged_record_is_never_trusted_and_status_says_so",
+    "tests.test_offsite.RecordTests.test_a_damaged_record_is_never_trusted_and_status_says_so",
+    "tests.test_offsite.RecordTests.test_a_damaged_record_is_never_trusted_and_status_says_so"
+   ],
+   "seconds": 181.2,
+   "at": "2026-11-05T03:37:47+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1015,
+   "file": "careeros/cli.py",
+   "mutation": "F2 (offsite): careeros status crashes on a damaged offsite record",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 6,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.RecordTests.test_a_damaged_record_is_never_trusted_and_status_says_so",
+    "tests.test_offsite.RecordTests.test_a_damaged_record_is_never_trusted_and_status_says_so",
+    "tests.test_offsite.RecordTests.test_a_damaged_record_is_never_trusted_and_status_says_so"
+   ],
+   "seconds": 180.5,
+   "at": "2026-11-05T03:37:57+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1016,
+   "file": "careeros/cli.py",
+   "mutation": "F2 (offsite): an offsite record that cannot be saved is neither recorded nor notified",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.DailyRunTests.test_a_record_that_cannot_be_saved_is_recorded_and_notified"
+   ],
+   "seconds": 182.8,
+   "at": "2026-11-05T03:38:09+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1017,
+   "file": "careeros/cli.py",
+   "mutation": "F2 (offsite): the offsite archive's own trouble fails the daily run",
+   "why": [
+    "file changed",
+    "caught only by a changed test module"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.RecordTests.test_the_offsite_archives_own_trouble_never_fails_the_run"
+   ],
+   "seconds": 188.4,
+   "at": "2026-11-05T03:40:24+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1018,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "#1: a passphrase copy that did not open the archive is recorded as confirmed",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ConfirmTests.test_status_warns_until_the_copy_kept_off_this_pc_opens_the_newest_archive"
+   ],
+   "seconds": 190.0,
+   "at": "2026-11-05T03:40:40+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1019,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "#1: the confirmation record keeps the passphrase",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ConfirmTests.test_status_warns_until_the_copy_kept_off_this_pc_opens_the_newest_archive"
+   ],
+   "seconds": 192.9,
+   "at": "2026-11-05T03:40:49+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1020,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "#1: offsite confirm never opens the archive with the copy typed in",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ConfirmTests.test_status_warns_until_the_copy_kept_off_this_pc_opens_the_newest_archive"
+   ],
+   "seconds": 194.7,
+   "at": "2026-11-05T03:40:57+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1021,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "#1: a damaged confirmation record is trusted",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ConfirmTests.test_status_warns_until_the_copy_kept_off_this_pc_opens_the_newest_archive"
+   ],
+   "seconds": 197.9,
+   "at": "2026-11-05T03:41:05+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1022,
+   "file": "careeros/cli.py",
+   "mutation": "#1: status says nothing while the passphrase copy kept off this PC was never tried",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_offsite.ConfirmTests.test_status_warns_until_the_copy_kept_off_this_pc_opens_the_newest_archive"
+   ],
+   "seconds": 199.5,
+   "at": "2026-11-05T03:41:17+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1023,
+   "file": "careeros/cli.py",
+   "mutation": "#1: status shows a passphrase copy that did not open the archive as fine",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ConfirmTests.test_status_warns_until_the_copy_kept_off_this_pc_opens_the_newest_archive"
+   ],
+   "seconds": 200.7,
+   "at": "2026-11-05T03:41:30+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1024,
+   "file": "careeros/cli.py",
+   "mutation": "#1: offsite confirm runs in Demo Mode",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ConfirmTests.test_off_without_a_folder_and_refused_before_the_first_archive"
+   ],
+   "seconds": 208.1,
+   "at": "2026-11-05T03:43:52+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1025,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "#4: the offsite archive leaves out the calibration lists",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_the_calibration_lists_and_the_power_bi_folder_are_kept_and_daily_reports_are_not"
+   ],
+   "seconds": 211.1,
+   "at": "2026-11-05T03:44:11+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1026,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "#4: the offsite archive leaves out your Power BI report folder",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 0,
+   "errors": 1,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_the_calibration_lists_and_the_power_bi_folder_are_kept_and_daily_reports_are_not"
+   ],
+   "seconds": 208.2,
+   "at": "2026-11-05T03:44:17+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1027,
+   "file": "careeros/ops/offsite.py",
+   "mutation": "#4: the offsite archive also takes the daily reports CareerOS makes again",
+   "why": [
+    "file changed",
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_offsite.ArchiveTests.test_the_calibration_lists_and_the_power_bi_folder_are_kept_and_daily_reports_are_not"
+   ],
+   "seconds": 209.1,
+   "at": "2026-11-05T03:44:26+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1028,
+   "file": "careeros/review/applications.py",
+   "mutation": "#11: the follow-up count starts from the first follow-up, not the latest",
+   "why": [
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_review_page.FollowUpRuleTests.test_a_second_follow_up_records_and_the_latest_one_counts"
+   ],
+   "seconds": 203.6,
+   "at": "2026-11-05T03:44:29+00:00"
+  },
+  {
+   "rev": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+   "index": 1029,
+   "file": "careeros/review/applications.py",
+   "mutation": "#11: a second follow-up on one application is not recorded",
+   "why": [
+    "new"
+   ],
+   "result": "CAUGHT",
+   "ran": 1096,
+   "failures": 2,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_analytics.DemoExportTest.test_a_private_export_never_goes_into_the_code_repository",
+    "tests.test_review_page.FollowUpRuleTests.test_a_second_follow_up_records_and_the_latest_one_counts"
+   ],
+   "seconds": 205.4,
+   "at": "2026-11-05T03:44:42+00:00"
+  }
+ ],
+ "survivor_fixed": {
+  "mutation": "\"in this role\" read as a role named \"this\"",
+  "fix": "e1178d714dc0bb3a620d12b38eafbcb768e2d994",
+  "merge": "f0ef4da44558a240c4ee07eb4860ab50243a538f",
+  "what": "Planted again with the whole suite, after its test fix (three test lines, no code change): survived on the checked revision, caught on the merge.",
+  "python": "3.14.10",
+  "node_version": "v24.22.1",
+  "checks": [
+   {
+    "rev": "ea1dfc1",
+    "commit": "ea1dfc167e67b3e9519bd2006cdc9607b581aa8d",
+    "tree": "ebed6e6636c55908796501f26f4d0bddfc0e7566e2bd5d5e1aaa710add61b87e",
+    "defect_index": 959,
+    "file": "careeros/qualify/role_years.py",
+    "mutation": "\"in this role\" read as a role named \"this\"",
+    "baseline": {
+     "exit": 0,
+     "ran": 1096,
+     "skipped": 8,
+     "seconds": 181.8
+    },
+    "result": "SURVIVED",
+    "ran": 1096,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 8,
+    "failing": [],
+    "seconds": 182.9,
+    "at": "2026-11-05T02:50:36+00:00"
+   },
+   {
+    "rev": "f0ef4da",
+    "commit": "f0ef4da44558a240c4ee07eb4860ab50243a538f",
+    "tree": "da895c65cbdad498614156513dc6071ca0c5512e60311b14a95ef6d91b66b91b",
+    "defect_index": 959,
+    "file": "careeros/qualify/role_years.py",
+    "mutation": "\"in this role\" read as a role named \"this\"",
+    "baseline": {
+     "exit": 0,
+     "ran": 1096,
+     "skipped": 8,
+     "seconds": 175.3
+    },
+    "result": "CAUGHT",
+    "ran": 1096,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 8,
+    "failing": [
+     "tests.test_scoring_loop.ReadingTests.test_a_role_is_read_only_where_the_area_starts"
+    ],
+    "seconds": 212.1,
+    "at": "2026-11-05T02:57:06+00:00"
+   }
+  ]
+ }
+}

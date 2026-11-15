@@ -167,3 +167,28 @@ class RunFailureNoticeTests(unittest.TestCase):
                 handler.close()
                 cli.log.removeHandler(handler)
         self.assertEqual(shown, ["CareerOS: daily run failed"])
+
+
+class RuntimeTests(unittest.TestCase):
+    """OPP-55 (D83): `careeros status` names the Python running the engine and every package that differs from
+    requirements.lock, so a rebuilt venv that took something else shows at once."""
+
+    def test_every_package_that_differs_from_the_lock_is_named(self):
+        from importlib import metadata
+
+        from careeros.ops import runtime
+        yaml_version = metadata.version("PyYAML")
+        with tempfile.TemporaryDirectory() as tmp:
+            lock = Path(tmp) / "requirements.lock"
+            lock.write_text("# a comment\n"
+                            f"PyYAML=={yaml_version} \\n    --hash=sha256:{'0' * 64}\n"
+                            "httpx==0.0.1\n"
+                            "no-such-package-careeros==1.0\n", encoding="utf-8")
+            self.assertEqual(runtime.locked(lock), {"PyYAML": yaml_version, "httpx": "0.0.1", "no-such-package-careeros": "1.0"})
+            line, differ = runtime.summary(lock)
+            self.assertEqual(differ, [f"httpx installed {metadata.version('httpx')} (lock 0.0.1)",
+                                      "no-such-package-careeros missing (lock 1.0)"])
+            self.assertRegex(line, r"^runtime: Python 3\.\d+\.\d+; 2 of 3 packages differ from requirements\.lock$")
+            lock.write_text(f"PyYAML=={yaml_version}\n", encoding="utf-8")
+            self.assertEqual(runtime.summary(lock), (f"runtime: Python {__import__('platform').python_version()}; "
+                                                     "all 1 packages as in requirements.lock", []))

@@ -41,7 +41,7 @@ into applying rather than screening.
 
 ## 3. Requirements
 
-The requirements are written as 119 numbered statements (107 requirements and 12 acceptance criteria) in
+The requirements are written as 121 numbered statements (109 requirements and 12 acceptance criteria) in
 `business_requirements.md` and traced to code and tests in
 `requirements_traceability.md`. The ones that shaped everything else:
 
@@ -99,9 +99,9 @@ list. The details are in `architecture.md`.
 
 ## 6. Implementation
 
-- **Stack:** Python 3.12 and the standard library, SQLite, httpx and PyYAML. The anthropic SDK backs an optional
+- **Stack:** Python 3.14 and the standard library, SQLite, httpx and PyYAML. The anthropic SDK backs an optional
   requirement reader that must quote the posting word for word and falls back to the rules.
-- **Size:** about 20,700 lines of engine code and 15,700 lines of tests, 43 tables, 14 forward-only migrations and 36
+- **Size:** about 29,100 lines of engine code and 30,400 lines of tests, 43 tables, 15 forward-only migrations and 43
   commands.
 - **Order of work:**
   1. Phase 1: board scanning, normalisation, the eligibility gate, scoring and the review page.
@@ -153,8 +153,8 @@ command, the same command as the CI workflow.
 
 | Measure | Result |
 |---|---|
-| Automated tests | 925, all passing; repeated full runs on 2026-10-13, including a fresh clone, showed no flaky test |
-| Planted defects | 749 defined. The latest full run (2026-11-02) caught all 749, each by a real failing test with the whole suite loaded (`evidence/mutation-receipt.json`). Every full run since the first, with the survivors each one exposed and the fixes that followed (the first survivor, a weak test, is in the table below), is in [testing.md](testing.md); every defect and the tests that caught it are in [defect_coverage.md](defect_coverage.md). |
+| Automated tests | 1627 collected; validation distinguishes passes and skips. Repeated full runs of the earlier revision on 2026-10-13, including a fresh clone, showed no flaky test |
+| Planted defects | 1826 defined. The latest full run (2026-11-05) caught all 1066 defined at the time, each by a real failing test with the whole suite loaded (`evidence/mutation-receipt.json`). Each change since was checked by hand instead of a new full run: every defect in a file it changed, or added since, was planted again. Each check ended with every one caught, a survivor only after a new or corrected test, and the few defects that depend on the Python version on 3.12.10; the latest, after the last change (2026-11-14), planted 411 (`evidence/mutation-hand-check-370a4fe.json`). Every full run since the first, with the survivors each one exposed and the fixes that followed (the first survivor, a weak test, is in the table below), is in [testing.md](testing.md); every defect and the tests that caught it are in [defect_coverage.md](defect_coverage.md). |
 | Functional MVP gate | 92 checks: no requirement fails; 10 PASS, 3 PARTIAL (5 small gaps, listed in `functional_mvp_report.md`) |
 | Release scan | No secret in the files or the Git history. Anyone can repeat the public repository's scan (`python tools/release_scan.py --history`); the private repository's result is reported, not inspectable. |
 | Dependency audit | At release, the first CI run's pip-audit, in the public repository (2026-10-15), found no known vulnerabilities in either lock. Advisories published afterwards affected three pinned packages, which were raised to fixed versions with hashes checked against PyPI: certifi on 2026-10-20, filelock on 2026-10-23 and msgpack on 2026-10-29. After the last update, pip-audit of both locks (2026-10-29) found no known vulnerabilities. Two of the fixed releases were under 14 days old; the lock's header records them as exceptions the owner approved. |
@@ -181,9 +181,9 @@ Fictional employers and postings, four simulated days, fixed by the tests:
 |---|---|
 | World | 15 fictional employers, 13 boards, an alert email and a pasted posting |
 | Boards | 8 active, 1 historical after an ATS migration, 2 manual-only, 1 rejected as an impostor, 1 awaiting review |
-| Jobs | 45 jobs: 27 scored, 13 rejected with stated reasons, 1 duplicate, 4 closed |
-| Tiers of the scored jobs | 5 Tier B, 13 near-miss, 9 archive |
-| Other routes | 13 routed to NIGHT, the separate overnight and part-time profile; 3 alert-email leads |
+| Jobs | 45 jobs: 28 scored, 12 rejected with stated reasons, 1 duplicate, 4 closed |
+| Tiers of the scored jobs | 5 Tier B, 15 near-miss, 8 archive |
+| Other routes | 14 routed to NIGHT, the separate overnight and part-time profile; 3 alert-email leads |
 | Isolation | 182 requests, all answered by the synthetic world; nothing reached the network or the private vault |
 
 These numbers describe a small hand-written world built to exercise every rule. They say nothing about a real job
@@ -284,4 +284,5 @@ Shadow scoring is built for that check: `careeros eval --scoring` compares it wi
    it, and add to the exit test a measure of how many wanted jobs reach the top tiers; then measure the
    source-expansion pilot.
 3. Decide how to handle careers pages that build their job lists with JavaScript, after a week of verification results.
-4. Review the lead-matching path that still uses an older identity check, and reduce the type-check baseline.
+4. Reduce the type-check baseline. (The lead-matching path that used an older identity check was replaced by lead
+   resolution on 2026-11-02.)

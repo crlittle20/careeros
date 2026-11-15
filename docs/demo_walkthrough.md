@@ -8,7 +8,7 @@ This walkthrough shows each part of CareerOS working, in Demo Mode, in about ten
 **synthetic**: fictional employers on `example.com`, a fictional job seeker, and four simulated days. Nothing reaches
 the internet, and no credential is needed.
 
-**Before you start** (CPython 3.12 on Windows x64 or Linux x64: the hash-locked install supports nothing else yet, and
+**Before you start** (CPython 3.14 or 3.12 on Windows x64 or Linux x64: the hash-locked install supports nothing else yet, and
 on macOS or another Python version it fails rather than installing), set up once from the repository folder, as in the
 README:
 
@@ -71,8 +71,8 @@ The tour runs four days of `careeros run`: board scans, an alert email, a pasted
 verification, then processing. Afterwards, `careeros status` shows the totals:
 
 ```
-jobs: scored=27, rejected=13, closed=4, duplicate=1
-NIGHT profile: on; supplemental/archive=3, supplemental/near_miss=10
+jobs: scored=28, rejected=12, closed=4, duplicate=1
+NIGHT profile: on; supplemental/archive=3, supplemental/near_miss=11
 ```
 
 ### 6. Observe employer verification
@@ -141,7 +141,7 @@ both routes on one page: Tier B, near-miss, "check before applying", and the NIG
 ### 10. Inspect evidence
 
 - `careeros explain greenhouse:meridianrx:101 --json`: the same 14 answers, as data.
-- `careeros verify` checks the hash-chained audit log and every job's history:
+- `careeros verify` checks the hash-chained audit log, every job's history, the database file and its foreign keys:
 
   ```
   "event_chain_breaks": []
@@ -154,7 +154,7 @@ both routes on one page: Tier B, near-miss, "check before applying", and the NIG
 `careeros export` writes 13 CSV files and a manifest into the demo vault, after its own checks:
 
 ```
-all 81 checks passed
+all 83 checks passed
 ```
 
 To see the Power BI report:

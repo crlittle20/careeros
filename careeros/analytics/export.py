@@ -23,11 +23,12 @@ from pathlib import Path
 from careeros.core.clock import parse_utc
 from careeros.discovery import sources
 from careeros.paths import CONFIG_DIR
-from careeros.review.applications import VOID
+from careeros.review.applications import EVIDENCE, VOID
 from careeros.review.dismiss import REINSTATED
 
 SCHEMA_VERSION = "analytics-1"
-SCHEMA_REVISION = 2     # raised by each column added within a version: 1 = 2026-10-13; 2 = dismissals (2026-10-30)
+SCHEMA_REVISION = 3     # raised by each column added within a version: 1 = 2026-10-13; 2 = dismissals (2026-10-30);
+                        # 3 = the application's assistance, evidence and tier at apply time (OPP-47, 2026-11-03)
 NONE = "(none)"
 QUALIFIED_TIERS = ("A", "B", "near_miss")       # as in review/discovery_metrics.py
 RECOMMENDED_TIERS = ("A", "B")
@@ -92,7 +93,8 @@ TABLES = {
         ("application_key", "int"), ("job_key", "key"), ("employer_key", "key"), ("ats_key", "key"), ("role_family_key", "key"),
         ("channel", "text"), ("applied_date_key", "int"), ("last_change_date_key", "int"), ("current_state", "text"),
         ("state_category", "text"), ("is_open", "flag"), ("got_answer", "flag"), ("reached_screening", "flag"),
-        ("reached_interview", "flag"), ("reached_offer", "flag"), ("is_hired", "flag"), ("days_in_process", "num")],
+        ("reached_interview", "flag"), ("reached_offer", "flag"), ("is_hired", "flag"), ("days_in_process", "num"),
+        ("assist_mode", "text"), ("evidence", "text"), ("assist_minutes", "num"), ("tier_at_apply", "text")],   # added last (revision 3)
 }
 DIMENSIONS = [t for t in TABLES if t.startswith("dim_")]
 FACTS = [t for t in TABLES if t.startswith("fact_")]
@@ -288,7 +290,13 @@ def build(store, policy) -> dict[str, list[dict]]:
         {"location_key": NONE, "remote_scope": None, "scope_label": "(none)", "work_arrangement": "Unknown", "is_remote": 0,
          "is_us": 0, "country": None, "allowed_states": None, "excluded_states": None, "sort_order": 99}]
 
+    from careeros.discovery.alerts import is_agency_lead, local_only_urls
     from careeros.qualify.gate import annualize
+    local = local_only_urls(store)   # a pasted agency link stays local here too, and every link during a stop (P4-02)
+
+    def link(url):
+        return None if url and is_agency_lead({"lead_id": "", "url": url}, local) else url
+
     tables["dim_job"] = [{
         "job_key": j["job_id"], "title": j["title"], "title_norm": j["title_norm"], "posted_employer_name": j["employer_name"],
         "department": j["department"], "requisition_id": j["requisition_id"], "employment_type": j["employment_type"],
@@ -296,7 +304,7 @@ def build(store, policy) -> dict[str, list[dict]]:
         "pay_max": j["comp_max"], "pay_period": j["comp_period"], "pay_currency": j["comp_currency"],
         "annual_pay_min": annualize(j["comp_min"], j["comp_period"]), "annual_pay_max": annualize(j["comp_max"], j["comp_period"]),
         "is_pay_stated": _flag(j["comp_min"] is not None or j["comp_max"] is not None),
-        "posted_date": (j["posted_at"] or "")[:10] or None, "deadline_date": (j["deadline_at"] or "")[:10] or None, "url": j["url"],
+        "posted_date": (j["posted_at"] or "")[:10] or None, "deadline_date": (j["deadline_at"] or "")[:10] or None, "url": link(j["url"]),
         "duplicate_of_job_key": j["duplicate_of"] if j["duplicate_of"] in job_by_id else None,
         "variant_of_job_key": j["variant_of"] if j["variant_of"] in job_by_id else None,
         "repost_of_job_key": j["repost_of"] if j["repost_of"] in job_by_id else None} for j in jobs]
@@ -420,9 +428,18 @@ def build(store, policy) -> dict[str, list[dict]]:
     history: dict[str, set] = {}
     for t in q("SELECT entity_id, to_state FROM transitions WHERE entity_type = 'application'"):
         history.setdefault(t["entity_id"], set()).add(t["to_state"])
+    # At apply time (OPP-47): the assistance session whose close recorded the application (its mode, and the minutes you
+    # reported), the evidence you gave when recording it, and the tier stored with it. Empty when there was none.
+    closed_by = {r["application_id"]: r for r in q("SELECT o.application_id, o.minutes, s.mode FROM assist_outcomes o JOIN "
+                                                    "assist_sessions s ON s.session_id = o.session_id WHERE o.outcome = 'submitted' "
+                                                    "AND o.application_id IS NOT NULL ORDER BY o.at, o.rowid")}
+    evidence_given = {r["entity_id"]: json.loads(r["metadata_json"]).get("evidence") for r in q(
+        "SELECT entity_id, metadata_json FROM events WHERE event_type = 'application_recorded' ORDER BY seq")}
     rows = []
     for a in applications:
         job = job_by_id[a["job_id"]]
+        session = closed_by.get(a["application_id"]) or {}
+        context = json.loads(a["context_json"]) if a["context_json"] else {}
         reached = history.get(a["application_id"], set()) | {a["current_state"]}
         category = categories.get(a["current_state"])
         rows.append({"application_key": len(rows) + 1, "job_key": a["job_id"], "employer_key": job_employer(job),
@@ -432,7 +449,9 @@ def build(store, policy) -> dict[str, list[dict]]:
                      "is_open": _flag(category in ("active", "blocked")), "got_answer": _flag(reached & ANSWERED),
                      "reached_screening": _flag(reached & SCREENED), "reached_interview": _flag(reached & INTERVIEWED),
                      "reached_offer": _flag(reached & OFFERED), "is_hired": _flag("accepted" in reached),
-                     "days_in_process": _days(a["applied_at"], a["entered_state_at"])})
+                     "days_in_process": _days(a["applied_at"], a["entered_state_at"]),
+                     "assist_mode": session.get("mode"), "evidence": evidence_given.get(a["application_id"]),
+                     "assist_minutes": session.get("minutes"), "tier_at_apply": context.get("tier")})
     tables["fact_application"] = rows
 
     keys = sorted({v for t in tables.values() for r in t for c, v in r.items() if c.endswith("_date_key") and v})
@@ -538,6 +557,10 @@ def validate(tables: dict[str, list[dict]]) -> list[dict]:
     dismissed = [j["job_key"] for j in jobs if j["is_dismissed"] != _flag(j["dismissed_date_key"] is not None)
                  or j["is_dismissed"] != _flag(j["dismissal_reason"])]
     _check(checks, "dismissed jobs, and only they, have a dismissal date and reason", not dismissed, dismissed[:5])
+    odd = [a["application_key"] for a in tables["fact_application"]
+           if a["assist_mode"] not in (None, "manual", "native", "assisted") or a["evidence"] not in (None, *EVIDENCE)
+           or (a["assist_minutes"] is not None and (a["assist_mode"] is None or a["assist_minutes"] < 0))]
+    _check(checks, "applications: known assistance modes and evidence; minutes only from an assistance session", not odd, odd[:5])
     dates = [r["date_key"] for r in tables["dim_date"]]
     _check(checks, "dim_date is one row per day with no gaps",
            len(dates) == len(set(dates)) and all(_next(a) == b for a, b in zip(dates, dates[1:], strict=False)), f"{len(dates)} days")
@@ -575,6 +598,12 @@ def reconcile(tables: dict[str, list[dict]], store, policy) -> list[dict]:
         (REINSTATED,))}
     _check(checks, "dismissed jobs (by their latest reason) match the application",
            dict(Counter(j["dismissal_reason"] for j in jobs if j["is_dismissed"])) == dismissed, dismissed)
+    modes = {r["mode"]: r["c"] for r in store.all(
+        "SELECT s.mode, COUNT(DISTINCT o.application_id) c FROM assist_outcomes o JOIN assist_sessions s ON s.session_id = o.session_id "
+        f"WHERE o.outcome = 'submitted' AND o.application_id IN (SELECT application_id FROM applications WHERE {included} AND job_id IN "
+        f"(SELECT job_id FROM jobs WHERE {included})) GROUP BY 1")}
+    _check(checks, "applications by assistance mode match the application",
+           dict(Counter(a["assist_mode"] for a in tables["fact_application"] if a["assist_mode"])) == modes, modes)
     scopes = {r["remote_scope"] or "unknown": r["c"] for r in store.all(f"SELECT remote_scope, COUNT(*) c FROM jobs WHERE {included} GROUP BY 1")}
     exported = Counter(next(loc["remote_scope"] for loc in tables["dim_location"] if loc["location_key"] == j["location_key"]) for j in jobs)
     _check(checks, "remote classifications match the application", dict(exported) == scopes, scopes)
@@ -632,7 +661,14 @@ def to_csv(table: str, rows: list[dict]) -> bytes:
 
 def export(store, policy, out_dir: Path, *, source: str) -> dict:
     """Build, validate and write the export. Writes nothing (and raises) if any check fails; replaces an earlier
-    export in out_dir only when the folder holds nothing but an earlier export."""
+    export in out_dir only when the folder holds nothing but an earlier export. Built under one reading of the private
+    settings, and written only while the file is still that reading (D141)."""
+    from careeros.core import private_sites
+    with private_sites.run():
+        return _export(store, policy, out_dir, source=source)
+
+
+def _export(store, policy, out_dir: Path, *, source: str) -> dict:
     tables = build(store, policy)
     checks = validate(tables) + reconcile(tables, store, policy) + (synthetic_only(tables) if source == "demo" else [])
     files = {f"{t}.csv": to_csv(t, rows) for t, rows in tables.items()}
@@ -643,6 +679,13 @@ def export(store, policy, out_dir: Path, *, source: str) -> dict:
     if not manifest["valid"]:
         raise ExportError("; ".join(c["check"] for c in checks if not c["ok"]))
     out_dir = Path(out_dir)
+    old = out_dir.with_name(out_dir.name + ".old")
+    known = {f"{t}.csv" for t in TABLES} | {"manifest.json"}
+    if old.exists() and not out_dir.exists():   # an export stopped between its renames: its earlier copy goes back first,
+        if any(old.iterdir()) and (not (old / "manifest.json").exists()   # whole (D153 R3)
+                                   or any(p.name not in known for p in old.iterdir())):
+            raise ExportError(f"{old} holds other files: refusing to replace it (move it away)")
+        old.rename(out_dir)
     if out_dir.exists() and any(out_dir.iterdir()):
         known = {f"{t}.csv" for t in TABLES} | {"manifest.json"}
         if not (out_dir / "manifest.json").exists() or any(p.name not in known for p in out_dir.iterdir()):
@@ -654,7 +697,27 @@ def export(store, policy, out_dir: Path, *, source: str) -> dict:
     for name, content in files.items():
         (staging / name).write_bytes(content)
     (staging / "manifest.json").write_bytes((json.dumps(manifest, indent=1) + "\n").encode("utf-8"))   # the same bytes on any OS
+    from careeros.core import private_sites
+    if old.exists():   # left by an export stopped part-way, the folder whole beside it; anything else there is never removed
+        if any(old.iterdir()) and (not (old / "manifest.json").exists() or any(p.name not in known for p in old.iterdir())):
+            shutil.rmtree(staging)
+            raise ExportError(f"{old} holds other files: refusing to replace it (move it away)")
+        shutil.rmtree(old)
     if out_dir.exists():
-        shutil.rmtree(out_dir)
-    staging.rename(out_dir)
+        out_dir.rename(old)   # set aside whole (a rename, never a slow delete), so the check below is the last step
+    try:
+        private_sites.check()   # the private settings as the export read them, or nothing is written (D141)
+    except private_sites.SettingsChanged as exc:
+        shutil.rmtree(staging)
+        if old.exists():
+            old.rename(out_dir)   # the earlier export stays as it was (Codex Pass 4)
+        raise ExportError(str(exc)) from None
+    try:
+        staging.rename(out_dir)
+    except OSError:
+        if old.exists() and not out_dir.exists():
+            old.rename(out_dir)   # the earlier export back in its place (D153 R3)
+        raise
+    if old.exists():
+        shutil.rmtree(old)
     return manifest

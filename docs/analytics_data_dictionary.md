@@ -1,11 +1,13 @@
 # CareerOS: analytics data dictionary
 
-- Version: 1.1 (schema `analytics-1`, revision 2)
-- Date: 2026-10-13; revision 2 on 2026-10-30
+- Version: 1.1 (schema `analytics-1`, revision 3)
+- Date: 2026-10-13; revision 2 on 2026-10-30; revision 3 on 2026-11-03
 - Contract: `manifest.json` names it in two keys, `schema_version` (`analytics-1`) and `schema_revision` (a whole
   number). Within a version, columns may only be added at the end of a table, and each addition raises the revision:
   - 1: the tables of 2026-10-13 (an export without `schema_revision` is revision 1);
-  - 2: `is_dismissed`, `dismissed_date_key` and `dismissal_reason` at the end of `fact_job_evaluation`.
+  - 2: `is_dismissed`, `dismissed_date_key` and `dismissal_reason` at the end of `fact_job_evaluation`;
+  - 3: `assist_mode`, `evidence`, `assist_minutes` and `tier_at_apply` at the end of `fact_application`: how each
+    application was made, as recorded when you applied (OPP-47).
 
   Removing, renaming, retyping or reordering a column, or changing what one means, needs a new version (`analytics-2`).
   A correction that changes no value an earlier export can hold keeps both: on 2026-10-30 `is_recommended` stopped
@@ -463,6 +465,10 @@ application workflow's transitions. Demo rows: 4. A void application (recorded b
 | `reached_offer` | 0/1 | Reached an offer. |
 | `is_hired` | 0/1 | Accepted an offer. |
 | `days_in_process` | decimal | Applied → latest status change, in days. |
+| `assist_mode` | text | The assistance session whose close recorded the application: `manual`, `native` or `assisted`. Empty when you recorded it without one (`careeros applied`, or "I applied" on the review page). |
+| `evidence` | text | What the record rests on, as you gave it: `owner_attested` (your statement) or `confirmation_observed` (you saw the employer's confirmation). Empty for an application recorded before 2026-10-21, when this was not yet asked. |
+| `assist_minutes` | decimal | The minutes you reported when closing that session. Empty without a session, or when you left it out (missing, never 0). |
+| `tier_at_apply` | text | The tier stored with the application when you recorded it (`A`, `B`, `near_miss`, ...); empty when the job was not scored then. It never changes when the job is scored again; `fact_job_evaluation[tier]` is the latest. |
 
 ## 6. Measures
 

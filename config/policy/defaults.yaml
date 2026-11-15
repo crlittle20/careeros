@@ -38,13 +38,23 @@ families:
     title_any: [reporting analyst, report analyst, data analyst, business intelligence, bi analyst, analytics analyst,
                 power bi, data quality analyst, data analytics, business insights, data operations analyst,
                 data validation analyst, data integrity analyst, data governance analyst, data reconciliation analyst,
-                quality analyst, quality assurance analyst, audit analyst]
+                quality analyst, quality assurance analyst, audit analyst, qa analyst, qa auditor,
+                call quality analyst, call quality auditor, contact center quality analyst, claims quality auditor]
   process_analyst:
     label: Business process analyst
     title_any: [process analyst, business process, process improvement, process optimization, operations analyst,
                 process excellence, continuous improvement analyst, workflow analyst, operational excellence,
                 implementation consultant,
                 implementation manager]   # 2026-10-12: an individual-contributor role (see seniority _IC_MANAGER)
+  service_operations_supervision:
+    label: Contact center / claims / service supervision (manual scope review)
+    title_any: [supervisor contact center, contact center supervisor, supervisor call center, call center supervisor,
+                supervisor customer service, customer service supervisor, supervisor provider data,
+                provider data operations supervisor, provider data supervisor, supervisor insurance billing,
+                supervisor insurance/billing, insurance billing supervisor, supervisor billing, billing supervisor,
+                supervisor claims, claims supervisor, claims operations supervisor, claims quality supervisor,
+                customer care team lead, operations team lead, helpdesk shift lead, service desk shift lead,
+                supervisor quality assurance, quality assurance supervisor, supervisor qa, qa supervisor]
 
 # Second review of title-screen rejects (2026-10-12, Part 3). Deterministic, no model calls. A title that matched no
 # family but holds an ambiguous role word is rescued only with strong evidence from the posting itself; every decision
@@ -85,7 +95,7 @@ parents:
 # "principal" is NOT here (2026-10-12): it is a seniority level (below) and the gate's principal_scope rule.
 title_exclude: [director, vice president, vp, svp, evp, avp, chief, head of, intern, internship, apprentice, sales,
                 account executive, account manager, recruiter, nurse, physician, pharmacist, therapist,
-                software engineer, data engineer, machine learning, scientist, attorney, counsel, professor,
+                software engineer, software qa supervisor, software quality assurance supervisor, data engineer, machine learning, scientist, attorney, counsel, professor,
                 medical coder, coding specialist, new grad, new graduate, graduate program, campus,
                 early career program, 2027 start]
 
@@ -129,7 +139,8 @@ extraction:
   min_confidence: 0.6
   min_requirements: 2         # fewer than this from a long posting => needs review
   ai:
-    enabled: true             # active only when an API key is stored (Credential Manager "CareerOS/anthropic")
+    enabled: false            # off unless overrides turn it on; even then only with a stored API key (Credential Manager
+                              # "CareerOS/anthropic"). The README and PRIVACY say off by default (OPP-69, D83, 2026-11-03)
     model: claude-opus-5-5    # Claude Haiku 5.5 (claude-haiku-5-5) is much cheaper for bulk reading, if you choose it
     effort: medium
     max_calls_per_day: 100    # only postings that pass the early title/US/remote screen are read
@@ -169,6 +180,19 @@ experience:
     ambiguous: {large_gap: cap_b, severe_gap: stretch}
   high_potential: {gap_classes: [medium_gap, large_gap], min_skill_coverage: 0.85, domain_levels: [direct]}   # a note only
   calibration: {min_labels: 50, min_years_labels: 20}   # EXPERIENCE_CALIBRATION_READY; never switches enforce on
+  # Years as a role, in a function or doing an activity (OPP-43, 2026-11-03, D90-D94; qualify/role_years.py): such a line
+  # is met only by a role title, function or skill that names it. An alternative made only of the domain vocabulary
+  # (domain_terms and the words below) and place words is a domain, which your domain years still answer.
+  role_years:
+    domain_words: [insurance, health insurance, managed care, health plans, health systems, health system, healthcare system,
+                   hospitals, life sciences, pharmaceutical, pharmaceuticals, pharma, biotech, biotechnology,
+                   financial services, finance, fintech, saas, b2b, technology, tech, government, public sector, medical,
+                   medical office, pharmacy benefit management, pharmacy benefits, payor, payors, payers, providers,
+                   members, patients, health related, healthcare related, health care industries, behavioral health,
+                   outpatient, inpatient, digital health]
+    setting_words: [industry, industries, space, setting, settings, environment, environments, company, companies,
+                    organization, organizations, organisation, organisations, sector, sectors, field, fields, domain,
+                    landscape, side, vendor, vendors, market, markets, lines of business]
 
 
 # Certifications (2026-10-15; docs/certifications.md). A deterministic catalog: each credential's canonical name, its
@@ -340,7 +364,8 @@ night:
   # conflict-of-interest review with a daytime job (Supplemental only). Same-industry overlap alone
   # (night_industry_overlap) is informational and never makes a job CONDITIONAL. An unset NIGHT pay floor is a
   # settings gap, not a job unknown.
-  material_unknowns_extra: [schedule_unknown, night_coi_review, daytime_hours_likely, possible_day_job_overlap]
+  material_unknowns_extra: [schedule_unknown, night_coi_review, daytime_hours_likely, possible_day_job_overlap,
+                            pay_tier_unknown, pay_period_unknown]
   # Your daytime job's hours, for Supplemental workload sustainability and overlap (2026-10-12). Unset = workload
   # "unknown". Set in vault overrides, e.g. day_job: {start: "08:00", end: "16:30", days: [mon, tue, wed, thu, fri],
   # timezone: America/New_York}. Without its timezone no workload result is confirmed (2026-10-16).
@@ -442,18 +467,38 @@ domain_levels:
 # hard failure but a material fact is unknown: check it before applying. Unposted pay never makes a job CONDITIONAL.
 eligibility_states:
   material_unknowns: [remote_unknown, home_state_unknown, commute_unknown, education_unknown, work_authorization_unknown,
-                      citizenship_check, years_unknown, low_confidence_requirement, license_check, clearance_check,
-                      certification_check, generic_title_unverified, pay_untrusted_below_floor]
+                      citizenship_check, years_unknown, years_role_unconfirmed, low_confidence_requirement, license_check,
+                      clearance_check, certification_check, generic_title_unverified, pay_untrusted_below_floor,
+                      pay_tier_unknown,   # 2026-11-04: pay by location straddling the floor, yours not named
+                      pay_period_unknown, residence_limit_check]   # 2026-11-05: a pay period left open across the
+                      # floor; a state limit read from a residence sentence (never a rejection)
 
 # Prompts v2.2: generic titles do not qualify on the title alone; the title or posting must show relevant context.
 generic_titles:
-  titles: [business analyst, data analyst, operations analyst, quality analyst, systems analyst, reporting analyst,
+  titles: [business analyst, data analyst, operations analyst, quality analyst, qa analyst, qa auditor, qa supervisor,
+           quality assurance supervisor, supervisor qa, supervisor quality assurance, systems analyst, reporting analyst,
            process analyst, analytics analyst, quality assurance analyst, application analyst, applications analyst,
            functional analyst, requirements analyst, test analyst, testing analyst, audit analyst, business systems analyst,
            business system analyst, implementation consultant]
   context_terms: [claims, claim, pharmacy, pbm, healthcare, health care, health plan, benefits, eligibility, reimbursement,
                   provider, payer, medicare, medicaid, member, patient, operations, validation, reconciliation, reporting,
                   implementation, configuration, enrollment, insurance]
+  # QA titles (2026-11-09): the QA-abbreviated titles judged on qa_context_terms instead of context_terms, so that a
+  # software-QA posting full of "validation", "configuration" or "reporting" does not pass on those generic words
+  qa_titles: [qa analyst, qa auditor, qa supervisor, quality assurance supervisor, supervisor qa, supervisor quality assurance]
+  # The health-plan operations words count for QA titles too: without them an "Eligibility QA Auditor" posting about
+  # 834 enrollment files was rejected (2026-11-09 hotfix)
+  qa_context_terms: [claims, pharmacy, pbm, healthcare, health care, health plan, reimbursement,
+                     provider, payer, medicare, medicaid, call center, contact center, call quality,
+                     call monitoring, member service, customer care, adjudication, coordination of benefits,
+                     encounter data, provider data, payment integrity, prior authorization]
+  # Weak words: they also fit software or finance work ("device enrollment", "834" as a test fixture), or any employer's
+  # perks ("benefits", "insurance": moved here from the list above, Pass 2, D126). With no word above, they only flag a
+  # QA title for review. A posting that names a software-testing tool below passes only with two different words above;
+  # with fewer it is flagged for review, never rejected (the hotfix's Pass 2, CR-HF-04, D126)
+  qa_weak_context_terms: [eligibility, enrollment, reconciliation, benefits, insurance, "834", "835", "837"]
+  qa_software_terms: [selenium, playwright, cypress, appium, webdriver, test automation, automation framework,
+                      automated tests, automated testing, unit tests, unit testing, pytest, junit, testng, postman, jmeter]
 
 industries:
   preferred: [healthcare, health, pbm, pharmacy, payer, health plan, insurance, medicare, medicaid, clinical, hospital, digital health]
@@ -527,6 +572,12 @@ skill_aliases:
   zapier: [zapier]
   claims validation: [claims validation, claim validation, test claims, claims testing]
   reconciliation: [reconciliation, reconcile, reconciling]
+
+# Ordinary English that contains a skill word (2026-11-03): "several facets of the role" is not the Facets claims system.
+# A skill word inside one of these phrases does not count; the same word elsewhere on the line still does.
+skill_alias_exclusions:
+  facets: [facets of, several facets, many facets, various facets, different facets, all facets, multiple facets,
+           other facets, key facets, these facets, those facets]
 
 stability:
   full_time: 1.0
@@ -620,6 +671,14 @@ source_discovery:
 operations:               # how CareerOS runs, never what it decides: changing these does not re-evaluate any job
   notifications: true     # Windows notification after the daily run when there is something new worth a look
   backup_keep: 14         # daily backups kept in vault/backups
+  # The offsite archive (OPP-26, D97): after the daily backup, one encrypted copy (GnuPG, AES-256) of the newest backup's
+  # database and the vault folders you wrote by hand, in a folder you choose such as a OneDrive folder. Off until you set
+  # the folder in your vault overrides and save the passphrase in Windows Credential Manager as CareerOS/offsite
+  # (operator manual, "Offsite archive"). Keep a second copy of the passphrase outside this PC.
+  offsite:
+    folder: null            # null = off
+    keep: 7                 # archives kept there; only CareerOS's own (careeros-offsite-DATE.zip.gpg) are ever removed
+    gpg: null               # null = gpg on PATH, else the one Git for Windows installs
   # Gmail search for job-alert emails (only used once you run `careeros gmail connect`). Senders only, so recruiter
   # and personal mail is never read; label any other alert email "CareerOS" in Gmail to include it.
   # LinkedIn sends application updates from the same jobs-noreply address, so application/interview subjects are

@@ -10,10 +10,11 @@ from __future__ import annotations
 import hashlib
 import sqlite3
 from pathlib import Path
+from typing import cast
 
 from careeros.core.clock import Clock
 
-from .store import PermissionDenied
+from .store import PermissionDenied, Store
 
 
 def _ro_uri(path: Path) -> str:
@@ -80,3 +81,7 @@ class ReadOnlyStore:
 
     def close(self) -> None:
         self.conn.close()
+
+    def verify_event_chain(self) -> list[str]:
+        """The same check `careeros verify` runs, on a copy (OPP-25): it reads the events only."""
+        return Store.verify_event_chain(cast(Store, self))

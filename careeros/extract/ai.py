@@ -16,6 +16,8 @@ import os
 import re
 import sys
 
+from careeros.normalize.posting import contains_term, norm
+
 from .model import CATEGORIES, REQUIREMENT_TYPES, Extraction, Requirement
 
 CREDENTIAL_TARGET = "CareerOS/anthropic"
@@ -32,7 +34,7 @@ degree or domain is its own record (they may share the same source_text).
 requirement_type:
 - hard_required: stated as required, minimum, must, or listed under required/minimum/basic qualifications.
 - required_with_equivalency: required but with "or equivalent experience" (or similar) wording.
-- preferred: preferred, nice to have, a plus, bonus, desired, ideally.
+- preferred: preferred, nice to have, a plus, bonus, desired, ideally, or explicitly helpful rather than required.
 - responsibility: a duty of the role, not a qualification.
 - ambiguous: you cannot tell whether it is required or preferred. Never guess "preferred".
 Leave out benefits, pay, company descriptions and equal-opportunity statements.
@@ -110,9 +112,23 @@ def _squash(text: str) -> str:
     return re.sub(r"\s+", " ", text or "").strip().lower()
 
 
+def _credential(name: str, certs: dict | None) -> str | None:
+    """The catalog credential an AI name stands for: its key, or the longest alias in it ("pmp certification", "PMP®",
+    "project management professional": pmp). None without the catalog or when no alias is in the name."""
+    credentials = (certs or {}).get("credentials") or {}
+    if name in credentials:
+        return name
+    best = None
+    for key, item in credentials.items():
+        for alias in item.get("aliases") or []:
+            if contains_term(norm(name), norm(alias)) and (best is None or len(norm(alias)) > best[1]):
+                best = (key, len(norm(alias)))
+    return best[0] if best else None
+
+
 class AIReader:
-    def __init__(self, client, model: str, effort: str = "medium"):
-        self.client, self.model, self.effort = client, model, effort
+    def __init__(self, client, model: str, effort: str = "medium", certs: dict | None = None):
+        self.client, self.model, self.effort, self.certs = client, model, effort, certs
 
     @property
     def extractor_id(self) -> str:
@@ -156,10 +172,17 @@ class AIReader:
 
     def extract(self, title: str, posting_text: str, rules_extraction: Extraction) -> tuple[Extraction, dict]:
         raw, meta = self.read(title, posting_text)
-        return merge(raw, posting_text, rules_extraction, self.extractor_id), meta
+        return merge(raw, posting_text, rules_extraction, self.extractor_id, self.certs), meta
 
 
-def merge(raw: list, posting_text: str, rules_extraction: Extraction, extractor_id: str) -> Extraction:
+def merge(raw: list, posting_text: str, rules_extraction: Extraction, extractor_id: str, certs: dict | None = None) -> Extraction:
+    """The AI's records, quoted verbatim, reconciled with the rules reader's. Certifications are the rules' alone
+    (CR-2026-11-09-INTAKE-HOTFIX Pass 4, CR-HF-09, D131 S1): every AI record of a certification is dropped and the
+    rules' certification records are kept exactly as the rules made them, so the AI never changes, replaces, merges
+    or drops one. One exception (round 6, D131 S1b): a certification the AI finds of a credential the rules recorded
+    nowhere in the posting (no rules record of the same catalog key; without a key, of the same normalized name) goes
+    in as its own "ambiguous" record (verify: CONDITIONAL unless held), never hard, never preferred, never in an
+    alternative group. `certs` is the policy's certification catalog. Every other category is reconciled as before."""
     posting = _squash(posting_text)
     kept: list[Requirement] = []
     dropped = 0
@@ -180,14 +203,62 @@ def merge(raw: list, posting_text: str, rules_extraction: Extraction, extractor_
 
     rules_hard = {(r.category, r.name) for r in rules_extraction.requirements if r.requirement_type == "hard_required"}
     reconciled = []
+    ai_certs = []
     for r in kept:
+        if r.category == "certification":   # the rules' alone (D131 S1), except a credential they missed (S1b, below)
+            ai_certs.append(r)
+            continue
         if r.requirement_type == "preferred" and (r.category, r.name) in rules_hard:
             r = Requirement(r.category, r.name, "ambiguous", r.source_text, min(r.confidence, 0.6), r.years)
         reconciled.append(r)
     have = {(r.category, r.name) for r in reconciled}
     for r in rules_extraction.requirements:  # gate-critical records found by the rules are never lost
-        if r.category in GATE_CRITICAL and r.requirement_type in ("hard_required", "required_with_equivalency") and (r.category, r.name) not in have:
+        if r.category == "certification":
+            reconciled.append(r)   # every certification record, exactly as the rules made it (D131 S1)
+        elif r.category in GATE_CRITICAL and r.requirement_type in ("hard_required", "required_with_equivalency") and (r.category, r.name) not in have:
             reconciled.append(r)
+    # D149 R-Y2 (Codex Pass 2 C and the AI-quote High): an AI reading only adds; a years figure the rules read on a
+    # posting line stays judged. D155 (2) (Codex Pass 3): never deduplicated away on line and figure alone (an AI SQL
+    # record on the Excel line hid the rules' Excel record). Every years record of the rules is kept as
+    # the rules made it, whatever the AI read on its line (another subject, another strength): the gate judges a line on
+    # the rules' own records and only flags where the AI's reading differs
+    for r in rules_extraction.requirements:
+        if r.years is not None and r.category != "certification" and r not in reconciled:
+            reconciled.append(r)
+    # The AI and the rules must agree on certifications, posting-wide (CR-2026-11-09-INTAKE-HOTFIX Pass 5, CR-HF-11 and
+    # CR-HF-12, D138 R1). An AI certification agrees when the rules hold the same credential (catalog key, else its
+    # normalized name) as a standalone hard record (hard, the only certification of its line), or when the AI reads it
+    # only as preferred, contextual or a responsibility and the rules recorded it in any way. If any AI certification
+    # disagrees (the rules missed it, or hold it only as preferred, unclear or in a group): every hard or equivalency
+    # certification of the rules becomes "ambiguous" (CONDITIONAL), and each disagreeing credential is added as its own
+    # "ambiguous" record, never grouped. No quote or line is matched; the rules' records are otherwise kept as they are
+    rules_certs = [x for x in rules_extraction.requirements if x.category == "certification"]
+
+    def same(rule: Requirement, key: str | None, name: str) -> bool:
+        return rule.name == key if key else norm(re.sub(r"^(?:family|issuer):", "", rule.name)) == norm(name)
+
+    def standalone(rule: Requirement) -> bool:
+        return rule.requirement_type == "hard_required" and not any(
+            x is not rule and _squash(x.source_text) == _squash(rule.source_text) for x in rules_certs)
+
+    disagreeing: list[tuple[str, Requirement]] = []
+    for r in ai_certs:
+        key = _credential(r.name, certs)
+        mine = [x for x in rules_certs if same(x, key, r.name)]
+        if any(standalone(x) for x in mine):
+            continue
+        if r.requirement_type in ("preferred", "contextual", "responsibility") and mine:
+            continue
+        disagreeing.append((key or r.name, r))
+    if disagreeing:
+        reconciled = [Requirement(x.category, x.name, "ambiguous", x.source_text, min(x.confidence, 0.6), x.years)
+                      if x.category == "certification" and x.requirement_type in ("hard_required", "required_with_equivalency")
+                      else x for x in reconciled]
+        added: set[str] = set()
+        for name, r in disagreeing:
+            if name not in added:
+                added.add(name)
+                reconciled.append(Requirement("certification", name, "ambiguous", r.source_text, min(r.confidence, 0.6), r.years))
     notes = list(rules_extraction.notes) + ([f"ai_dropped_unquoted:{dropped}"] if dropped else [])
     return Extraction(extractor_id, reconciled, rules_extraction.sections, notes)
 
@@ -203,4 +274,6 @@ def build_reader(policy) -> AIReader | None:
         return None
     import anthropic
     client = anthropic.Anthropic(api_key=key, max_retries=2, timeout=180.0)
-    return AIReader(client, settings.get("model", "claude-opus-5-5"), settings.get("effort", "medium"))
+    # the certification catalog, to tell a credential only the AI found (D131 S1b)
+    return AIReader(client, settings.get("model", "claude-opus-5-5"), settings.get("effort", "medium"),
+                    policy.get("certifications", default={}) or {})

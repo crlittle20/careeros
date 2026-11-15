@@ -95,6 +95,72 @@ class PipelineTests(unittest.TestCase):
         for row in self.store.all("SELECT job_id FROM jobs"):
             self.assertEqual(self.store.verify_job_consistency(JOB_MATRIX, row["job_id"]), set(), row["job_id"])
 
+    def test_pay_read_better_is_not_a_change_the_employer_made(self):
+        """2026-11-04: the same words re-read with cents get their pay without a job_changes row; an edit still has one."""
+        from careeros.normalize.posting import content_fingerprint
+        cents = postings.GOOD_FIT.replace("$95,000 - $120,000", "$95,000.00 - $120,000.00")
+        job_id = "greenhouse:synth:201"
+        self.board.jobs = [gh_job(201, "Business Systems Analyst", cents, req="R-9")]
+        self.poll()
+        row = self.store.one("SELECT * FROM jobs WHERE job_id = ?", (job_id,))
+        self.assertEqual((row["comp_min"], row["comp_max"], row["comp_period"]), (95000, 120000, "year"))
+        old = {**dict(row), "comp_min": None, "comp_max": None, "comp_period": None}   # what the older reader stored
+        self.store.writer("discovery").update("jobs", {"comp_min": None, "comp_max": None, "comp_period": None,
+                                                       "content_fingerprint": content_fingerprint(old)}, "job_id = ?", (job_id,))
+        self.clock.advance(minutes=1)
+        process(self.ctx)
+
+        def changes():
+            return self.store.one("SELECT COUNT(*) AS n FROM job_changes WHERE job_id = ?", (job_id,))["n"]
+        before = changes()
+        counts = self.poll()
+        self.assertEqual((counts["pay_reread"], counts["changed"]), (1, 0))
+        self.assertEqual(self.store.one("SELECT comp_max FROM jobs WHERE job_id = ?", (job_id,))["comp_max"], 120000)
+        self.assertEqual(changes(), before)
+        last = self.store.one("SELECT reason_code FROM transitions WHERE entity_id = ? ORDER BY sequence DESC", (job_id,))
+        self.assertEqual(last["reason_code"], "derived_fields_refreshed")
+        self.board.jobs = [gh_job(201, "Business Systems Analyst", cents.replace("$120,000.00", "$125,000.00"), req="R-9")]
+        counts = self.poll()   # the employer changed the pay line: a change
+        self.assertEqual((counts["pay_reread"], counts["changed"]), (0, 1))
+        self.assertEqual(changes(), before + 1)
+        self.assert_all_consistent()
+
+    def test_the_pay_stored_is_your_states_tier(self):
+        """2026-11-04: normalization passes your home state (the synthetic policy: FL) to the pay reader. D155 (F6): a
+        work arrangement in the pay block ("This role is remote; ...") chooses no tier by label, so there the first
+        range is stored (both clear the floor here: no flag); without it, your state's tier."""
+        tiers = postings.GOOD_FIT.replace("Pay range: $95,000 - $120,000 per year",
+                                          "The base pay in California and New York is $110,000 - $130,000 per year. "
+                                          "The base pay in all other locations is $95,000 - $120,000 per year.")
+        plain = tiers.replace("This role is remote; we hire in the following states: Texas, Florida, Arizona, Georgia.\n",
+                              "We hire in the following states: Texas, Florida, Arizona, Georgia.\n")
+        self.assertNotEqual(plain, tiers)
+        self.board.jobs = [gh_job(202, "Business Systems Analyst", plain, req="R-10"),
+                           gh_job(203, "Business Systems Analyst", tiers, req="R-11")]
+        self.poll()
+        row = self.store.one("SELECT comp_min, comp_max FROM jobs WHERE job_id = 'greenhouse:synth:202'")
+        self.assertEqual((row["comp_min"], row["comp_max"]), (95000, 120000))
+        row = self.store.one("SELECT comp_min, comp_max FROM jobs WHERE job_id = 'greenhouse:synth:203'")
+        self.assertEqual((row["comp_min"], row["comp_max"]), (110000, 130000))
+
+    def test_a_pay_reread_needs_the_same_words_and_pay_read_from_them(self):
+        from types import SimpleNamespace
+
+        from careeros.pipeline import _pay_reread
+        text = "Pay range: $95,000.00 - $120,000.00 per year. Open to candidates who reside in Florida."
+        existing = {"title": "Analyst", "location_raw": "Remote", "description_text": text, "requisition_id": "R-1",
+                    "canonical_url": "https://example.test/1", "comp_min": None, "comp_max": None, "comp_period": None,
+                    "remote_type": "remote", "remote_states_json": "[]", "remote_excluded_states_json": "[]",
+                    "country": "US", "employment_type": "full_time", "deadline_at": None}
+        fields = dict(existing, comp_min=95000.0, comp_max=120000.0, comp_period="year", remote_states_json='["FL"]')
+        text_pay = SimpleNamespace(comp=None)
+        self.assertTrue(_pay_reread(existing, fields, text_pay))   # pay and the state limit, read better
+        self.assertFalse(_pay_reread(existing, fields, SimpleNamespace(comp={"min": 95000, "max": 120000})))
+        self.assertFalse(_pay_reread(dict(existing, comp_min=99000.0, comp_max=99999.0, comp_period="year"), fields,
+                                     text_pay))   # the board's own pay fields were dropped: a change
+        self.assertFalse(_pay_reread(existing, dict(fields, requisition_id="R-2"), text_pay))
+        self.assertFalse(_pay_reread(existing, dict(existing, remote_states_json='["FL"]'), text_pay))   # no pay change
+
     def test_full_flow(self):
         counts = self.poll()
         self.assertEqual((counts["new"], counts["duplicate"], counts["variant"]), (5, 1, 1))
@@ -159,6 +225,32 @@ class PipelineTests(unittest.TestCase):
         process(self.ctx)
         row = self.store.one("SELECT current_state, family FROM jobs WHERE job_id = 'greenhouse:synth:108'")
         self.assertEqual(tuple(row), ("scored", "pbm_claims_operations"))  # live bug: stale family kept it rejected
+        self.assert_all_consistent()
+
+    def test_title_screen_regrade_reads_current_text_even_with_cached_requirements(self):
+        job_id = "greenhouse:synth:101"
+        self.poll()
+        process(self.ctx)
+        self.assertEqual(self.state(job_id), "scored")
+
+        older_policy = json.loads(json.dumps(self.policy.data))
+        older_policy["families"].pop("service_operations_supervision")
+        older_policy["title_rescue"]["enabled"] = False
+        self.ctx.policy = PolicyBundle(older_policy, fingerprint(older_policy))
+        self.board.jobs[0] = gh_job(101, "QA Supervisor", postings.GOOD_FIT + "\nRequired Qualifications\n- Active pharmacist license required.", req="R-1")
+        self.poll()
+        process(self.ctx)
+        previous = self.store.one("SELECT extraction_fingerprint FROM jobs WHERE job_id = ?", (job_id,))[0]
+        self.assertTrue(previous)
+        self.assertEqual(self.state(job_id), "rejected")
+
+        self.ctx.policy = self.policy
+        self.clock.advance(minutes=1)
+        process(self.ctx)
+        latest = self.store.one("SELECT hard_failures_json FROM gate_results WHERE job_id = ? ORDER BY at DESC, rowid DESC", (job_id,))
+        self.assertEqual(self.state(job_id), "rejected")
+        self.assertIn("license_required", {failure["code"] for failure in json.loads(latest[0])})
+        self.assertEqual(process(self.ctx)["reevaluated"], 0)
         self.assert_all_consistent()
 
     def test_employment_type_stated_in_the_title_wins_and_is_refreshed(self):

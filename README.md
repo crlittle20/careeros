@@ -19,23 +19,62 @@ seeker" is Chris on the private system and a fictional person in Demo Mode.
 
 **Results**
 
-- 925 automated tests pass locally with outbound network refused. The public repository's CI runs the same
+- The suite contains 1627 automated tests, run with outbound network refused. The public repository's CI runs the same
   validation; this version's CI result comes with its publication.
-- 749 planted defects: the latest full run (2026-11-02) caught all 749, each with a failing test
-  (`evidence/mutation-receipt.json`).
+- 1826 planted defects: the latest full run (2026-11-05) caught all 1066 defined at the time, each with a failing test
+  (`evidence/mutation-receipt.json`). Each change since was checked by hand instead of a new full run: every defect in
+  a file it changed, or added since, was planted again, and the suite had to fail. Each check ended with every one
+  caught: a survivor got a new or corrected test, and the few defects that depend on the Python version were caught
+  on 3.12.10, the runtime a rollback returns to. The latest check, after the last change (2026-11-14), planted 411
+  (`evidence/mutation-hand-check-370a4fe.json`); every check, with what it found, is in [testing.md](docs/testing.md).
 - Chris labelled 50 real postings (2026-10-16): the hard rules agreed with all 50 (in-sample), the ranking did not;
   ranking effectiveness is not demonstrated ([limitations](#limitations)).
 
-### Project status (2026-11-02)
+### Project status (2026-11-14)
 
-- First published 2026-10-15 (UTC). This version publishes the code as of 2026-11-02; the code published before it
-  was the snapshot of 2026-10-31 (published 2026-11-01: assisted applications with the browser extension, and
-  dismissal fields in the analytics export).
-- New since then: the review page confirms each action on a page naming the posting, can undo a dismissal and can
-  void an application the employer never answered ([ADR 0007](docs/adr/0007-human-approval-at-selected-stages.md),
-  amended 2026-11-01); the shortlist leaves out closed postings and shows each job's id and how long it has waited;
-  `careeros explain` opens with a one-sentence verdict; the daily run keeps a redacted log, and `careeros status` and
-  the saved report show the last completed run and the label backlog.
+- First published 2026-10-15 (UTC). This version publishes the code as of 2026-11-14; the code published before it
+  was the snapshot of 2026-11-02 (published the same day: confirmations and undo on the review page, and the daily
+  run's redacted log and status).
+- New since then:
+  - **Lead resolution** ([ADR 0003](docs/adr/0003-new-boards-are-quarantined.md) and
+    [ADR 0001](docs/adr/0001-official-employer-sites-are-authoritative.md), amended 2026-11-02). A job seen only in a
+    job alert or a recommendation is matched to the employer's own posting, on a board in the daily scan, by its own
+    title, link, requisition and location, after every scan. A likely match waits for the job seeker to confirm or
+    reject it, and `careeros leads unlink` corrects a wrong link with a recorded reason. A website named by a lead or
+    by the curated employer list is only a hint: it helps find the employer's board, and the site counts as the
+    employer's only through the site name it declares, read as a browser reads it.
+  - **Python 3.14 and resilience** ([ADR 0008](docs/adr/0008-local-store-with-enforced-duties-and-audit-chain.md),
+    amended 2026-11-03). The engine runs on Python 3.14 (before: 3.12.10, kept for a rollback), and both installs are
+    hash-locked. An engine refuses a database newer than itself unless the newer migration allows it, and only a
+    command holding the writer lock migrates. An optional encrypted offsite archive of the backups is decrypted back
+    and compared before it is kept, and a weekly drill opens the newest one.
+  - **Requirements read more closely.** A line asking for years as a role, in a function or doing an activity is
+    judged on that ([Experience Match](docs/experience_match.md)); skills offered as alternatives are credited by the
+    best one held; with pay listed by location, the range for the job seeker's state is used when the posting says
+    which applies.
+  - **Fail-safe readings.** Where CareerOS cannot be sure how to read a requirement (a years figure, a pay period or
+    tier, where the job seeker must live, a certification), the job is marked to verify (CONDITIONAL) instead of
+    being rejected or passing silently. Of the years requirements, only total professional years still reject on
+    their own; a clearly stated pay range below the floor, or a location outside the U.S., still rejects as before.
+    The accepted cost is more jobs to check by hand.
+  - **Job-alert intake.** A readable link in a job alert whose job CareerOS cannot identify with certainty (an
+    unrecognised job ID, two IDs that disagree, a redirect it cannot read) is kept as a lead to review, never matched
+    to a job by itself; a link that cannot be read at all is counted as skipped. Job-alert digests from a staffing
+    agency (off unless set up) are read from the email alone, never by following a link or visiting the agency's
+    site: each job card read from a supported digest is kept as a local lead, never exported or matched to an
+    employer's posting, because the agency's client is never guessed. A digest that cannot be read safely (an
+    attachment, an unexpected format, or words about an application or an interview) is held for the job seeker to
+    review, and no lead is taken from it.
+  - **Applications measured.** Each application records what it rests on (the evidence given when it was
+    recorded). One made through an assist session also records how it was made (by hand, with the employer's own
+    autofill or with the browser extension) and, when the job seeker reports them, the minutes it took (revision 3 of
+    the analytics export; without a session these fields stay empty). A follow-up the job
+    seeker sent is recorded as an event, and every view uses one reminder rule: while an application waits for a
+    response, a follow-up is due 14 days after the later of entering that state and the latest recorded follow-up. A
+    form's full-name box is filled from an approved answer.
+- Codex (OpenAI) reviewed each batch. Its last review of the two largest batches still reported findings; the owner
+  closed them with the fail-safe changes above, checked with targeted tests and planted defects, without a further
+  independent review.
 - The 50 labelled postings behind the calibration and the owner's Power BI report on real data stay private.
 
 ### For technical reviewers
@@ -55,8 +94,8 @@ seeker" is Chris on the private system and a fictional person in Demo Mode.
 | What | A local, single-user Python application: a daily pipeline, a command line, a local review page and a Power BI report |
 | For | One real job search. Designed for healthcare operations and business-systems roles, including claims and pharmacy-benefit work. It runs daily on the owner's machine. |
 | Shown publicly through | Demo Mode: the same production code on fictional employers, offline, with no credentials |
-| Size | About 20,700 lines of Python in the engine and 15,700 in tests; 43 database tables; 36 commands |
-| Documented by | 119 numbered requirements (107 requirements and 12 acceptance criteria), consolidated from the specifications and the built system and traced to code and tests ([business requirements](docs/business_requirements.md), [traceability](docs/requirements_traceability.md)), and 9 architecture decision records ([ADRs](docs/adr/README.md)) |
+| Size | About 29,100 lines of Python in the engine and 30,400 in tests; 43 database tables; 43 commands |
+| Documented by | 121 numbered requirements (109 requirements and 12 acceptance criteria), consolidated from the specifications and the built system and traced to code and tests ([business requirements](docs/business_requirements.md), [traceability](docs/requirements_traceability.md)), and 9 architecture decision records ([ADRs](docs/adr/README.md)) |
 | Built with | A human-directed, AI-assisted workflow: the owner directed and decided, ChatGPT helped design and challenge, Claude implemented ([how](docs/ai_assisted_development.md)) |
 | Status | Phase 1 (discovery and qualification) is in daily private use. The public repository's code is a generated snapshot of the private development repository; its documentation and dependency locks were also updated directly in the public repository on 2026-10-29, and the private repository carries the same corrections ([limitations](#limitations)). |
 
@@ -243,8 +282,8 @@ Every control in the threat model is tied to a test and to a planted defect that
 
 | Layer | What it shows |
 |---|---|
-| 925 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`) |
-| 749 planted defects | `tools/mutate.py` breaks each safety rule in a scratch copy, and the test suite must then fail. A defect that survives is an untested rule. |
+| 1627 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`); validation records passes, skips and unavailable checks separately |
+| 1826 planted defects | `tools/mutate.py` breaks each safety rule in a scratch copy, and the test suite must then fail. A defect that survives is an untested rule. |
 | Functional MVP gate | `tools/mvp_gate.py` runs the real command line in Demo Mode and makes 92 checks against expectations written from the postings and the policy, not read back from the system. Result: no requirement fails. Of 13, 10 are PASS and 3 are PARTIAL, with the gaps listed in the [report](docs/functional_mvp_report.md). |
 | Documentation tests | The documents' named files, tests, tables and commands must exist |
 | Static checks | ruff (pyflakes, bugbear and security rules), mypy against a recorded baseline of older errors, configuration checks |
@@ -267,7 +306,7 @@ a throwaway demo vault. While Demo Mode is on, the private vault cannot even be 
 credentials, mail, GitHub, the clipboard, the AI reader and notifications are all refused. The tests prove it under a
 "jail" that records any attempt to leave.
 
-**Synthetic results** (fictional data, fixed by the tests): 45 jobs, of which 27 scored, 13 rejected with stated
+**Synthetic results** (fictional data, fixed by the tests): 45 jobs, of which 28 scored, 12 rejected with stated
 reasons, 1 duplicate and 4 closed; 13 boards, of which 8 active, 1 rejected as an impostor and 1 awaiting review. These
 numbers describe a hand-written world chosen to exercise every rule, not a real job market. See
 [Demo Mode](docs/demo_mode.md) and the [reviewer walkthrough](docs/demo_walkthrough.md).
@@ -276,8 +315,8 @@ numbers describe a hand-written world chosen to exercise every rule, not a real 
 
 | Area | Choice |
 |---|---|
-| Language and runtime | Python 3.12, standard library first |
-| Storage | SQLite in WAL mode, 14 forward-only migrations |
+| Language and runtime | Python 3.14, standard library first |
+| Storage | SQLite in WAL mode, 15 forward-only migrations |
 | Dependencies | httpx (HTTP), PyYAML (policy), anthropic (an optional AI requirement reader, used only when an API key is stored) |
 | Review page | The standard library's HTTP server, bound to 127.0.0.1 |
 | Analytics | CSV star schema; Power BI project files (TMSL model and PBIR report) generated by `tools/build_powerbi_project.py` |
@@ -286,8 +325,8 @@ numbers describe a hand-written world chosen to exercise every rule, not a real 
 
 ## Quickstart
 
-The hash-locked development set (`requirements-dev.lock`, wheels only) installs on CPython 3.12 on Windows x64 or
-Linux x64, and on nothing else yet: Windows 10 and 11 are where the owner runs CareerOS, and the Linux install is
+The hash-locked development set (`requirements-dev.lock`, wheels only) installs on CPython 3.14 (or 3.12) on Windows x64
+or Linux x64, and on nothing else yet: Windows 10 and 11 are where the owner runs CareerOS, and the Linux install is
 verified by the CI job. On macOS, or with another Python version, the install fails because no hashed wheel matches;
 the [reviewer walkthrough](docs/demo_walkthrough.md) says what can be checked without installing.
 
@@ -325,7 +364,7 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
 
 - **Single user, local, Windows.** The full validation also passes on Linux in CI, where that job is informational;
   the daily-run setup (Task Scheduler, Credential Manager, notifications) is Windows-only. The hash-locked install is
-  for CPython 3.12 on Windows x64 or Linux x64 only; macOS is unsupported and untested.
+  for CPython 3.14 (or 3.12) on Windows x64 or Linux x64 only; macOS is unsupported and untested.
 - **CI runs only on the public repository.** The private development repository has no remote. The first run
   (2026-10-15) passed on Windows (required) and Linux (informational).
 - **Four providers.** Only Greenhouse, Lever, Ashby and Workable are read automatically. Other systems are manual
@@ -347,7 +386,7 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
   jobs reach the top tiers ([calibration](docs/case_study.md#ranking-calibration-identify-measure-improve-validate)).
   The source-expansion targets are provisional.
 - **Known gaps.** The Functional MVP gate grades 3 of 13 requirements PARTIAL (5 small gaps, listed in its report).
-  Lead matching still relies on an older identity check. Type checking runs against a baseline of 164 older errors.
+  Type checking runs against a baseline of 158 older errors.
 - **Generated, not mirrored.** The public repository's code is a snapshot generated from an allowlist, with fresh
   history ([release checklist](docs/public_release_checklist.md)). Its documentation and dependency locks were also
   updated directly in the public repository on 2026-10-29; the private development repository carries the same
@@ -356,7 +395,7 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
 ## Roadmap
 
 **Portfolio release:**
-1. Close the remaining Functional MVP gaps, and hash-lock the runtime install.
+1. Close the remaining Functional MVP gaps.
 
 **Product:**
 - Improve the tier rule that the 2026-10-16 calibration found weak, test any change side by side on new labels before

@@ -10,6 +10,9 @@ sources:
   examplejobs: blocked        # a status unlike the default, so a test can see the file applied
 staffing_agencies: [harbor staffing, bayview partners]   # the second has no generic agency word in its name
 agency_shortcut: Harbor Staffing
+agency_digests:              # a fictional agency's job-alert digest, read from the email alone
+  - {name: Harbor Staffing, site: harborstaffing, sender_domain: email.harborstaffing.com,
+     tracker_host: click.email.harborstaffing.com, layout: c5d892ac0ea84766}   # careeros agency-layout
 sites:
   - site: careers.northgategroup.com (Northgate, Northgatecare)
     discovery: manual

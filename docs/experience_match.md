@@ -69,8 +69,12 @@ fingerprint, so changing it re-checks every job.
 | large_gap | stretch (Tier A/B to near-miss) | cap at Tier B | none |
 | severe_gap | stretch | stretch | none |
 
-- The hard rule is unchanged: a hard-required line more than `gate.years_major_gap` (4) years short is rejected by the
-  gate, whatever the score. The rejection records the line's Experience Match, so the explanation shows why.
+- The hard rule, as amended by D151 (2026-11-13) and D155 (2026-11-14): a hard-required line more than
+  `gate.years_major_gap` (4) years short is rejected by the gate, whatever the score, only when it asks for total
+  professional experience, was read from the posting by the rules reader, and the requirements offer no alternative.
+  Any other shortfall that size (years in a role, a function, an activity, a domain or a tool) is marked to verify
+  (CONDITIONAL), never a rejection on its own. A rejection records the line's Experience Match, so the explanation
+  shows why.
 - In shadow mode the tier is never changed. With enforcement on, a cap or stretch is applied the way the degree
   STRETCH already is, and a tier is never raised.
 - **High potential** is a note only: a medium or large gap where weighted skill coverage is at least 85% and the
@@ -91,11 +95,23 @@ fingerprint, so changing it re-checks every job.
 - A cutoff changes only when at least 3 labelled jobs in the same cell disagree with CareerOS and the change does not
   lower agreement elsewhere. Each change is recorded as an owner decision. The scoring never adjusts itself.
 
+## Years as a role, in a function or doing an activity (2026-11-03, OPP-43)
+
+A line that names a role, a function or an activity is scored on that only (`qualify/role_years.py`): the item counted
+is a role title, function or skill that names it, and the explanation says "Read as years as a role" (or "in a
+function", "doing an activity"). When the line also says where ("as a business systems analyst in healthcare"), the
+domain is scored beside the role and the line keeps its AND reading: years in that role in that domain are at most your
+years in the domain. A place that names several domains ("in healthcare or PBM") is one condition, met by your best of
+them. The gate's years rule reads the line the same way and judges the role, so the two agree (2026-11-04, after
+the pre-review). Since D151 (2026-11-13) such a line is never a rejection on its own: a far shortfall is marked to
+verify.
+
 ## Known limits
 
 - The gate still judges a line on your best item, while Experience Match judges an AND-line on the strictest item, so
   the two can differ on a line such as "5+ years with SQL and Excel". The gate was left unchanged on purpose: making it
-  strict would add rejections that calibration has not justified.
+  strict would add rejections that calibration has not justified. Since D155 (2026-11-14) such a line, which names
+  tools, is never a rejection on its own.
 - "Bachelor's degree or 9 years of experience" is read as a hard degree requirement: the parser recognises equivalency
   wording such as "or equivalent" and "in lieu of", not "or N years". It is recorded for a separate decision.
 - "N years of equivalent experience" names no area the profile can answer, so its years stay unknown.

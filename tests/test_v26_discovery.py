@@ -111,11 +111,19 @@ class IdentityTests(unittest.TestCase):
         self.assertEqual(result["outcome"], "identity_unresolved")
         self.assertEqual(store.one("SELECT identity_status FROM board_mappings")["identity_status"], "unresolved")
         match = store.one("SELECT * FROM lead_matches")
-        self.assertEqual((match["decision"], match["job_id"]), ("ambiguous", None))  # reviewable, never admitted
+        # 2026-11-02 (ADR 0003 amendment): the posting matches, the board is a candidate: it waits, never admitted
+        self.assertEqual((match["decision"], match["job_id"]), ("awaiting_board", None))
         self.assertEqual(store.one("SELECT COUNT(*) c FROM jobs")["c"], 0)
         self.assertIsNone(store.one("SELECT job_id FROM leads")["job_id"])
+        self.assertEqual(store.one("SELECT verification_status FROM board_mappings")["verification_status"], "candidate")
 
     def test_supplied_domain_verifies_and_the_lead_becomes_a_graded_posting_without_joining_the_daily_scan(self):
+        """Since 2026-11-02 (ADR 0003 amendment) discovery's identity evidence grades nothing: the lead waits for its board,
+        and becomes a graded posting only once the board is admitted (here by your approval and its validation scan) and
+        scanned. Discovery itself never puts the board into the daily scan."""
+        from careeros.discovery import board_registry as registry
+        from careeros.discovery import board_verifier as bv
+        from careeros.discovery.boards import greenhouse_posting
         store, ctx = setup()
         fake = FakeATS()
         fake.greenhouse["foohealth"] = {"name": "Foo Health", "content": "Careers at foohealth.com", "jobs": [
@@ -130,14 +138,26 @@ class IdentityTests(unittest.TestCase):
         self.assertIn("official_domain", mapping["verified_method"])
         self.assertIsNone(mapping["activated_at"])  # never joins the daily scan by itself
         match = store.one("SELECT * FROM lead_matches")
-        self.assertEqual((match["decision"], match["method"], match["job_id"]), ("matched", "requisition", "greenhouse:foohealth:12"))
-        self.assertEqual(store.one("SELECT job_id FROM leads")["job_id"], "greenhouse:foohealth:12")
-        self.assertEqual(store.one("SELECT COUNT(*) c FROM employers")["c"], 0)
+        self.assertEqual((match["decision"], match["method"], match["job_id"]), ("awaiting_board", "requisition", None))
+        self.assertEqual(json.loads(match["candidates_json"]), ["12"])
+        self.assertEqual((store.one("SELECT status, job_id FROM leads")["status"], store.one("SELECT job_id FROM leads")["job_id"]),
+                         ("new", None))
+        self.assertEqual((store.one("SELECT COUNT(*) c FROM jobs")["c"], store.one("SELECT COUNT(*) c FROM employers")["c"]), (0, 0))
         with self.assertRaises(ValueError) as refused:  # 2026-10-13: discovery evidence never admits a board by itself
             bd.activate(store, "greenhouse:foohealth")
         self.assertIn("employer's own site", str(refused.exception))
         self.assertEqual(store.one("SELECT verification_status FROM board_mappings")["verification_status"], "candidate")
         self.assertEqual(store.one("SELECT COUNT(*) c FROM employers")["c"], 0)
+        # admitted: your approval, then its validation scan; the first scan ingests the postings and links the lead
+        self.assertEqual(registry.approve(store, "greenhouse:foohealth", reason="its careers page links it"), "quarantined")
+        client = client_for(fake)
+        self.assertEqual(bv.validate_board(ctx, "greenhouse:foohealth", client), "active")
+        client.close()
+        self.assertIsNone(store.one("SELECT job_id FROM leads")["job_id"])   # nothing ingested at admission
+        with mock.patch.object(cli, "fetch_board", lambda c, ats, token: [greenhouse_posting(token, i) for i in fake.greenhouse[token]["jobs"]]):
+            cli.cmd_discover(ctx, None, SimpleNamespace(employer=None))
+        self.assertEqual(store.one("SELECT job_id FROM leads")["job_id"], "greenhouse:foohealth:12")
+        self.assertEqual(store.one("SELECT method FROM lead_matches WHERE decision = 'matched'")["method"], "requisition")
 
     def test_identical_titles_without_a_requisition_stay_ambiguous(self):
         store, ctx = setup()
@@ -735,14 +755,24 @@ class ReviewPageTests(unittest.TestCase):
 # --- measurement ------------------------------------------------------------------------------------------------------------------
 class MetricsTests(unittest.TestCase):
     def test_enrichment_is_kept_apart_from_new_opportunities(self):
+        from careeros.discovery.boards import greenhouse_posting
         store, ctx = setup()
         fake = FakeATS()
         fake.greenhouse["foohealth"] = {"name": "Foo Health", "content": "foohealth.com", "jobs": [
             gh_item(11, "Claims Analyst", CLAIMS, "foohealth", req="R-11")]}
         lead = add_lead(store, "lead:m", "Claims Analyst", "Foo Health · Remote · req=R-11; domain=foohealth.com")
         client = client_for(fake)
-        bd.discover(ctx, bd.candidate_from_lead(lead, POLICY), client)
+        bd.discover(ctx, bd.candidate_from_lead(lead, POLICY), client)   # found: it waits for its board (2026-11-02)
         client.close()
+        self.assertEqual(metrics(store, POLICY, 30)["opportunities"]["lead_enrichment_matches"], 0)
+        from careeros.discovery import board_registry as registry
+        from careeros.discovery import board_verifier as bv
+        registry.approve(store, "greenhouse:foohealth", reason="its careers page links it")
+        client = client_for(fake)
+        self.assertEqual(bv.validate_board(ctx, "greenhouse:foohealth", client), "active")   # admitted to the daily scan
+        client.close()
+        with mock.patch.object(cli, "fetch_board", lambda c, ats, token: [greenhouse_posting(token, i) for i in fake.greenhouse[token]["jobs"]]):
+            cli.cmd_discover(ctx, None, SimpleNamespace(employer=None))   # the scan links the lead to its posting
         process(ctx)
         m = metrics(store, POLICY, 30)
         self.assertEqual(m["opportunities"]["lead_enrichment_matches"], 1)

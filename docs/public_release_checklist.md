@@ -116,7 +116,8 @@ an allowlist, with fresh history, rather than cleaned up from this repository.
 | **Commit identity** | Needs work for release | The author's name and personal email are in all 17 commits. | **R5 (high, release blocker):** fresh history under a GitHub no-reply identity |
 
 Also from earlier reviews:
-- the lead-matching path relies on the older identity flag (`functional_mvp_report.md`, section 6);
+- the lead-matching path relied on the older identity flag (`functional_mvp_report.md`, section 6; replaced by lead
+  resolution on 2026-11-02, ADR 0003);
 - the Functional MVP gaps G1-G5 (G6 was fixed on 2026-10-13).
 
 Neither blocks release, but both are worth closing first.
@@ -132,9 +133,8 @@ Neither blocks release, but both are worth closing first.
   CareerOS authors") was tried the same day and dropped: the repository lives under the owner's account, whose address
   shows the username anyway, and neutral commits would not be credited to that account.
 - **Power BI:** the `.pbix` is left out; the generated project and the screenshots ship.
-- **R3 accepted in writing:** the engine's own `requirements.lock` is not hash-locked, and its pydantic was released less
-  than 14 days ago. The public copy's documented install path (`requirements-dev.lock`) is hash-locked already.
-  Revisit after 2026-10-23, when that pydantic version meets the 14-day rule.
+- **R3, closed 2026-11-03 (OPP-71):** the engine's own `requirements.lock` is hash-locked too, like the public copy's
+  documented install path (`requirements-dev.lock`), and both pin the same pydantic, which meets the 14-day rule.
 
 ## 5. Checklist for each public snapshot
 

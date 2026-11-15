@@ -9,6 +9,7 @@ import unittest
 from http.server import HTTPServer
 from pathlib import Path
 from types import SimpleNamespace
+from unittest import mock
 
 import httpx
 
@@ -227,6 +228,76 @@ class ApplicationLogicTests(unittest.TestCase):
         with redirect_stdout(out):
             cmd_app_status(ctx, {}, SimpleNamespace(application_id=app_id, state="void", notes=None, reason="wrong posting"))
         self.assertEqual(out.getvalue(), f"{app_id} -> void\n")
+
+    def test_a_follow_up_is_an_event_and_never_changes_the_status(self):
+        """OPP-21 (2026-11-03): `record_follow_up` adds one event to the audit chain; the status, its sequence and the
+        transitions stay as they were. A repeat of the same request records once; finished, void and unknown
+        applications are refused, and nothing is recorded for them."""
+        from careeros.review.applications import FOLLOWED_UP, VOID, record_follow_up
+        app_id = self.record()
+        before = self.store.one("SELECT COUNT(*) c FROM transitions")["c"]
+        self.assertEqual(record_follow_up(self.store, app_id, notes=" emailed the recruiter ", key="f1"), "new")
+        self.assertEqual(record_follow_up(self.store, app_id, notes=" emailed the recruiter ", key="f1"), "replay")
+        row = self.store.one("SELECT current_state, state_sequence FROM applications WHERE application_id = ?", (app_id,))
+        self.assertEqual(tuple(row), ("applied", 0))
+        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM transitions")["c"], before)
+        events = self.store.all("SELECT * FROM events WHERE event_type = ?", (FOLLOWED_UP,))
+        self.assertEqual([(e["entity_type"], e["entity_id"], e["actor_type"], e["workflow_id"]) for e in events],
+                         [("application", app_id, "human", f"application:{app_id}")])
+        self.assertEqual(json.loads(events[0]["metadata_json"]),
+                         {"job_id": "gh:acme:1", "state": "applied", "notes": "emailed the recruiter"})
+        self.assertEqual(self.store.verify_event_chain(), [])
+        update_application(self.store, APP, app_id, "rejected", key="r1")
+        with self.assertRaisesRegex(ValueError, "not_open: the application is rejected"):
+            record_follow_up(self.store, app_id, key="f2")
+        mistaken = self.record("gh:acme:9", key="k2")
+        update_application(self.store, APP, mistaken, VOID, reason="wrong posting", key="v1")
+        with self.assertRaisesRegex(ValueError, "not_open: the application is void"):
+            record_follow_up(self.store, mistaken, key="f3")
+        with self.assertRaisesRegex(ValueError, "unknown_application"):
+            record_follow_up(self.store, "app:none", key="f4")
+        self.assertEqual(len(self.store.all("SELECT 1 FROM events WHERE event_type = ?", (FOLLOWED_UP,))), 1)
+
+    def test_follow_up_due_counts_from_the_later_of_the_state_and_your_follow_up(self):
+        """QW-11: FR-062's 14 days, from entering the waiting state (applied or acknowledged) or from your latest
+        follow-up, whichever is later; no reminder once someone at the employer answered or the application ended."""
+        from careeros.review.applications import FOLLOW_UP_DAYS, follow_up_due
+        self.assertEqual(FOLLOW_UP_DAYS, 14)
+        app = {"current_state": "acknowledged", "entered_state_at": "2026-10-10T09:00:00.000Z"}
+        due = follow_up_due(app, "2026-10-24T08:59:00.000Z")
+        self.assertEqual((due.due, due.days, due.after_follow_up, due.due_at), (False, 13, False, "2026-10-24T09:00:00.000Z"))
+        self.assertTrue(follow_up_due(app, "2026-10-24T09:00:00.000Z").due)
+        earlier = follow_up_due(app, "2026-10-30T09:00:00.000Z", "2026-10-05T09:00:00.000Z")   # before the state changed
+        self.assertEqual((earlier.due, earlier.days, earlier.after_follow_up), (True, 20, False))
+        later = follow_up_due(app, "2026-10-30T09:00:00.000Z", "2026-10-20T09:00:00.000Z")
+        self.assertEqual((later.due, later.days, later.after_follow_up, later.since, later.due_at),
+                         (False, 10, True, "2026-10-20T09:00:00.000Z", "2026-11-03T09:00:00.000Z"))
+        for state in ("responded", "screening", "ghosted", "rejected", "closed", "void"):
+            self.assertIsNone(follow_up_due({**app, "current_state": state}, "2026-12-30T09:00:00.000Z"), state)
+
+    def test_app_status_followed_up_on_the_command_line(self):
+        import io
+        from contextlib import redirect_stdout
+
+        from careeros import cli
+        from careeros.cli import cmd_app_status
+        app_id = self.record()
+        ctx = SimpleNamespace(store=self.store)
+        for state, reason, refusal in (("screening", None, "give no status or --reason"), (None, "why", "give no status or --reason")):
+            with self.subTest(state=state, reason=reason), self.assertRaisesRegex(SystemExit, refusal):
+                cmd_app_status(ctx, {}, SimpleNamespace(application_id=app_id, state=state, notes=None, reason=reason, followed_up=True))
+        with self.assertRaisesRegex(SystemExit, "give the new status"):
+            cmd_app_status(ctx, {}, SimpleNamespace(application_id=app_id, state=None, notes=None, reason=None, followed_up=False))
+        out = io.StringIO()
+        with redirect_stdout(out):
+            cmd_app_status(ctx, {}, SimpleNamespace(application_id=app_id, state=None, notes="called", reason=None, followed_up=True))
+        self.assertEqual(out.getvalue(), f"{app_id}: follow-up recorded; the status is unchanged and the follow-up reminder "
+                                         "counts from today\n")
+        self.assertEqual(self.store.one("SELECT current_state FROM applications")["current_state"], "applied")
+        with mock.patch.object(cli, "_dispatch") as dispatch:
+            cli.main(["app-status", app_id, "--followed-up", "--notes", "called"])
+        args = dispatch.call_args.args[0]
+        self.assertEqual((args.state, args.followed_up, args.notes), (None, True, "called"))
 
     def test_a_possible_duplicate_or_the_same_title_elsewhere_holds_until_confirmed(self):
         add_job(self.store, "gh:acme:20", title="Pricing Analyst", title_norm="pricing analyst", location_raw="Boston")

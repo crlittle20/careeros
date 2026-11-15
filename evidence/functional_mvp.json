@@ -1,9 +1,9 @@
 {
- "at": "2026-11-02T13:33:35+00:00",
+ "at": "2026-11-15T05:49:02+00:00",
  "commit": "",
  "uncommitted_changes": false,
  "private_vault": "decoy",
- "seconds": 20,
+ "seconds": 44,
  "overall": "PARTIAL",
  "grades": {
   "fresh demo initialization": "PASS",
@@ -76,7 +76,7 @@
     "check": "`careeros demo run --all` runs the four simulated days",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, 3.7s"
+    "evidence": "exit 0, 11.4s"
    },
    {
     "check": "each day is a completed production run (`careeros run`)",
@@ -267,16 +267,16 @@
   ],
   "eligibility": [
    {
-    "check": "each planted rule violation is rejected for the right reason (13 postings)",
+    "check": "each planted rule violation is rejected for the right reason (12 postings)",
     "ok": true,
     "core": true,
-    "evidence": "all 13"
+    "evidence": "all 12"
    },
    {
     "check": "no scored job breaks a hard rule (remote only, CO allowed, $70,000 / $34/h floor, title exclusions, a target family)",
     "ok": true,
     "core": true,
-    "evidence": "27 scored jobs"
+    "evidence": "28 scored jobs"
    },
    {
     "check": "every rejection records a reason code and a plain-language explanation",
@@ -314,7 +314,7 @@
     "check": "apply priority = 0.65 fit + 0.25 career value + 0.1 freshness (recomputed)",
     "ok": true,
     "core": true,
-    "evidence": "27 jobs"
+    "evidence": "28 jobs"
    },
    {
     "check": "each score was made under the same policy and profile as the job's eligibility decision",
@@ -340,7 +340,7 @@
     "check": "every tier matches the policy thresholds (A 92, B 85 with ELIGIBLE and 70% skills, near-miss 78)",
     "ok": true,
     "core": true,
-    "evidence": "{'A': 0, 'B': 5, 'near_miss': 13, 'archive': 9}"
+    "evidence": "{'A': 0, 'B': 5, 'near_miss': 15, 'archive': 8}"
    },
    {
     "check": "every A / B / near-miss job is on the final report",
@@ -358,7 +358,7 @@
     "check": "NIGHT routes jobs to its own section (CONDITIONAL when the hours are not stated)",
     "ok": true,
     "core": true,
-    "evidence": "13 routed: ['CONDITIONAL']"
+    "evidence": "14 routed: ['CONDITIONAL']"
    },
    {
     "check": "an overnight posting that NIGHT accepts is shown",
@@ -387,10 +387,10 @@
     "evidence": "[]"
    },
    {
-    "check": "`careeros verify`: the hash-chained audit log and every job's history are consistent",
+    "check": "`careeros verify`: the hash-chained audit log, every job's history, the file and its foreign keys are consistent",
     "ok": true,
     "core": true,
-    "evidence": "{'event_chain_breaks': [], 'inconsistent_jobs': {}, 'inconsistent_applications': {}}"
+    "evidence": "{'event_chain_breaks': [], 'inconsistent_jobs': {}, 'inconsistent_applications': {}, 'quick_check': ['ok'], 'foreign_key_problems': [], 'foreign_key_problem_count': 0}"
    },
    {
     "check": "every eligibility decision records the policy, profile and extraction it was made under",
@@ -440,7 +440,7 @@
     "check": "`careeros status` reports the same job counts as the database",
     "ok": true,
     "core": true,
-    "evidence": "({'scored': '27', 'rejected': '13', 'closed': '4', 'duplicate': '1'}, {'scored': 27, 'rejected': 13, 'closed': 4, 'duplicate': 1})"
+    "evidence": "({'scored': '28', 'rejected': '12', 'closed': '4', 'duplicate': '1'}, {'scored': 28, 'rejected': 12, 'closed': 4, 'duplicate': 1})"
    },
    {
     "check": "`careeros demo status` summarises the demo",
@@ -454,7 +454,7 @@
     "check": "a run with four failing boards (HTTP 503, invalid JSON, timeout, 1-hour rate limit) completes",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, run completed, 4.3s"
+    "evidence": "exit 0, run completed, 4.4s"
    },
    {
     "check": "each failure is recorded against its board with its own error code",
@@ -490,7 +490,7 @@
     "check": "a 1-hour Retry-After is reported, not slept through",
     "ok": true,
     "core": false,
-    "evidence": "4.3s"
+    "evidence": "4.4s"
    },
    {
     "check": "an unreadable email and an empty pasted file are reported and skipped",
@@ -548,13 +548,13 @@
     "check": "the GitHub inbox is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "Local\\Temp\\careeros-mvp-gate-6o3kyqgj\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
+    "evidence": "Local\\Temp\\careeros-mvp-gate-vcn_0xvh\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
    },
    {
     "check": "the clipboard is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-6o3kyqgj\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
+    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-vcn_0xvh\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
    },
    {
     "check": "Gmail is refused in Demo Mode",

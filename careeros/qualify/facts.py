@@ -59,6 +59,18 @@ def pay_fact(job: dict, policy) -> dict:
         return _fact("pay", "unknown", f"{shown} is an aggregator estimate: confirm on the employer's own posting", source="aggregator")
     if not floor:
         return _fact("pay", "unknown", f"{shown}; your minimum is not set")
+    from .gate import _pay_tiers_straddle
+    if _pay_tiers_straddle(job, floor, (policy.get("location", "home_state", default=None) or None)):
+        # the gate's pay_tier_unknown (2026-11-04): ranges by location on both sides of your floor, yours not named
+        return _fact("pay", "unknown", f"pay is listed by location, with ranges on both sides of your {_money(floor)} "
+                                       f"minimum, and the posting doesn't say which applies to {_home(policy)}: "
+                                       "confirm your range")
+    from .gate import _pay_period_straddle
+    if _pay_period_straddle(job, floor, (policy.get("location", "home_state", default=None) or None)):
+        # the gate's pay_period_unknown (2026-11-05): per hour it clears your minimum, per week or year it doesn't
+        return _fact("pay", "unknown", f"{shown} is a guess at the pay period: the posting doesn't say plainly whether it "
+                                       f"is per hour, week, month or year, and the readings fall on both sides of your "
+                                       f"{_money(floor)} minimum: confirm the period")
     if high < floor:
         return _fact("pay", "incompatible", f"{shown}: the top of the range is under your {_money(floor)} minimum")
     near = text[max(0, text.lower().find("$") - 300): text.lower().find("$") + 600] if "$" in text else text[:1500]
@@ -87,6 +99,9 @@ def eligibility_facts(job: dict, requirements: list, gate: GateResult, policy) -
     if "state_excluded" in codes or "state_not_eligible" in codes:
         f = codes.get("state_excluded") or codes.get("state_not_eligible")
         facts.append(_fact("location_state", "incompatible", f["detail"], f.get("source_text")))
+    elif "residence_limit_check" in flags:   # a residence sentence, never a rejection (2026-11-05)
+        f = flags["residence_limit_check"]
+        facts.append(_fact("location_state", "unknown", f["detail"], f.get("source_text")))
     elif states and home in states:
         facts.append(_fact("location_state", "compatible", f"{home} is in the posting's state list", ", ".join(states)))
     elif job.get("country") == "US" and job.get("remote_type") == "remote" and not states and not excluded:
@@ -131,7 +146,8 @@ def eligibility_facts(job: dict, requirements: list, gate: GateResult, policy) -
                            checks[0].get("source_text")))
 
     hard = [codes[c] for c in ("degree_required", "years_far_short", "work_authorization", "sponsorship_unavailable") if c in codes]
-    soft = [flags[c] for c in ("education_unknown", "years_unknown", "work_authorization_unknown", "citizenship_check") if c in flags]
+    soft = [flags[c] for c in ("education_unknown", "years_role_unconfirmed", "years_unknown", "work_authorization_unknown",
+                               "citizenship_check") if c in flags]
     if hard:
         facts.append(_fact("qualifications", "incompatible", hard[0]["detail"], hard[0].get("source_text")))
     elif soft:

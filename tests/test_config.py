@@ -16,7 +16,7 @@ AUTOMATIC = ATS_AUTOMATIC | {"employer_site"}                     # plus employe
 NEVER_AUTOMATED = {"linkedin", "indeed", "glassdoor"}
 SITE_VALUES = {"allowed", "supervised_only", "manual", "unknown", "blocked"}
 ENV_VARIABLES = {"CAREEROS_VAULT", "CAREEROS_DEMO_MODE", "CAREEROS_DEMO_VAULT", "ANTHROPIC_API_KEY"}
-DIFFERENT_ON_PURPOSE = {"pydantic", "pydantic-core"}   # requirements.lock's were 4 days old; the dev lock keeps the 14-day rule
+DIFFERENT_ON_PURPOSE: set[str] = set()   # pydantic differed until 2026-11-03 (OPP-71): the two locks now agree exactly
 
 
 def normalize(name: str) -> str:
@@ -90,10 +90,14 @@ class DependencyPinTest(unittest.TestCase):
             self.assertEqual(runtime.get(normalize(name)), version, f"requirements.lock: {name}")
             self.assertEqual(dev.get(normalize(name)), version, f"requirements-dev.lock: {name}")
 
-    def test_the_runtime_lock_pins_every_package(self):
-        lines = [line for line in (ENGINE_ROOT / "requirements.lock").read_text(encoding="utf-8").splitlines()
-                 if line.strip() and not line.startswith("#")]
-        self.assertEqual([line for line in lines if "==" not in line], [])
+    def test_the_runtime_lock_hash_pins_every_package(self):
+        """Since 2026-11-03 (OPP-71) the engine's own install is hash-locked like the development set."""
+        text = (ENGINE_ROOT / "requirements.lock").read_text(encoding="utf-8")
+        entries = re.split(r"\n(?=[A-Za-z0-9])", "\n".join(line for line in text.splitlines() if not line.startswith("#")).strip())
+        self.assertEqual(len(entries), len(pins("requirements.lock")))
+        for entry in entries:
+            self.assertRegex(entry, r"^[A-Za-z0-9._-]+==\S+ \\\n    --hash=sha256:[0-9a-f]{64}", entry[:60])
+        self.assertIn("--require-hashes", text)
 
     def test_the_dev_lock_hash_pins_every_package_and_holds_the_runtime_set(self):
         text = (ENGINE_ROOT / "requirements-dev.lock").read_text(encoding="utf-8")

@@ -4,13 +4,13 @@ never prints it.
 Values are planted in a throwaway git repository, built at run time so that no secret-shaped text sits in this file.
 """
 import json
-import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
+from careeros.core.scratch import remove_tree
 from careeros.paths import ENGINE_ROOT
 
 sys.path.insert(0, str(ENGINE_ROOT / "tools"))
@@ -38,7 +38,7 @@ class ReleaseScanTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.repo = Path(tempfile.mkdtemp(prefix="careeros-release-scan-"))
-        cls.addClassCleanup(shutil.rmtree, cls.repo, True)
+        cls.addClassCleanup(remove_tree, cls.repo)   # git's read-only objects too (item 10, 2026-11-02)
         git(cls.repo, "init", "-q")
         (cls.repo / "app.py").write_text("\n".join(f"value_{n} = '{v}'" for n, v in enumerate(PLANTED.values())) + "\n", encoding="utf-8")
         (cls.repo / "notes.md").write_text(f"We follow {PRIVATE_TERM} closely.\n", encoding="utf-8")

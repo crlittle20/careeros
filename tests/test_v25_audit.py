@@ -19,7 +19,7 @@ from careeros.discovery.alerts import AlertEmail, Link
 from careeros.discovery.note import context_note, is_alert_source, parse_note
 from careeros.extract.rules import extract
 from careeros.pipeline import Context, night_process
-from careeros.qualify import night
+from careeros.qualify import night, role_years
 from careeros.qualify.gate import evaluate, state_for
 from careeros.qualify.profile import Profile
 from careeros.qualify.scores import skill_coverage
@@ -113,7 +113,9 @@ class PrincipalTests(unittest.TestCase):
             required=["10+ years of claims experience required", "Excel skills required"],
             duties=["Own the architecture strategy and set the strategy for enterprise architecture across the company"]))
         self.assertEqual(state_for(result, APPROVED), "INELIGIBLE")
-        self.assertTrue({"years_far_short", "principal_strategic_scope"} <= failures(result))
+        # (since D155 (1) "10+ years of claims experience" far short is to verify; the scope still rejects)
+        self.assertTrue({"principal_strategic_scope"} <= failures(result))
+        self.assertIn("years_role_unconfirmed", flags(result))
         self.assertNotIn("title_excluded", failures(result))
 
     def test_people_leadership_alone_rejects_a_principal_title_and_one_strategy_term_only_flags_it(self):
@@ -283,13 +285,20 @@ class NoteTests(unittest.TestCase):
 # --- #2 Seen-jobs index and requisition fingerprints -----------------------------------------------------------------
 class SeenIndexTests(unittest.TestCase):
     def setUp(self):
+        from careeros.discovery import board_registry as reg
         self.store, self.ctx = store_ctx()
+        # a board the daily scan admits: since 2026-11-02 (Codex F2) an alert line is matched only against such a board's jobs
+        self.store.writer("admin").insert("employers", {"employer_id": "greenhouse:synth", "name": "Synthetic Health",
+                                                        "parent": "Synthetic Health", "ats": "greenhouse", "board_token": "synth",
+                                                        "status": "verified", "admitted_via": "legacy"})
+        reg.sync_legacy(self.store)
         add_job(self.store, "gh:synth:100", title="Claims Analyst", title_norm="claims analyst", family="claims_analysis",
                 employer_name="Synthetic Health, Inc.", requisition_id="R-100", location_raw="Remote - US",
                 url="https://job-boards.greenhouse.io/synth/jobs/100?gh_src=abc&utm_source=newsletter",
-                canonical_url="https://job-boards.greenhouse.io/synth/jobs/100")
+                canonical_url="https://job-boards.greenhouse.io/synth/jobs/100", employer_id="greenhouse:synth")
         add_job(self.store, "gh:synth:200", title="Claims Analyst", title_norm="claims analyst", family="claims_analysis",
-                employer_name="Synthetic Health", requisition_id="R200", url="https://job-boards.greenhouse.io/synth/jobs/200")
+                employer_name="Synthetic Health", requisition_id="R200", url="https://job-boards.greenhouse.io/synth/jobs/200",
+                employer_id="greenhouse:synth")
         add_job(self.store, "gh:synth:300", title="Software Engineer", title_norm="software engineer", family=None,
                 employer_name="Synthetic Health", url="https://job-boards.greenhouse.io/synth/jobs/300")
         lead(self.store, "lead:li", "https://www.linkedin.com/jobs/view/4000000100?trk=public&refId=abc", "Claims Analyst",
@@ -455,7 +464,7 @@ class PartialFailureTests(unittest.TestCase):
     def test_an_error_on_one_line_is_flagged_and_the_rest_carry_on(self):
         store, ctx = store_ctx()
         real = cli._known_job
-        boom = lambda c, url: (_ for _ in ()).throw(KeyError("odd")) if url.endswith("401") else real(c, url)
+        boom = lambda c, url, **kw: (_ for _ in ()).throw(KeyError("odd")) if url.endswith("401") else real(c, url, **kw)
         alert = AlertEmail("s", "t", None, [
             Link("https://www.linkedin.com/jobs/view/4000000401", "linkedin", "Claims Analyst", "A · Remote", True),
             Link("https://www.linkedin.com/jobs/view/4000000402", "linkedin", "Claims Analyst", "B · Remote", True)])
@@ -665,7 +674,13 @@ class DecisionTests(unittest.TestCase):
         self.assertIn("years_unknown", flags(gate("Business Analyst, Appraisal Operations", text)))
         ops = Profile(data={**MID.data, "role_titles": [{"name": "operations associate", "years": 3.7, "screening_years": 4}]},
                       fingerprint="ops")
-        self.assertNotIn("years_unknown", flags(gate("Business Analyst, Appraisal Operations", text, profile=ops)))
+        # met by the last alternative: no years flag at all (a cut list would say years_role_unconfirmed instead)
+        self.assertFalse({c for c in flags(gate("Business Analyst, Appraisal Operations", text, profile=ops)) if c.startswith("years")})
+        # Since OPP-43 the gate reads the line itself (qualify/role_years.py), so both readings are checked directly: the
+        # gate's, and the extracted area that still names the experience area for fit (functional experience) and the card
+        self.assertEqual(role_years.read(line, 2, APPROVED).alternatives[-1], ("operations associate", "specific"))
+        areas = [r.name for r in extract(text, APPROVED).requirements if r.category == "years_experience"]
+        self.assertEqual(areas, ["junior analyst, qa analyst, data analyst, or operations associate"])
 
     def test_exact_role_titles_never_spill_into_specific_titles(self):
         generic = Profile(data={**MID.data, "role_titles": [
@@ -715,10 +730,13 @@ class AcceptanceTests(unittest.TestCase):
         self.assertIn("below_pay_floor", failures(evaluate(j, extract(low, APPROVED).requirements, MID, APPROVED)))
 
     def test_experience(self):
-        far = gate("Business Systems Analyst", posting(required=["9+ years of claims experience required"]))
+        far = gate("Business Systems Analyst", posting(required=["9+ years of professional experience required"]))
         self.assertIn("years_far_short", failures(far))  # 9 required, 4 held: more than 4 short
-        major = gate("Business Systems Analyst", posting(required=["8+ years of claims experience required"]))
+        major = gate("Business Systems Analyst", posting(required=["8+ years of professional experience required"]))
         self.assertEqual((failures(major), "years_gap" in flags(major)), (set(), True))  # 4 short: major penalty only
+        # D155 (1): only total professional years reject; a domain far short ("claims") is to verify
+        domain = gate("Business Systems Analyst", posting(required=["9+ years of claims experience required"]))
+        self.assertEqual((failures(domain), state_for(domain, APPROVED)), (set(), "CONDITIONAL"))
         preferred = gate("Business Systems Analyst", posting(required=["Excel skills required"],
                                                              preferred=["9+ years of claims experience"]))
         self.assertNotIn("years_far_short", failures(preferred))

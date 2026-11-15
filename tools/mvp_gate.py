@@ -27,7 +27,6 @@ import json
 import logging
 import os
 import re
-import shutil
 import socket
 import sqlite3
 import subprocess
@@ -44,6 +43,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 import httpx  # noqa: E402
+
+from careeros.core.scratch import remove_tree_or_say  # noqa: E402
 
 from careeros import cli  # noqa: E402
 from careeros import paths as layout  # noqa: E402
@@ -369,13 +370,14 @@ def assess(gate: Gate, jail: Jail, demo: Path, private: Path, private_before: di
                  ("QA Automation Engineer", "Cobalt Claims Technology", ("rejected", "no_target_family")),
                  ("Healthcare Business Systems Analyst", "Bluepeak Health Plan", ("rejected", "not_remote")),
                  ("Reporting Analyst", "Bluepeak Health Plan", ("rejected", "not_remote")),
-                 ("Claims Operations Specialist", "Bluepeak Health Plan", ("rejected", "state_not_eligible")),
+                 # D151 (R1, R2, R4): no state in a location field rejects; the NY/NJ-only role is scored CONDITIONAL
+                 # (residence_limit_check), so it left this list
                  ("Rebate Operations Analyst", "Meridian Rx", ("rejected", "below_pay_floor")),
                  ("Claims Operations Associate", "Sterling Claims Services", ("rejected", "below_pay_floor")),
                  ("Overnight Claims Quality Auditor", "Sterling Claims Services", ("rejected", "below_pay_floor")),
                  ("Remote Claims Analyst", "Brightwater Benefits", ("rejected", "scam_signals"))]
     off = {f"{t} @ {e}": sorted(by_title.get((t, e), set())) for t, e, want in decisions if want not in by_title.get((t, e), set())}
-    gate.check(item, "each planted rule violation is rejected for the right reason (13 postings)", not off, off or "all 13")
+    gate.check(item, "each planted rule violation is rejected for the right reason (12 postings)", not off, off or "all 12")
     floor_y, floor_h = policy.get("compensation", "floor_annual"), policy.get("compensation", "floor_hourly")
     home = policy.get("location", "home_state")
     excluded = [t.lower() for t in policy.get("title_exclude")]
@@ -386,7 +388,9 @@ def assess(gate: Gate, jail: Jail, demo: Path, private: Path, private_before: di
         why = []
         if r["remote_scope"] in ("hybrid", "onsite"):
             why.append("not remote")
-        if r["remote_scope"] == "US_restricted_states" and home not in json.loads(r["remote_states_json"] or "[]"):
+        # D151: a location naming other states no longer rejects; scored, it must carry the residence flag to confirm
+        if r["remote_scope"] == "US_restricted_states" and home not in json.loads(r["remote_states_json"] or "[]") \
+                and "residence_limit_check" not in ((gates.get(job_id) or {}).get("flags_json") or ""):
             why.append("state")
         if r["comp_max"] is not None and r["comp_max"] < (floor_h if r["comp_period"] == "hour" else floor_y):
             why.append("pay")
@@ -508,8 +512,10 @@ def assess(gate: Gate, jail: Jail, demo: Path, private: Path, private_before: di
         verdict = json.loads(out[out.index("{"):])
     except ValueError:
         verdict = None
-    gate.check(item, "`careeros verify`: the hash-chained audit log and every job's history are consistent",
-               code == 0 and verdict == {"event_chain_breaks": [], "inconsistent_jobs": {}, "inconsistent_applications": {}}, verdict or out[-200:])
+    clean = {"event_chain_breaks": [], "inconsistent_jobs": {}, "inconsistent_applications": {},
+             "quick_check": ["ok"], "foreign_key_problems": [], "foreign_key_problem_count": 0}   # file checks: OPP-50, 2026-11-03
+    gate.check(item, "`careeros verify`: the hash-chained audit log, every job's history, the file and its foreign keys are consistent",
+               code == 0 and verdict == clean, verdict or out[-200:])
     unprinted = [r["result_id"] for r in rows(demo, "SELECT * FROM gate_results")
                  if not (r["policy_fingerprint"] and r["profile_fingerprint"] and r["extraction_fingerprint"])]
     gate.check(item, "every eligibility decision records the policy, profile and extraction it was made under", not unprinted, unprinted)
@@ -737,7 +743,7 @@ def main(argv: list[str] | None = None) -> int:
                 handler.close()
                 cli.log.removeHandler(handler)
         sandbox.install(None)
-        shutil.rmtree(scratch, ignore_errors=True)
+        remove_tree_or_say(scratch)   # really removed, or said (item 10, 2026-11-02)
     took = time.monotonic() - started
 
     grades = {item: gate.grade(item) for item in ITEMS}

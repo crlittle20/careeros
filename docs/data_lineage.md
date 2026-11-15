@@ -127,8 +127,8 @@ recommendation for the same job adds a sighting next to it (`openings.py`).
 | `provider_status` | discovery | mutable | Provider-wide degradation | Health, report |
 | `discovery_queue` | discovery, admin | mutable | Employers queued for board discovery | Discovery |
 | `discovery_attempts` | discovery | append-only | Each attempt to find an employer's board, and its outcome | Metrics |
-| `lead_matches` | discovery, review | mutable (audit) | A lead matched to a board posting, and your audit | Lead enrichment, metrics |
-| `leads` | discovery, review (status) | mutable | Links CareerOS may not read itself (LinkedIn ...), with title and context | Report, seen index |
+| `lead_matches` | discovery, review | append-only decisions (your audit verdict is the one update) | A lead matched to a posting: linked automatically, a likely candidate for you, ambiguous, waiting for its board, no match; and your confirmations, rejections and corrections, with who and why (2026-11-02) | Lead enrichment, metrics, the review page, `careeros leads` |
+| `leads` | discovery, review (status and link) | mutable | Links CareerOS may not read itself (LinkedIn ...), with title and context; the state (new, ingested, dismissed, no_match, closed) with its reason, and why the lead's own link could not be read (2026-11-02) | Report, seen index |
 | `alert_messages` | discovery | append-only | Which alert emails were read (IDs and counts, not content) | Idempotent mail reading |
 | `inbox_issues` | discovery | mutable (closed) | Recommendation issues read and the reply posted | Retries, seen index |
 | `labels` | review | append-only | Your Apply / Stretch / Skip labels with the system's tier at the time | Agreement, funnel, analytics |
@@ -174,12 +174,14 @@ recommendation for the same job adds a sighting next to it (`openings.py`).
 | Seen-jobs index | `jobs`, `observations`, `leads`. Job facts only (company, title, location, requisition, links, first and last seen, source); never labels, decisions, scores or pay. | `vault\reports\inbox-index`, published to the private inbox repository |
 | Analytics export | The tables mapped in `analytics_data_dictionary.md` (each fact's source is named there) | `vault\exports\analytics` → Power BI |
 | Backups | `careeros.db`, profile, policy overrides | `vault\backups\<date>` |
+| Offsite archive (encrypted) | The newest backup's `careeros.db` and manifest; `vault\profile`, `policy`, `sources`, `documents`, `drafts`, `packages`, `reports\calibration`, `reports\powerbi` | The folder in `operations.offsite.folder` |
 
 ## 6. Retention
 
 - **History is kept.** Append-only tables are never trimmed. Jobs, boards and applications are never deleted: closed,
   historical and retired rows stay, with their history.
 - **Backups:** the newest 14 dated backups are kept. Only folders the backup itself created are ever pruned.
+- **Offsite archives:** the newest 7 are kept. Only CareerOS's own (`careeros-offsite-<date>.zip.gpg`) are ever removed.
 - **Exports** are replaced as a whole on each `careeros export`.
 - **Demo vaults** are deleted only with `careeros demo reset`, and only when they carry the demo marker.
 - **Email content is not stored**: only the alert's sender, subject, links and the text beside each link.

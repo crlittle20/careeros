@@ -67,6 +67,82 @@ def stored(user="jobs@example.com", password="abcd efgh ijkl mnop"):
 
 
 class ImapTests(unittest.TestCase):
+    def test_a_held_email_is_found_by_its_gmail_id_and_a_search_beyond_the_limit_says_so(self):
+        from careeros.discovery.gmail import GmailError
+
+        class FindImap(FakeImap):
+            def uid(self, command, *args):
+                if command == "SEARCH" and args[0] == "X-GM-MSGID":
+                    self.calls.append((command, *args))
+                    found = next((uid for uid, msgid in MSGIDS.items() if str(msgid) == args[1]), b"")
+                    return "OK", [found]
+                return super().uid(command, *args)
+
+        fake = FindImap()
+        client = imap.ImapGmailClient(stored(), connect=lambda: fake)
+        self.assertIn(b"Claims Business Analyst", client.raw(format(MSGIDS[b"12"], "x")))   # never listed by a search (CR-AD-V2-10)
+        self.assertIn(("SEARCH", "X-GM-MSGID", str(MSGIDS[b"12"])), fake.calls)
+        with self.assertRaises(GmailError) as gone:
+            client.raw(format(42, "x"))
+        self.assertEqual(gone.exception.code, "message_gone")
+        client.search("label:alerts", limit=1)
+        self.assertTrue(client.truncated)
+        client.search("label:alerts", limit=5)
+        self.assertFalse(client.truncated)
+
+    def test_an_unclear_imap_answer_stops_the_pull_and_never_reads_as_no_email(self):
+        from careeros.discovery.gmail import GmailError
+
+        class Faulty(FakeImap):
+            def __init__(self, fault):
+                super().__init__()
+                self.fault = fault
+
+            def list(self):
+                return ("NO", [b"[UNAVAILABLE] synthetic"]) if self.fault == "list" else super().list()
+
+            def uid(self, command, *args):
+                if command == "FETCH" and args[1] == "(X-GM-MSGID RFC822.SIZE)" and self.fault in ("fetch", "short"):
+                    if self.fault == "fetch":
+                        return "NO", [b"Some messages could not be FETCHed (Failure)"]
+                    return "OK", [b"1 (UID 11 X-GM-MSGID 1278455344230334865 RFC822.SIZE 2048)"]
+                if command == "SEARCH" and args[0] == "X-GM-MSGID" and self.fault == "search":
+                    return "NO", [b"synthetic"]
+                return super().uid(command, *args)
+
+        for fault, code in (("list", "imap_list_failed"), ("fetch", "imap_list_failed"), ("short", "imap_list_incomplete")):
+            with self.subTest(fault), self.assertRaises(GmailError) as raised:   # red team FU-01
+                imap.ImapGmailClient(stored(), connect=lambda fault=fault: Faulty(fault)).search("q")
+            self.assertEqual(raised.exception.code, code)
+        class OneUnserved(FakeImap):
+            def uid(self, command, *args):
+                if command == "FETCH" and args[1] == "(X-GM-MSGID RFC822.SIZE)" and args[0] != "11":
+                    return "NO", [b"Some messages could not be FETCHed (Failure)"]   # the batch and the one Gmail cannot serve
+                if command == "FETCH" and args[1] == "(X-GM-MSGID RFC822.SIZE)":
+                    return "OK", [b"1 (UID 11 X-GM-MSGID 1278455344230334865 RFC822.SIZE 2048)"]
+                return super().uid(command, *args)
+
+        partly = imap.ImapGmailClient(stored(), connect=OneUnserved)
+        self.assertEqual((partly.search("q"), partly.unserved), ([format(1278455344230334865, "x")], 1))   # the rest is read
+        with self.assertRaises(GmailError) as refused:   # a refusal is not a deletion (I3-02)
+            imap.ImapGmailClient(stored(), connect=lambda: Faulty("search")).raw(format(42, "x"))
+        self.assertEqual(refused.exception.code, "imap_search_failed")
+
+        class InboxOnly(FakeImap):
+            def list(self):
+                return "OK", [b'(\\HasNoChildren) "/" "INBOX"']
+
+            def uid(self, command, *args):
+                if command == "SEARCH" and args[0] == "X-GM-MSGID":
+                    return "OK", [b""]
+                return super().uid(command, *args)
+
+        inbox_only = imap.ImapGmailClient(stored(), connect=InboxOnly)
+        self.assertFalse(inbox_only.all_mail)
+        with self.assertRaises(GmailError) as unreachable:   # not found in the inbox is not "gone" (FU-02)
+            inbox_only.raw(format(42, "x"))
+        self.assertEqual(unreachable.exception.code, "message_not_reachable")
+
     def test_mailbox_is_opened_read_only_and_messages_are_never_marked_read(self):
         fake = FakeImap()
         client = imap.ImapGmailClient(stored(), connect=lambda: fake)
@@ -119,6 +195,24 @@ class ImapPullTests(unittest.TestCase):
         self.assertGreaterEqual(counts["lead_new"], 3)
         again = _gmail_pull(ctx, boards, "q", gmail=imap.ImapGmailClient(stored(), connect=FakeImap))
         self.assertEqual(again["gmail_messages"], 0)
+
+        class InboxOnly(FakeImap):
+            def list(self):
+                return "OK", [b'(\\HasNoChildren) "/" "INBOX"']
+
+        class OneUnserved(FakeImap):
+            def uid(self, command, *args):
+                if command == "FETCH" and args[1] == "(X-GM-MSGID RFC822.SIZE)" and args[0] != "11":
+                    return "NO", [b"Some messages could not be FETCHed (Failure)"]
+                if command == "FETCH" and args[1] == "(X-GM-MSGID RFC822.SIZE)":
+                    return "OK", [b"1 (UID 11 X-GM-MSGID 1278455344230334865 RFC822.SIZE 2048)"]
+                return super().uid(command, *args)
+
+        _gmail_pull(ctx, boards, "q", gmail=imap.ImapGmailClient(stored(), connect=OneUnserved))   # FU-01: reported
+        self.assertEqual(store.one("SELECT COUNT(*) FROM exceptions WHERE error_code = 'gmail_alert_unserved'")[0], 1)
+        _gmail_pull(ctx, boards, "q", gmail=imap.ImapGmailClient(stored(), connect=InboxOnly))   # FU-02: said, once
+        _gmail_pull(ctx, boards, "q", gmail=imap.ImapGmailClient(stored(), connect=InboxOnly))
+        self.assertEqual(store.one("SELECT COUNT(*) FROM exceptions WHERE error_code = 'imap_inbox_only'")[0], 1)
 
 
 if __name__ == "__main__":

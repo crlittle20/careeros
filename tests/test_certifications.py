@@ -48,6 +48,48 @@ def judged(profile, *lines):
 
 
 class ExtractionTests(unittest.TestCase):
+    def test_helpful_coding_certification_is_preferred_not_a_hard_requirement(self):
+        line = "Experience or certification in coding/billing is helpful."   # D126 C1 (the intake hotfix's Pass 3): not the
+        self.assertEqual(mentions(line), [("unspecified certification", "ambiguous")])   # plain form, so unclear, never preferred
+        self.assertEqual(mentions("Coding certification is helpful."), [("family:medical_coding", "preferred")])
+        self.assertEqual(mentions("PMP helpful."), [("pmp", "preferred")])
+        self.assertEqual(mentions("PMP required"), [("pmp", "hard_required")])
+        self.assertEqual(mentions("PMP or equivalent experience required"),
+                         [("pmp", "required_with_equivalency")])
+
+    def test_helpful_does_not_weaken_a_separate_license_or_credential_requirement(self):
+        line = "Coding certification is helpful. Active pharmacist license required."
+        requirements = extract("Required Qualifications:\n- " + line, POLICY).requirements
+        self.assertIn(("license", "hard_required"), {(r.category, r.requirement_type) for r in requirements})
+        self.assertEqual(mentions("PMP required; Scrum certification is helpful."),
+                         [("pmp", "hard_required"), ("family:scrum", "preferred")])
+        # D126 (the intake hotfix's Pass 2): a demand and "helpful" in one clause is unclear: flagged, never preferred
+        self.assertEqual(mentions("PMP is helpful but required for this role."), [("pmp", "ambiguous")])
+        # D127 (the intake hotfix's Pass 3): any softening word outside the plain form makes the sentence unclear,
+        # including a credential demanded beside it (CONDITIONAL, never a pass and never a rejection)
+        self.assertEqual(mentions("Prior experience is helpful, but you need active PMP certification."),
+                         [("pmp", "ambiguous")])
+        self.assertEqual(mentions("CPC certification is necessary, and prior experience is helpful."),
+                         [("cpc", "ambiguous")])
+        self.assertEqual(mentions("You need active PMP certification."), [("pmp", "hard_required")])   # no softening word
+
+        self.assertEqual(mentions("PMP certification, and prior experience is helpful."),   # D126: "helpful" outside
+                         [("pmp", "ambiguous")])                                          # PMP's clause: unclear
+
+    def test_ai_merge_keeps_a_quoted_helpful_credential_preferred(self):
+        from careeros.extract.ai import merge
+
+        helpful = "Experience or certification in coding/billing is helpful."
+        required = "Active pharmacist license required."
+        text = f"Required Qualifications:\n- {helpful}\n- {required}"
+        raw = [{"category": "certification", "name": "cpc", "requirement_type": "hard_required",
+                "source_text": helpful, "confidence": 0.95}]
+        # D126 (the intake hotfix's Pass 2): the rules read an unnamed certification as helpful in that sentence, not CPC
+        # itself, so the AI's required CPC is unclear (flagged for review), never preferred and never a rejection
+        combined = merge(raw, text, extract(text, POLICY), "synthetic", CATALOG)
+        self.assertEqual({(r.category, r.requirement_type) for r in combined.requirements},
+                         {("certification", "ambiguous"), ("license", "hard_required")})
+
     def test_named_credentials_and_their_strength(self):
         self.assertEqual(mentions("PMP required"), [("pmp", "hard_required")])
         self.assertEqual(mentions("PMP preferred"), [("pmp", "preferred")])
@@ -128,10 +170,14 @@ class FalsePositiveTests(unittest.TestCase):
         self.assertNotIn("certification_check", {f["code"] for f in gate.flags})
 
     def test_not_required_is_not_a_requirement(self):
-        self.assertEqual(mentions("Coding credentials help, though certification is not required."),
-                         [("unspecified certification", "preferred")])
-        gate, _reqs, _j = judged(PROFILE, "Coding credentials help, though certification is not required.")
+        self.assertEqual(mentions("Certification is not required."), [("unspecified certification", "preferred")])
+        gate, _reqs, _j = judged(PROFILE, "Certification is not required.")
         self.assertNotIn("certification_check", {f["code"] for f in gate.flags})
+        # D126 C1 (the intake hotfix's Pass 3): "help" as a verb is no plain form, so the reading is unclear (CONDITIONAL)
+        self.assertEqual(mentions("Coding credentials help, though certification is not required."),
+                         [("unspecified certification", "ambiguous")])
+        gate, _reqs, _j = judged(PROFILE, "Coding credentials help, though certification is not required.")
+        self.assertIn("certification_check", {f["code"] for f in gate.flags})
 
 
 class MatchingTests(unittest.TestCase):
@@ -148,7 +194,7 @@ class MatchingTests(unittest.TestCase):
         record = certs.analyse(reqs, capm, POLICY)[-1]
         self.assertEqual((record["candidate_status"], record["match_type"], record["satisfied"], record["decision_effect"]),
                          ("not_held", "related", False, "hard_failure"))
-        failure = next(f for f in gate.hard_failures if f["code"] == "certification_required")
+        failure = next(f for f in gate.flags if f["code"] == "certification_check" and f.get("hard_reading"))   # D140 F1
         self.assertIn("related, not counted", failure["detail"])
 
     def test_a_planned_credential_is_never_held(self):
@@ -156,7 +202,7 @@ class MatchingTests(unittest.TestCase):
         gate, reqs, _ = judged(planned, "PL-300 certification required")
         record = certs.analyse(reqs, planned, POLICY)[-1]
         self.assertEqual((record["candidate_status"], record["match_type"], record["satisfied"]), ("planned", "exact", False))
-        failure = next(f for f in gate.hard_failures if f["code"] == "certification_required")
+        failure = next(f for f in gate.flags if f["code"] == "certification_check" and f.get("hard_reading"))   # D140 F1
         self.assertIn("yours is planned, not counted as held", failure["detail"])
         self.assertFalse(planned.has_certification("pl-300"))
         in_progress = person({"name": "PL-300", "status": "in_progress"})
@@ -168,7 +214,7 @@ class MatchingTests(unittest.TestCase):
         gate, reqs, _ = judged(unrecorded, "PMP required")
         record = certs.analyse(reqs, unrecorded, POLICY)[-1]
         self.assertEqual((record["candidate_status"], record["satisfied"]), ("unknown", False))
-        failure = next(f for f in gate.hard_failures if f["code"] == "certification_required")
+        failure = next(f for f in gate.flags if f["code"] == "certification_check" and f.get("hard_reading"))   # D140 F1
         self.assertIn("yours is without a recorded status, not counted as held", failure["detail"])
         self.assertFalse(unrecorded.has_certification("pmp"))
         self.assertEqual(certs.profile_warnings(unrecorded, POLICY), ["PMP: no status recorded (counted as unknown, not held)"])
@@ -236,8 +282,9 @@ class MatchingTests(unittest.TestCase):
         pmp = next(r for r in certs.analyse(reqs, cbap, POLICY) if r["certification_key"] == "pmp")
         self.assertEqual(pmp["satisfied_by_alternative"], "Certified Business Analysis Professional (CBAP)")
         gate, _reqs, _ = judged(PROFILE, "PMP or CBAP certification required")
-        failures = [f for f in gate.hard_failures if f["code"] == "certification_required"]
-        self.assertEqual(len(failures), 1)   # one rejection for the set of alternatives, naming both
+        failures = [f for f in gate.flags if f["code"] == "certification_check" and f.get("hard_reading")]   # D140 F1
+        self.assertEqual(len(failures), 1)   # one "verify" for the set of alternatives, naming both
+        self.assertFalse(gate.hard_failures)
         self.assertIn("Project Management Professional (PMP) or Certified Business Analysis Professional (CBAP) required",
                       failures[0]["detail"])
 
@@ -261,7 +308,8 @@ class ReviewFixTests(unittest.TestCase):
 
     def failures(self, profile, *lines):
         gate, _, _ = judged(profile, *lines)
-        return [f for f in gate.hard_failures if f["code"] == "certification_required"]
+        self.assertFalse([f for f in gate.hard_failures if f["code"].startswith("certification")])   # D140 F1: never a rejection
+        return [f for f in gate.flags if f["code"] == "certification_check" and f.get("hard_reading")]
 
     def test_an_or_elsewhere_on_the_line_never_makes_separate_credentials_alternatives(self):
         cbap = person({"name": "CBAP", "status": "held"})

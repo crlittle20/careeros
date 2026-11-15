@@ -110,6 +110,8 @@ every decision, so the job seeker spends time applying, not screening.
 | FR-034 | Re-verify boards on a schedule and on triggers. Pause a board that disappears or changes identity. Detect ATS migrations. Treat provider-wide failures as provider problems. A board scanned before verification existed keeps its history and is marked `verification_required` while proof is unavailable. |
 | FR-035 | Record employers whose careers site uses a system CareerOS never reads (e.g. Workday, iCIMS) as manual-only sources. |
 | FR-036 | Never probe for a staffing agency's undisclosed client, and never guess boards for excluded or held employers. |
+| FR-037 | Resolve a lead (a job seen only in an alert or a recommendation) to the employer's own posting only through a board admitted to the daily scan, with the lead's employer and the board's resolved as one. Match each lead with its own facts after every scan and when a board is admitted. Link the same requisition, link or title automatically; show a likely match (a near-identical title, the same seniority, a compatible location) for the job seeker to confirm or reject; keep two or more candidates unlinked. Record the lead's state (no match yet, closed) with its reason, and why its link could not be read. Link a lead when the job seeker pastes or adds the same posting. Correct a wrong link only by a later, audited record (2026-11-02). |
+| FR-038 | Treat an official-website hint (a lead's, the curated employer list's, or one given with `careeros sources suggest`) as a hint: when no board is known, find the board through the employer's own site; check a board waiting for an unknown website as soon as a lead supplies one; never let a hint merge employer records, replace a known website, or verify a board on the hint alone (2026-11-02). |
 
 ### Requirements, eligibility and decisions
 | ID | Requirement |
@@ -153,7 +155,7 @@ every decision, so the job seeker spends time applying, not screening.
 ## 5. Non-functional requirements
 | ID | Requirement |
 |---|---|
-| NFR-001 | Runs locally for one user: Python 3.12, SQLite, no server infrastructure. |
+| NFR-001 | Runs locally for one user: Python 3.14, SQLite, no server infrastructure. |
 | NFR-002 | One failing item never stops a run: per board, issue, line, email and job. A failed run raises a notification. |
 | NFR-003 | Decisions are reproducible: each records the policy, profile and extraction fingerprints. Same inputs give the same decisions. |
 | NFR-004 | Changes are accepted only when the full test suite passes and the mutation check catches every deliberate defect. |
@@ -168,7 +170,7 @@ every decision, so the job seeker spends time applying, not screening.
 | DQ-001 | Posting text is cleaned of hidden characters and escaped HTML before use. |
 | DQ-002 | Tracking parameters never create a new posting identity. Links are canonicalised. |
 | DQ-003 | Weaker sources (alerts, recommendations) never overwrite facts from the employer's own board. Conflicts stay visible. |
-| DQ-004 | Pay is judged on the full range: units annualised; a range that straddles the floor, geographic tiers or variable pay without a base stated = unknown; aggregator pay never rejects. |
+| DQ-004 | Pay is judged on the full range: units annualised; a range that straddles the floor, geographic tiers or variable pay without a base stated = unknown; aggregator pay never rejects. With pay listed by location, the range for your state when the posting says which it is; when it doesn't, a range nobody named never passes or rejects a role on the floor (2026-11-04). |
 | DQ-005 | "Remote" alone is never read as nationwide. State limits and exclusions are kept. |
 | DQ-006 | Postings older than the configured age are flagged as possibly stale, never hidden. |
 | DQ-007 | Structured note fields are validated. Bad values are dropped, never stored, and can never change a decision. |

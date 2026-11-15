@@ -120,13 +120,14 @@ and the overnight (NIGHT) profile on. On days 3 and 4 they act, through the func
 This gives the analytics export (`careeros export`) an application pipeline to show.
 
 Totals after four days: **45 jobs**.
-- 27 scored.
-- 13 rejected, with reasons: title excluded, no target family, not remote, state not eligible, below pay floor, scam
-  signals.
+- 28 scored.
+- 12 rejected, with reasons: title excluded, no target family, not remote, below pay floor, scam signals.
+  The NY/NJ-only role is scored with a residence check to verify, not rejected: no state in a location field rejects
+  on its own (D151).
 - 1 duplicate.
 - 4 closed.
 
-Also: 3 alert-email leads, 13 boards, 8 discovery attempts, and 13 jobs routed to NIGHT. These counts are recorded in the
+Also: 3 alert-email leads, 13 boards, 8 discovery attempts, and 14 jobs routed to NIGHT. These counts are recorded in the
 tests (`RECORDED` in `tests/test_demo_mode.py`). A change to the world or to the rules that moves any of them fails a
 test until the record and this document are updated together.
 
@@ -141,7 +142,7 @@ test until the record and this document are updated together.
 | Duplicates | Meridian 101 / 102 (same requisition) | `duplicate` (same_requisition) |
 | Updated jobs | Bluepeak, day 2 | One meaningful change (pay) and one cosmetic change (wording) |
 | Remote nationwide | Meridian 101 / 108, Cascade, Cobalt | `US_nationwide` |
-| Remote, restricted states | Meridian 103 (CO/TX/AZ), Bluepeak (NY/NJ) | `US_restricted_states`; the NY/NJ role is rejected `state_not_eligible` |
+| Remote, restricted states | Meridian 103 (CO/TX/AZ), Bluepeak (NY/NJ) | `US_restricted_states`; the NY/NJ role is scored with `residence_limit_check` to verify (D151) |
 | Hybrid / onsite | Bluepeak Denver / Chicago | Rejected `not_remote` |
 | PBM roles | Meridian | PBM Operations Analyst, PBM Client Reporting Analyst, Pharmacy Claims Analyst |
 | Claims roles | Bluepeak, Sterling, Cascade | Claims Analyst II, Senior Claims Analyst (hourly), Claims Data Analyst |
@@ -163,7 +164,7 @@ test until the record and this document are updated together.
 | Below pay floor | Meridian, Sterling | Rejected `below_pay_floor`, with the posting's pay quoted |
 | Scam | Brightwater (pasted) | Rejected `scam_signals` |
 | Closed job | Meridian 103 | Closed `no_longer_listed` after complete scans without it |
-| NIGHT routing | 13 daytime roles with no hours stated; Sterling's overnight auditor | NIGHT section of the report: the 13 are routed to NIGHT Supplemental as conditional; the overnight role is judged as Replacement work and rejected for pay. No overnight role passes NIGHT in this world. |
+| NIGHT routing | 14 daytime roles with no hours stated; Sterling's overnight auditor | NIGHT section of the report: the 14 are routed to NIGHT Supplemental as conditional; the overnight role is judged as Replacement work and rejected for pay. No overnight role passes NIGHT in this world. |
 | Leads never fetched | LinkedIn link in the alert | A lead with status `new`; nothing fetched |
 
 ## 6. The same production logic

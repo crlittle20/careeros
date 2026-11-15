@@ -272,6 +272,16 @@ class PackageTests(unittest.TestCase):
         self.assertIn("this posting's questions are not known yet", panel)
         self.assertIn("Are you legally authorized to work in the United States?", panel)
 
+    def test_a_full_name_answer_is_on_the_panel_of_a_form_not_yet_read(self):
+        """Tremendous (Ashby, 2026-11-04): the form asked for the whole name and the panel had only its two halves."""
+        record_label(self.store, JOB, "apply", None, "k1")
+        self.vault.write(LIBRARY + "  - id: full-name\n    question: Full Name\n    answer: Avery Synth\n"
+                                   "    field: full_name\n    approved: 2026-10-01\n")
+        out = self.prepare(questions=None)
+        panel = (self.vault.root / out["folder"] / "answers.md").read_text(encoding="utf-8")
+        self.assertIn("- Full Name\n  Avery Synth", panel)
+        self.assertIn("- First Name\n  Avery", panel)
+
     def test_a_missing_resume_is_an_open_item(self):
         record_label(self.store, JOB, "apply", None, "k1")
         (self.vault.root / "documents" / "resume.pdf").unlink()

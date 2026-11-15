@@ -95,11 +95,42 @@ class ReaderTests(unittest.TestCase):
         self.assertEqual(found[("skill", "sql")], "ambiguous")          # never silently downgraded to preferred
         self.assertEqual(found[("education", "bachelor")], "hard_required")  # AI omitted it; rules record kept
 
+    def test_d149_a_years_figure_the_rules_read_is_never_lost_in_the_merge(self):
+        """D149 R-Y2: an AI reading only adds. A years figure the rules read on a line stays a record when no AI record
+        quoting that line (or part of it) carries it; one the AI carries is not doubled."""
+        text = "Requirements:\n- 5+ years as a Business Systems Analyst\n- 3+ years of SQL experience required\n"
+        rules_ex = rules.extract(text, POLICY)
+        cert = [{"category": "certification", "name": "pmp", "requirement_type": "hard_required", "years": None,
+                 "source_text": "5+ years as a Business Systems Analyst", "confidence": 0.9}]
+        kept = {(r.source_text, r.years) for r in merge(cert, text, rules_ex, "ai:test").requirements if r.years}
+        self.assertEqual(kept, {("- 5+ years as a Business Systems Analyst", 5.0), ("- 3+ years of SQL experience required", 3.0)})
+        carried = [{"category": "years_experience", "name": "business systems analyst", "requirement_type": "hard_required",
+                    "years": 5, "source_text": "5+ years as a Business Systems Analyst", "confidence": 0.9}]
+        merged = merge(carried, text, rules_ex, "ai:test").requirements
+        # D155 (2): the rules' own record is kept beside the AI's, never deduplicated away on line and figure
+        self.assertEqual(sorted((r.source_text, r.years) for r in merged if r.years),
+                         [("- 3+ years of SQL experience required", 3.0), ("- 5+ years as a Business Systems Analyst", 5.0),
+                          ("5+ years as a Business Systems Analyst", 5.0)])
+
     def test_refusal_truncation_and_bad_json_raise(self):
         for bad in (response(stop_reason="refusal"), response(stop_reason="max_tokens"),
                     SimpleNamespace(stop_reason="end_turn", content=[SimpleNamespace(type="text", text="not json")])):
             with self.assertRaises(AIUnavailable):
                 AIReader(FakeClient(bad), "m").read("t", "x")
+
+    def test_the_ai_reader_is_off_by_default_even_with_a_stored_key(self):
+        """The README and PRIVACY say the AI reader is off by default; the defaults now say so too (OPP-69, D83,
+        2026-11-03). Only overrides turn it on, and then only with a stored key."""
+        from unittest import mock
+
+        from careeros.extract import ai
+        defaults = load_policy(CONFIG_DIR / "policy" / "defaults.yaml", None)
+        self.assertIs(defaults.get("extraction", "ai", "enabled"), False)
+        with mock.patch.object(ai, "read_api_key", return_value="sk-test") as key:
+            self.assertIsNone(ai.build_reader(defaults))
+            key.assert_not_called()
+            on = SimpleNamespace(get=lambda *keys, default=None: {"enabled": True, "model": "m"})
+            self.assertIsInstance(ai.build_reader(on), ai.AIReader)
 
 
 class PipelineAITests(unittest.TestCase):
@@ -141,6 +172,49 @@ class PipelineAITests(unittest.TestCase):
         self.assertTrue(self.extractor("greenhouse:synth:201").startswith("ai:"))
         self.assertEqual(self.store.one("SELECT current_state FROM jobs WHERE job_id = 'greenhouse:synth:201'")["current_state"], "scored")
         self.assertEqual(self.store.verify_event_chain(), [])
+
+    def test_d155_an_ai_record_never_replaces_a_rules_record_through_the_pipeline(self):
+        """D155 (2), Codex Pass 3's AI record identity High, through mocked board intake and pipeline.process as Codex
+        ran it: an AI Excel record quoting the SQL line never passes it silently, an AI SQL record quoting the Excel line
+        never makes a hard SQL shortfall, and a total-years demand the rules read still rejects beside an AI record."""
+        from careeros.qualify.profile import Profile
+        base = load_profile(FIXTURES / "synthetic_profile.yaml")
+        profile = Profile({**base.data, "skills": [{"name": "sql", "years": 3, "evidence": "direct"},
+                                                   {"name": "excel", "years": 10, "evidence": "direct"}]}, "d155-sql3")
+        required = ("- 5+ years of experience as a business systems analyst in healthcare\n- 3+ years of SQL experience required\n"
+                    "- Bachelor's degree or equivalent work experience\n- Experience with RxClaim or another PBM adjudication platform")
+        assert required in postings.GOOD_FIT
+
+        def run(job_id, line, records):
+            text = postings.GOOD_FIT.replace(required, f"{line}\n- Bachelor's degree")
+            board = Board([gh_job(job_id, "Business Systems Analyst", text, req=f"D{job_id}")])
+            http = HttpClient(transport=httpx.MockTransport(board.handler), min_interval=0, sleep=lambda s: None)
+            try:
+                ctx = Context(self.store, POLICY, profile, JOB_MATRIX, Path(self.tmp.name),
+                              AIReader(FakeClient(response(records)), "claude-opus-5-5"))
+                ingest(ctx, self.employer, fetch_board(http, "greenhouse", "synth"))
+                process(ctx)
+            finally:
+                http.close()
+            row = self.store.one("SELECT decision, hard_failures_json, flags_json FROM gate_results WHERE job_id = ? "
+                                 "ORDER BY at DESC LIMIT 1", (f"greenhouse:synth:{job_id}",))
+            self.assertTrue(self.extractor(f"greenhouse:synth:{job_id}").startswith("ai:"))
+            return (row["decision"], {f["code"] for f in json.loads(row["hard_failures_json"])},
+                    {f["code"] for f in json.loads(row["flags_json"])})
+
+        def ai(name, quote, years, category="skill", kind="hard_required"):
+            return [{"category": category, "name": name, "requirement_type": kind, "years": years, "source_text": quote,
+                     "confidence": 0.95}]
+        decision, failures, flags = run(301, "- 10+ years of SQL", ai("excel", "10+ years of SQL", 10))
+        self.assertNotIn("years_far_short", failures)
+        self.assertIn("years_role_unconfirmed", flags)   # never a silent pass on the AI's Excel
+        decision, failures, flags = run(302, "- 10+ years of Excel", ai("sql", "10+ years of Excel", 10))
+        self.assertNotIn("years_far_short", failures)    # never a hard SQL shortfall
+        decision, failures, flags = run(303, "- 10+ years of SQL", ai("sql", "10+ years of SQL", 10, kind="contextual"))
+        self.assertIn("years_role_unconfirmed", flags)   # the contextual copy never suppresses the rules' hard record
+        decision, failures, flags = run(304, "- 14+ years of professional experience",
+                                        ai("excel", "14+ years of professional experience", 14))
+        self.assertEqual((decision, "years_far_short" in failures), ("rejected", True))   # control: total years, 8 of 14
 
     def test_daily_cap_limits_calls(self):
         data = json.loads(json.dumps(POLICY.data))

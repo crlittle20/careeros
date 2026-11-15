@@ -141,6 +141,31 @@ class ModeTests(unittest.TestCase):
         self.assertIn("night_pay_unconfigured", codes(quiet))
         self.assertEqual(quiet["state"], "ELIGIBLE")
 
+    def test_a_residence_sentence_is_conditional_for_night_too(self):
+        """The fail-safe (the fix-check of 2026-11-05): NIGHT shares the gate's location rules, so a residence sentence
+        naming another state makes the posting CONDITIONAL with the sentence quoted, never a rejection; yours is silent."""
+        line = "\nThis is a remote position, open to candidates who reside in: {}."
+        other = assess("Claims Quality Auditor (Part-Time)", QUIET + line.format("Texas"), employment="part time")
+        self.assertEqual((other["decision"], other["state"]), ("eligible", "CONDITIONAL"))
+        flag = next(f for f in other["flags"] if f["code"] == "residence_limit_check")
+        self.assertIn("reside in: Texas", flag["source_text"])
+        yours = assess("Claims Quality Auditor (Part-Time)", QUIET + line.format("Florida"), employment="part time")
+        self.assertNotIn("residence_limit_check", codes(yours))
+        self.assertEqual(yours["state"], "ELIGIBLE")
+
+    def test_private_flag_lists_cannot_promote_unconfirmed_hours(self):
+        from careeros.core.policy import PolicyBundle
+        from careeros.qualify.gate import GateResult
+        from careeros.qualify.night import night_state
+
+        policy = PolicyBundle({**POLICY.data, "night": {"material_unknowns_extra": []},
+                               "eligibility_states": {"material_unknowns": []}}, "synthetic")
+        for flag in ("schedule_unknown", "daytime_hours_likely"):
+            with self.subTest(flag=flag):
+                result = GateResult("eligible")
+                result.flag(flag, "verify shift")
+                self.assertEqual(night_state(result, policy), "CONDITIONAL")
+
     def test_hard_rules(self):
         self.assertIn("daytime_schedule", codes(assess("Claims Quality Auditor", QUIET.replace(
             "overnight shift, Sunday to Thursday, 11pm to 7:30am", "day shift, standard business hours")), "failures"))

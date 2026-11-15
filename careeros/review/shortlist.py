@@ -90,17 +90,18 @@ def ageing(item: dict) -> str:
 
 
 def next_action(item: dict) -> str:
-    """The one next useful step, in this order: closed, applied (its own clock), a submission hold, an incompatibility,
+    """The one next useful step, in this order: closed, applied (the follow-up rule of the applications card,
+    applications.follow_up_due: QW-11, 2026-11-03), a submission hold, an incompatibility,
     an open question, a possible earlier application to the same role, then the label's age, then apply. "Apply or
     dismiss" comes after every check (stage 1-2 review, 2026-11-01), so it never nudges you to apply to a posting you
     may already have applied to, or one that needs a check first."""
     if item["status"] == "closed":
         return "none: the posting is closed"
     if item["applied"]:
-        app = item["applied"]
-        if app["current_state"] in ("applied", "acknowledged"):
-            days = item.get("days_since_applied") or 0
-            return "follow up with the recruiter" if days >= 7 else "wait for a response"
+        app, due = item["applied"], item.get("follow_up")
+        if due is not None:   # nobody at the employer has answered yet
+            return (f"follow up if you choose: no response in {due.days} days" if due.due
+                    else f"wait for a response: a follow-up is due from {due.due_at[:10]}")
         return f"track the {app['current_state'].replace('_', ' ')} stage"
     if item.get("submission"):   # held, employer unidentified, or broken hold settings: preparation only
         return "prepare only, don't submit yet: " + item["submission"]
@@ -117,7 +118,9 @@ def next_action(item: dict) -> str:
 
 def shortlist(store: Store, policy=None) -> list[dict]:
     from careeros.openings import application_status, conflicts
+    from .applications import follow_up_due, follow_ups
     now = store.clock.now()
+    followed = follow_ups(store)
     out = []
     for job_id in shortlisted_job_ids(store):
         job = store.one("SELECT * FROM jobs WHERE job_id = ?", (job_id,))
@@ -138,7 +141,8 @@ def shortlist(store: Store, policy=None) -> list[dict]:
                 "conflicts": conflicts(store, job), "applied": status["applied"], "possibly_applied": status["possibly_applied"],
                 "dismissed": status["dismissed"], "stretch": bool(comps.get("stretch"))}
         if status["applied"]:
-            item["days_since_applied"] = (parse_utc(now) - parse_utc(status["applied"]["applied_at"])) / timedelta(days=1)
+            app = status["applied"]
+            item["follow_up"] = follow_up_due(app, now, followed.get(app["application_id"]))
         if policy is not None:   # permission to submit (R2), shown apart from the qualification
             from .submission import display
             item["submission"] = display(store, policy, job_id)

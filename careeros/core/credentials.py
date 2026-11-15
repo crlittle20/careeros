@@ -54,6 +54,19 @@ class WindowsCredentials:
             self._api.CredFree(pointer)
         return user, (blob.decode("utf-16-le") if b"\x00" in blob else blob.decode("utf-8"))
 
+    def written(self, target: str) -> str | None:
+        """When the credential was last saved (its FILETIME, as a number), or None when there is none. Not secret, and it
+        changes whenever the secret is saved again, even unchanged: the offsite key's generation (Codex
+        CR-2026-11-05-COMBINED, F8). The secret is read by CredReadW but never looked at here."""
+        pointer = ctypes.POINTER(self._struct)()
+        if not self._api.CredReadW(target, CRED_TYPE_GENERIC, 0, ctypes.byref(pointer)):
+            return None
+        try:
+            stamp = pointer.contents.LastWritten
+            return str((stamp.dwHighDateTime << 32) | stamp.dwLowDateTime)
+        finally:
+            self._api.CredFree(pointer)
+
     def write(self, target: str, secret: str, user: str = "CareerOS") -> None:
         data = secret.encode("utf-8")
         if len(data) > MAX_BLOB:
@@ -75,6 +88,7 @@ class MemoryCredentials:
     def __init__(self):
         self.items: dict[str, str] = {}
         self.users: dict[str, str] = {}
+        self.saved: dict[str, int] = {}   # each save is a new generation, as LastWritten is
 
     def read(self, target: str) -> str | None:
         return self.items.get(target)
@@ -82,8 +96,12 @@ class MemoryCredentials:
     def read_entry(self, target: str) -> tuple[str, str] | None:
         return (self.users.get(target, ""), self.items[target]) if target in self.items else None
 
+    def written(self, target: str) -> str | None:
+        return str(self.saved.get(target, 0)) if target in self.items else None
+
     def write(self, target: str, secret: str, user: str = "CareerOS") -> None:
         self.items[target], self.users[target] = secret, user
+        self.saved[target] = self.saved.get(target, 0) + 1
 
     def delete(self, target: str) -> bool:
         return self.items.pop(target, None) is not None

@@ -220,7 +220,8 @@ class AgeingTests(StatusMixin, unittest.TestCase):
         items = self.items()
         self.assertTrue(items["gh:q:6"]["next_action"].startswith("apply: "))
         self.assertEqual(items["gh:q:7"]["next_action"], "apply or dismiss: labelled 7 days ago")
-        self.assertEqual(items["gh:q:old"]["next_action"], "wait for a response")   # applied: the application's clock instead
+        self.assertEqual(items["gh:q:old"]["next_action"],   # applied: the follow-up rule instead (QW-11)
+                         "wait for a response: a follow-up is due from 2026-11-13")
 
     def test_apply_or_dismiss_never_outranks_a_possible_application_an_incompatibility_or_a_hold(self):
         """Stage 1-2 review (2026-11-01): the label's age comes after every check, so CareerOS never nudges Chris to apply
@@ -243,6 +244,92 @@ class AgeingTests(StatusMixin, unittest.TestCase):
         for field, (value, expected) in cases.items():
             with self.subTest(field=field):
                 self.assertEqual(next_action({**base, field: value}), expected)
+
+
+class FollowUpRuleTests(StatusMixin, unittest.TestCase):
+    """QW-11 and OPP-21 (2026-11-03): one follow-up rule, applications.follow_up_due, for the applications card and the
+    shortlist: FR-062's 14 days without a response, from entering the waiting state or from your latest follow-up,
+    whichever is later. The same application on the same day gets the same advice in both views, and a recorded
+    follow-up restarts the count in both."""
+
+    def setUp(self):
+        super().setUp()
+        label_at(self.store, scored(self.store, "gh:f:1", "B", days=30), "apply", days=29)
+        self.store.writer("tracker").insert("applications", {
+            "application_id": "app:f", "workflow_id": "application:app:f", "job_id": "gh:f:1", "channel": "direct",
+            "applied_at": ago(13), "first_seen_at": ago(13), "current_state": "applied", "entered_state_at": ago(13)})
+
+    def views(self) -> tuple[str, str]:
+        from careeros.review.shortlist import shortlist
+        item = next(i for i in shortlist(self.store, POLICY) if i["job_id"] == "gh:f:1")
+        return item["next_action"], build_report(self.store, PROFILE, POLICY)
+
+    def test_the_card_and_the_shortlist_agree_and_a_follow_up_restarts_the_count(self):
+        from careeros.review.applications import record_follow_up
+        nxt, page = self.views()   # applied 13 days ago
+        self.assertEqual(nxt, "wait for a response: a follow-up is due from 2026-11-02")
+        self.assertNotIn("no response in", page)
+        self.store.clock.advance(days=1)
+        nxt, page = self.views()
+        self.assertEqual(nxt, "follow up if you choose: no response in 14 days")
+        self.assertIn("status: applied — no response in 14 days: following up is your choice, CareerOS sends nothing (to "
+                      "record one: careeros app-status app:f --followed-up)", page)
+        self.assertNotIn("ghosted", page)   # a reminder never suggests a status
+        self.assertEqual(record_follow_up(self.store, "app:f", key="f1"), "new")
+        nxt, page = self.views()
+        self.assertEqual(nxt, "wait for a response: a follow-up is due from 2026-11-16")
+        self.assertNotIn("no response in", page)
+        self.assertIn("you followed up 2026-11-02", page)
+        self.store.clock.advance(days=14)
+        nxt, page = self.views()
+        self.assertEqual(nxt, "follow up if you choose: no response in 14 days")
+        self.assertIn("status: applied — no response in 14 days since your follow-up: following up", page)
+
+    def test_a_second_follow_up_records_and_the_latest_one_counts(self):
+        """Pre-review #11 (D111): follow-ups on one application, days apart, with keys of their own (as the command line
+        makes them): both are recorded, and the count starts from the latest in both views."""
+        from careeros.review.applications import FOLLOWED_UP, follow_ups, record_follow_up
+        self.store.clock.advance(days=1)
+        self.assertEqual(record_follow_up(self.store, "app:f", key="f1"), "new")   # 2026-11-02
+        self.store.clock.advance(days=10)
+        self.assertEqual(record_follow_up(self.store, "app:f", key="f2"), "new")   # 2026-11-12
+        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM events WHERE event_type = ? AND entity_id = 'app:f'",
+                                        (FOLLOWED_UP,))["c"], 2)
+        self.assertEqual(follow_ups(self.store)["app:f"][:10], "2026-11-12")
+        nxt, page = self.views()
+        self.assertEqual(nxt, "wait for a response: a follow-up is due from 2026-11-26")
+        self.assertIn("you followed up 2026-11-12", page)
+        self.store.clock.advance(days=13)
+        self.assertEqual(self.views()[0], "wait for a response: a follow-up is due from 2026-11-26")
+        self.store.clock.advance(days=1)
+        nxt, page = self.views()
+        self.assertEqual(nxt, "follow up if you choose: no response in 14 days")
+        self.assertIn("no response in 14 days since your follow-up", page)
+
+    def test_once_someone_answers_there_is_no_follow_up_reminder(self):
+        from careeros.review.applications import application_matrix, update_application
+        self.store.clock.advance(days=30)
+        update_application(self.store, application_matrix(), "app:f", "screening", key="s1")
+        self.store.clock.advance(days=30)
+        nxt, page = self.views()
+        self.assertEqual(nxt, "track the screening stage")
+        self.assertNotIn("no response in", page)
+
+    def test_the_card_says_when_the_posting_closed_and_the_reminder_stays(self):
+        """A closed posting leaves the shortlist (ticket 1); its application card says when it closed and keeps the
+        reminder: an employer may still answer the applications it has."""
+        add_job(self.store, "gh:f:2", current_state="closed", closed_at=ago(3))
+        self.store.writer("tracker").insert("applications", {
+            "application_id": "app:g", "workflow_id": "application:app:g", "job_id": "gh:f:2", "channel": "direct",
+            "applied_at": ago(20), "first_seen_at": ago(20), "current_state": "applied", "entered_state_at": ago(20)})
+        page = build_report(self.store, PROFILE, POLICY)
+        def card(app_id: str) -> str:
+            start = page.index(f'<div class="card" id="{app_id}">')
+            end = page.find('<div class="card"', start + 1)
+            return page[start:end if end != -1 else None]
+        self.assertIn("the posting closed 2026-10-29", card("app:g"))
+        self.assertIn("no response in 20 days", card("app:g"))
+        self.assertNotIn("the posting closed", card("app:f"))
 
 
 class ShortlistFormTests(StatusMixin, unittest.TestCase):
@@ -336,6 +423,62 @@ class ServerMixin(StatusMixin):
 
     def count(self, table: str) -> int:
         return self.store.one(f"SELECT COUNT(*) c FROM {table}")["c"]
+
+
+class ReadingPerRequestTests(ServerMixin, unittest.TestCase):
+    def test_each_request_makes_its_own_reading_of_the_private_settings(self):
+        from unittest import mock
+        import careeros.review.server as server
+        from careeros.core import private_sites
+        real, seen = server.build_report, []
+
+        def build(*args, **kwargs):
+            seen.append(private_sites._RUN.get() is not None)
+            return real(*args, **kwargs)
+
+        with mock.patch.object(server, "build_report", build):
+            self.get()
+            self.get()
+        self.assertEqual(seen, [True, True])   # an edit counts from the next request (the red team before Pass 4)
+
+    def test_a_pasted_posting_enrols_the_tracking_hosts_first(self):
+        from careeros.discovery.alerts import enrolled_hosts
+
+        from tests.test_v26_discovery import IntakeTests
+        self.assertEqual(set(enrolled_hosts(self.store)), set())
+        key = self.form(self.get(), "paste", "new")
+        self.post("paste", target="new", key=key, url="https://click.email.harborstaffing.com/job/SYNTH-PERSONAL",
+                  text=IntakeTests.PASTED, company="")
+        self.assertIn("click.email.harborstaffing.com", enrolled_hosts(self.store))   # Codex Pass 4, CR-AD-V2-02
+
+    def test_a_paste_whose_tracking_hosts_cannot_be_enrolled_saves_nothing(self):
+        """Codex Pass 5 (D153 R4): with an enrolled host missing from the settings, the paste box refused to enrol the
+        new host but saved the pasted tracking link as an ordinary job, which the index later published whole."""
+        import os
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        from careeros.core import private_sites
+        from careeros.discovery.alerts import enrolled_hosts
+
+        from tests.test_v26_discovery import IntakeTests
+        key = self.form(self.get(), "paste", "new")
+        self.post("paste", target="new", key=key, url="https://example.com/job/SYNTH-ORDINARY", text=IntakeTests.PASTED,
+                  company="")   # enrols the fixture's host
+        self.assertIn("click.email.harborstaffing.com", enrolled_hosts(self.store))
+        jobs = self.count("jobs")
+        with tempfile.TemporaryDirectory() as tmp:
+            other = Path(tmp) / "private_sites.yaml"   # another agency only: the enrolled host is missing
+            other.write_text("agency_digests:\n  - {name: Other Agency, site: otheragency, sender_domain: "
+                             "mail.other-agency.example, tracker_host: click.other-agency.example}\n", encoding="utf-8")
+            with mock.patch.dict(os.environ, {private_sites.ENV: str(other)}):
+                key = self.form(self.get(), "paste", "new")
+                reply = self.post("paste", target="new", key=key, url="https://click.other-agency.example/job/SYNTH-PERSONAL",
+                                  text=IntakeTests.PASTED + " (second)", company="")
+        self.assertEqual(reply.status_code, 400)
+        self.assertIn("Nothing was saved", reply.text)
+        self.assertEqual(self.count("jobs"), jobs)
+        self.assertNotIn("click.other-agency.example", enrolled_hosts(self.store))
 
 
 class ConfirmationTests(ServerMixin, unittest.TestCase):
@@ -681,6 +824,116 @@ class VoidApplicationTests(ServerMixin, unittest.TestCase):
         static = build_report(self.store, PROFILE, POLICY, app_matrix=application_matrix())
         self.assertIn(f'recorded by mistake? <code>careeros app-status {app_id} void --reason "..."</code>',
                       card_of(static, app_id).replace("&quot;", '"'))
+
+
+class SafeFormTests(ServerMixin, unittest.TestCase):
+    """The interface review of 2026-11-03, item 1, folded into the Python 3.14 batch (D88): one click or Enter never
+    records a status or a label by itself, a form already used answers with a page instead of a dropped connection, so
+    does an error nothing else answers, and every response carries the Content-Security-Policy as a header."""
+
+    def application(self):
+        from careeros.review.applications import application_matrix, record_application
+        job = scored(self.store, "gh:s:1", "B", title="Claims Analyst")
+        record_label(self.store, job, "apply", None, key="k1")
+        return job, record_application(self.store, application_matrix(), job, "direct", policy=POLICY, key="a1")
+
+    def test_no_status_is_preselected_and_enter_in_a_note_records_nothing(self):
+        from careeros.review.report import NO_ENTER, _night_label_form
+        job, app_id = self.application()
+        page = self.get()
+        card = card_of(page, app_id)
+        self.assertIn('<select name="state" required><option value="">choose the new status</option>', card)
+        reply = self.post("status", target=app_id, key=self.form(card, "status", app_id), state="", notes="pressed Enter")
+        self.assertEqual(reply.status_code, 400)   # a submission without a choice records nothing
+        self.assertEqual(self.store.one("SELECT current_state FROM applications")["current_state"], "applied")
+        for html in (card_of(page, job), _night_label_form(job, self.token, {})):
+            with self.subTest(form=html[:40]):
+                first = html.index("<button")
+                self.assertEqual(html[first:first + len(NO_ENTER)], NO_ENTER)   # Enter submits with the first button
+                self.assertIn('disabled hidden', NO_ENTER)
+
+    def test_a_form_already_used_answers_409_and_records_nothing_more(self):
+        job = scored(self.store, "gh:s:2", "B", title="Claims Analyst")
+        key = self.form(self.get(), "label", job)
+        self.assertEqual(self.post("label", target=job, key=key, label="skip", reason="").status_code, 303)
+        again = self.post("label", target=job, key=key, label="apply", reason="")   # a second click on another button
+        self.assertEqual(again.status_code, 409)
+        self.assertIn("already used for a different choice", again.text)
+        self.assertEqual([r["label"] for r in self.store.all("SELECT label FROM labels")], ["skip"])
+
+    def test_an_error_nothing_else_answers_gets_a_page_not_a_dropped_connection(self):
+        from unittest import mock
+
+        from careeros.review import server
+        job = scored(self.store, "gh:s:3", "B", title="Claims Analyst")
+        key = self.form(self.get(), "label", job)
+        with mock.patch.object(server, "record_label", side_effect=RuntimeError("boom")), \
+                mock.patch("sys.stderr", io.StringIO()):
+            reply = self.post("label", target=job, key=key, label="skip", reason="")
+        self.assertEqual(reply.status_code, 500)
+        self.assertIn("Not recorded: something went wrong", reply.text)
+        with mock.patch.object(server, "build_report", side_effect=RuntimeError("boom")), mock.patch("sys.stderr", io.StringIO()):
+            page = __import__("httpx").get(f"{self.base}/?t={self.token}")
+        self.assertEqual(page.status_code, 500)
+        self.assertIn("Could not build the page", page.text)
+
+    def test_an_error_after_part_of_a_form_was_saved_never_says_not_recorded(self):
+        """Codex CR-2026-11-03-PYTHON-314, F3: a pasted posting is taken in (committed), then processed; an error in the
+        processing leaves the posting saved, and the page says so and names it."""
+        from unittest import mock
+
+        from tests.test_v26_discovery import IntakeTests
+        key = self.form(self.get(), "paste", "new")
+        with mock.patch("careeros.pipeline.process", side_effect=RuntimeError("boom")), mock.patch("sys.stderr", io.StringIO()):
+            reply = self.post("paste", target="new", key=key, url="https://acme.example/jobs/77", text=IntakeTests.PASTED,
+                              company="")
+        self.assertEqual(reply.status_code, 500)
+        self.assertNotIn("Not recorded", reply.text)
+        self.assertIn("some changes may have been saved", reply.text)
+        job_id = self.store.one("SELECT job_id FROM jobs WHERE canonical_url LIKE '%acme.example/jobs/77%'")["job_id"]
+        self.assertIn(f"Check {job_id} on the review page before trying again", reply.text)
+
+    def test_a_refusal_after_part_of_a_form_was_saved_never_says_not_recorded(self):
+        """Codex's Pass 2 of CR-2026-11-03-PYTHON-314: F3 holds for the errors the page answers itself (a ValueError from
+        the processing of a pasted posting already taken in), and a refusal before any write still says "Not recorded"."""
+        from unittest import mock
+
+        from tests.test_v26_discovery import IntakeTests
+        job = scored(self.store, "gh:s:5", "B", title="Claims Analyst")
+        reply = self.post("label", target=job, key=self.form(self.get(), "label", job), label="bogus", reason="")
+        self.assertEqual(reply.status_code, 400)
+        self.assertIn("Not recorded: unknown_label", reply.text)
+        key = self.form(self.get(), "paste", "new")
+        with mock.patch("careeros.pipeline.process", side_effect=ValueError("invalid literal for int()")):
+            reply = self.post("paste", target="new", key=key, url="https://acme.example/jobs/78", text=IntakeTests.PASTED,
+                              company="")
+        self.assertEqual(reply.status_code, 400)
+        self.assertNotIn("Not recorded", reply.text)
+        job_id = self.store.one("SELECT job_id FROM jobs WHERE canonical_url LIKE '%acme.example/jobs/78%'")["job_id"]
+        self.assertIn(f"Could not finish: invalid literal for int(); some changes may have been saved. Check {job_id} on the "
+                      "review page before trying again.", reply.text)
+
+    def test_every_response_carries_the_content_security_policy_header(self):
+        import httpx
+
+        from careeros.review.report import CSP
+        job = scored(self.store, "gh:s:4", "B", title="Claims Analyst")
+        replies = {"page": httpx.get(f"{self.base}/?t={self.token}"),
+                   "forbidden": httpx.get(f"{self.base}/?t=wrong"),
+                   "out of date": self.post("label", target=job, key="stale", label="skip")}
+        for name, reply in replies.items():
+            with self.subTest(response=name, status=reply.status_code):
+                self.assertEqual(reply.headers.get("content-security-policy"), CSP)
+        import http.client   # too large: the server answers from the headers, so only they are sent
+        connection = http.client.HTTPConnection("127.0.0.1", self.server.server_address[1], timeout=10)
+        try:
+            connection.putrequest("POST", f"/label?t={self.token}")
+            connection.putheader("Content-Length", str(10_000_000))
+            connection.endheaders()
+            reply = connection.getresponse()
+            self.assertEqual((reply.status, reply.getheader("Content-Security-Policy")), (413, CSP))
+        finally:
+            connection.close()
 
 
 if __name__ == "__main__":

@@ -3067,6 +3067,58 @@
               }
             ],
             "formatString": "0.0"
+          },
+          {
+            "name": "assist_mode",
+            "dataType": "string",
+            "sourceColumn": "assist_mode",
+            "lineageTag": "1520affa-402b-5001-9221-1240a49eaa36",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "evidence",
+            "dataType": "string",
+            "sourceColumn": "evidence",
+            "lineageTag": "610c3218-9a42-5fd1-9e55-f6ac66a7c4a0",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "assist_minutes",
+            "dataType": "double",
+            "sourceColumn": "assist_minutes",
+            "lineageTag": "ff0dab26-f6ae-5d9b-82ea-7e7c14d932db",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
+          },
+          {
+            "name": "tier_at_apply",
+            "dataType": "string",
+            "sourceColumn": "tier_at_apply",
+            "lineageTag": "dbe23b90-0d7e-5a96-9b11-326f6176b35a",
+            "summarizeBy": "none",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "User"
+              }
+            ]
           }
         ],
         "partitions": [
@@ -3078,7 +3130,7 @@
               "expression": [
                 "let",
                 "    Source = LoadTable(\"fact_application\"),",
-                "    Typed = Table.TransformColumnTypes(Source, {{\"application_key\", Int64.Type}, {\"job_key\", type text}, {\"employer_key\", type text}, {\"ats_key\", type text}, {\"role_family_key\", type text}, {\"channel\", type text}, {\"applied_date_key\", Int64.Type}, {\"last_change_date_key\", Int64.Type}, {\"current_state\", type text}, {\"state_category\", type text}, {\"is_open\", Int64.Type}, {\"got_answer\", Int64.Type}, {\"reached_screening\", Int64.Type}, {\"reached_interview\", Int64.Type}, {\"reached_offer\", Int64.Type}, {\"is_hired\", Int64.Type}, {\"days_in_process\", type number}})",
+                "    Typed = Table.TransformColumnTypes(Source, {{\"application_key\", Int64.Type}, {\"job_key\", type text}, {\"employer_key\", type text}, {\"ats_key\", type text}, {\"role_family_key\", type text}, {\"channel\", type text}, {\"applied_date_key\", Int64.Type}, {\"last_change_date_key\", Int64.Type}, {\"current_state\", type text}, {\"state_category\", type text}, {\"is_open\", Int64.Type}, {\"got_answer\", Int64.Type}, {\"reached_screening\", Int64.Type}, {\"reached_interview\", Int64.Type}, {\"reached_offer\", Int64.Type}, {\"is_hired\", Int64.Type}, {\"days_in_process\", type number}, {\"assist_mode\", type text}, {\"evidence\", type text}, {\"assist_minutes\", type number}, {\"tier_at_apply\", type text}})",
                 "in",
                 "    Typed"
               ]

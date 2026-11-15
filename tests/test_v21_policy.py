@@ -87,11 +87,15 @@ class ExclusionTests(unittest.TestCase):
 
 class YearsRuleTests(unittest.TestCase):
     def test_more_than_four_years_short_on_a_required_number_rejects(self):
-        result = gate_for("Business Systems Analyst", "Requirements:\n- 10+ years of SQL experience required\n- Excel skills required\nThis role is remote.")
+        # D155 (1): only total professional years reject (a tool's far shortfall, "10+ years of SQL", is to verify)
+        result = gate_for("Business Systems Analyst", "Requirements:\n- 14+ years of professional experience required\n- Excel skills required\nThis role is remote.")
         self.assertIn("years_far_short", {f["code"] for f in result.hard_failures})
+        tool = gate_for("Business Systems Analyst", "Requirements:\n- 10+ years of SQL experience required\n- Excel skills required\nThis role is remote.")
+        self.assertNotIn("years_far_short", {f["code"] for f in tool.hard_failures})
+        self.assertIn("years_role_unconfirmed", {f["code"] for f in tool.flags})
 
     def test_two_to_four_years_short_is_a_major_penalty_not_a_rejection(self):
-        result = gate_for("Business Systems Analyst", "Requirements:\n- 7+ years of SQL experience required\n- Excel skills required\nThis role is remote.")
+        result = gate_for("Business Systems Analyst", "Requirements:\n- 11+ years of professional experience required\n- Excel skills required\nThis role is remote.")
         self.assertEqual(result.decision, "eligible")
         self.assertIn("years_gap", {f["code"] for f in result.flags})
 
@@ -112,7 +116,9 @@ class YearsRuleTests(unittest.TestCase):
                 Requirement("skill", "excel", "hard_required", "Excel skills required", 0.9, None)]
         result = evaluate(job("Business Systems Analyst", "Requirements:\n- " + line + "\nThis role is remote."), reqs, PROFILE, POLICY)
         self.assertNotIn("years_far_short", {f["code"] for f in result.hard_failures})
-        self.assertIn("years_gap", {f["code"] for f in result.flags})
+        # judged on healthcare's 5, the best record; since D151 (c) the line's "or" is a cue in the requirements, so the
+        # gap is to verify (it was years_gap)
+        self.assertIn("(you have 5)", next(f["detail"] for f in result.flags if f["code"] == "years_role_unconfirmed"))
 
     def test_country_named_in_the_title(self):
         from careeros.normalize.posting import title_country

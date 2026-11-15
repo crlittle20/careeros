@@ -58,6 +58,15 @@ def issue(number=7, body=BODY):
 
 
 class ParseTests(unittest.TestCase):
+    def test_an_agency_line_too_long_to_store_whole_is_reported_never_stored(self):
+        from careeros.discovery.github_inbox import issue_alert
+        tracker = "https://click.email.harborstaffing.com/test?token=synthetic-1"
+        for url in (tracker + "&pad=" + "x" * 4100,
+                    "https://scanner.example.net/r?pad=" + "x" * 4100 + "&u=" + tracker):   # the red team before Pass 4
+            with self.subTest(length=len(url)):
+                alert = issue_alert({"number": 1, "body": f"Claims Analyst | Synthetic Employer | Remote | {url} | source=alert"})
+                self.assertEqual([link.site for link in alert.links], ["invalid"])
+
     def test_pipe_lines_tables_and_markdown_links(self):
         rows = inbox.parse_lines(BODY + "| [Data Analyst](https://jobs.lever.co/acme/abc-1) | Acme | Remote | new |\n")
         self.assertEqual([r["title"] for r in rows], ["Pharmacy Benefits Systems Analyst", "Claims Operations Analyst",
@@ -153,6 +162,47 @@ class PullTests(unittest.TestCase):
         with self.assertRaises(inbox.InboxError) as ctx:
             _inbox_pull(self.ctx, self.client, REPO, runner=broken)
         self.assertEqual(ctx.exception.code, "gh_failed")
+
+    def test_a_change_while_the_comment_is_sent_stops_the_close_and_the_next_run_finishes_the_reply(self):
+        import os
+        import shutil
+
+        from careeros.core import private_sites
+        settings = Path(self.tmp.name) / "private_sites.yaml"
+        shutil.copy(FIXTURES / "private_sites.yaml", settings)
+
+        class ChangedOnComment(FakeGh):
+            def __call__(gh, argv, input=None, **kw):
+                result = FakeGh.__call__(gh, argv, input=input, **kw)
+                if argv[1:3] == ["issue", "comment"]:
+                    with open(settings, "a", encoding="utf-8") as file:
+                        file.write("# edited while the comment was sent\n")
+                return result
+
+        gh = ChangedOnComment([issue()])
+        with mock.patch.dict(os.environ, {private_sites.ENV: str(settings)}):
+            counts = _inbox_pull(self.ctx, self.client, REPO, runner=gh)
+            self.assertEqual([c[:2] for c in gh.calls if c[1] in ("comment", "close")], [("issue", "comment")])   # Codex Pass 4
+            self.assertEqual((counts["inbox_config_error"], self.store.one("SELECT closed FROM inbox_issues")["closed"]), (1, 0))
+            later = FakeGh(gh.issues)
+            _inbox_pull(self.ctx, self.client, REPO, runner=later)   # the next run reads the edit and finishes the reply
+        self.assertEqual([c[:2] for c in later.calls if c[1] in ("comment", "close")], [("issue", "comment"), ("issue", "close")])
+        self.assertEqual(self.store.one("SELECT closed FROM inbox_issues")["closed"], 1)
+
+    def test_the_helper_checks_before_each_of_its_two_writes(self):
+        from careeros.core import private_sites
+        for refused_at in (1, 2):
+            with self.subTest(refused_at=refused_at):
+                gh, seen = FakeGh([issue()]), []
+
+                def before_write(refused_at=refused_at, seen=seen):
+                    seen.append(1)
+                    if len(seen) == refused_at:
+                        raise private_sites.SettingsChanged("private_sites_changed: synthetic")
+
+                with self.assertRaises(private_sites.SettingsChanged):
+                    inbox.close_with_reply(REPO, 7, "reply", gh, before_write=before_write)
+                self.assertEqual([c[1] for c in gh.calls], ["comment"][:refused_at - 1])
 
 
 class GhTests(unittest.TestCase):

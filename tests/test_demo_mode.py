@@ -17,7 +17,6 @@ import io
 import logging
 import os
 import re
-import shutil
 import socket
 import subprocess
 import tempfile
@@ -35,6 +34,7 @@ import httpx
 from careeros import cli
 from careeros import paths as vault_layout
 from careeros.core.credentials import CredentialError, WindowsCredentials
+from careeros.core.scratch import remove_tree
 from careeros.demo import runner, sandbox, world
 from careeros.discovery import github_inbox, gmail, imap
 from careeros.discovery.http import PROVIDER_HOSTS, HttpClient
@@ -47,17 +47,17 @@ from careeros.ops import notify
 RECORDED = {
     "day": 4, "of_days": 4,
     "boards": {"active": 8, "historical": 1, "manual_only": 2, "rejected": 1, "review_required": 1},
-    "jobs": {"closed": 4, "duplicate": 1, "rejected": 13, "scored": 27},
-    "tiers": {"near_miss": 13, "B": 5, "archive": 9},
+    "jobs": {"closed": 4, "duplicate": 1, "rejected": 12, "scored": 28},
+    "tiers": {"near_miss": 15, "B": 5, "archive": 8},
     "remote_scopes": {"US_nationwide": 6, "US_unspecified": 34, "unknown": 1, "hybrid": 1, "onsite": 1, "US_restricted_states": 2},
     "review_cases": {"site_unreadable": 1, "board_not_found": 1, "migration_detected": 1, "identity_mismatch": 1},
-    "rejections": {"scam_signals": 1, "not_remote": 2, "title_excluded": 4, "state_not_eligible": 1, "below_pay_floor": 3,
-                   "no_target_family": 2},
+    # D151: the NY/NJ-only role is no longer rejected state_not_eligible (no state in a location field rejects)
+    "rejections": {"scam_signals": 1, "not_remote": 2, "title_excluded": 4, "below_pay_floor": 3, "no_target_family": 2},
     "board_activity": {"active": 8, "unavailable": 1, "empty": 1},
     "discovery_outcomes": {"verified": 3, "manual_only": 2, "no_qualified_roles": 1, "slug_absent": 1, "skipped_policy": 1},
     "lifecycle_events": {"board_active": 9, "board_quarantined": 3, "identity_mismatch": 1, "employer_rejected": 1,
                          "ats_migration_detected": 1, "validation_scan_passed": 3, "ats_migration_verified": 1},
-    "leads": 3, "changes": {"meaningful": 1, "cosmetic": 1}, "night_routed": 13,
+    "leads": 3, "changes": {"meaningful": 1, "cosmetic": 1}, "night_routed": 14,
 }
 SECRET = "PRIVATE-SENTINEL-4f9a2c"   # planted in the decoy private vault: must never appear in anything the demo writes; release-scan: fake
 
@@ -126,7 +126,7 @@ class DemoTourTest(unittest.TestCase):
         env = mock.patch.dict(os.environ, {"CAREEROS_VAULT": str(cls.private), sandbox.VAULT_ENV: str(cls.demo), sandbox.ENV: ""})
         env.start()
         cls.addClassCleanup(env.stop)
-        cls.addClassCleanup(shutil.rmtree, cls.tmp, True)
+        cls.addClassCleanup(remove_tree, cls.tmp)   # really removed, or an error (item 10, 2026-11-02)
         cls.addClassCleanup(close_log_files, cls.tmp)
         cls.addClassCleanup(sandbox.install, None)
         cls.before = snapshot(cls.private)
@@ -238,7 +238,7 @@ class DemoTourTest(unittest.TestCase):
                 ("Office Coordinator", "Northwind Benefits", ("rejected", "no_target_family")),         # poor fit
                 ("Healthcare Business Systems Analyst", "Bluepeak Health Plan", ("rejected", "not_remote")),  # hybrid
                 ("Reporting Analyst", "Bluepeak Health Plan", ("rejected", "not_remote")),              # onsite
-                ("Claims Operations Specialist", "Bluepeak Health Plan", ("rejected", "state_not_eligible")),  # NY/NJ only
+                ("Claims Operations Specialist", "Bluepeak Health Plan", ("scored", None)),  # NY/NJ only: D151 flags
                 ("Rebate Operations Analyst", "Meridian Rx", ("rejected", "below_pay_floor")),
                 ("Remote Claims Analyst", "Brightwater Benefits", ("rejected", "scam_signals")),
                 ("Claims Operations Specialist", "Meridian Rx", ("closed", "no_longer_listed")),
@@ -282,6 +282,19 @@ class DemoTourTest(unittest.TestCase):
             return re.sub(r"\b(rev|run|evt|exc|att|lm|ent|app):[0-9a-f]{8,32}\b", r"\1:ID", text.replace(str(vault.resolve()), "VAULT"))
         self.assertEqual(report(again), report(self.demo))
 
+    def test_a_command_stopped_for_a_settings_change_says_so_in_one_line(self):
+        """D153 R2: a command that ended because its private settings changed is reported as stopped, not a crash."""
+        def stopped(*args):
+            raise cli.CommandStopped("synthetic step stopped: private_sites_changed: the file changed during this run")
+
+        with mock.patch.dict(os.environ, {sandbox.ENV: "true"}), Jail(), redirect_stdout(io.StringIO()), \
+                mock.patch.object(cli, "cmd_explain", stopped), self.assertRaises(SystemExit) as ended, \
+                mock.patch("sys.stderr", io.StringIO()) as err:
+            cli.main(["explain", "greenhouse:meridianrx:101"])
+        self.assertEqual(ended.exception.code, 2)
+        self.assertEqual(err.getvalue(), "Stopped: synthetic step stopped: private_sites_changed: the file changed during "
+                                         "this run\n")
+
     # --- normal commands while Demo Mode is on --------------------------------------------------------------------------
     def test_commands_with_demo_mode_on_use_the_demo_vault(self):
         with mock.patch.dict(os.environ, {sandbox.ENV: "true"}), Jail() as jail, redirect_stdout(io.StringIO()) as out:
@@ -298,10 +311,31 @@ class DemoTourTest(unittest.TestCase):
         self.assertEqual(jail.attempts, [])
         self.assertEqual(snapshot(self.private), self.before)
 
+    def test_every_store_is_closed_never_left_to_the_garbage_collector(self):
+        """Python 3.13+ warns when the garbage collector closes a database connection ("unclosed database"), and the
+        warning can land in a test's captured output, as it did in the line compared above under 3.14. A command closes
+        its store when it ends, and a store that is discarded open closes its connection itself (Python 3.14 batch,
+        2026-11-03)."""
+        import gc
+        import warnings
+
+        from careeros.core.clock import Clock
+        from careeros.db.store import Store
+        with mock.patch.dict(os.environ, {sandbox.ENV: "true"}), Jail(), redirect_stdout(io.StringIO()), \
+                mock.patch.object(Store, "close", autospec=True, side_effect=Store.close) as close:
+            cli.main(["status"])
+        self.assertGreaterEqual(close.call_count, 1)
+        gc.collect()   # what earlier tests left behind is collected before the check
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            Store(":memory:", Clock())
+            gc.collect()
+        self.assertEqual([str(w.message) for w in caught if issubclass(w.category, ResourceWarning)], [])
+
     def test_the_reviewer_walkthrough_shows_what_the_commands_print(self):
         """docs/demo_walkthrough.md quotes these lines (Portfolio Prompt 12); each must be real output and in the document."""
-        quoted = {("status",): ["jobs: scored=27, rejected=13, closed=4, duplicate=1",
-                                "NIGHT profile: on; supplemental/archive=3, supplemental/near_miss=10"],
+        quoted = {("status",): ["jobs: scored=28, rejected=12, closed=4, duplicate=1",
+                                "NIGHT profile: on; supplemental/archive=3, supplemental/near_miss=11"],
                   ("sources", "list"): ["greenhouse:harborline historical Harborline Health", "greenhouse:quillon rejected Quillon Health",
                                         "ashby:pinecrest review_required Pinecrest Care Navigation"],
                   ("sources", "explain", "greenhouse:quillon"): ["status=rejected", "identity=mismatch",
@@ -311,7 +345,7 @@ class DemoTourTest(unittest.TestCase):
                                                          "Verdict: Near-miss: priority 80.7 vs 85 for Tier B (4.3 short)."],
                   ("shortlist",): ["greenhouse:meridianrx:108 | Pharmacy Claims Analyst | Meridian Rx | open | tier B ELIGIBLE"],
                   ("verify",): ['"event_chain_breaks": []'],
-                  ("export",): ["all 81 checks passed"]}
+                  ("export",): ["all 83 checks passed"]}
         flat = lambda text: " ".join(text.split())
         walkthrough = flat((vault_layout.ENGINE_ROOT / "docs" / "demo_walkthrough.md").read_text(encoding="utf-8"))
         with mock.patch.dict(os.environ, {sandbox.ENV: "true"}), Jail() as jail:
@@ -355,7 +389,7 @@ class DemoTourTest(unittest.TestCase):
 class DemoBoundaryTest(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="careeros-demo-guard-"))
-        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.addCleanup(remove_tree, self.tmp)
         self.private = self.tmp / "private-vault"
         decoy_private_vault(self.private)
         self.before = snapshot(self.private)

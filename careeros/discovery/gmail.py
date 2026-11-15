@@ -183,6 +183,7 @@ class GmailClient:
             page = data.get("nextPageToken")
             if not page:
                 break
+        self.truncated = page is not None   # more emails match than `limit`: the oldest were not listed (CR-AD-V2-10)
         return ids
 
     def raw(self, message_id: str) -> bytes:

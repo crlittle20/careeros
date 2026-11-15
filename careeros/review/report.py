@@ -17,7 +17,7 @@ from careeros.core import private_sites
 from careeros.core.clock import parse_utc
 from careeros.db.store import Store
 from careeros.qualify import certifications, experience
-from careeros.review.applications import COUNTED, OPEN_STATES, VOID, void_refusal
+from careeros.review.applications import COUNTED, OPEN_STATES, VOID, follow_up_due, follow_ups, void_refusal
 from careeros.review.dismiss import RECENT_DAYS, is_dismissed, recent
 from careeros.review.labels import label_backlog
 
@@ -25,7 +25,6 @@ TIER_TITLES = {"A": "Tier A: exceptional", "B": "Tier B: strong apply", "near_mi
 STATE_NOTE = {"CONDITIONAL": "CONDITIONAL: check the flagged unknowns before applying",
               "HOLD": "HOLD: an employer-level eligibility hold (gate.held_parents) until you decide about it"}
 STALE_DAYS = 60  # default only: the policy's discovery.max_posting_age_days decides (2026-10-12)
-NO_RESPONSE_DAYS = 14
 # Jobs that reached CareerOS only as NIGHT recommendations: their PRIMARY verdict is not a PRIMARY decision to audit.
 NIGHT_ONLY = ("(j.source = 'manual_url' AND j.job_id IN (SELECT job_id FROM leads WHERE profile = 'night') "
               "AND j.job_id NOT IN (SELECT job_id FROM leads WHERE profile = 'primary' AND job_id IS NOT NULL))")
@@ -102,12 +101,17 @@ def _origin(origin: str) -> str:
     return f'<input type="hidden" name="from" value="{esc(origin)}">'
 
 
+# The first submit button of a label form: Enter in its reason box submits with the form's first button, which would
+# record "Apply". Disabled, it makes Enter record nothing (interface review 2026-11-03, item 1; D88).
+NO_ENTER = '<button type="submit" disabled hidden aria-hidden="true" tabindex="-1"></button>'
+
+
 def _label_form(job_id: str, token: str | None, form_keys: dict, origin: str = "card") -> str:
     if not token:
         return f'<span class="meta">label: <code>careeros label {esc(job_id)} apply|stretch|skip</code></span>'
     buttons = "".join(f'<button name="label" value="{v}">{t}</button> ' for v, t in (("apply", "Apply"), ("stretch", "Stretch"), ("skip", "Skip")))
     return _form("label", job_id, token, form_keys,
-                 f'{_origin(origin)}<input type="text" name="reason" placeholder="label reason (optional)"> {buttons}')
+                 f'{_origin(origin)}{NO_ENTER}<input type="text" name="reason" placeholder="label reason (optional)"> {buttons}')
 
 
 def _apply_form(job_id: str, token: str | None, form_keys: dict, origin: str = "card") -> str:
@@ -128,9 +132,10 @@ def _status_form(app, token: str | None, form_keys: dict, app_matrix) -> str:
         return ""
     nexts = sorted(to for (frm, to) in app_matrix.edges if frm == app["current_state"] and to != VOID)   # void: its own control
     options = "".join(f'<option value="{esc(s)}">{esc(s.replace("_", " "))}</option>' for s in nexts)
+    # nothing preselected and a choice required: one click or Enter in the note records nothing (D88)
     return _form("status", app["application_id"], token, form_keys,
-                 f'<select name="state">{options}</select> <input type="text" name="notes" placeholder="note (optional)"> '
-                 f'<button>Update status</button>')
+                 f'<select name="state" required><option value="">choose the new status</option>{options}</select> '
+                 f'<input type="text" name="notes" placeholder="note (optional)"> <button>Update status</button>')
 
 
 def _void_form(store: Store, app, token: str | None, form_keys: dict, app_matrix) -> str:
@@ -244,8 +249,8 @@ def _plain_card(store: Store, job, now: str, token: str | None, form_keys: dict,
 
 
 def _applications_section(store: Store, now: str, token, form_keys, app_matrix) -> list[str]:
-    rows = store.all("""SELECT a.*, j.title, j.employer_name, j.url FROM applications a LEFT JOIN jobs j ON j.job_id = a.job_id
-                        ORDER BY a.applied_at DESC""")
+    rows = store.all("""SELECT a.*, j.title, j.employer_name, j.url, j.current_state AS job_state, j.closed_at FROM applications a
+                        LEFT JOIN jobs j ON j.job_id = a.job_id ORDER BY a.applied_at DESC""")
     if not rows:
         return []
     counted = [r for r in rows if r["current_state"] != VOID]   # a void one stays listed, and never counts (2026-11-01)
@@ -253,10 +258,15 @@ def _applications_section(store: Store, now: str, token, form_keys, app_matrix) 
     voided = len(rows) - len(counted)
     out = [f"<h2>Your applications ({len(counted)}{f'; {voided} void' if voided else ''})</h2><div class=\"meta\">" +
            " · ".join(f"{esc(k.replace('_', ' '))}: {v}" for k, v in states.most_common()) + "</div>"]
+    followed = follow_ups(store)
     for a in rows:
-        waiting = _days(a["entered_state_at"], now) or 0
-        nudge = (f" — no response in {int(waiting)} days: follow up, or mark it ghosted"
-                 if a["current_state"] in ("applied", "acknowledged") and waiting >= NO_RESPONSE_DAYS else "")
+        due = follow_up_due(a, now, followed.get(a["application_id"]))   # the one rule (QW-11, OPP-21)
+        nudge = (f" — no response in {due.days} days{' since your follow-up' if due.after_follow_up else ''}: following up "
+                 "is your choice, CareerOS sends nothing (to record one: careeros app-status "
+                 f"{a['application_id']} --followed-up)" if due and due.due else "")
+        facts = [f"you followed up {followed[a['application_id']][:10]}"] if a["application_id"] in followed else []
+        if a["job_state"] == "closed":   # the reminder stays: the employer may still answer (OPP-21)
+            facts.append(f"the posting closed {a['closed_at'][:10]}" if a["closed_at"] else "the posting closed")
         if a["current_state"] == VOID:   # why: the reason given when it was voided
             why = store.one("SELECT reason_code FROM transitions WHERE workflow_id = ? AND to_state = ? ORDER BY sequence DESC "
                             "LIMIT 1", (a["workflow_id"], VOID))
@@ -265,6 +275,7 @@ def _applications_section(store: Store, now: str, token, form_keys, app_matrix) 
                    f'{_id_code(a["application_id"])}<span>{esc(a["employer_name"])}</span><span>applied {esc(a["applied_at"][:10])} via {esc(a["channel"])}'
                    f'{" (" + esc(a["agency"]) + ")" if a["agency"] else ""}</span>'
                    f'<span class="{"flag" if nudge else "ok"}">status: {esc(a["current_state"].replace("_", " "))}{esc(nudge)}</span></div>'
+                   + (f'<div class="row meta">{esc("; ".join(facts))}</div>' if facts else "")
                    + (f'<div class="row">note: {esc(a["notes"])}</div>' if a["notes"] else "")
                    + _status_form(a, token, form_keys, app_matrix) + _void_form(store, a, token, form_keys, app_matrix) + "</div>")
     return out
@@ -283,20 +294,70 @@ def _funnel_section(store: Store) -> list[str]:
             f'<table class="meta">{head}{body}</table>']
 
 
-def _leads_section(store: Store, token, form_keys) -> list[str]:
-    leads = store.all("SELECT * FROM leads WHERE status = 'new' AND family IS NOT NULL ORDER BY first_seen_at DESC")
-    if not leads:
+def _likely_section(store: Store, token, form_keys, policy) -> list[str]:
+    """Likely matches waiting for you (2026-11-02; ADR 0003, amendment of that date): a lead and the one posting at its
+    employer with a near-identical title. Never linked until you confirm; "Not this one" keeps the lead open and that job
+    is never proposed for it again. A form names the lead and the job it shows, so a stale page records nothing."""
+    from .leads import pending_all
+    items = pending_all(store, policy)   # only proposals that still qualify (Codex F6)
+    if not items:
         return []
-    out = [f"<h2 id=\"leads\">Leads from alerts and recommendations ({len(leads)})</h2><div class=\"meta\">CareerOS cannot open these sites for you. "
-           "Open the ones worth a look, save the posting page (Ctrl+S, 'Webpage, HTML only') into vault\\inbox, then run "
-           "<code>careeros import</code> to grade it.</div>"]
-    for lead in leads[:60]:
-        dismiss = _form("lead", lead["lead_id"], token, form_keys, '<button name="action" value="dismiss">Dismiss</button>') if token else ""
-        out.append(f'<div class="card"><h3>{safe_link(lead["url"], lead["title"])}</h3><div class="row">'
-                   + ('<span class="flag">NIGHT</span>' if lead["profile"] == "night" else '')
-                   + f'<span>{esc(lead["site"])}</span><span>family: {esc(lead["family"])}</span>'
-                   f'<span>from: {esc(lead["sender"])}</span><span>{esc((lead["received_at"] or lead["first_seen_at"])[:10])}</span></div>'
-                   + (f'<div class="row">{esc(lead["context"])}</div>' if lead["context"] else "") + dismiss + "</div>")
+    out = [f'<h2 id="likely">Likely matches for your leads ({len(items)})</h2><div class="meta">A lead from an alert or a '
+           "recommendation and the one posting at its employer whose title is nearly the same (filler such as remote or I/II "
+           "aside), at the same seniority and a compatible location. CareerOS links it only when you confirm. Or: "
+           "<code>careeros leads confirm LEAD_ID --job JOB_ID</code>.</div>"]
+    for item in items[:40]:
+        lead, job, match = item["lead"], item["job"], item["match"]
+        target = f"{lead['lead_id']}|{job['job_id']}"
+        buttons = (_form("lead_confirm", target, token, form_keys, "<button>Confirm: this is the lead's posting</button>") + " "
+                   + _form("lead_reject", target, token, form_keys, "<button>Not this one</button>")) if token else (
+            f'<span class="meta"><code>careeros leads confirm {esc(lead["lead_id"])} --job {esc(job["job_id"])}</code> or '
+            f'<code>careeros leads reject {esc(lead["lead_id"])} --job {esc(job["job_id"])}</code></span>')
+        out.append(f'<div class="card" id="likely-{esc(lead["lead_id"])}"><h3>Lead: {safe_link(lead["url"], lead["title"])}</h3>'
+                   f'<div class="row"><span>{esc(lead["site"])}</span><span>{esc(lead["context"] or "")}</span>'
+                   f'<span>lead id <code>{esc(lead["lead_id"])}</code></span></div>'
+                   f'<div class="row"><span>Likely posting: {safe_link(job["url"], job["title"])}</span><span>{esc(job["employer_name"])}</span>'
+                   f'<span>{esc(job["location_raw"] or "location unknown")}</span><span>job id <code>{esc(job["job_id"])}</code></span></div>'
+                   f'<div class="meta">{esc(match["reason"] or "")}</div>{buttons}</div>')
+    return out
+
+
+def _lead_card(lead, token, form_keys) -> str:
+    ungraded = lead["family"] is None
+    dismiss = _form("lead", lead["lead_id"], token, form_keys, '<button name="action" value="dismiss">Dismiss</button>') if token else ""
+    state = (f'<div class="row"><span class="flag">no match yet</span><span>{esc(lead["status_reason"])}</span></div>'
+             if lead["status"] == "no_match" else
+             f'<div class="row"><span>{esc(lead["status_reason"])}</span></div>' if lead["status_reason"] else "")
+    failed = (f'<div class="row"><span class="flag">could not be read: {esc(lead["fetch_failure"])}</span></div>'
+              if lead["fetch_failure"] else "")
+    family = ('<span>family: not matched</span><span class="flag">Not graded</span>' if ungraded else
+              f'<span>family: {esc(lead["family"])}</span>')
+    return (f'<div class="card"><h3>{safe_link(lead["url"], lead["title"])}</h3><div class="row">'
+            + ('<span class="flag">NIGHT</span>' if lead["profile"] == "night" else '<span>PRIMARY</span>' if ungraded else '')
+            + f'<span>{esc(lead["site"])}</span>{family}'
+            f'<span>from: {esc(lead["sender"])}</span><span>{esc((lead["received_at"] or lead["first_seen_at"])[:10])}</span></div>'
+            + (f'<div class="row">{esc(lead["context"])}</div>' if lead["context"] else "") + state + failed + dismiss + "</div>")
+
+
+def _leads_section(store: Store, token, form_keys) -> list[str]:
+    leads = store.all("SELECT * FROM leads WHERE status IN ('new','no_match') AND family IS NOT NULL ORDER BY first_seen_at DESC")
+    ungraded = store.all("SELECT * FROM leads WHERE status IN ('new','no_match') AND family IS NULL ORDER BY first_seen_at DESC, lead_id")
+    out = []
+    if leads:
+        out.append(f"<h2 id=\"leads\">Leads from alerts and recommendations ({len(leads)})</h2><div class=\"meta\">CareerOS cannot open these sites for you. "
+                   "Open the ones worth a look, save the posting page (Ctrl+S, 'Webpage, HTML only') into vault\\inbox, then run "
+                   "<code>careeros import</code> to grade it. A lead whose employer's board CareerOS scans is matched again after "
+                   "every scan of that board.</div>")
+        out.extend(_lead_card(lead, token, form_keys) for lead in leads[:60])
+    if ungraded:
+        if not leads:
+            out.append('<div id="leads"></div>')   # the existing dismiss route returns to this anchor
+        out.append(f'<h2 id="leads-role-review">Needs role review / Not graded ({len(ungraded)})</h2>'
+                   '<div class="meta">These retained links did not match a configured role family. Review the posting yourself; '
+                   'eligibility and qualification have not been assessed. '
+                   f'Showing {min(60, len(ungraded))} of {len(ungraded)} open leads needing role review. '
+                   'Use <code>careeros leads list</code> to list every open lead.</div>')
+        out.extend(_lead_card(lead, token, form_keys) for lead in ungraded[:60])
     return out
 
 
@@ -305,7 +366,8 @@ def _night_label_form(job_id: str, token: str | None, form_keys: dict) -> str:
         return f'<span class="meta">label: <code>careeros label {esc(job_id)} apply|stretch|skip --night</code></span>'
     buttons = "".join(f'<button name="label" value="{v}">{t}</button> ' for v, t in
                       (("apply", "Apply"), ("stretch", "Stretch"), ("skip", "Skip"), ("skip_schedule", "Skip: schedule doesn't fit")))
-    return _form("label_night", job_id, token, form_keys, f'<input type="text" name="reason" placeholder="label reason (optional)"> {buttons}')
+    return _form("label_night", job_id, token, form_keys,
+                 f'{NO_ENTER}<input type="text" name="reason" placeholder="label reason (optional)"> {buttons}')
 
 
 def _night_card(store: Store, r, now: str, token, form_keys, stale_days: int = STALE_DAYS) -> str:
@@ -351,13 +413,34 @@ def _night_section(store: Store, now: str, token, form_keys, policy) -> list[str
            'Labels here measure NIGHT only.</div>']
     for mode, title in (("supplemental", "NIGHT · Supplemental"), ("replacement", "NIGHT · Replacement")):
         mine = [r for r in rows if r["n_mode"] == mode]
+        unconfirmed = [
+            r for r in mine
+            if r["n_state"] == "CONDITIONAL"
+            and r["n_schedule"] in ("unknown", "daytime_likely")
+            and r["n_priority"] >= near_min
+        ]
+        unconfirmed_ids = {r["job_id"] for r in unconfirmed}
         groups = [
             ("Tier A", [r for r in mine if r["n_tier"] == "A"]),
             ("Tier B", [r for r in mine if r["n_tier"] == "B"]),
-            ("Conditional priority", [r for r in mine if r["n_state"] == "CONDITIONAL" and r["n_priority"] >= conditional_min]),
+            ("Conditional priority", [
+                r for r in mine
+                if r["n_state"] == "CONDITIONAL"
+                and r["n_priority"] >= conditional_min
+                and r["job_id"] not in unconfirmed_ids
+            ]),
             ("On hold", [r for r in mine if r["n_state"] == "HOLD" and r["n_priority"] >= near_min]),
-            ("Near-miss", [r for r in mine if r["n_tier"] == "near_miss" and r["n_state"] != "HOLD"
-                           and not (r["n_state"] == "CONDITIONAL" and r["n_priority"] >= conditional_min)]),
+            ("Near-miss", [
+                r for r in mine
+                if r["n_tier"] == "near_miss"
+                and r["n_state"] != "HOLD"
+                and r["job_id"] not in unconfirmed_ids
+                and not (
+                    r["n_state"] == "CONDITIONAL"
+                    and r["n_priority"] >= conditional_min
+                )
+            ]),
+            ("Unconfirmed hours — check before considering", unconfirmed),
         ]
         shown = sum(len(items) for _, items in groups)
         out.append(f'<h2 id="night-{mode}">{title} ({shown})</h2><div class="meta">'
@@ -409,6 +492,22 @@ def run_health(store: Store, completing: tuple[str, str] | None = None) -> tuple
     return line, warning
 
 
+HELD_DIGEST_DAYS = 14
+
+
+def held_digests(store: Store) -> str | None:
+    """A warning while an agency job-alert digest held back in the last HELD_DIGEST_DAYS days is still open
+    (2026-11-09): its jobs may be missing, so the email itself must be opened. It names no agency. A digest read in
+    full later closes its problem; an older one stops showing, but each new failure shows again."""
+    now = store.clock.now()
+    rows = store.all("SELECT occurred_at FROM exceptions WHERE error_code = 'agency_digest_held' AND status != 'resolved'")
+    recent = sum(1 for r in rows if (_days(r["occurred_at"], now) or 0) <= HELD_DIGEST_DAYS)
+    if not recent:
+        return None
+    return (f"{recent} agency job-alert digest(s) from the last {HELD_DIGEST_DAYS} days could not be read in full, so some "
+            "of their jobs may be missing here. Open those emails themselves; careeros status lists the problems.")
+
+
 def build_report(store: Store, profile, policy, *, token: str | None = None, form_keys: dict | None = None,
                  seed: int | None = None, since: str | None = None, app_matrix=None,
                  completing: tuple[str, str] | None = None) -> str:
@@ -431,6 +530,14 @@ def build_report(store: Store, profile, policy, *, token: str | None = None, for
     out.append(f'<div class="meta">{esc(last_run)}</div>')
     if run_warning:
         out.append(f'<div class="banner"><b>{esc(run_warning)}</b></div>')
+    held = held_digests(store)
+    if held:
+        out.append(f'<div class="banner"><b>{esc(held)}</b></div>')
+    from careeros.discovery.alerts import agency_setting_problem
+    if agency_setting_problem(store):   # names no agency or host here; careeros status has the detail (L3-02)
+        out.append('<div class="banner"><b>Alert intake is stopped: a job-alert setting is missing or changed, so no alert '
+                   'email, saved email or inbox issue is read and the seen-jobs index is not published. Run careeros status '
+                   'for what to restore.</b></div>')
     if not profile.approved:
         out.append('<div class="banner"><b>Profile not approved.</b> Scores are provisional until you fill in and approve '
                    '<code>vault/profile/candidate_profile_v0.yaml</code>. Unknown facts are scored as neutral, never as matches.</div>')
@@ -449,7 +556,7 @@ def build_report(store: Store, profile, policy, *, token: str | None = None, for
     if since:
         fresh = [r for r in scored if r["first_seen_at"] > since]
         out.append(f"<h2>New since your last review ({len(_grouped(fresh))})</h2>"
-                   f'<div class="meta">Found after {esc(since[:16].replace("T", " "))} UTC, best first.</div>')
+                   f'<div class="meta">Graded postings first seen after {esc(since[:16].replace("T", " "))} UTC. Unverified Gmail and GitHub alert leads are counted separately below, not in this total.</div>')
         out.extend(_card(store, r, now, token, form_keys, n, new=True) for r, n in _grouped(fresh)[:30])
         if not fresh:
             out.append('<div class="meta">none</div>')
@@ -476,6 +583,7 @@ def build_report(store: Store, profile, policy, *, token: str | None = None, for
 
     from .shortlist import shortlisted_job_ids
     out.extend(_check_section(store, scored, set(shortlisted_job_ids(store)), near_min))
+    out.extend(_likely_section(store, token, form_keys, policy))
     out.extend(_leads_section(store, token, form_keys))
     out.extend(_paste_form(token, form_keys))
     if (policy.get("night", default={}) or {}).get("enabled"):

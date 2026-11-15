@@ -72,23 +72,26 @@ and `responsibility`. The posting's own words are kept as the record's `wording`
 | Requirement | Result | Effect |
 |---|---|---|
 | Hard required, named credential | held (exact or equivalent) | requirement met |
-| Hard required, named credential | not held, planned, in progress or only related | rejected (`certification_required`), as CareerOS already did |
+| Hard required, named credential | not held, planned, in progress or only related | verify the certification (`certification_check`, CONDITIONAL); never a rejection since 2026-11-11 (D140) |
 | Hard required, a family or issuer | a held member | requirement met |
 | Hard required, a family, issuer or unnamed certification | none held | flag to check (`certification_check`), as before |
-| Required with an equivalent, or ambiguous | not held | flag to check (`certification_gap` or `certification_check`) |
+| Required with an equivalent, named credential | not held | a note (`certification_gap`, not material: ELIGIBLE), as before D140 |
+| Ambiguous, or required with an equivalent but not a named credential | not held | verify the certification (`certification_check`, CONDITIONAL; D140) |
 | Preferred | held | a plus, in the explanation only |
 | Preferred | not held | no effect |
 
-Certifications add no points to any score: they appear in no part of Candidate Fit, Career Value or skill coverage.
-They affect a decision only through the gate's rejection and flags above.
+Certifications add no points to Candidate Fit, Career Value or skill coverage. They can lower one score: the
+eligibility score's education and certification part (10% of it) drops when a certification is to verify
+(`certification_check`, which also makes the job CONDITIONAL) or noted as a gap (`certification_gap`). Since
+2026-11-11 (D140) a certification never rejects a job on its own.
 
 ## Where to see it
 
 - `careeros explain JOB`: a Certifications list, one line per certification, built only from stored fields.
 - The review page: one certifications row on each scored card.
 - `careeros certifications`: demand across your target jobs. For each certification: how many jobs ask for it, how
-  (hard required, with an equivalent, ambiguous, preferred), by month, your status, and how many jobs reject you for
-  lacking it; also families, and the credentials you do not hold ordered by demand. It reports observed postings
+  (hard required, with an equivalent, ambiguous, preferred), by month, your status, and how many jobs require it while
+  you lack it (to verify, never a rejection since D140); also families, and the credentials you do not hold ordered by demand. It reports observed postings
   only, and it changes nothing about your plans.
 
 The analytics export is unchanged; a certification table in the export and the Power BI report is a possible later

@@ -6,6 +6,7 @@ precision or false-reject rate, and vice versa.
 from __future__ import annotations
 
 import uuid
+from collections import Counter
 from datetime import timedelta
 
 from careeros.core.clock import parse_utc
@@ -249,3 +250,84 @@ def three_way(store: Store, policy, profile=None) -> dict:
                         "enforced": bool(experience.settings(policy)["enforce"]),
                         "note": "ready only means enough labels to review the thresholds; enforcement stays the owner's decision"},
     }
+
+
+# --- where your labels and the system disagree (OPP-20, 2026-11-03, D90) ------------------------------------------------
+CLASS_WORDS = {"apply": "Tier A/B", "stretch": "near-miss, flagged stretch", "near_miss_unflagged": "near-miss, no stretch flag",
+               "skip": "rejected or archive", "not_judged": "not judged"}
+# The disagreements that matter most come first: a wanted posting the system turns away, then a skipped one it picks.
+_ORDER = {("apply", "skip"): 0, ("stretch", "skip"): 0, ("skip", "apply"): 1, ("skip", "stretch"): 1, ("dismissed", "apply"): 2,
+          ("dismissed", "stretch"): 2, ("stretch", "apply"): 3, ("apply", "stretch"): 3, ("dismissed", "near_miss_unflagged"): 4}
+
+
+def class_now(store: Store, job) -> str:
+    """The system's class for a job now (`system_class`). A closed posting is judged by its last decision before it
+    closed: rejected when its latest gate result rejected it, else its latest score."""
+    import json
+    score = store.one("SELECT tier, components_json FROM scores WHERE job_id = ? ORDER BY at DESC, rowid DESC LIMIT 1", (job["job_id"],))
+    gate = store.one("SELECT decision FROM gate_results WHERE job_id = ? ORDER BY at DESC, rowid DESC LIMIT 1", (job["job_id"],))
+    state = job["current_state"]
+    if state == "closed":
+        state = "rejected" if gate is not None and gate["decision"] == "rejected" else "scored"
+    stretch = bool(json.loads(score["components_json"]).get("stretch")) if score else False
+    return system_class(state, score["tier"] if score and state == "scored" else None, stretch)
+
+
+def disagreements(store: Store, policy) -> dict:
+    """Each posting whose latest PRIMARY label, or whose dismissal in force, disagrees with the system's class now, with
+    the rule that fired (the verdict line, OPP-03), the class when you labelled it, and the date. A near-miss without a
+    stretch flag never counts as agreement (as in `three_way`); a dismissed posting disagrees while the system still
+    ranks it (Tier A/B or near-miss). Read only: nothing is recomputed or written."""
+    from careeros.review.dismiss import current
+    from careeros.review.explain import _verdict
+    rows = store.all(f"""SELECT j.*, l.label, l.at AS labelled_at, l.system_tier, l.system_decision
+                         FROM jobs j LEFT JOIN labels l ON l.label_id = (SELECT label_id FROM labels WHERE job_id = j.job_id
+                                                                        AND profile = 'primary' ORDER BY at DESC, rowid DESC LIMIT 1)
+                         WHERE j.exclude_from_kpi = 0 AND (l.label_id IS NOT NULL OR {dismissed_sql('j.job_id')})
+                         ORDER BY j.job_id""")
+    found, judged, not_judged, dismissed = [], 0, [], 0
+    for row in rows:
+        in_force = current(store, row["job_id"])   # the latest dismissal event, unless it was a reinstatement
+        dismissed += in_force is not None
+        now = class_now(store, row)
+        if now == "not_judged":
+            not_judged.append(row["job_id"])
+            continue
+        judged += 1
+        label_disagrees = row["label"] is not None and now != row["label"]
+        dismissal_disagrees = in_force is not None and now in ("apply", "stretch", "near_miss_unflagged")
+        if not (label_disagrees or dismissal_disagrees):
+            continue
+        kind = row["label"] if label_disagrees else "dismissed"
+        found.append({"job_id": row["job_id"], "title": row["title"], "employer": row["employer_name"], "label": row["label"],
+                      "labelled_at": (row["labelled_at"] or "")[:10] or None,
+                      "class_then": system_class(row["system_decision"], row["system_tier"], False) if row["label"] else None,
+                      "class_now": now, "dismissed": in_force["reason_code"] if in_force is not None else None,
+                      "verdict": _verdict(store, policy, row["job_id"]),
+                      "rank": _ORDER.get((kind, now), 5 if now == "near_miss_unflagged" else 3)})
+    found.sort(key=lambda r: (r["rank"], r["labelled_at"] or "", r["job_id"]))
+    labelled = sum(1 for r in rows if r["label"] is not None)
+    return {"labelled": labelled, "dismissed": dismissed, "judged": judged,
+            "not_judged": not_judged, "disagreements": found,
+            "by_class": dict(sorted(Counter(f"{r['label'] or 'dismissed'} -> {r['class_now']}" for r in found).items()))}
+
+
+def render_disagreements(result: dict) -> list[str]:
+    """`careeros labels disagreements`: one block per posting, the ones that matter most first."""
+    out = [f"Where your labels and dismissals disagree with CareerOS now: {len(result['disagreements'])} of {result['judged']} "
+           f"judged postings ({result['labelled']} labelled, {result['dismissed']} dismissed). Read only."]
+    if result["not_judged"]:
+        out.append(f"Not judged (no decision to compare): {len(result['not_judged'])}.")
+    for item in result["disagreements"]:
+        yours = f"you: {item['label']}" if item["label"] else "you: dismissed"
+        if item["label"] and item["dismissed"]:
+            yours += f", then dismissed ({item['dismissed']})"
+        elif item["dismissed"]:
+            yours += f" ({item['dismissed']})"
+        out.append(f"- {item['job_id']}  {item['title'][:60]} | {item['employer'][:40]}")
+        then = f"; when you labelled it ({item['labelled_at']}): {CLASS_WORDS[item['class_then']]}" if item["label"] else ""
+        out.append(f"    {yours}; CareerOS now: {CLASS_WORDS[item['class_now']]}{then}")
+        out.append(f"    {item['verdict']}")
+    if result["by_class"]:
+        out.append("By class: " + "; ".join(f"{k}: {v}" for k, v in result["by_class"].items()))
+    return out

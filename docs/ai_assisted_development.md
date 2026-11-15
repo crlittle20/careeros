@@ -142,15 +142,14 @@ review by a person or a tool outside this chain is still recommended.
 ## 4. How tests validated behavior
 
 - **Tests come with the change.** Each milestone that changed system behaviour or documentation added or updated tests
-  for the change. The suite has 925 tests on synthetic fixtures, fake transports and fixed clocks, and
+  for the change. The suite has 1627 tests on synthetic fixtures, fake transports and fixed clocks, and
   `tools/validate.py` runs it with outbound network refused.
 - **Planted defects check the tests themselves.** `tools/mutate.py` deliberately breaks each safety rule, one at a
-  time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 749
-  such defects. The latest full run (2026-11-02) caught all 749, each by a real failing test with the whole suite
-  loaded (`evidence/mutation-receipt.json`); every full run since the first, with what each survivor exposed, is in
-  [testing.md](testing.md). Spot checks made between 2026-10-13 and the first full run (2026-10-14) proved nothing:
-  the tool's scratch copies lacked files some tests need, so every defect looked caught. The tool now refuses to run
-  unless an unmutated copy passes.
+  time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 1826
+  such defects. The latest full run (2026-11-05) caught all 1066 defined at the time, each by a real failing test with the whole suite
+  loaded (`evidence/mutation-receipt.json`). Every full run since the first, with what each survivor exposed, is in [testing.md](testing.md). Spot checks made
+  between 2026-10-13 and the first full run (2026-10-14) proved nothing: the tool's scratch copies lacked files some
+  tests need, so every defect looked caught. The tool now refuses to run unless an unmutated copy passes.
 - **Expectations do not come from the system.** The Functional MVP gate derives its 92 checks from the postings and the
   policy. For example, it recomputes tiers from the thresholds rather than reading the stored tier.
 - **Proof that a gate can fail.** Both fixes prompted by the Functional MVP gate were proven by running the gate against
@@ -253,7 +252,7 @@ the documents true to the code.
 - **Privacy slipped early.** During fast early iteration, personal settings entered code comments, defaults and test
   fixtures. The repository test of that time checked only email addresses and API keys. A release scan with a private
   denylist found them, and on 2026-10-14 they were moved into the vault; the tests now use fictional values.
-- **Known gaps:** a type-check baseline of 164 older errors; three PARTIAL items in the Functional MVP gate; Linux is
+- **Known gaps:** a type-check baseline of 158 older errors; three PARTIAL items in the Functional MVP gate; Linux is
   checked only by the informational CI job.
 - **Human inspection was targeted, not line by line.** See section 3.
 - **Provenance.** Git history names Claude as co-author on every commit, but it does not record who originated each

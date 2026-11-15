@@ -137,6 +137,55 @@ def ensure_entity(store, name: str, *, domain: str | None = None, origin: str | 
     return entity_id
 
 
+# Where a lead's facts come from (discovery's candidate origins): an alert, a recommendation, or a backfill of them.
+LEAD_ORIGINS = ("recommendation", "alert", "backfill", "lead")
+# Candidate origins whose official domain is only a hint (ADR 0001, amendments of 2026-11-02): a lead's, and since the
+# owner's answer of 2026-11-02 (item 11) the curated employer list's and `careeros sources suggest --domain`'s ("curated").
+HINT_ORIGINS = (*LEAD_ORIGINS, "curated")
+# employer_entities.domain_origin values that board_verifier checks strictly; `owner` (careeros sources domain) is not one
+HINTED_DOMAINS = ("lead", "curated")
+
+
+def apply_domain_hint(store, name: str, domain: str | None, *, origin: str | None = "lead") -> tuple[str, str]:
+    """A hinted domain for the employer named `name` (ADR 0001, amendments of 2026-11-02): a lead's `domain=`, or the
+    curated list's or `careeros sources suggest`'s domain (origin `curated`). The employer record is found or made by its
+    NAME alone, so a domain never merges two records or creates an alias. The hint becomes the record's official-domain
+    candidate (domain_origin `lead` or `curated`, checked more strictly by board_verifier) only when the record has none
+    and no other record uses it. Returns (entity_id, outcome): set | same | kept (the record already has another domain) |
+    conflict (another employer record uses it) | invalid."""
+    entity_id = ensure_entity(store, name, origin=origin)
+    clean = clean_domain(domain)
+    if not clean:
+        return entity_id, "invalid"
+    row = entity(store, entity_id)
+    if row["official_domain"] == clean:
+        return entity_id, "same"
+    if row["official_domain"]:
+        return entity_id, "kept"
+    if store.one("SELECT 1 FROM employer_entities WHERE official_domain = ? AND entity_id != ?", (clean, entity_id)):
+        return entity_id, "conflict"
+    now, marker = store.clock.now(), "curated" if origin == "curated" else "lead"
+    store.writer("discovery").update("employer_entities", {"official_domain": clean, "domain_status": "unverified",
+                                                           "domain_origin": marker, "domain_set_at": now, "updated_at": now},
+                                     "entity_id = ?", (entity_id,))
+    _event(store, "discovery", "official_domain_hint", "informational", entity_id, domain=clean, origin=marker)
+    return entity_id, "set"
+
+
+def ensure_entity_for(store, name: str, *, domain: str | None = None, origin: str | None = None) -> str:
+    """ensure_entity, except that a domain from a lead or the curated list (`origin` in HINT_ORIGINS) is only a hint
+    (apply_domain_hint). A curated domain that is already another employer's website is left out and raised as a review
+    case, so the list's author sees it (a lead's is only counted)."""
+    if domain and origin in HINT_ORIGINS:
+        entity_id, outcome = apply_domain_hint(store, name, domain, origin=origin)
+        if outcome == "conflict" and origin == "curated":
+            open_case(store, entity_id=entity_id, reason_code="domain_conflict",
+                      detail=f"the curated website {clean_domain(domain)} for {name!r} is already another employer's; it was not "
+                             f"used (correct the curated list, or set the website with careeros sources domain)")
+        return entity_id
+    return ensure_entity(store, name, domain=domain, origin=origin)
+
+
 # --- boards ----------------------------------------------------------------------------------------------------------
 def mapping(store, mapping_id: str | None):
     return store.one("SELECT * FROM board_mappings WHERE mapping_id = ?", (mapping_id,)) if mapping_id else None
@@ -183,7 +232,8 @@ def sync_legacy(store) -> int:
         existing = mapping_for_employer(store, row)
         if not entity_id:
             entity_id = (existing["entity_id"] if existing and existing["entity_id"] else
-                         ensure_entity(store, row["name"], domain=existing["official_domain"] if existing else None, origin="legacy"))
+                         ensure_entity_for(store, row["name"], domain=existing["official_domain"] if existing else None,
+                                           origin=existing["origin"] if existing and existing["origin"] in HINT_ORIGINS else "legacy"))
         if existing is None:
             legacy = row["admitted_via"] == "legacy"
             mapping_id = ensure_mapping(store, entity_id, row["ats"], row["board_token"], name=row["name"],

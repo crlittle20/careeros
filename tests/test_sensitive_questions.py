@@ -586,6 +586,24 @@ class KindShapeTests(unittest.TestCase):
         self.assertEqual(answers.find_field("first_name", library, "2026-10-21", "First Name")["status"], "matched")
         self.assertEqual(answers.find_field("first_name", library, "2026-10-21", "")["status"], "matched")
 
+    def test_a_full_name_fills_only_a_box_labelled_as_your_whole_name(self):
+        """The Tremendous form (Ashby, 2026-11-04) asked for the whole name in one box."""
+        entry = {"id": "full", "kind": "contact", "question": "Full Name", "phrasings": [], "answer": "Avery Synth",
+                 "field": "full_name", "facts": [], "approved": "2026-10-01", "expires": ""}
+        library = {"documents": {}, "answers": [entry]}
+        for label in ("", "Name", "Full Name", "Legal Name", "Your name", "Your full name", "NAME *"):
+            self.assertEqual(answers.find_field("full_name", library, "2026-10-21", label)["status"], "matched", label)
+        for label in ("First Name", "Last Name", "Preferred Name", "Printed name", "Company name", "Reference name",
+                      "Emergency contact name", "Name of your current employer", "Username", "Nickname"):
+            self.assertEqual(answers.find_field("full_name", library, "2026-10-21", label)["status"], "kind_mismatch",
+                             label)
+        for label in ("Signature", "Full legal name", "Full name (signature)", "Maiden name"):   # an attestation
+            self.assertEqual(answers.find_field("full_name", library, "2026-10-21", label)["status"], "sensitive", label)
+        self.assertEqual(answers.find("Full Name", library, "2026-10-21")["status"], "missing")   # never a custom question
+        self.assertIsNone(answers.blocked(entry))
+        for question in ("Printed name", "Company name"):
+            self.assertIn("doesn't read as the full_name field", answers.blocked(dict(entry, question=question)), question)
+
 
 class AnswerTextTests(unittest.TestCase):
     """Independent Codex review, Pass 2 of 4787e2a (2026-10-22): an answer's own text is read whatever its length."""

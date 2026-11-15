@@ -37,6 +37,18 @@ def posting(required_years: int) -> str:
     return postings.GOOD_FIT.replace(BSA_LINE, BSA_LINE.replace("5+", f"{required_years}+"))
 
 
+# D151 (under D149): a role's years gap beyond the minor gap is CONDITIONAL, never a years_gap, so the Experience Match
+# tests that need the gate ELIGIBLE with the BSA line 3-4 years short widen the gate's minor gap (a slightly-short flag)
+WIDE = policy_with(gate__years_minor_gap=4)
+WIDE_ENFORCED = policy_with(experience__enforce=True, gate__years_minor_gap=4)
+
+
+def plain(text: str) -> str:
+    """GOOD_FIT's two "or" lines stated plainly: no cue of an alternative anywhere in the requirements (D151 (c))."""
+    return (text.replace("- Bachelor's degree or equivalent work experience", "- Bachelor's degree")
+            .replace("RxClaim or another PBM adjudication platform", "RxClaim"))
+
+
 def card(text, policy=POLICY, title=TITLE):
     j = job(title, text)
     reqs = extract(j["description_text"], policy).requirements
@@ -245,24 +257,31 @@ class ShadowModeTests(unittest.TestCase):
                          ("B", "small_gap", "none"))
 
     def test_tier_b_with_a_large_gap_is_only_shown_as_a_future_stretch(self):
-        _gate, shadow = card(posting(9))
-        _gate, enforced = card(posting(9), ENFORCED)
+        _gate, shadow = card(posting(9), WIDE)
+        _gate, enforced = card(posting(9), WIDE_ENFORCED)
         self.assertEqual((shadow.tier, shadow.components["stretch"], shadow.components["experience"]["hypothetical_tier"]),
                          ("B", False, "near_miss"))
         self.assertEqual((enforced.tier, enforced.components["stretch"], enforced.components["stretch_reason"]),
                          ("near_miss", True, "experience"))
 
     def test_a_severe_gap_under_four_years_short_is_a_stretch_never_a_rejection(self):
-        gate, result = card(posting(10))   # 4 years short on the best item: the gate's rule does not reject
+        gate, result = card(posting(10), WIDE)   # 4 years short on the best item: the gate's rule does not reject
         self.assertEqual(gate.decision, "eligible")
         self.assertEqual((result.tier, result.components["experience"]["effect"]), ("B", "stretch"))
 
     def test_more_than_four_years_short_is_still_rejected_and_explained(self):
+        # D149 R-Y0: years in a role never reject on their own (the BSA line 11+ is CONDITIONAL), so the rejection is shown
+        # on a total-years demand with no role named: 13+ years of professional experience against your 8
+        self.assertNotIn("years_far_short", {f["code"] for f in card(posting(11))[0].hard_failures})
+        # ... and, since D151 (c), with no cue of an alternative anywhere in the requirements
+        total = plain(postings.GOOD_FIT.replace(BSA_LINE, "13+ years of professional experience"))
+        self.assertNotIn("years_far_short", {f["code"] for f in card(postings.GOOD_FIT.replace(
+            BSA_LINE, "13+ years of professional experience"))[0].hard_failures})   # GOOD_FIT's own "or" lines
         for policy in (POLICY, ENFORCED):
-            gate, _ = card(posting(11), policy)
+            gate, _ = card(total, policy)
             failure = next(f for f in gate.hard_failures if f["code"] == "years_far_short")
-            self.assertEqual((gate.decision, failure["required_years"]), ("rejected", 11.0))
-            self.assertEqual(failure["experience"]["counted_years"], 6.0)
+            self.assertEqual((gate.decision, failure["required_years"]), ("rejected", 13.0))
+            self.assertEqual(failure["experience"]["counted_years"], 8.0)
         text = " ".join(exp.explain(exp.rejection_block(failure)))
         self.assertIn("rejected by the existing years rule", text)
 
@@ -322,7 +341,7 @@ class ShadowModeTests(unittest.TestCase):
 
 class ExplanationTests(unittest.TestCase):
     def test_identical_blocks_give_identical_text_from_stored_numbers(self):
-        _gate, result = card(posting(9))
+        _gate, result = card(posting(9), WIDE)
         block = result.components["experience"]
         first, second = exp.explain(block), exp.explain(json.loads(json.dumps(block)))
         self.assertEqual(first, second)

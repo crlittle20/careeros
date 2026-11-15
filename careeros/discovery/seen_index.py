@@ -23,7 +23,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit
 
 from careeros.normalize.posting import norm
 
-from .alerts import canonical_job_url
+from .alerts import canonical_job_url, is_agency_lead, local_only_urls
 from .note import context_note
 
 SCHEMA = "careeros.seen_jobs/1"
@@ -84,7 +84,10 @@ def _observations(store) -> list[dict]:
                     "req": norm_req(job["requisition_id"]), "title": job["title_norm"], "location": _location(job["location_raw"]),
                     "url": cleaned[0] if cleaned else None, "first": job["first_seen_at"], "last": job["last_seen_at"],
                     "source": job["ats"] if job["ats"] != "manual" else (cleaned[1] if cleaned else "employer")})
+    local = local_only_urls(store)
     for lead in store.all("SELECT lead_id, url, site, title_norm, context, job_id, first_seen_at FROM leads"):
+        if is_agency_lead(lead, local):
+            continue  # personal tracking links and their unverified digest facts stay local, by the row's own mark
         note = context_note(lead["context"])
         company = norm_company((lead["context"] or "").split(" · ")[0]) if lead["context"] else ""
         cleaned = clean_url(lead["url"])
@@ -181,8 +184,15 @@ def check_record(record: dict) -> None:
 
 
 def build(store) -> list[dict]:
-    """The index records, sorted by fingerprint: the same database always gives exactly the same output."""
-    records = [_record(g) for g in _merge(_observations(store))]
+    """The index records, sorted by fingerprint: the same database always gives exactly the same output. Refused (fail
+    closed, D125) while a stored agency lead's tracking host is missing from the private settings."""
+    from careeros.core import private_sites
+    from .alerts import agency_setting_problem
+    with private_sites.pinned():   # one revision of the settings for the whole export; refused if it changes (CR-AD-V2-07)
+        problem = agency_setting_problem(store)
+        if problem:
+            raise ValueError(problem)
+        records = [_record(g) for g in _merge(_observations(store))]
     records = [r for r in records if r.get("normalized_title") and (r.get("normalized_company") or r.get("canonical_url"))]
     out = sorted(records, key=lambda r: r["fingerprint"])
     fingerprints = [r["fingerprint"] for r in out]

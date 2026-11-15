@@ -257,8 +257,8 @@ def main(argv: list[str] | None = None) -> int:
     unknown = [s for s in chosen if s not in CHECKS]
     if unknown:
         parser.error(f"unknown checks: {', '.join(unknown)} (choose from {', '.join(STEPS)})")
-    if sys.version_info[:2] != (3, 12):
-        print(f"note: CareerOS targets Python 3.12; this is {platform.python_version()}")
+    if sys.version_info[:2] not in ((3, 14), (3, 12)):   # 3.14 since the 2026-11-03 batch; 3.12 for a rollback
+        print(f"note: CareerOS targets Python 3.14 (or 3.12); this is {platform.python_version()}")
     print(f"CareerOS validation: {describe_commit()}; Python {platform.python_version()} on {platform.system()}", flush=True)
     scratch = Path(tempfile.mkdtemp(prefix="careeros-validate-"))
     results: dict[str, Outcome] = {}
@@ -273,7 +273,9 @@ def main(argv: list[str] | None = None) -> int:
             results[name] = outcome
             print(f"  {'PASS' if outcome.ok else 'FAIL'}  {name:<10}{time.monotonic() - started:7.1f}s  {outcome.detail}", flush=True)
     finally:
-        shutil.rmtree(scratch, ignore_errors=True)
+        sys.path.insert(0, str(ROOT))
+        from careeros.core.scratch import remove_tree_or_say
+        remove_tree_or_say(scratch)   # really removed, or said (item 10, 2026-11-02)
     failed = [name for name, outcome in results.items() if not outcome.ok]
     for name in failed:
         print(f"\n--- {name} ---\n{results[name].output.strip() or '(no output)'}")

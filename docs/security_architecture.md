@@ -113,22 +113,28 @@ person to open.
 |---|---|---|
 | Database, profile, overrides, reports, logs, exports | Vault folder | The Windows account's file permissions. The vault may not sit inside the repository. |
 | Backups | `vault\backups\<date>` | Integrity-checked SQLite copy with a SHA-256 manifest; 14 kept |
+| Offsite archive (optional, OPP-26) | A folder the job seeker chooses, e.g. OneDrive | GnuPG symmetric AES-256, SHA-512 key derivation; passphrase in Credential Manager and kept by the job seeker; each archive decrypted back and compared before it is named; weekly decrypt drill; 7 kept |
 | Analytics export | `vault\exports\analytics` | Private; refused inside the repository |
 | Power BI report on private data | The job seeker's choice | Kept in the vault; never published |
 | Demo data and samples | `%TEMP%\careeros-demo-vault`, `samples/analytics_demo/` | Synthetic only (`example.com`) |
 
 ## 7. Residual risks and assumptions
 
-- **The Windows account is trusted.** Anyone signed in as the job seeker can read the vault. Disk encryption
-  (BitLocker) and an offsite backup are the job seeker's decisions; backups currently sit on the same disk.
+- **The Windows account is trusted.** Anyone signed in as the job seeker can read the vault, and the passphrase of
+  the offsite archive in Credential Manager. Disk encryption (BitLocker) is the job seeker's decision. The daily
+  backups sit on the same disk; the offsite archive (2026-11-03) is the copy elsewhere, and only as safe as the
+  passphrase the job seeker keeps outside the PC.
 - **Gmail's read-only scope covers the whole mailbox.** The sender filter is CareerOS's own restriction, not
   Google's. A dedicated job-search mailbox reduces the exposure.
-- **Lead matching still relies on discovery's older identity flag** (`board_discovery._record_match`). It could grade
-  one lead's posting from a board that board verification has not admitted. This is recorded in
-  `functional_mvp_report.md`, section 6, and should be reviewed before lead enrichment is relied on.
-- **The runtime install is pinned by version only** (`requirements.lock`; PyYAML 6.0.2, httpx 0.27.2, anthropic 1.8.0
-  and their dependencies). The development and CI set, `requirements-dev.lock`, is hash-locked, and pip-audit checks
-  both (since 2026-10-13).
+- **Lead matching no longer relies on discovery's older identity flag** (resolved 2026-11-02, ADR 0003 amendment). A
+  match found on a board discovery has just read (`board_discovery._record_match`) is only recorded as
+  `awaiting_board`; a lead is linked to a job only by lead resolution, through a board in the daily scan.
+- **Both installs are hash-locked** (`requirements.lock` since 2026-11-03, OPP-71; `requirements-dev.lock` since
+  2026-10-13): every file is a wheel whose sha256 is PyPI's, installed with `--require-hashes`, and pip-audit checks
+  both. What remains: a hash proves a file is PyPI's, not that it is safe; and the portable Node.js runtime for the
+  extension tests is outside both locks (its checksum is in the operator manual). `careeros status` names any package
+  pinned in `requirements.lock` that is missing or installed at another version (OPP-55); it compares versions, not
+  where a package came from.
 - **Power BI Desktop's auto-recovery files** can hold report data. A report opened on private data should be treated
   like the vault.
 - **The review server token** is visible to processes running as the same user. That is acceptable for a local,

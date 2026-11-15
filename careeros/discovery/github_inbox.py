@@ -13,10 +13,11 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from careeros.core.clock import from_external
 
-from .alerts import AlertEmail, Link, canonical_job_url
+from .alerts import AlertEmail, Link, canonical_job_url, kept_for_review, site_of, stored_url
 
 GH_FALLBACK = Path(r"C:\Program Files\GitHub CLI\gh.exe")
 MAX_ISSUES = 20
@@ -127,16 +128,33 @@ def parse_lines(body: str) -> list[dict]:
 def issue_alert(issue: dict) -> AlertEmail:
     """The issue as an alert: the same lead/grading path as alert emails. A line whose link cannot be read becomes a
     link on the site "invalid", which is reported as malformed and never stored or opened."""
+    from careeros.discovery.alerts import agency_for_url
     links = []
     for row in parse_lines(issue.get("body") or ""):
+        agency = None if row.get("malformed") else agency_for_url(row["url"])
+        if agency is not None and len(row["url"]) > 4096:   # too long to store whole: the cut copy might not name the
+            links.append(Link(url=row["url"][:200], site="invalid", text=row["title"], context="", job_like=False))
+            continue   # agency, so it is reported as malformed, never stored (the red team before Pass 4)
+        if agency is not None:   # an agency's personal tracking link: a local agency lead, never 'malformed' (L4-03)
+            context = " · ".join(x for x in (row["company"], row["location"], row["note"]) if x) or agency.name
+            links.append(Link(url=row["url"][:4096], site=agency.site, text=row["title"], context=context[:NOTE_MAX + 210],
+                              job_like=True))
+            continue
         try:
             canonical = None if row.get("malformed") else canonical_job_url(row["url"])
         except ValueError:  # e.g. a broken IPv6 host: urlsplit refuses it
-            canonical = None
+            outer = row["url"].strip()   # unless a review link whose own outer link reads: kept under it (D155 rule b)
+            try:
+                readable = outer.startswith(("https://", "http://")) and bool(urlsplit(outer).netloc)
+                canonical = (outer, "", True) if readable and kept_for_review(outer) else None
+            except ValueError:
+                canonical = None
         if canonical is None:
             links.append(Link(url=row["url"][:200], site="invalid", text=row["title"], context="", job_like=False))
             continue
         url, site, _ = canonical
+        url = stored_url(row["url"], url)   # a review link stays a review lead, whatever its kept URL reads as (D149 R-I1)
+        site = site_of(urlsplit(url).netloc)   # the site of the stored link, not of its unwrapped destination (D151 rule 4)
         context = " · ".join(x for x in (row["company"], row["location"], row["note"]) if x)
         links.append(Link(url=url, site=site, text=row["title"], context=context[:NOTE_MAX + 210], job_like=True))
     author = ((issue.get("author") or {}).get("login") or "unknown")[:60]
@@ -185,14 +203,22 @@ def reply_text(day: str, outcomes: list, gmail: str | None = None) -> str:
     return f"CareerOS read this issue on {day}: {summary}.{note}\n\n" + "\n".join(lines)
 
 
-def close_with_reply(repo: str, number: int, reply: str, runner=subprocess.run) -> None:
+def close_with_reply(repo: str, number: int, reply: str, runner=subprocess.run, before_write=None) -> None:
+    """The reply as a comment, then the close. `before_write`, when given, is called before each of the two and stops
+    them by raising (the private settings changed during the run, D141; Codex Pass 4)."""
+    if before_write is not None:
+        before_write()
     _gh(["issue", "comment", str(number), "-R", check_repo(repo), "--body-file", "-"], runner, stdin=reply)
+    if before_write is not None:
+        before_write()
     _gh(["issue", "close", str(number), "-R", repo], runner)
 
 
-def publish_files(repo: str, files: dict[str, str], message: str, runner=subprocess.run) -> list[str]:
+def publish_files(repo: str, files: dict[str, str], message: str, runner=subprocess.run, before_write=None) -> list[str]:
     """Create or update files in the inbox repository through the GitHub contents API. A file whose content is already
-    identical is left alone (no commit), so publishing the same index twice changes nothing. Returns the changed paths."""
+    identical is left alone (no commit), so publishing the same index twice changes nothing. Returns the changed paths.
+    `before_write`, when given, is called just before each file is sent and stops the publication by raising (the
+    private settings changed since the index was built, D141)."""
     changed = []
     for path, content in sorted(files.items()):
         if not re.fullmatch(r"[A-Za-z0-9_./-]{1,100}", path) or ".." in path:
@@ -209,6 +235,8 @@ def publish_files(repo: str, files: dict[str, str], message: str, runner=subproc
         body = {"message": message, "content": base64.b64encode(content.encode("utf-8")).decode("ascii")}
         if sha:
             body["sha"] = sha
+        if before_write is not None:
+            before_write()
         _gh(["api", "-X", "PUT", f"repos/{repo}/contents/{path}", "--input", "-"], runner, stdin=json.dumps(body))
         changed.append(path)
     return changed

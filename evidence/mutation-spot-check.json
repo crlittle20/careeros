@@ -1,0 +1,57 @@
+{
+ "what": "The one planted defect the full run of this receipt missed, planted by hand after its test was fixed: the owner's decision (2026-11-04) in place of a new full run. Each check: the whole suite in a git-archive copy of the commit, unchanged (it must pass), then with the defect planted.",
+ "receipt_at": "2026-11-04T22:31:41+00:00",
+ "receipt_tree": "f3a1390e369df5f777b29e7f985c3745e018c11208089a2fa246fd2624d685b9",
+ "fix": "05ed645eac98aa8e141ea55926bd402b6321b069",
+ "python": "3.14.10",
+ "node_version": "v24.22.1",
+ "checks": [
+  {
+   "rev": "d561171",
+   "commit": "d5611712b8889748e3514363cc45d04a147ed0f4",
+   "tree": "f3a1390e369df5f777b29e7f985c3745e018c11208089a2fa246fd2624d685b9",
+   "defect_index": 207,
+   "file": "careeros/extract/rules.py",
+   "mutation": "long OR-lists of roles cut at 60 characters",
+   "baseline": {
+    "exit": 0,
+    "ran": 1087,
+    "skipped": 8,
+    "seconds": 191.6
+   },
+   "result": "SURVIVED",
+   "ran": 1087,
+   "failures": 0,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [],
+   "seconds": 191.6,
+   "at": "2026-11-04T22:39:03+00:00",
+   "tree_is_the_receipts": true
+  },
+  {
+   "rev": "HEAD",
+   "commit": "c09617436c09ac2a0e44b24ccb06a1901d2976d2",
+   "tree": "dc586c53094b152cdd7092d95b6ec4204cbe9072921b45057167714476f428d4",
+   "defect_index": 207,
+   "file": "careeros/extract/rules.py",
+   "mutation": "long OR-lists of roles cut at 60 characters",
+   "baseline": {
+    "exit": 0,
+    "ran": 1087,
+    "skipped": 8,
+    "seconds": 187.1
+   },
+   "result": "CAUGHT",
+   "ran": 1087,
+   "failures": 1,
+   "errors": 0,
+   "skipped": 8,
+   "failing": [
+    "tests.test_v25_audit.DecisionTests.test_a_long_or_list_of_roles_reaches_its_last_alternative"
+   ],
+   "seconds": 180.1,
+   "at": "2026-11-04T22:45:12+00:00"
+  }
+ ]
+}

@@ -17,7 +17,6 @@ import json
 import logging
 import os
 import re
-import shutil
 import sqlite3
 import tempfile
 import unittest
@@ -27,6 +26,7 @@ from unittest import mock
 
 from careeros import cli
 from careeros.analytics.export import SCHEMA_REVISION, SCHEMA_VERSION, TABLES, build, kpis, reconcile, validate
+from careeros.core.scratch import remove_tree
 from careeros.demo import runner, sandbox
 from careeros.paths import ENGINE_ROOT
 
@@ -61,7 +61,7 @@ class DemoExportTest(unittest.TestCase):
                                            sandbox.ENV: ""})
         env.start()
         cls.addClassCleanup(env.stop)
-        cls.addClassCleanup(shutil.rmtree, cls.tmp, True)
+        cls.addClassCleanup(remove_tree, cls.tmp)   # really removed, or an error (item 10, 2026-11-02)
         cls.addClassCleanup(close_log_files, cls.tmp)
         cls.addClassCleanup(sandbox.install, None)
         cls.ready = None     # the demo and the export run at the first test (setUp), not here
@@ -144,7 +144,7 @@ class DemoExportTest(unittest.TestCase):
     def test_the_contract_revision_names_these_columns(self):
         """Within analytics-1, columns are only ever added, and each addition raises schema_revision (2026-10-30), so a
         manifest says which columns its files have. A change to TABLES must come with a new revision or version."""
-        columns = {1: "9137c0fd60d82089", 2: "ed8f6d32b8175028"}   # revision -> fingerprint of TABLES (names and types, in order)
+        columns = {1: "9137c0fd60d82089", 2: "ed8f6d32b8175028", 3: "b67b93d9f484111c"}   # revision -> fingerprint of TABLES (names and types, in order)
         self.assertEqual((self.manifest["schema_version"], self.manifest["schema_revision"]), ("analytics-1", SCHEMA_REVISION))
         self.assertEqual(hashlib.sha256(json.dumps(TABLES).encode()).hexdigest()[:16], columns.get(SCHEMA_REVISION),
                          "the tables changed: raise SCHEMA_REVISION (columns added at the end) or the version, record the "

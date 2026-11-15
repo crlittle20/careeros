@@ -62,7 +62,7 @@ The full run takes about 30 seconds:
 - **Ingestion:** compared with every posting the synthetic boards list on any of the four days.
 - **Tiers and priorities:** recomputed from the policy's thresholds (92 / 85 / 78, with a 70% skill minimum) and
   weights (0.65 / 0.25 / 0.10).
-- **Eligibility:** the 27 scored jobs are checked against the hard rules directly: remote only, Colorado allowed,
+- **Eligibility:** the 28 scored jobs are checked against the hard rules directly: remote only, Colorado allowed,
   the $70,000 and $34/h floors, title exclusions, and a target family.
 
 **Isolation.** Everything runs under a jail that records any attempt to:
@@ -97,7 +97,12 @@ An independent reviewer (for example ChatGPT, reading this report and the eviden
 
 ## 3. Results by requirement
 
-Every check, with its evidence, is in `evidence/functional_mvp.json`. The headline evidence:
+The table records the assessment of 2026-10-13, run on the private computer: its figures, and its check that the
+real private vault was unchanged, come from that run. `evidence/functional_mvp.json` is regenerated each time the gate
+runs, so it holds the latest run's checks. The public copy runs it with a decoy vault (`"private_vault": "decoy"`), so
+its privacy check compares the decoy, never the real vault. The demo world has grown since, and the run of 2026-11-14
+recorded 12 planted rejections, 28 scored jobs with 23 distinct priorities, tiers of 5 B, 15 near-miss and 8 archive,
+and 14 jobs routed by NIGHT (CONDITIONAL). The headline evidence of 2026-10-13:
 
 | Requirement | Grade | What was shown |
 |---|---|---|
@@ -107,7 +112,7 @@ Every check, with its evidence, is in `evidence/functional_mvp.json`. The headli
 | Employer verification | PARTIAL | All 13 boards end in the expected status. Every active board has the official-site handshake, a confirmed identity and trust of at least 85. The three new boards passed quarantine and a validation scan. The impostor board (Quillon) is an identity mismatch and is rejected. The non-existent board (Atlas) is recorded as absent, and nothing is admitted. The migration keeps the old board as history and verifies the new one. The empty board stays active. Workday and iCIMS are never requested. The agency's client is never guessed. **Gaps:** the Atlas outcome is invisible to you; two Harborline review cases stay open after the migration completed; no board in the world is contradicted by its employer's own site. |
 | Duplicate prevention | PASS | The second posting of one requisition is a duplicate. The same job seen in an alert email and a board scan is one job (twice over). Roles re-posted after the ATS migration are linked to the old ones. The same title at two employers stays two jobs. Applying to a duplicate, or applying twice, is refused. |
 | Eligibility | PASS | All 13 planted violations are rejected for the right reason: director and other excluded titles, no target family, hybrid, onsite, a state outside the limit, below the pay floor, scam. No scored job breaks a hard rule. Every rejection has a reason and an explanation. All 3 pay rejections quote the posting. The posting with no pay is scored, with pay shown as an unknown to check. |
-| Scoring | PASS | All 27 scored jobs have scores between 0 and 100. Each apply priority equals 0.65 fit + 0.25 career value + 0.10 freshness. Each score was made under the same policy and profile as its eligibility decision. Every component states its basis. The 27 jobs have 23 distinct priorities. |
+| Scoring | PASS | All 28 scored jobs have scores between 0 and 100. Each apply priority equals 0.65 fit + 0.25 career value + 0.10 freshness. Each score was made under the same policy and profile as its eligibility decision. Every component states its basis. The 27 jobs have 23 distinct priorities. |
 | Routing | PARTIAL | Every tier matches the recomputed threshold: 5 B, 13 near-miss, 9 archive. Every A, B and near-miss job is on the report. NIGHT routes 13 jobs to its own section, as conditional because their hours are not stated. NIGHT judges the full-time overnight posting as Replacement work against its own $70,000 floor, separately from the main (PRIMARY) decision. **Gap:** no overnight posting in the demo world is accepted by NIGHT. |
 | Evidence generation | PASS | `careeros explain JOB --json` answers all 14 questions for all 45 jobs. `careeros sources explain` explains all 13 boards. `careeros verify` finds the hash chain and every history consistent. Every eligibility decision records the policy, profile and extraction fingerprints. |
 | Output | PASS | There is a report for each day, with every section, and a verified backup for each day (integrity check and SHA-256 manifest). The report's verified-board figures (8) match the board records, after fix 1. `careeros metrics` counts 8 verified and 1 awaiting review, matching the records. `careeros status` matches the database. The seen-jobs index is written locally. |
@@ -183,6 +188,8 @@ G4 and G5 change the demo's recorded totals, so the `RECORDED` summary and `demo
   example, a same-name company's board could still have one matching lead posting graded.
   - The demo cannot reach this path.
   - I recommend a review of it before you rely on lead enrichment.
+  - Resolved 2026-11-02 (lead resolution, ADR 0003 amendment): such a match is only recorded as `awaiting_board`, and
+    a lead is linked to a job only through a board in the daily scan.
 
 ## 7. Limits of this assessment
 

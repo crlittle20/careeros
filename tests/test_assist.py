@@ -730,5 +730,47 @@ class ReportTests(Base):
         self.assertEqual((assisted["median_minutes"], assisted["measured_minutes"], assisted["median_span_minutes"]), (None, 0, 9.0))
 
 
+
+class ApplicationExportTests(Base):
+    """OPP-47 (2026-11-03): the analytics export's fact_application says how each application was made, as recorded when
+    you applied: the assistance session's mode and the minutes you reported, the evidence you gave and the tier then
+    (export revision 3, columns added at the end). Empty, never 0, when there was none."""
+    CHECK = "applications: known assistance modes and evidence; minutes only from an assistance session"
+
+    def test_an_application_recorded_by_closing_a_session_exports_its_mode_minutes_evidence_and_tier(self):
+        from careeros.analytics.export import build, reconcile, validate
+        session = self.open(mode="manual")
+        out = self.close(session["session_id"], "submitted", evidence="confirmation_observed", minutes=12.5)
+        context = json.loads(self.store.one("SELECT context_json FROM applications WHERE application_id = ?",
+                                            (out["application_id"],))["context_json"])
+        self.assertIsNotNone(context["tier"])
+        tables = build(self.store, self.ctx.policy)
+        checks = validate(tables) + reconcile(tables, self.store, self.ctx.policy)
+        self.assertEqual([c["check"] for c in checks if not c["ok"]], [])
+        self.assertIn("applications by assistance mode match the application", [c["check"] for c in checks])
+        [row] = tables["fact_application"]
+        self.assertEqual((row["assist_mode"], row["assist_minutes"], row["evidence"], row["tier_at_apply"]),
+                         ("manual", 12.5, "confirmation_observed", context["tier"]))
+        row["assist_mode"] = "assisted"   # an export that disagrees with the database is caught
+        failing = [c["check"] for c in reconcile(tables, self.store, self.ctx.policy) if not c["ok"]]
+        self.assertEqual(failing, ["applications by assistance mode match the application"])
+
+    def test_without_a_session_the_assistance_columns_stay_empty_and_validation_refuses_odd_values(self):
+        import copy
+
+        from careeros.analytics.export import build, validate
+        record_application(self.store, APP, JOB, "direct", policy=POLICY, key="a1")
+        tables = build(self.store, self.ctx.policy)
+        [row] = tables["fact_application"]
+        self.assertEqual((row["assist_mode"], row["assist_minutes"], row["evidence"]), (None, None, "owner_attested"))
+        self.assertTrue(next(c for c in validate(tables) if c["check"] == self.CHECK)["ok"])
+        for bad in ({"assist_minutes": 5}, {"assist_mode": "robot"}, {"evidence": "hearsay"},
+                    {"assist_mode": "manual", "assist_minutes": -1}):
+            with self.subTest(bad=bad):
+                broken = copy.deepcopy(tables)
+                broken["fact_application"][0].update(bad)
+                self.assertFalse(next(c for c in validate(broken) if c["check"] == self.CHECK)["ok"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -12,6 +12,15 @@ board name are only CANDIDATES):
  6 board function    the board's public listing API answers with well-formed postings (an empty board is valid).
 Then the discovery claim (pass A) is compared with what the employer's own site showed (pass B): match, mismatch
 (another supported board, or a manual-only system such as Workday), or not found.
+A domain only a lead, the curated list or `careeros sources suggest` supplied (domain_origin `lead` or `curated`; ADR 0001,
+amendments of 2026-11-02; Codex CR-2026-11-02-LEAD-RESOLUTION F1) is a hint and is checked strictly: step 1 needs the
+homepage to declare itself the employer (every site name it declares, repeated tags included, each read whole, and the
+same as those in its source; never its title, never a mention, and never a page the reader could not parse), and step 4
+uses strict_identity (a board named for another
+company is a mismatch first, one whose name only contains the employer's waits for review; postings naming the employer
+and the domain echoed on the board never count; a nameless board only through that branded site). A wrong domain can only
+fail to verify. The daily upkeep also
+checks, within the first-check cap, an employer with no board known whose lead supplied a domain (lead_resolution).
 
 BOARD TRUST (legitimacy only; whether the jobs suit you never enters it), out of 100:
   40 handshake, 20 identity, 15 second link, 10 board function, 10 domain agreement (5 the homepage names the
@@ -123,12 +132,61 @@ def decide(*, handshake: bool, identity: str, domain_named: bool, supported: boo
     return True, f"trust {trust}"
 
 
+def board_names_employer(names: set[str], board_name: str | None) -> bool:
+    """The board's own display name is the employer (one of its names, or contains it as a whole term)."""
+    return bool(board_name) and (norm_company(board_name) in names or any(
+        len(n) >= 4 and (contains_term(norm(board_name), n) or n.replace(" ", "") == norm(board_name).replace(" ", "")) for n in names))
+
+
+def named_exactly(names: set[str], name: str | None) -> bool:
+    """The name IS one of the employer's names (legal suffixes and spacing aside), not merely one containing it."""
+    squeezed = {n.replace(" ", "") for n in names}
+    return bool(name) and (norm_company(name) in names or norm_company(name).replace(" ", "") in squeezed)
+
+
+def branded_as(inspection, names: set[str]) -> bool:
+    """The page presents ITSELF as the employer (Codex CR-2026-11-02-LEAD-RESOLUTION F1) only through the site name it
+    declares (og:site_name, application-name), which IS one of the employer's names (legal suffixes aside): every one it
+    declares, repeated tags included (Pass 3), each compared whole (Pass 4). Never through its title (Pass 7: the title
+    fallback let a reader quirk, an SVG's or an unfinished title, or a customer story's title speak for the site), and never
+    through a mention ("implementation partner of Example Health", or anywhere in its text). The declarations the reader
+    found must be exactly those in the page's source (Pass 7: no quirk of the reader may hide another company's or show one
+    a browser does not), and the reader must have parsed the page without an error (Pass 6). Otherwise the hinted site waits
+    for your review."""
+    if not inspection.read_whole or inspection.site_names != inspection.source_site_names:   # Codex F1, Passes 6 and 7
+        return False
+    squeezed = {n.replace(" ", "") for n in names}
+    is_employer = lambda brand: norm_company(brand) in names or norm_company(brand).replace(" ", "") in squeezed
+    declared = [b for b in inspection.site_names if b.strip()]   # every declaration the page made (site_inspect, Codex F1 Pass 3)
+    if declared:   # the site's own declared name decides (Codex F1, Pass 2)
+        return all(is_employer(b) for b in declared)
+    return False   # Codex F1, Pass 7: a hinted site that declares no site name is never branded by its title
+
+
+def strict_identity(names: set[str], board_name: str | None, *, site_branded: bool) -> tuple[str, list[str]]:
+    """Identity for a board found through a HINTED domain (a lead's, the curated list's, a suggestion's; ADR 0001, amendments
+    of 2026-11-02; Codex CR-2026-11-02-LEAD-RESOLUTION F1). A board whose own name is another company's is a mismatch
+    before anything else. Mentions of the employer in postings, and the hinted domain echoed on the board, are never
+    identity: a contractor's postings name its customers. A board whose name IS the employer's (legal suffixes aside) is
+    confirmed; one whose name only contains it ("Example Health Foundation", a credit union) is another organisation's
+    until you review it (Pass 6); a nameless board (Lever, Ashby) is confirmed only when the hinted site presents itself
+    as the employer (branded_as) and links the board; otherwise unresolved, so it goes to your review."""
+    if board_name:
+        if named_exactly(names, board_name):
+            return "confirmed", ["board_name"]
+        if board_names_employer(names, board_name):   # contains the employer's name, but is longer (Codex F1, Pass 6)
+            return "unresolved", [f"the board's name contains the employer's but is not it: {board_name}"]
+        return "mismatch", [f"board names another company: {board_name} (checked first for a hinted website)"]
+    if site_branded:
+        return "confirmed", ["employer_site_brand"]
+    return "unresolved", ["a nameless board, and the hinted site does not present itself as the employer"]
+
+
 def identity_check(names: set[str], board_name: str | None, domain_seen: bool, shares: dict, *, handshake: bool,
                    previous: str | None = None) -> tuple[str, list[str]]:
     """('confirmed' | 'unresolved' | 'mismatch', signals) from the board's own content."""
     signals = []
-    name_matches = bool(board_name) and (norm_company(board_name) in names or any(
-        len(n) >= 4 and (contains_term(norm(board_name), n) or n.replace(" ", "") == norm(board_name).replace(" ", "")) for n in names))
+    name_matches = board_names_employer(names, board_name)
     if name_matches:
         signals.append("board_name")
     if domain_seen:
@@ -196,6 +254,9 @@ def verify_employer(ctx, entity_id: str, *, site_factory, ats_client, claim_mapp
     cfg = reg.bcfg(policy)
     ent = reg.entity(store, entity_id)
     names = reg.entity_names(store, entity_id)
+    # a hinted domain (ADR 0001, amendments of 2026-11-02; Codex F1): the homepage must present itself as the employer
+    # (branded_as), and a board's identity rests on its own name, or for a nameless board on that branded site (strict_identity)
+    hinted = ent["domain_origin"] in reg.HINTED_DOMAINS
     claim = reg.mapping(store, claim_mapping_id)
     claim_key = board_key(claim["ats"], claim["board_token"]) if claim and claim["collection"] == "allowed" else None
     log = RunLog(store, kind, entity_id, claim_mapping_id, claim=claim_key)
@@ -263,6 +324,11 @@ def verify_employer(ctx, entity_id: str, *, site_factory, ats_client, claim_mapp
         return done("offsite_homepage", "offsite_redirect", site=site)
     home = inspect(home_page.text, home_page.final_url, domain)
     named = names_employer(home, names)
+    if hinted and named and not branded_as(home, names):   # a mention ("partner of ...", the text) is not the site's owner
+        log.add("official_domain", "info", source_url=home_page.final_url, method=f"names:{named}",
+                notes="the homepage mentions the employer but does not declare itself the employer (its site name, "
+                      "og:site_name or application-name); a hinted domain (a lead's, the curated list's) needs that")
+        named = None
     if named:
         log.add("official_domain", "pass", points=TRUST_POINTS["domain_named"], source_url=home_page.final_url, method=f"names:{named}",
                 content_hash=home_page.content_hash)
@@ -370,7 +436,7 @@ def verify_employer(ctx, entity_id: str, *, site_factory, ats_client, claim_mapp
     for key in order:
         status, trust = _evaluate_board(ctx, log, ent, names, domain, bool(named), findings[key], kind, ats_client, cache,
                                         independent=(key == claim_key) or len(findings[key].pages) >= 2,
-                                        migrated_from=result.get("migrated_from"))
+                                        migrated_from=result.get("migrated_from"), strict=hinted)
         result["boards"][key] = status
         if trust is not None:
             trusts.append(trust)
@@ -500,7 +566,7 @@ def _claim_not_shown(ctx, log, claim, kind, findings, systems, careers_seen, ent
 
 
 def _evaluate_board(ctx, log, ent, names, domain, domain_named, finding: Finding, kind, ats_client, cache, *, independent: bool,
-                    migrated_from=None) -> tuple[str, int | None]:
+                    migrated_from=None, strict: bool = False) -> tuple[str, int | None]:
     store, cfg = ctx.store, reg.bcfg(ctx.policy)
     now = store.clock.now()
     mid = reg.ensure_mapping(store, ent["entity_id"], finding.ats, finding.token, name=ent["canonical_name"],
@@ -526,7 +592,10 @@ def _evaluate_board(ctx, log, ent, names, domain, domain_named, finding: Finding
         return m["verification_status"], None
     shares = reg.identity_shares(postings, names, domain)
     domain_seen = bool(domain) and (domain in (board_text or "").lower() or shares["domain_share"] > 0)
-    identity, signals = identity_check(names, board_name, domain_seen, shares, handshake=True, previous=m["identity_check"])
+    if strict:   # a hinted domain: neither postings naming the employer nor the domain echoed on the board count (Codex F1)
+        identity, signals = strict_identity(names, board_name, site_branded=domain_named)
+    else:
+        identity, signals = identity_check(names, board_name, domain_seen, shares, handshake=True, previous=m["identity_check"])
     log.add("identity", "pass" if identity == "confirmed" else "fail", points=TRUST_POINTS["identity"] if identity == "confirmed" else 0,
             mapping_id=mid, notes=", ".join(signals) or "no signal on the board itself")
     reg._event(store, "discovery", "identity_verified" if identity == "confirmed" else
@@ -691,6 +760,7 @@ def validate_board(ctx, mapping_id: str, ats_client, *, provider_degraded: bool 
         reg._event(store, "discovery", "board_active", "success", mapping_id)
         if store.one("SELECT 1 FROM board_mappings WHERE migrated_to = ?", (mapping_id,)):
             reg._event(store, "discovery", "ats_migration_verified", "success", mapping_id)
+        _leads_after_admission(ctx, mapping_id)
         outcome = "active"
     else:
         reg.update_board(store, mapping_id, values)
@@ -699,6 +769,17 @@ def validate_board(ctx, mapping_id: str, ats_client, *, provider_degraded: bool 
         outcome = "validated"
     log.finish(outcome, trust=m["board_trust_score"], ats_requests=ats_client.requests - before)
     return outcome
+
+
+def _leads_after_admission(ctx, mapping_id: str) -> None:
+    """The employer's open leads, matched against the jobs CareerOS holds from the board just admitted (ADR 0003, amendment
+    of 2026-11-02). A failure is recorded; it never undoes or stops the admission."""
+    from .lead_resolution import after_admission
+    try:
+        after_admission(ctx, mapping_id)
+    except Exception as exc:  # noqa: BLE001 - recorded for you to see in status
+        ctx.store.writer("discovery").exception("data_quality", "medium", f"lead matching at admission failed: {type(exc).__name__}: {exc}",
+                                                entity_type="employer_board", entity_id=mapping_id, error_code="lead_rematch_failed")
 
 
 def _validation_failed(ctx, log, m, why: str, requests: int) -> str:
@@ -769,22 +850,36 @@ def maintain(ctx, *, site_factory=None, ats_client=None, run_started: str | None
         ats_client = discovery_client(policy, RequestBudget(total, {p: total for p in ("greenhouse", "lever", "ashby", "workable")}))
     try:
         for m in pending_candidates(store, now):
-            if m["entity_id"] is None:
-                reg.update_board(store, m["mapping_id"], {"entity_id": reg.ensure_entity(store, m["employer_name"], domain=m["official_domain"],
-                                                                                         origin=m["origin"])})
+            if m["entity_id"] is None:   # a lead's domain stays a hint (ADR 0001, amendment of 2026-11-02)
+                reg.update_board(store, m["mapping_id"], {"entity_id": reg.ensure_entity_for(store, m["employer_name"], domain=m["official_domain"],
+                                                                                             origin=m["origin"])})
         if reg.site_checks_enabled(policy):
             budget = RequestBudget(int(cfg["daily_site_requests"]), {"site": int(cfg["daily_site_requests"])})
             factory = site_factory or default_site_factory(policy, budget)
             seen: set = set()
+            # a lead's domain= (only a hint, ADR 0001 amendment of 2026-11-02): a board waiting for an unknown domain is
+            # checked first, now; an employer with no board known is checked at its own site, within the same first-check cap
+            from .lead_resolution import lead_domains
+            hints = lead_domains(ctx, now)
+            counts.update(hints["counts"])
+            pending = pending_candidates(store, now)
+            pending = [m for m in pending if m["mapping_id"] in hints["retry"]] + [m for m in pending if m["mapping_id"] not in hints["retry"]]
+            initial = pending[:int(cfg["max_verifications_per_run"])]
+            route = hints["check"][:max(0, int(cfg["max_verifications_per_run"]) - len(initial))]
             work = ([("reverify", m) for m in due_reverifications(store, now)[:int(cfg["max_reverifications_per_run"])]]
-                    + [("initial", m) for m in pending_candidates(store, now)[:int(cfg["max_verifications_per_run"])]])
+                    + [("initial", m) for m in initial]
+                    + [("lead_domain", {"entity_id": entity_id, "mapping_id": None}) for entity_id in route])
+            from .alerts import agency_setting_problem
             for kind, m in work:
                 if m["entity_id"] in seen or budget.remaining() <= 0:
                     continue
+                if kind == "lead_domain" and agency_setting_problem(store):   # a stop found part-way: no site is checked
+                    counts["verification_lead_domain_stopped"] += 1           # for a lead's hint (the red team before
+                    continue                                                  # Pass 4)
                 seen.add(m["entity_id"])
                 try:
                     outcome = verify_employer(ctx, m["entity_id"], site_factory=factory, ats_client=ats_client,
-                                              claim_mapping_id=m["mapping_id"], kind=kind)["outcome"]
+                                              claim_mapping_id=m["mapping_id"], kind="initial" if kind == "lead_domain" else kind)["outcome"]
                 except FetchError as exc:
                     if exc.code == "budget_exhausted":
                         break

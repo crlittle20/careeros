@@ -108,7 +108,8 @@ def refresh_derived_fields(ctx: Context) -> int:
 def normalized_fields(ctx: Context, employer: dict | None, p: RawPosting) -> dict:
     text = p.description_text or ""
     remote = detect_remote(p.location, p.workplace_hint, text)
-    comp = parse_comp(text, p.comp) or {}
+    # the pay tier for your state when the posting says which it is (2026-11-04); the gate reads the same home state
+    comp = parse_comp(text, p.comp, ctx.policy.get("location", "home_state") or ctx.profile.state) or {}
     name = (employer or {}).get("name") or p.board_token
     parent = (employer or {}).get("parent") or name
     title_norm = norm(p.title)
@@ -129,6 +130,26 @@ def normalized_fields(ctx: Context, employer: dict | None, p: RawPosting) -> dic
     }
     fields["content_fingerprint"] = content_fingerprint(fields)  # department / dates are not content: never "changed"
     return fields
+
+
+def _pay_reread(existing, fields: dict, p: RawPosting) -> bool:
+    """The stored pay (and state limits) differ only because CareerOS reads the same words better: the title, location,
+    text, requisition and address are unchanged; the pay comes from the text now (not the board's own pay fields,
+    which can change on their own) and came from it before (none stored, or a range the text states: a board that
+    drops its own pay fields is a change); and pay and state eligibility are the only meaningful differences."""
+    from careeros.normalize.posting import _RANGE, _amount
+    from careeros.openings import meaningful_changes
+    if p.comp and (p.comp.get("min") or p.comp.get("max")):
+        return False
+    if any((existing[k] or "") != (fields.get(k) or "")
+           for k in ("title", "location_raw", "description_text", "requisition_id", "canonical_url")):
+        return False
+    if existing["comp_max"] is not None and not any(
+            abs(max(_amount(m.group(1), m.group(2)), _amount(m.group(3), m.group(4))) - existing["comp_max"]) < 1.0
+            for m in _RANGE.finditer(fields.get("description_text") or "")):
+        return False
+    changes = meaningful_changes(existing, fields)
+    return any(c["what"] == "pay" for c in changes) and all(c["what"] in ("pay", "state eligibility") for c in changes)
 
 
 def _snapshot(ctx: Context, job_id: str, fields: dict, raw: dict) -> None:
@@ -238,6 +259,14 @@ def ingest(ctx: Context, employer: dict | None, postings: list[RawPosting], *, s
                 elif existing["current_state"] in ("duplicate", "closed"):
                     disc.update("jobs", {"last_seen_at": now}, "job_id = ?", (job_id,))
                     counts["inactive_seen"] += 1
+                elif existing["content_fingerprint"] != fields["content_fingerprint"] and _pay_reread(existing, fields, p):
+                    # the same words, read better (2026-11-04: cents, the period, your pay tier): not a change the
+                    # employer made, so no job_changes row; the posting is screened again with the new pay
+                    disc.update("jobs", {**fields, "last_seen_at": now, "absent_scans": 0}, "job_id = ?", (job_id,))
+                    _snapshot(ctx, job_id, fields, p.raw)
+                    if existing["current_state"] not in ("discovered", "normalized"):
+                        disc.transition(ctx.matrix, job_id, "normalized", reason_code="derived_fields_refreshed")
+                    counts["pay_reread"] += 1
                 elif existing["content_fingerprint"] != fields["content_fingerprint"]:
                     from careeros.openings import meaningful_changes, record_change
                     changes = meaningful_changes(existing, fields)
@@ -289,7 +318,8 @@ def ingest(ctx: Context, employer: dict | None, postings: list[RawPosting], *, s
 # --- process -----------------------------------------------------------------------------------------
 def _extraction_fingerprint(ctx: Context, job, use_ai: bool | None = None) -> str:
     vocab = {"aliases": ctx.policy.get("skill_aliases"), "domains": ctx.policy.get("domain_terms"),
-             "certifications": ctx.policy.get("certifications")}   # 2026-10-15: a catalog change re-reads postings
+             "certifications": ctx.policy.get("certifications"),   # 2026-10-15: a catalog change re-reads postings
+             "alias_exclusions": ctx.policy.get("skill_alias_exclusions", default={})}   # 2026-11-03: so does an exclusion
     use_ai = (ctx.ai is not None) if use_ai is None else use_ai
     extractor = f"{rules.EXTRACTOR_ID}|{ctx.ai.extractor_id}" if use_ai else rules.EXTRACTOR_ID
     return fingerprint({"extractor": extractor, "content": job["content_fingerprint"], "vocab": fingerprint(vocab)})
@@ -557,16 +587,19 @@ def close_open_jobs(ctx: Context, employer_id: str, reason_code: str, notes: str
 def _reevaluate(ctx: Context) -> int:
     """Jobs judged under an older policy or profile go back through the gate (append-only history keeps the old result)."""
     store, writer, moved = ctx.store, ctx.store.writer("qualify"), 0
-    rows = store.all("""SELECT j.*, g.policy_fingerprint AS gp, g.profile_fingerprint AS gpr FROM jobs j
+    rows = store.all("""SELECT j.*, g.policy_fingerprint AS gp, g.profile_fingerprint AS gpr,
+                               g.extraction_fingerprint AS gate_extraction FROM jobs j
                         JOIN gate_results g ON g.result_id = (SELECT result_id FROM gate_results WHERE job_id = j.job_id
                                                               ORDER BY at DESC, rowid DESC LIMIT 1)
                         WHERE j.current_state IN ('scored','rejected','eligible','needs_review')""")
     for row in rows:
         reason = "policy_or_rules_changed" if row["gp"] != decision_fingerprint(ctx) else "profile_changed" if row["gpr"] != ctx.profile.fingerprint else None
         if reason:
-            # Title-screened jobs were never extracted, and a job parked for review is re-read from the start (the reading
-            # rules may be what changed), so both go back through screening and extraction.
-            target = "normalized" if row["extraction_fingerprint"] is None or row["current_state"] == "needs_review" else "extracted"
+            # A title screen may have rejected a posting after an earlier revision was extracted. Rescreen it
+            # and re-read the current text instead of grading it against requirements cached from that revision.
+            rescreen = (row["gate_extraction"] == TITLE_SCREEN or row["extraction_fingerprint"] is None
+                        or row["current_state"] == "needs_review")
+            target = "normalized" if rescreen else "extracted"
             writer.transition(ctx.matrix, row["job_id"], target, reason_code=reason)
             moved += 1
     for row in store.all("SELECT job_id FROM jobs j WHERE current_state = 'needs_review' AND NOT EXISTS "

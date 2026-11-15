@@ -57,7 +57,7 @@ def scored(store, job_id: str, tier: str, days: float = 0, **job) -> str:
 class StatusMixin:
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        self.paths = {"lock": Path(self.tmp.name) / "data" / "writer.lock"}
+        self.paths = {"lock": Path(self.tmp.name) / "data" / "writer.lock", "backups": Path(self.tmp.name) / "backups"}
         self.store = open_store(":memory:", FixedClock(NOW), "test-policy")
 
     def tearDown(self):
@@ -67,7 +67,9 @@ class StatusMixin:
     def status(self) -> str:
         ctx = Context(self.store, POLICY, PROFILE, JOB_MATRIX, None, None)
         out = io.StringIO()
-        with mock.patch.object(cli, "_ai_status", lambda ctx: "off"), redirect_stdout(out):
+        from careeros.ops import runtime   # what is installed here is not what these tests are about (OPP-55 has its own)
+        with mock.patch.object(cli, "_ai_status", lambda ctx: "off"), redirect_stdout(out), \
+                mock.patch.object(runtime, "differences", lambda lock: []):
             cli.cmd_status(ctx, self.paths, SimpleNamespace())
         return out.getvalue()
 
@@ -250,6 +252,70 @@ class SavedReportHealthTests(StatusMixin, unittest.TestCase):
                 stack.enter_context(mock.patch.object(cli, "build_report", side_effect=RuntimeError("disk full")))
             cli.cmd_run(Context(self.store, POLICY, PROFILE, JOB_MATRIX, None, None), paths, SimpleNamespace())
         return paths["reports"] / f"report-{self.store.clock.now()[:10]}.html"
+
+    def stopped_after(self, command, steps: tuple, editing: str, args, policy=POLICY, patches=()) -> dict:
+        """`command` with its steps mocked, the private settings edited by `editing`: it must end there (CommandStopped)."""
+        import os
+        import shutil
+        from careeros.core import private_sites
+        settings = Path(self.tmp.name) / f"private_sites-{editing}.yaml"
+        shutil.copy(Path(__file__).parent / "fixtures" / "private_sites.yaml", settings)
+
+        def edit(*args, **kwargs):
+            with open(settings, "a", encoding="utf-8") as file:
+                file.write("# edited during the run\n")
+            return Counter()
+
+        mocks = {}
+        with ExitStack() as stack:
+            stack.enter_context(mock.patch.dict(os.environ, {private_sites.ENV: str(settings)}))
+            stack.enter_context(private_sites.run())
+            private_sites.check()   # the run's reading, taken at its start as main() takes it (_enroll_reading)
+            for name in steps:
+                mocks[name] = stack.enter_context(mock.patch.object(cli, name, side_effect=edit) if name == editing
+                                                  else mock.patch.object(cli, name, return_value=Counter()))
+            for target in patches:
+                stack.enter_context(mock.patch(target))
+            stack.enter_context(mock.patch.object(cli, "_ai_status", return_value="off"))
+            stack.enter_context(mock.patch.object(cli, "_after_run"))
+            stack.enter_context(redirect_stdout(io.StringIO()))
+            with self.assertRaises(cli.CommandStopped):
+                command(Context(self.store, policy, PROFILE, JOB_MATRIX, None, None), {"reports": Path(self.tmp.name) / "r"},
+                        args)
+        mocks[editing].assert_called_once()
+        for name in steps[steps.index(editing) + 1:]:
+            mocks[name].assert_not_called()
+        return mocks
+
+    def test_a_run_whose_settings_change_stops_before_its_next_step_and_is_not_completed(self):
+        """Codex Pass 5 (D153 R2): once a step of the daily run saw its private settings change, nothing more of the
+        run is done: no later step, no processing, no index, no report. The run is recorded as failed."""
+        steps = ("cmd_discover", "_daily_gmail", "_daily_inbox", "_daily_discovery", "_board_maintenance", "cmd_process",
+                 "_publish_index", "cmd_report")
+        for editing in steps[:-1]:
+            with self.subTest(editing=editing):
+                self.stopped_after(cli.cmd_run, steps, editing, SimpleNamespace())
+        self.assertEqual({r["status"] for r in self.store.all("SELECT status FROM runs WHERE kind = 'daily'")}, {"failed"})
+        self.assertTrue(self.store.one("SELECT 1 FROM exceptions WHERE error_code = 'private_sites_changed'"))
+
+    def test_the_inbox_and_a_gmail_fetch_stop_before_their_next_step_too(self):
+        class Inbox:   # the policy with a GitHub inbox configured
+            def __init__(self, policy):
+                self.policy = policy
+
+            def get(self, *keys, default=None):
+                return "synthetic/recommendations" if keys == ("operations", "github_inbox") else self.policy.get(*keys, default=default)
+
+            def __getattr__(self, name):
+                return getattr(self.policy, name)
+
+        steps = ("_daily_inbox", "process", "_publish_index", "cmd_report")
+        for editing in steps[:-1]:
+            with self.subTest(command="inbox", editing=editing):
+                self.stopped_after(cli.cmd_inbox, steps, editing, SimpleNamespace(), policy=Inbox(POLICY))
+        with self.subTest(command="gmail fetch"):
+            self.stopped_after(cli.cmd_gmail, ("_gmail_pull", "process", "cmd_report"), "_gmail_pull",
+                               SimpleNamespace(action="fetch", days=None), patches=("careeros.core.credentials.WindowsCredentials",))
 
     def saved_header(self) -> str:
         page = self.daily_run().read_text(encoding="utf-8")

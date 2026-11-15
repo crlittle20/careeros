@@ -11,13 +11,13 @@ The report itself was opened, refreshed and checked page by page in Power BI Des
 """
 import json
 import re
-import shutil
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 from careeros.analytics.export import REFERENCES, TABLES
+from careeros.core.scratch import remove_tree
 from careeros.paths import ENGINE_ROOT
 
 sys.path.insert(0, str(ENGINE_ROOT / "tools"))
@@ -47,7 +47,7 @@ class PowerBIProjectTest(unittest.TestCase):
 
     def test_the_committed_project_is_exactly_what_the_generator_builds(self):
         tmp = Path(tempfile.mkdtemp(prefix="careeros-pbip-"))
-        self.addCleanup(shutil.rmtree, tmp, True)
+        self.addCleanup(remove_tree, tmp)   # really removed, or an error (item 10, 2026-11-02)
         theme = PROJECT / "CareerOS.Report" / "StaticResources" / "SharedResources" / "BaseThemes" / f"{pbi.THEME}.json"
         pbi.build(tmp, self.folder.replace('""', '"'), theme)
         built, committed = files(tmp), files(PROJECT)

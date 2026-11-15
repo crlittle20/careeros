@@ -96,30 +96,52 @@ class Profile:
         match = self.years_match(name)
         return match["years"] if match else None
 
-    def years_match(self, name: str) -> dict | None:
+    def years_match(self, name: str, role_only: bool = False) -> dict | None:
         """The profile item a years requirement is judged on (2026-10-15): its kind, the years used for screening, its
-        factual `years` (never changed here) and its recorded evidence. None when no item answers the requirement."""
+        factual `years` (never changed here) and its recorded evidence. None when no item answers the requirement.
+        `role_only` (OPP-43, 2026-11-03): years AS a role or IN a function, so only a skill, function or role title that
+        names it counts, the one with the most years; never a domain and never your total years. A function that only
+        overlaps the words ("business systems analysis" for "Business Intelligence Analyst") is `partial`: evidence that
+        may pass, never one that confirms the tenure or rejects on its own (Codex Pass 1 F4, 2026-11-05). So is one whose
+        words only share a prefix or come in another order ("production management" for "Product Manager", "administrative
+        assistance" for "Assistant Administrator": D120): a function confirms a role only in the same words (`_identity`)."""
         hit = self.skill(name) or self.function(name)
-        if hit and _screening_years(hit) is not None:
-            return _years_match(hit, "skill" if "via" in hit else "function")
+        if role_only and hit and "via" not in hit and _identity(hit["name"]) != _identity(name):
+            # a function in the role's own words, before one that only shares their stems (D120)
+            hit = next((f for f in self._items("functions") if _identity(f["name"]) == _identity(name)), hit)
+        found = _years_match(hit, "skill" if "via" in hit else "function") if hit and _screening_years(hit) is not None else None
+        if found and not role_only:
+            return found
+        if role_only:
+            role = self._role_title(name)
+            if found and hit and "via" not in hit and _identity(hit["name"]) != _identity(name):
+                found = {**found, "partial": True}
+            confirmed = [m for m in (found, role) if m and not m.get("partial")]
+            return max(confirmed, key=lambda m: m["years"], default=None) if confirmed else found
         # e.g. "3+ years of claims experience" or "medical claims operations" vs the claims domain
         domains = [d for d in self._items("domains")
                    if _screening_years(d) is not None and (norm(d["name"]) == norm(name) or contains(norm(name), norm(d["name"])))]
         if domains:
             return _years_match(max(domains, key=lambda d: _screening_years(d) or 0.0), "domain")
-        # e.g. "2+ years as a Data Analyst": role titles YOU confirmed your years count for (profile `role_titles`).
-        # An `exact: true` title only matches that exact wording: "analyst" answers "years as an analyst", never
-        # "years as a Data Analyst".
-        roles = [r for r in self._items("role_titles")
-                 if _screening_years(r) is not None and (norm(r["name"]) == norm(name)
-                                                         or (not r.get("exact") and contains(norm(name), norm(r["name"]))))]
-        if roles:
-            return _years_match(max(roles, key=lambda r: _screening_years(r) or 0.0), "role_title")
+        role = self._role_title(name)
+        if role:
+            return role
         if norm(name) in GENERIC_EXPERIENCE:  # "3+ years of relevant experience": your total professional years
             total = self.data.get("total_professional_years")
             return {"kind": "generic", "item": "total professional years", "years": float(total), "factual_years": float(total),
                     "evidence": None} if total is not None else None
         return None
+
+    def _role_title(self, name: str) -> dict | None:
+        """e.g. "2+ years as a Data Analyst": role titles YOU confirmed your years count for (profile `role_titles`).
+        An `exact: true` title only matches that exact wording: "analyst" answers "years as an analyst", never
+        "years as a Data Analyst". A plural names the title too ("as Business Systems Analysts": D123's check)."""
+        def named(title: str, text: str, exact: bool) -> bool:
+            return text == title or (not exact and contains(text, title))
+        roles = [r for r in self._items("role_titles")
+                 if _screening_years(r) is not None and (named(norm(r["name"]), norm(name), bool(r.get("exact")))
+                                                         or named(_plain(r["name"]), _plain(name), bool(r.get("exact"))))]
+        return _years_match(max(roles, key=lambda r: _screening_years(r) or 0.0), "role_title") if roles else None
 
     def level_rank(self) -> int | None:
         return LEVEL_RANK.get(self.data.get("current_level"))
@@ -158,6 +180,48 @@ def alternatives(name: str) -> list[str]:
 
 def _stems(text: str) -> set[str]:
     return {w[:6] for w in norm(text).split() if w not in _STOP and len(w) > 1}
+
+
+# The word a function uses for what the role that does it is called (D120, 2026-11-09): "business systems analysis" is
+# the work of a "business systems analyst", "claims processing" of a "claims processor". A closed list, of pairs the
+# 6-letter stems already joined: a shared prefix is no identity ("production" is not "product", "accounting" not
+# "account", "programmer" not "program"), and neither are "reporting"/"reporter" (reporting is producing reports; a
+# reporter writes the news) or "operations"/"operator" (running operations is not operating a machine): those stay
+# unconfirmed either way. Round 3 adds the work of an architect, a moderator, an interpreter and a statistician.
+_ROLE_FORMS = {"analysis": "analyst", "management": "manager", "processing": "processor", "administration": "administrator",
+               "coordination": "coordinator", "supervision": "supervisor", "development": "developer",
+               "engineering": "engineer", "programming": "programmer", "consulting": "consultant", "accounting": "accountant",
+               "underwriting": "underwriter", "recruiting": "recruiter", "recruitment": "recruiter",
+               "adjudication": "adjudicator", "investigation": "investigator", "scheduling": "scheduler",
+               "navigation": "navigator", "research": "researcher", "design": "designer", "review": "reviewer",
+               "examination": "examiner", "counseling": "counselor", "counselling": "counsellor", "therapy": "therapist",
+               "transcription": "transcriptionist", "registration": "registrar", "reception": "receptionist",
+               "collection": "collector", "credentialing": "credentialer", "instruction": "instructor",
+               "inspection": "inspector", "negotiation": "negotiator", "facilitation": "facilitator",
+               "translation": "translator", "dispatch": "dispatcher", "bookkeeping": "bookkeeper", "estimation": "estimator",
+               "leadership": "leader", "assistance": "assistant", "architecture": "architect", "moderation": "moderator",
+               "interpretation": "interpreter", "statistic": "statistician"}
+
+
+def _singular(word: str) -> str:
+    """A plural's singular ("claims" -> "claim", "systems" -> "system"); "business", "analysis" and "status" stay."""
+    if len(word) > 4 and word.endswith("ies"):
+        return word[:-3] + "y"
+    if len(word) > 3 and word.endswith("s") and not word.endswith(("ss", "is", "us")):
+        return word[:-1]
+    return word
+
+
+def _plain(text: str) -> str:
+    """Text with each plural word made singular ("business systems analysts" -> "business system analyst")."""
+    return " ".join(_singular(w) for w in norm(text).split())
+
+
+def _identity(text: str) -> tuple[str, ...]:
+    """A function's or a role's words, whole and in order, for telling whether a function names the role (D120): plural
+    endings set aside, and a function's word for the work in the form of the role that does it (`_ROLE_FORMS`)."""
+    words = (_singular(w) for w in norm(text).split() if w not in _STOP and len(w) > 1)
+    return tuple(_ROLE_FORMS.get(w, w) for w in words)
 
 
 def load_profile(path: Path) -> Profile:

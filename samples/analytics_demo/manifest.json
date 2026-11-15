@@ -1,6 +1,6 @@
 {
  "schema_version": "analytics-1",
- "schema_revision": 2,
+ "schema_revision": 3,
  "source": "demo",
  "generated_at": "2026-11-05T13:01:00.000Z",
  "tables": {
@@ -12,7 +12,7 @@
   "dim_employer": {
    "file": "dim_employer.csv",
    "rows": 14,
-   "sha256": "dee5af81838ea94031903f7924a1bbeaeb828c9a98792274af172ec6618c8908"
+   "sha256": "f1da91beeeff17e7ffa1c13c0a546f938c225507089ce617ab9536991b3c62e0"
   },
   "dim_board": {
    "file": "dim_board.csv",
@@ -31,8 +31,8 @@
   },
   "dim_role_family": {
    "file": "dim_role_family.csv",
-   "rows": 6,
-   "sha256": "b2d65d5b0d07e49324d6c99b9f5496eae21447abb641c3a6a33db16f9bf06446"
+   "rows": 7,
+   "sha256": "d0fa8402b2855759ae1b45045d5bc24bbbb59cc9cb93f570f20346e0a1cd06cf"
   },
   "dim_location": {
    "file": "dim_location.csv",
@@ -47,7 +47,7 @@
   "fact_job_evaluation": {
    "file": "fact_job_evaluation.csv",
    "rows": 45,
-   "sha256": "0b99e8449e6dc288680d53f51e104864b8f3b7cb56d41ecb0e2c92603f73a7e4"
+   "sha256": "7e10669d4256e304861f2700fdd8ea5776d8de96882bddeca83381e1979c9ef5"
   },
   "fact_job_observation": {
    "file": "fact_job_observation.csv",
@@ -67,26 +67,26 @@
   "fact_application": {
    "file": "fact_application.csv",
    "rows": 4,
-   "sha256": "56e4953e317cfb67d079a4dcf0c9545ecdd3576e1c22fe09d07ea9ed8c6cbb77"
+   "sha256": "a7b589dc3b39eeaa8f7dc5d9c1c35578ba23975766477978f4a29e0434f7ca21"
   }
  },
  "kpis": {
   "jobs_discovered": 45,
   "distinct_openings": 44,
   "jobs_evaluated": 40,
-  "jobs_qualified": 18,
+  "jobs_qualified": 20,
   "jobs_recommended": 5,
-  "jobs_rejected": 13,
-  "jobs_manual_review": 13,
-  "manual_review_rate": 0.325,
+  "jobs_rejected": 12,
+  "jobs_manual_review": 15,
+  "manual_review_rate": 0.375,
   "duplicates_prevented": 3,
   "cross_source_sightings": 2,
   "verified_employers": 8,
-  "average_fit": 84.8,
+  "average_fit": 86.0,
   "board_verification_rate": 0.8,
   "new_board_verification_rate": 0.6,
   "scan_reliability": 0.963,
-  "night_routed": 13,
+  "night_routed": 14,
   "applications": 4,
   "applications_open": 3,
   "interview_rate": 0.0
@@ -126,7 +126,7 @@
   {
    "check": "dim_role_family: the primary key role_family_key is present and unique",
    "ok": true,
-   "detail": "6 rows"
+   "detail": "7 rows"
   },
   {
    "check": "dim_location: the primary key location_key is present and unique",
@@ -409,6 +409,11 @@
    "detail": "[]"
   },
   {
+   "check": "applications: known assistance modes and evidence; minutes only from an assistance session",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
    "check": "dim_date is one row per day with no gaps",
    "ok": true,
    "detail": "9 days"
@@ -446,10 +451,15 @@
   {
    "check": "jobs by state match the application",
    "ok": true,
-   "detail": "{'closed': 4, 'duplicate': 1, 'rejected': 13, 'scored': 27}"
+   "detail": "{'closed': 4, 'duplicate': 1, 'rejected': 12, 'scored': 28}"
   },
   {
    "check": "dismissed jobs (by their latest reason) match the application",
+   "ok": true,
+   "detail": "{}"
+  },
+  {
+   "check": "applications by assistance mode match the application",
    "ok": true,
    "detail": "{}"
   },
@@ -466,7 +476,7 @@
   {
    "check": "jobs_qualified equals the application's own figure",
    "ok": true,
-   "detail": "export 18, application 18"
+   "detail": "export 20, application 20"
   },
   {
    "check": "duplicates_prevented equals the application's own figure",

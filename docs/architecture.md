@@ -22,7 +22,7 @@ phase, not ruled out (ADR 0007).
 
 | Property | How |
 |---|---|
-| Local and private | Python 3.12, one SQLite file. Personal data lives in a *vault* folder outside the code repository, and that separation is enforced. |
+| Local and private | Python 3.14, one SQLite file. Personal data lives in a *vault* folder outside the code repository, and that separation is enforced. |
 | Explainable | Every decision is stored with its reasons, its evidence, and the fingerprint of the rules and profile it was made under. `careeros explain JOB` reads it back. |
 | Auditable | State changes go only through workflow matrices. History tables are append-only, and the audit log is hash-chained. |
 | Conservative with sources | Only four public listing APIs are read automatically. A board is admitted only when the employer's own website points to it. |
@@ -61,7 +61,7 @@ flowchart LR
 | Package | Responsibility | Main modules |
 |---|---|---|
 | `careeros/cli.py` | Commands (`careeros run`, `import`, `review`, `explain`, `export`, `demo`, ...) and the daily run's orchestration | `cmd_run`, `main` |
-| `careeros/discovery` | Everything that touches the outside: board scans, alerts, inbox, pasted and saved postings, board discovery and verification, source health | `boards.py`, `http.py`, `safe_fetch.py`, `board_verifier.py`, `board_registry.py`, `board_discovery.py`, `employer_intel.py`, `source_health.py`, `alerts.py`, `gmail.py`, `imap.py`, `github_inbox.py`, `manual_intake.py`, `saved.py`, `seen_index.py` |
+| `careeros/discovery` | Everything that touches the outside: board scans, alerts, inbox, pasted and saved postings, board discovery and verification, source health, lead resolution (2026-11-02) | `boards.py`, `http.py`, `safe_fetch.py`, `board_verifier.py`, `board_registry.py`, `board_discovery.py`, `lead_resolution.py`, `employer_intel.py`, `source_health.py`, `alerts.py`, `gmail.py`, `imap.py`, `github_inbox.py`, `manual_intake.py`, `saved.py`, `seen_index.py` |
 | `careeros/normalize` | Posting text and fields: title, location, remote scope, state limits, pay, employment type | `posting.py`, `sanitize.py` |
 | `careeros/pipeline.py` + `openings.py` | Ingest, deduplication, sightings, the job workflow, re-evaluation when rules change | `ingest`, `process`, `_reevaluate` |
 | `careeros/extract` | Reading requirements: deterministic rules, plus an optional AI reader that must quote the posting | `rules.py`, `ai.py` |
@@ -69,7 +69,7 @@ flowchart LR
 | `careeros/review` | What a person sees and does: report, local review server, labels, applications, dismissals, explain, metrics | `report.py`, `server.py`, `explain.py`, `applications.py`, `labels.py`, `discovery_metrics.py` |
 | `careeros/db` | The store: schema migrations, per-component write permissions, transitions, the audit chain, idempotency receipts | `store.py`, `schema/*.sql` |
 | `careeros/core` | Clock, policy and fingerprints, workflow matrices, locks, credential store, redaction | `policy.py`, `transitions.py`, `locks.py`, `credentials.py`, `redact.py` |
-| `careeros/ops` | Backups and notifications | `backup.py`, `notify.py` |
+| `careeros/ops` | Backups, the encrypted offsite archive and notifications | `backup.py`, `offsite.py`, `notify.py` |
 | `careeros/demo` | Demo Mode: the sandbox boundary, the synthetic world, demo commands | `sandbox.py`, `world.py`, `runner.py` |
 | `careeros/analytics` | The star-schema export for Power BI | `export.py` |
 | `config/` | Engine defaults (policy, workflows, site policy) | `policy/defaults.yaml`, `workflows/job.json`, `workflows/application.json`, `site_policy.yaml` |
@@ -173,7 +173,7 @@ override a mismatch, an unsafe address or a manual-only system (ADR 0007).
 
 | Element | Design |
 |---|---|
-| Store | One SQLite file (`vault\data\careeros.db`) in WAL mode. Schema migrations are `careeros/db/schema/001-014`. |
+| Store | One SQLite file (`vault\data\careeros.db`) in WAL mode. Schema migrations are `careeros/db/schema/001-015`. |
 | Write permissions | Each component gets a `Writer` limited to the tables, and for some tables the columns, it owns (`TABLES_BY_COMPONENT`, `COLUMN_LIMITS`). For example, `qualify` cannot write jobs, `discovery` cannot write scores, and only `admin` may activate a board or record an override. |
 | Workflow state | Changes only through `Writer.transition`, which checks the matrix. Projection and history must agree, or the write fails closed. |
 | History | Append-only tables (transitions, events, gate results, scores, verification evidence ...), enforced by database triggers. Re-evaluation adds rows and never rewrites them. |
@@ -202,7 +202,7 @@ Vault layout:
 |---|---|---|---|
 | Greenhouse, Lever, Ashby, Workable listing APIs | read | public, no credentials | Host allowlist on every request and redirect, request budgets, politeness pauses, `Retry-After` honoured (a long one is reported, never slept through) |
 | Employer websites | read | public | `safe_fetch` (SSRF-safe, pinned connections, robots.txt, size and type caps) and a page budget; used only to verify boards |
-| Gmail | read | OAuth `gmail.readonly`, token in Windows Credential Manager | Sender-filtered search; only job links and the text beside them are kept; never marks mail read |
+| Gmail | read | OAuth `gmail.readonly`, token in Windows Credential Manager | Sender-filtered search; only job links, the text beside them and the email's sender, subject and received time are kept, with each lead in the local vault; never marks mail read |
 | Gmail over IMAP | read | app password in Windows Credential Manager | EXAMINE (read-only) and `BODY.PEEK` |
 | GitHub recommendation inbox | read and write | the `gh` CLI the job seeker signed in | Issue text is data; replies and the published seen-jobs index carry job facts only |
 | Anthropic API (optional, off) | write (posting text) | API key in Windows Credential Manager | Public posting text only; every record must quote the posting; falls back to rules |

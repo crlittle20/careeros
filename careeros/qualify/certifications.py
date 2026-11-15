@@ -18,8 +18,9 @@ policy), or, when the posting asks only for a family or an issuer, through any h
 different credential of the same family is `related` and never satisfies a named credential. A line that offers
 alternatives ("PMP or CBAP") is satisfied by any one of them.
 
-Decision effects follow the rules CareerOS already had: a named credential on a hard-required line that you do not
-hold rejects the job (`certification_required`); everything else is a flag to check or nothing. A held preferred
+Decision effects: a named credential on a hard-required line that you do not hold is `hard_failure`, which since the
+owner's D140 (2026-11-11) never rejects the job: every requirement you do not meet is "verify the certification"
+(`certification_check`, CONDITIONAL); a preferred one is nothing. A held preferred
 credential is a `positive_signal` for the explanation only: certifications add no points to any score.
 """
 from __future__ import annotations
@@ -302,6 +303,11 @@ def _alternatives(records: list, policy) -> None:
     line ("... plus Jira or Azure DevOps") never turns separate requirements into alternatives."""
     by_clause: dict = {}
     for record in records:
+        if record["requirement_type"] == "ambiguous":
+            # an unclear certification is always its own requirement, judged alone: it never joins an alternative
+            # group, never satisfies another and is never satisfied by one ("Must hold PMP, or CBAP is preferred."
+            # with CBAP held is CONDITIONAL; CR-2026-11-09-INTAKE-HOTFIX Pass 4, CR-HF-10, D131 S2)
+            continue
         spot = _spot(record, policy)
         if spot is not None:
             by_clause.setdefault((record["mention"], record["requirement_type"]), []).append((spot, record))
@@ -375,7 +381,7 @@ STATUS_WORDS = {"held": "held", "in_progress": "in progress (not counted as held
                 "not_held": "not held", "unknown": "status not recorded (not counted as held)"}
 MATCH_WORDS = {"exact": "exact match", "equivalent": "equivalent (owner-approved)", "family_match": "same family",
                "related": "related credential only", "none": "no match", "unknown": "cannot be matched (not named)"}
-EFFECT_WORDS = {"requirement_satisfied": "requirement met", "hard_failure": "rejects the job (hard requirement not held)",
+EFFECT_WORDS = {"requirement_satisfied": "requirement met", "hard_failure": "verify before applying (a required credential not held)",
                 "check_required": "check before applying", "positive_signal": "a plus you have (no score effect)",
                 "none": "no effect", "not_a_requirement": "on-the-job, not a requirement"}
 

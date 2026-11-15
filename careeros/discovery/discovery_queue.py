@@ -36,9 +36,9 @@ def enqueue(store, candidate: bd.Candidate, priority: float) -> str:
     key = _canonical(store, candidate.employer_norm)
     now = store.clock.now()
     existing = store.one("SELECT * FROM discovery_queue WHERE employer_norm = ?", (key,))
-    hint = {"domain": candidate.official_domain, "board_url": candidate.board_url, "title": candidate.title,
-            "requisition_id": candidate.requisition_id, "posting_url": candidate.posting_url, "location": candidate.location,
-            "relationship": candidate.relationship, "first_seen_at": candidate.first_seen_at}
+    # employer-level evidence only: each lead's job facts (title, link, requisition, location) stay with the lead and are
+    # read from it when its board is matched (gap 2, 2026-11-02: the first lead's facts were used for every lead)
+    hint = {"domain": candidate.official_domain, "board_url": candidate.board_url, "relationship": candidate.relationship}
     writer = store.writer("discovery")
     if existing:
         leads = sorted(set(json.loads(existing["lead_ids_json"])) | set(candidate.lead_ids))
@@ -68,8 +68,12 @@ def build_backfill(ctx, days: int | None = None) -> dict:
     days = int(days or bd.cfg(policy)["lookback_days"])
     since = (parse_utc(store.clock.now()) - timedelta(days=days)).isoformat(timespec="milliseconds").replace("+00:00", "Z")
     groups: dict = {}
+    from careeros.discovery.alerts import agency_setting_problem, local_only_urls
+    if agency_setting_problem(store):   # fail closed (D125): no lead-based discovery while an agency entry is missing
+        return {"agency_setting_missing": 1}
+    local = local_only_urls(store)
     for lead in store.all("SELECT * FROM leads WHERE first_seen_at >= ? ORDER BY first_seen_at", (since,)):
-        candidate = bd.candidate_from_lead(lead, policy)
+        candidate = bd.candidate_from_lead(lead, policy, local)
         if candidate is None:
             continue
         key = _canonical(store, candidate.employer_norm)
@@ -112,19 +116,41 @@ def load_curated(ctx, path: Path) -> dict:
     return stats
 
 
+def _still_eligible(store, row, local: frozenset[str]) -> bool:
+    """A queued row made from leads is probed only while one of its leads is still an ordinary lead: a lead that has
+    since turned out to be an agency card's personal link (a marked twin, CR-AD-02) no longer counts. Curated rows and
+    rows without leads are unchanged."""
+    lead_ids = json.loads(row["lead_ids_json"] or "[]")
+    if row["origin"] == "curated" or not lead_ids:
+        return True
+    from careeros.discovery.alerts import is_agency_lead
+    for lead_id in lead_ids:
+        lead = store.one("SELECT lead_id, url FROM leads WHERE lead_id = ?", (lead_id,))
+        if lead is not None and not is_agency_lead(lead, local):
+            return True
+    return False
+
+
 def _candidate_from_row(row) -> bd.Candidate:
+    """The employer a queue row stands for, with its leads. No job facts: a row written before 2026-11-02 may still hold
+    its first lead's title, link and requisition in evidence_json, and they are never read (discover reads each lead's own)."""
     evidence = json.loads(row["evidence_json"] or "{}")
     return bd.Candidate(employer_name=row["employer_name"], origin=row["origin"], official_domain=row["official_domain"],
-                        board_url=row["board_url"], posting_url=evidence.get("posting_url"), requisition_id=evidence.get("requisition_id"),
-                        title=evidence.get("title"), location=evidence.get("location"), lead_ids=json.loads(row["lead_ids_json"] or "[]"),
-                        relationship=evidence.get("relationship") or "employer", first_seen_at=evidence.get("first_seen_at"))
+                        board_url=row["board_url"], lead_ids=json.loads(row["lead_ids_json"] or "[]"),
+                        relationship=evidence.get("relationship") or "employer")
 
 
 def plan(ctx, limit: int = 50) -> list[dict]:
     """The dry run: what would be probed, in order, without sending any request."""
     now = ctx.store.clock.now()
-    out = []
+    out: list[dict] = []
+    from careeros.discovery.alerts import agency_setting_problem, local_only_urls
+    if agency_setting_problem(ctx.store):   # fail closed (D125)
+        return out
+    local = local_only_urls(ctx.store)
     for row in _due(ctx.store, now)[:limit]:
+        if not _still_eligible(ctx.store, row, local):
+            continue
         c = _candidate_from_row(row)
         targets = ([bd.parse_board_url(c.board_url)] if bd.parse_board_url(c.board_url or "") else
                    [] if bd.manual_system(c.board_url or "") else
@@ -152,8 +178,21 @@ def run(ctx, *, budget: RequestBudget | None = None, client=None, limit: int = 1
     now = store.clock.now()
     stats: dict = {"requests": 0}
     curated_used = 0
+    from careeros.discovery.alerts import agency_setting_problem, local_only_urls
+    if agency_setting_problem(store):   # fail closed (D125): nothing is probed while an agency entry is missing
+        if own_client:
+            client.close()
+        return {**stats, "agency_setting_missing": 1}
+    local = local_only_urls(store)
     try:
         for row in _due(store, now)[:limit]:
+            if agency_setting_problem(store):   # stopped mid-run: nothing more is probed (CR-AD-V2-12)
+                stats["agency_setting_missing"] = 1
+                break
+            local = local_only_urls(store)
+            if not _still_eligible(store, row, local):
+                stats["agency_lead_skipped"] = stats.get("agency_lead_skipped", 0) + 1
+                continue
             candidate = _candidate_from_row(row)
             curated = row["origin"] == "curated"
             if curated and curated_used >= curated_cap:

@@ -6,7 +6,8 @@ applied" and Void. Confirm records exactly that; when the dismissal is no longer
 differ, nothing is recorded and a fresh confirmation is shown.
 
 Actions: label a job, record an application to it, update an application's status, dismiss a job or an email lead,
-add a pasted posting.
+add a pasted posting, confirm or reject a likely match for a lead (2026-11-02: the form's target names the lead and the
+job its card showed; anything else waiting now records nothing).
 
 Confirmation (OPP-16; ADR 0007, amendment of 2026-11-01, "Confirmation plus undo"): Dismiss, "I applied", Undo of a
 dismissal and Void of an application (ASKS) record nothing. They answer with a page naming the posting (its title, employer and job id, and the channel or the
@@ -19,23 +20,27 @@ from __future__ import annotations
 
 import hmac
 import secrets
+import sys
+import traceback
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, quote, urlsplit
 
 from careeros.core.locks import LockError, SingleWriterLock
+from careeros.db.store import IdempotencyCollision
 
 from .applications import (CHANNELS, CONFIRM_CODES, VOID, ApplicationConflict, ApplicationHold, SessionOpen,
                            application_matrix, record_application, sessions_waiting, update_application, void_refusal)
 from .dismiss import DismissalChanged
 from .labels import record_label
-from .leads import dismiss_lead
+from .leads import confirm_likely, dismiss_lead, reject_likely
 from .report import CSP, _form, build_report, esc, last_review_at
 
 MAX_BODY = 4096
 MAX_PASTE_BODY = 200_000   # a pasted posting (Part 6)
 MAX_FORM_KEYS = 20000
 ACTIONS = ("label", "label_night", "apply", "status", "lead", "dismiss", "paste", "reinstate", "void",
-           "confirm_apply", "confirm_dismiss", "confirm_reinstate", "confirm_void")
+           "confirm_apply", "confirm_dismiss", "confirm_reinstate", "confirm_void",
+           "lead_confirm", "lead_reject")   # a likely match for a lead (2026-11-02): the form names the lead and the job shown
 ASKS = (   # a confirmation page first; only its Confirm (confirm_<action>) records
     "dismiss",   # Dismiss a posting, with the chosen reason
     "apply",     # "I applied", with the chosen channel
@@ -110,6 +115,7 @@ def make_handler(store, profile, policy, token: str, lock_path, port_holder: dic
             self.send_header("Cache-Control", "no-store")
             self.send_header("Referrer-Policy", "no-referrer")
             self.send_header("X-Frame-Options", "DENY")
+            self.send_header("Content-Security-Policy", CSP)   # every response, error pages included (D88)
             for k, v in (extra or {}).items():
                 self.send_header(k, v)
             self.end_headers()
@@ -242,6 +248,46 @@ def make_handler(store, profile, policy, token: str, lock_path, port_holder: dic
             return (409 if status == 200 else status), page
 
         def do_GET(self):
+            self._last_resort(self._get, "Could not build the page")
+
+        def do_POST(self):
+            self._last_resort(self._post, "Not recorded")
+
+        def _last_resort(self, handle, title: str):
+            """An error nothing else answers gets a page saying so, not a dropped connection (D88). A write that fails
+            rolls back what it had not committed, but a form can record in steps (a pasted posting is taken in, then
+            processed): "Not recorded" only when the request changed no row (Codex CR-2026-11-03-PYTHON-314, F3)."""
+            from careeros.core import private_sites
+            self._posting = None   # set by _post: the posting the form is about, once known
+            self._before = store.committed   # rows changed by committed transactions; every write is in one (Store.tx)
+            try:
+                with private_sites.run():   # one reading of the private settings per request, never one for the page's
+                    handle()                # whole life: an edit counts from the next request (the red team before Pass 4)
+            except Exception:  # noqa: BLE001 - the page says it failed; the console keeps the traceback
+                traceback.print_exc(file=sys.stderr)
+                message = (self._maybe_saved("something went wrong in CareerOS") if self._changed()
+                           else f"{title}: something went wrong in CareerOS.")
+                try:
+                    self._problem(500, f"{message} The details are in the window that runs the review page.")
+                except OSError:   # the browser has gone: nothing more to say
+                    pass
+
+        def _changed(self) -> bool:
+            """Whether this request committed a change. A write refused and rolled back is not one: its page says
+            "Not recorded", truly."""
+            return store.committed != self._before
+
+        def _maybe_saved(self, why: str) -> str:
+            check = f"Check {self._posting} on the review page" if self._posting else "Check the review page"
+            return f"Could not finish: {str(why).rstrip('.')}; some changes may have been saved. {check} before trying again."
+
+        def _refuse(self, status: int, message: str, why) -> None:
+            """A refusal: `message` ("Not recorded ...") when the request committed no change; otherwise, as when a pasted
+            posting was taken in and its processing then refused, a page that says changes may have been saved, with
+            `why` (F3; Codex's Pass 2: the errors handled here, not only the unexpected ones)."""
+            self._problem(status, self._maybe_saved(why) if self._changed() else message)
+
+        def _get(self):
             if urlsplit(self.path).path != "/" or not self._authorized():
                 return self._send(403, "forbidden")
             page = build_report(store, profile, policy, token=token, form_keys=form_keys, since=since, app_matrix=app_matrix)
@@ -250,7 +296,7 @@ def make_handler(store, profile, policy, token: str, lock_path, port_holder: dic
                 shown.pop(stale, None)
             self._send(200, page)
 
-        def do_POST(self):
+        def _post(self):
             action = urlsplit(self.path).path.strip("/")
             if action not in ACTIONS or not self._authorized():
                 return self._send(403, "forbidden")
@@ -259,6 +305,8 @@ def make_handler(store, profile, policy, token: str, lock_path, port_holder: dic
                 return self._send(413, "too large")
             form = {k: v[0] for k, v in parse_qs(self.rfile.read(length).decode("utf-8")).items()}
             target, key = form.get("target", ""), form.get("key", "")
+            if action != "paste":   # a paste's target is "new": its posting is known once taken in
+                self._posting = target.partition("|")[2] or target or None   # a lead form's target is lead|job
             if form_keys.get(key) != (action, target):
                 return self._problem(400, "This form is out of date. Reload the review page and try again.")
             if action in ASKS:   # confirmation first: nothing is recorded here (OPP-16)
@@ -310,25 +358,53 @@ def make_handler(store, profile, policy, token: str, lock_path, port_holder: dic
                         from careeros.paths import CONFIG_DIR
                         from careeros.pipeline import Context, process
                         ctx = Context(store, policy, profile, load_matrix(CONFIG_DIR / "workflows" / "job.json"))
+                        from careeros.discovery.alerts import enroll_reading
+                        if not enroll_reading(store):   # a pasted tracking link's host is remembered first (Codex Pass 4),
+                            raise ValueError(        # or nothing is taken in (D153 R4, Codex Pass 5)
+                                "the private settings are missing an agency's tracking host, changed during this request, or "
+                                "cannot be read (careeros status names the problem). Nothing was saved; paste again once "
+                                "it is fixed.")
                         result = intake(ctx, form.get("text", ""), (form.get("url") or "").strip() or None,
                                         company=(form.get("company") or "").strip() or None)
+                        self._posting = result["job_id"]   # taken in: an error after this has saved it (F3)
+                        from careeros.discovery.lead_resolution import link_same_posting
+                        link_same_posting(ctx, result["job_id"], via="pasted")   # the lead for the same posting (2026-11-02)
                         process(ctx)
                         anchor = result["job_id"]
                     elif action == "lead":
                         dismiss_lead(store, target, key=key)
                         anchor = "leads"
-            except LockError:
-                return self._problem(409, "A CareerOS run is writing right now. Go back and try again in a moment.")
+                    elif action in ("lead_confirm", "lead_reject"):   # only the likely match the card showed, or nothing
+                        lead_id, _, job_id = target.partition("|")
+                        if not job_id:
+                            raise ValueError("this form names no job")
+                        if action == "lead_confirm":
+                            confirm_likely(store, lead_id, policy=policy, job_id=job_id, key=key)
+                        else:
+                            reject_likely(store, lead_id, policy=policy, job_id=job_id, key=key)
+                        anchor = "likely"
+            # Each refusal says "Not recorded" only while this request committed no change (_refuse; Codex
+            # CR-2026-11-03-PYTHON-314, F3, Pass 2): a paste is taken in before it is processed
+            except LockError:   # when the lock is taken nothing is written; when it is let go the writes are done
+                return self._refuse(409, "A CareerOS run is writing right now. Go back and try again in a moment.",
+                                    "CareerOS's writer lock was busy or changed hands")
             except (ConfirmationChanged, DismissalChanged) as exc:   # F3: nothing recorded; confirm what is true now
+                if self._changed():
+                    return self._problem(409, self._maybe_saved(exc))
                 return self._send(*self._ask_again(kind, target, form, exc))
             except ApplicationHold as exc:
+                if self._changed():
+                    return self._problem(409, self._maybe_saved(exc))
                 return self._send(409, self._hold_page(target, form, exc))
             except SessionOpen as exc:   # an assistance session records it when you close it (OPP-77): its command, exactly
-                return self._problem(409, f"Not recorded: {exc}")
+                return self._refuse(409, f"Not recorded: {exc}", exc)
             except ApplicationConflict as exc:
-                return self._problem(409, f"Not recorded. {exc}.")
+                return self._refuse(409, f"Not recorded. {exc}.", exc)
+            except IdempotencyCollision:   # a second click on another button of a form already used (D88)
+                return self._refuse(409, "Not recorded: this form was already used for a different choice. Reload the "
+                                         "review page and choose again.", "this form was already used for a different choice")
             except ValueError as exc:
-                return self._problem(400, f"Not recorded: {exc}")
+                return self._refuse(400, f"Not recorded: {exc}", exc)
             self._send(303, "", {"Location": f"/?t={token}#{quote(anchor, safe=':')}"})
 
     return Handler

@@ -127,10 +127,15 @@ class SourceStatusTests(unittest.TestCase):
 
 class LedgerTests(unittest.TestCase):
     def test_same_job_through_another_site_is_recognised(self):
+        """Since 2026-11-02 (Codex CR-2026-11-02-LEAD-RESOLUTION F2) the tracked job must be on a board the daily scan admits."""
+        from careeros.discovery import board_registry as reg
         store = open_store(":memory:", FixedClock(), POLICY.fingerprint)
         ctx = Context(store, POLICY, PROFILE, JOB_MATRIX, None)
+        store.writer("admin").insert("employers", {"employer_id": "greenhouse:synth", "name": "Synthetic Health", "parent": "Synthetic Health",
+                                                   "ats": "greenhouse", "board_token": "synth", "status": "verified", "admitted_via": "legacy"})
+        reg.sync_legacy(store)
         add_job(store, "gh:synth:1", title="Claims Analyst", title_norm="claims analyst", employer_name="Synthetic Health",
-                parent="Synthetic Health")
+                parent="Synthetic Health", employer_id="greenhouse:synth")
         outcomes = []
         alert = AlertEmail("s", "t", None, [
             Link("https://www.linkedin.com/jobs/view/4000000011", "linkedin", "Claims Analyst", "Synthetic Health · Remote", True),

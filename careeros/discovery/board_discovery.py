@@ -11,7 +11,7 @@ Two separate decisions:
     description_name       the employer's full name appears in the board's posting texts.
   Verified = one strong kind (supplied link / official domain), or both name kinds. A matching job TITLE never
   counts. Anything less stays "unresolved" for you to confirm (`careeros sources verify`).
-- JOB MATCHING: which posting on a verified board is the lead's job? Requisition id, then exact link, then title +
+- JOB MATCHING: which posting on the board is the lead's job? Requisition id, then exact link, then title +
   location + seniority. Several candidates = "ambiguous" (reviewable), none = "no_match", and an old lead with no
   match = "posting_closed" (the board is still worth keeping).
 
@@ -21,9 +21,11 @@ record. Every request goes through a client restricted to the four API hosts (re
 per-provider budget; Retry-After is honoured. Staffing agencies are recorded as such and their clients are never
 guessed. Excluded and held employers are skipped.
 
-2026-10-13: discovery only ever produces CANDIDATES. The identity evidence above decides whether a lead's posting may
-be graded; it never admits a board to the daily scan. Admission needs board verification against the employer's own
+2026-10-13: discovery only ever produces CANDIDATES. Admission needs board verification against the employer's own
 website (board_verifier: official-site handshake, quarantine, validation scan) or your expiring approval.
+2026-11-02 (ADR 0003, amendment): the identity evidence above no longer grades a lead either. A posting that matches a
+lead on a board discovery reads is recorded as `awaiting_board` and never ingested; the lead is linked by
+lead_resolution once the board is admitted and scanned (the employer resolved by employer_identity, not by this evidence).
 """
 from __future__ import annotations
 
@@ -89,10 +91,14 @@ def is_staffing_agency(name: str, policy) -> bool:
         re.search(r"\b(staffing|recruiting|recruitment|talent solutions)\b", text))
 
 
-def candidate_from_lead(lead, policy) -> Candidate | None:
+def candidate_from_lead(lead, policy, local_urls: frozenset[str] = frozenset()) -> Candidate | None:
     """A lead (alert or recommendation) as a discovery candidate: its company, any board / domain hints in its Note,
     and the job facts needed for matching later. None when the lead names no company."""
+    from careeros.discovery.alerts import is_agency_lead
     from careeros.discovery.note import context_note
+
+    if is_agency_lead(lead, local_urls):  # an agency card or its link: its client is never guessed (CR-AD-02, CR-AD-06)
+        return None
     context = lead["context"] or ""
     company = re.sub(r"\s+", " ", context.split(" · ")[0]).strip() if context else ""
     if not company or len(company) > 100 or re.search(r"[@=<>]|https?:", company):
@@ -109,6 +115,15 @@ def candidate_from_lead(lead, policy) -> Candidate | None:
     if note.get("agency") or is_staffing_agency(company, policy):
         candidate.relationship = "staffing_agency"
     return candidate
+
+
+def lead_facts(store, lead_id: str, policy) -> Candidate | None:
+    """One lead's own job facts (title, link, requisition, location, first seen) for matching. Leads at one employer
+    share a discovery queue row and a board, never one another's facts (gap 2, 2026-11-02). None for a lead that is gone
+    or names no company."""
+    from careeros.discovery.alerts import local_only_urls
+    row = store.one("SELECT * FROM leads WHERE lead_id = ?", (lead_id,))
+    return candidate_from_lead(row, policy, local_only_urls(store)) if row is not None else None
 
 
 def slug_variants(name: str, limit: int = 2) -> list[str]:
@@ -170,27 +185,120 @@ def relevant_roles(postings: list, policy) -> int:
 
 
 # --- job matching (separate from identity) ---------------------------------------------------------------------
+@dataclass(frozen=True)
+class TrackedPosting:
+    """A job CareerOS tracks, as the lead matcher reads it (lead_resolution, 2026-11-02). `key` is its job id, and is what
+    a match names; a posting read from a board during discovery is named by its own id on that board."""
+    key: str
+    title: str
+    url: str | None
+    requisition_id: str | None
+    external_id: str | None
+    location: str
+    remote_type: str
+
+
+def _key(p) -> str:
+    return getattr(p, "key", None) or p.external_id
+
+
+def _remote(p) -> str:
+    known = getattr(p, "remote_type", None)
+    return known or detect_remote(p.location, p.workplace_hint, p.description_text)
+
+
+def _same_link(a: str | None, b: str | None) -> bool:
+    from careeros.normalize.posting import canonical_url
+    if not (a and b):
+        return False
+    return a.rstrip("/") == b.rstrip("/") or (canonical_url(a) is not None and canonical_url(a) == canonical_url(b))
+
+
+# Filler a near-identical title may differ by (2026-11-02, the owner's decision D68: "filler such as remote, I/II aside"):
+# where the work is done, and a level written as I-IV or 1-4. Everything else in the title must be the same words.
+_FILLER_PHRASES = re.compile(r"\b(work from home|wfh|remote|hybrid|on site|onsite|in office|virtual|telecommute|telework|"
+                             r"nationwide|anywhere|united states|usa|us|level (?:i{1,3}|iv|[1-4]))\b")
+_LEVEL = {"i", "ii", "iii", "iv", "1", "2", "3", "4"}
+
+
+def near_title(title: str | None) -> str:
+    """The title with its filler removed ("Claims Analyst II - Remote (US)" -> "claims analyst")."""
+    words = _FILLER_PHRASES.sub(" ", norm(title or "")).split()
+    return " ".join(w for w in words if w not in _LEVEL)
+
+
+def _place_words(location: str) -> set[str]:
+    return {w for w in norm(location).split() if len(w) >= 3 and w not in ("remote", "hybrid", "onsite", "united", "states", "usa")}
+
+
+def location_compatible(lead_location: str | None, posting) -> bool:
+    """Whether a lead's location (as an alert showed it) can be the posting's. Unknown on either side is compatible. Not
+    compatible: a remote lead and an on-site or hybrid posting (or the reverse), a US place and a non-US one, or two named
+    places with nothing in common (a state, or a city word)."""
+    from careeros.normalize.posting import _states_in, detect_country
+    lead = "" if "=" in (lead_location or "") else (lead_location or "")   # a Note field in that place is no location
+    lead_remote, post_remote = detect_remote(lead, None, ""), _remote(posting)
+    if {lead_remote, post_remote} in ({"remote", "onsite"}, {"remote", "hybrid"}):
+        return False
+    countries = {detect_country(lead, "", lead_remote), detect_country(posting.location or "", "", post_remote)}
+    if countries == {"US", "non_US"}:
+        return False
+    if "remote" in (lead_remote, post_remote) or not norm(lead) or not norm(posting.location or ""):
+        return True
+    lead_states, post_states = _states_in(lead), _states_in(posting.location or "")
+    if lead_states and post_states:
+        return bool(lead_states & post_states)
+    words, other = _place_words(lead), _place_words(posting.location or "")
+    return not (words and other) or bool(words & other)
+
+
 def match_lead(candidate: Candidate, postings: list, policy, now: str) -> dict:
+    """Which of `postings` is the lead's job (`candidate` holds that one lead's facts), in this order:
+      requisition     the same requisition id: matched;
+      canonical_link  the same link: matched;
+      title_location  the same title, the same seniority, a compatible location, and no different known requisition:
+                      one = matched, several = ambiguous;
+      likely_title    otherwise, a near-identical title (filler such as remote or I/II aside) with the same seniority, a
+                      compatible location and no different known requisition: one = likely (a candidate the owner
+                      confirms or rejects, never linked by itself, 2026-11-02), several = ambiguous;
+    none = no_match, or posting_closed for a lead older than closed_after_days. Postings may be a board's (discovery) or
+    tracked jobs (TrackedPosting)."""
+    from careeros.discovery.alerts import kept_for_review
     from careeros.normalize.posting import seniority
+    if candidate.posting_url and kept_for_review(candidate.posting_url):
+        # A lead kept for review (no single job ID) is never matched automatically, not even by its byte-identical URL:
+        # only you dismiss it (CR-2026-11-09-INTAKE-HOTFIX Pass 6, CR-HF-01, the owner's D140 F2), checked first
+        return {"decision": "no_match", "method": "review_link", "posting": None, "candidates": []}
+    # A posting tracked at a review link is never a candidate, by any strategy (requisition, link, title, location): the
+    # exclusion comes before the candidate set is built (the owner's D142 R-b, Codex Pass 7)
+    postings = [p for p in postings if not (p.url and kept_for_review(p.url))]
     req = norm_req(candidate.requisition_id)
     if req:
         hits = [p for p in postings if norm_req(p.requisition_id) == req or norm_req(p.external_id) == req]
         if len(hits) == 1:
-            return {"decision": "matched", "method": "requisition", "posting": hits[0], "candidates": [hits[0].external_id]}
+            return {"decision": "matched", "method": "requisition", "posting": hits[0], "candidates": [_key(hits[0])]}
     if candidate.posting_url:
-        hits = [p for p in postings if p.url and p.url.rstrip("/") == candidate.posting_url.rstrip("/")]
+        hits = [p for p in postings if _same_link(p.url, candidate.posting_url)]
         if len(hits) == 1:
-            return {"decision": "matched", "method": "canonical_link", "posting": hits[0], "candidates": [hits[0].external_id]}
+            return {"decision": "matched", "method": "canonical_link", "posting": hits[0], "candidates": [_key(hits[0])]}
     title = norm(candidate.title or "")
     terms = policy.get("seniority_terms", default={})
-    same = [p for p in postings if title and norm(p.title) == title]
-    if candidate.location and "remote" in candidate.location.lower():
-        same = [p for p in same if detect_remote(p.location, p.workplace_hint, p.description_text) in ("remote", "unknown")] or same
-    same = [p for p in same if seniority(norm(p.title), terms) == seniority(title, terms)]
+    level = seniority(title, terms)
+    # a different known requisition is a different vacancy; a place that cannot be the lead's is another posting
+    fits = [p for p in postings if not (req and norm_req(p.requisition_id) and norm_req(p.requisition_id) != req)
+            and seniority(norm(p.title), terms) == level and location_compatible(candidate.location, p)]
+    same = [p for p in fits if title and norm(p.title) == title]
     if len(same) == 1 and not req:
-        return {"decision": "matched", "method": "title_location", "posting": same[0], "candidates": [same[0].external_id]}
+        return {"decision": "matched", "method": "title_location", "posting": same[0], "candidates": [_key(same[0])]}
     if same:
-        return {"decision": "ambiguous", "method": "title_location", "posting": None, "candidates": [p.external_id for p in same][:10]}
+        return {"decision": "ambiguous", "method": "title_location", "posting": None, "candidates": [_key(p) for p in same][:10]}
+    near = near_title(candidate.title)
+    if len(near.split()) >= 2:
+        likely = [p for p in fits if near_title(p.title) == near]
+        if len(likely) == 1:
+            return {"decision": "likely", "method": "likely_title", "posting": likely[0], "candidates": [_key(likely[0])]}
+        if likely:
+            return {"decision": "ambiguous", "method": "likely_title", "posting": None, "candidates": [_key(p) for p in likely][:10]}
     old = candidate.first_seen_at and (parse_utc(now) - parse_utc(candidate.first_seen_at)) / timedelta(days=1) > cfg(policy)["closed_after_days"]
     return {"decision": "posting_closed" if old else "no_match", "method": "none", "posting": None, "candidates": []}
 
@@ -221,7 +329,8 @@ def _upsert_mapping(store, candidate: Candidate, ats: str, token: str, *, collec
     existing = store.one("SELECT * FROM board_mappings WHERE mapping_id = ?", (mapping_id,))
     writer = store.writer("discovery")
     from . import board_registry as registry
-    entity_id = registry.ensure_entity(store, candidate.employer_name, domain=candidate.official_domain, origin=candidate.origin)
+    # a lead's domain= is only a hint: it never merges employer records (ADR 0001, amendment of 2026-11-02)
+    entity_id = registry.ensure_entity_for(store, candidate.employer_name, domain=candidate.official_domain, origin=candidate.origin)
     if existing:
         merged = {json.dumps(e, sort_keys=True) for e in json.loads(existing["identity_evidence"] or "[]")} | \
                  {json.dumps(e, sort_keys=True) for e in evidence}
@@ -352,8 +461,10 @@ def discover(ctx, candidate: Candidate, client: HttpClient, *, now: str | None =
         _attempt(store, candidate, outcome, ats=ats, slug=token, requests=client.requests - before,
                  detail=f"{len(postings)} postings, {relevant} relevant; evidence: {method or 'none'}")
         outcomes.append(outcome)
-        for lead_id in candidate.lead_ids:
-            result["matches"] += _record_match(ctx, candidate, lead_id, mapping, postings, verified, now)
+        for lead_id in candidate.lead_ids:   # each lead with its own job facts, never the group's (gap 2, 2026-11-02)
+            facts = lead_facts(store, lead_id, policy)
+            if facts is not None:
+                result["matches"] += _record_match(ctx, facts, lead_id, mapping, postings, now)
         # a candidate only: admission to the daily scan is board_verifier's decision (the employer's own site first)
         if verified:
             break  # one verified board per employer is enough
@@ -364,31 +475,22 @@ def discover(ctx, candidate: Candidate, client: HttpClient, *, now: str | None =
     return result
 
 
-def _record_match(ctx, candidate: Candidate, lead_id: str, mapping_id: str, postings: list, verified: bool, now: str) -> int:
-    """Job matching, kept apart from identity. A match on a verified board grades the lead's job (one posting read
-    from an allowed source, already in hand); on an unresolved board it is only recorded for review."""
-    from careeros.pipeline import ingest
-    store = ctx.store
-    match = match_lead(candidate, postings, ctx.policy, now)
-    job_id = None
-    if match["decision"] == "matched" and verified:
-        posting = match["posting"]
-        mapping = store.one("SELECT * FROM board_mappings WHERE mapping_id = ?", (mapping_id,))
-        employer = store.one("SELECT * FROM employers WHERE ats = ? AND board_token = ?", (mapping["ats"], mapping["board_token"]))
-        from careeros.discovery.saved import parent_for
-        owner = dict(employer) if employer else {"employer_id": None, "name": mapping["employer_name"],
-                                                 "parent": parent_for(mapping["employer_name"], ctx.policy)}
-        ingest(ctx, owner, [posting], source="ats_api" if employer else "manual_url", full_board=False)
-        job_id = f"{posting.ats}:{posting.board_token}:{posting.external_id}"
-        if store.one("SELECT 1 FROM jobs WHERE job_id = ?", (job_id,)):
-            store.writer("discovery").update("leads", {"status": "ingested", "job_id": job_id}, "lead_id = ? AND job_id IS NULL", (lead_id,))
-        else:
-            job_id = None
-    store.writer("discovery").insert("lead_matches", {
-        "match_id": f"lm:{uuid.uuid4().hex[:16]}", "lead_id": lead_id, "job_id": job_id, "mapping_id": mapping_id,
-        "method": match["method"], "decision": match["decision"] if verified or match["decision"] != "matched" else "ambiguous",
-        "candidates_json": json.dumps(match["candidates"]), "decided_at": now, "audit": None, "audited_at": None})
-    return int(job_id is not None)
+def _record_match(ctx, facts: Candidate, lead_id: str, mapping_id: str, postings: list, now: str) -> int:
+    """Job matching, kept apart from identity. The board discovery just read is a candidate, never admitted (ADR 0003), so
+    a match here never grades the lead or ingests its posting, whatever the board's identity evidence (ADR 0003,
+    amendment of 2026-11-02): it is recorded as `awaiting_board`, and the lead is linked by lead_resolution once the
+    board is admitted and scanned. Several candidates stay ambiguous; none is no_match (posting_closed for an old lead).
+    The lead's own state is left as it is: only an admitted board's scan changes it. Returns 1 for a match found."""
+    match = match_lead(facts, postings, ctx.policy, now)
+    found = match["decision"] in ("matched", "likely")   # a likely match is confirmed by you once the board is admitted
+    decision = "awaiting_board" if found else match["decision"]
+    reason = ("a posting on this candidate board matches; the lead is linked once the board is admitted and scanned" if found
+              else None)
+    ctx.store.writer("discovery").insert("lead_matches", {
+        "match_id": f"lm:{uuid.uuid4().hex[:16]}", "lead_id": lead_id, "job_id": None, "mapping_id": mapping_id,
+        "method": match["method"], "decision": decision, "candidates_json": json.dumps(match["candidates"]), "decided_at": now,
+        "audit": None, "audited_at": None, "actor": "careeros", "reason": reason})
+    return int(found)
 
 
 def activate(store, mapping_id: str, *, actor: str = "user") -> str:

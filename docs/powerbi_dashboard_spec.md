@@ -58,8 +58,8 @@ The empty-to-null step matters: an empty cell otherwise fails to convert to a nu
 **Refresh.** Run `careeros export`, then refresh the report. The export folder is replaced as a whole, and only after
 every check passes, so a refresh never sees a half-written export.
 
-**Privacy.** A report on your private export contains your real search data. Keep that `.pbix` in the vault, and
-never publish it to the web. Build portfolio screenshots from the demo export only.
+**Privacy.** A report on your private export contains your real search data. Keep that `.pbix` in the vault
+(`vault\reports\powerbi` is in the offsite archive), and never publish it to the web. Build portfolio screenshots from the demo export only.
 
 ## 3. Measures
 
@@ -70,19 +70,19 @@ never publish it to the web. Build portfolio screenshots from the demo export on
 | Jobs Discovered | `jobs_discovered` | 45 |
 | Distinct Openings | `distinct_openings` | 44 |
 | Jobs Evaluated | `jobs_evaluated` | 40 |
-| Jobs Qualified | `jobs_qualified` | 18 |
+| Jobs Qualified | `jobs_qualified` | 20 |
 | Jobs Recommended | `jobs_recommended` | 5 |
-| Jobs Rejected | `jobs_rejected` | 13 |
-| Jobs Manual Review | `jobs_manual_review` | 13 |
-| Manual Review Rate | `manual_review_rate` | 32.5% |
+| Jobs Rejected | `jobs_rejected` | 12 |
+| Jobs Manual Review | `jobs_manual_review` | 15 |
+| Manual Review Rate | `manual_review_rate` | 37.5% |
 | Duplicates Prevented | `duplicates_prevented` | 3 |
 | Cross-Source Sightings | `cross_source_sightings` | 2 |
 | Verified Employers | `verified_employers` | 8 |
-| Average Fit | `average_fit` | 84.8 |
+| Average Fit | `average_fit` | 86.0 |
 | Board Verification Rate | `board_verification_rate` | 80.0% |
 | New-Board Verification Rate | `new_board_verification_rate` | 60.0% |
 | Scan Reliability | `scan_reliability` | 96.3% |
-| NIGHT Routed | `night_routed` | 13 |
+| NIGHT Routed | `night_routed` | 14 |
 | Applications | `applications` | 4 |
 | Open Applications | `applications_open` | 3 |
 | Interview Rate | `interview_rate` | 0.0% |

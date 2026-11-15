@@ -14,11 +14,18 @@ from careeros.normalize.posting import contains_term, norm, seniority
 
 from . import certifications as certification_mod
 from . import experience as experience_mod
+from . import skill_groups
 from .gate import GateResult, annualize, state_for
 from .profile import EVIDENCE_WEIGHT, Profile
 
 # Bump when scoring logic changes: scores recorded under an older version are recomputed automatically.
-SCORES_VERSION = "scores-2026-10-15b"  # b: certification records kept with the score; a: Experience Match (shadow mode)
+SCORES_VERSION = "scores-2026-11-13a"  # 11-13a: 11-11a scored again on the rules-v16 readings; not yet deployed
+# 11-11a: 11-10a scored again on the rules-v15 readings (d662c91); not yet deployed
+# 11-10a: Experience Match counts roles joined by "and" by the weakest, and a line
+# whose demands may be alternatives as AND (D123); not yet deployed
+# 11-03b: skills offered as alternatives count once, as their best (OPP-80);
+# 11-03a: years_role_unconfirmed counts as unknown years (OPP-43)
+# 10-15b: certification records kept with the score; 10-15a: Experience Match (shadow mode)
 NEUTRAL = 0.5
 # "principal" (2026-10-12): a strong seniority signal, not an automatic rejection; the requirements decide.
 SENIORITY_RANK = {"entry": 1, "mid": 2, "unspecified": 2, "senior": 3, "principal": 4, "manager": 5}
@@ -46,11 +53,44 @@ def _dim(value: float, basis: str, unknown: bool = False) -> dict:
     return {"value": round(max(0.0, min(1.0, value)), 3), "basis": basis, "unknown": unknown}
 
 
-def _skill_matches(requirements, profile: Profile, types: tuple) -> tuple[list, list]:
-    wanted = sorted({r.name for r in requirements if r.category == "skill" and r.requirement_type in types})
+def _skill_matches(requirements, profile: Profile, types: tuple, lesser=(), best_of=None) -> tuple[list, list]:
+    """The skills asked for, split into those you have and those you lack. A set of alternatives (OPP-80) is one skill,
+    its best member (`lesser` are the others); a missing one is named with its alternatives ("facets or qnxt")."""
+    wanted = sorted({r.name for r in requirements if r.category == "skill" and r.requirement_type in types} - set(lesser))
     matched = [(name, profile.skill(name)) for name in wanted if profile.skill(name)]
-    missing = [name for name in wanted if not profile.skill(name)]
+    missing = [" or ".join((best_of or {}).get(name, [name])) for name in wanted if not profile.skill(name)]
     return matched, missing
+
+
+def _skill_item(name: str, title: str, duties: set, profile: Profile, policy) -> dict:
+    """One skill's importance (policy level, promoted to core when the job title names it and one level when it is also
+    a duty), and the credit your evidence gives it."""
+    cfg = policy.get("skill_importance", default={}) or {}
+    weights = cfg.get("weights") or {"core": 4, "important": 2, "supporting": 1, "generic": 0.5}
+    lists = {level: {norm(s) for s in cfg.get(level, []) or []} for level in ("core", "supporting", "generic")}
+    aliases = policy.get("skill_aliases", default={}) or {}
+    level = next((lv for lv in ("core", "supporting", "generic") if norm(name) in lists[lv]), cfg.get("default", "important"))
+    basis = f"policy: {level}" if level != cfg.get("default", "important") else "listed skill"
+    if any(contains_term(title, norm(w)) for w in aliases.get(name, [name])):
+        level, basis = "core", "named in the job title"
+    elif name in duties and level != "core":
+        level = IMPORTANCE_ORDER[IMPORTANCE_ORDER.index(level) + 1]
+        basis += "; also a stated duty (+1 level)"
+    hit = profile.skill(name)
+    evidence = (hit.get("evidence") or "adjacent") if hit else None
+    return {"importance": level, "weight": float(weights.get(level, 1)), "basis": basis, "evidence": evidence,
+            "credit": EVIDENCE_WEIGHT.get(evidence, 0.4) if evidence else 0.0}
+
+
+def _skill_rank(job, requirements, profile: Profile, policy):
+    """Orders the members of a set of alternatives: your evidence first, then the skill's importance."""
+    title = job.get("title_norm") or ""
+    duties = {r.name for r in requirements if r.category == "skill" and r.requirement_type == "responsibility"}
+
+    def rank(name: str) -> tuple:
+        item = _skill_item(name, title, duties, profile, policy)
+        return item["credit"], item["weight"]
+    return rank
 
 
 def _seniority_fit(job: dict, profile: Profile, policy) -> tuple[float, str, bool]:
@@ -75,13 +115,14 @@ def skill_coverage(job, requirements, profile: Profile, policy) -> dict:
     Education, work authorization, clearance, licences and certifications are never counted (the gate judges them)."""
     cfg = policy.get("skill_importance", default={}) or {}
     weights = cfg.get("weights") or {"core": 4, "important": 2, "supporting": 1, "generic": 0.5}
-    lists = {level: {norm(s) for s in cfg.get(level, []) or []} for level in ("core", "supporting", "generic")}
-    aliases = policy.get("skill_aliases", default={}) or {}
     title = job.get("title_norm") or ""
     duties = {r.name for r in requirements if r.category == "skill" and r.requirement_type == "responsibility"}
+    # OPP-80 (2026-11-03): skills offered as alternatives ("Tableau or Power BI") count once, as the best one you have
+    lesser, best_of = skill_groups.alternatives(requirements, policy, REQUIRED_TYPES, _skill_rank(job, requirements, profile, policy))
     wanted: dict = {}
     for r in requirements:
-        if r.requirement_type in REQUIRED_TYPES and r.category in ("skill", "domain"):
+        if r.requirement_type in REQUIRED_TYPES and r.category in ("skill", "domain") \
+                and not (r.category == "skill" and r.name in lesser):
             wanted.setdefault((r.category, r.name), r.source_text)
     items = []
     for (category, name), source in sorted(wanted.items()):
@@ -89,33 +130,31 @@ def skill_coverage(job, requirements, profile: Profile, policy) -> dict:
             level, basis = cfg.get("required_domains", "core"), "required domain"
             have = norm(name) in profile.domains()
             evidence = "direct" if have else None
+            weight, credit = float(weights.get(level, 1)), EVIDENCE_WEIGHT.get(evidence, 0.4) if evidence else 0.0
         else:
-            level = next((lv for lv in ("core", "supporting", "generic") if norm(name) in lists[lv]), cfg.get("default", "important"))
-            basis = f"policy: {level}" if level != cfg.get("default", "important") else "listed skill"
-            if any(contains_term(title, norm(w)) for w in aliases.get(name, [name])):
-                level, basis = "core", "named in the job title"
-            elif name in duties and level != "core":
-                level = IMPORTANCE_ORDER[IMPORTANCE_ORDER.index(level) + 1]
-                basis += "; also a stated duty (+1 level)"
-            hit = profile.skill(name)
-            evidence = (hit.get("evidence") or "adjacent") if hit else None
-        weight = float(weights.get(level, 1))
-        credit = EVIDENCE_WEIGHT.get(evidence, 0.4) if evidence else 0.0
-        items.append({"requirement": name, "category": category, "importance": level, "weight": weight, "basis": basis,
-                      "evidence": evidence or "none", "credit": credit, "source_text": (source or "")[:160]})
+            skill = _skill_item(name, title, duties, profile, policy)
+            level, basis, evidence, weight, credit = (skill["importance"], skill["basis"], skill["evidence"], skill["weight"],
+                                                      skill["credit"])
+        item = {"requirement": name, "category": category, "importance": level, "weight": weight, "basis": basis,
+                "evidence": evidence or "none", "credit": credit, "source_text": (source or "")[:160]}
+        if category == "skill" and name in best_of:
+            item["alternatives"] = [m for m in best_of[name] if m != name]
+            item["basis"] += f"; the best of {' or '.join(best_of[name])}"
+        items.append(item)
     total = sum(i["weight"] for i in items)
     coverage = round(sum(i["weight"] * i["credit"] for i in items) / total, 3) if total else None
     found = [i for i in items if i["credit"] > 0]
     return {"method": "weighted-v1", "weighted_coverage": coverage, "items": items,
             "naive_coverage": round(len(found) / len(items), 3) if items else None,
-            "weight_found": round(sum(i["weight"] * i["credit"] for i in items), 2), "weight_total": total}
+            "weight_found": round(sum(i["weight"] * i["credit"] for i in items), 2), "weight_total": total,
+            "lesser_alternatives": sorted(lesser), "alternatives": {best: list(m) for best, m in sorted(best_of.items())}}
 
 
 def eligibility(job, requirements, profile, gate: GateResult, policy) -> dict:
     required = REQUIRED_TYPES
-    matched, missing = _skill_matches(requirements, profile, required)
     dims = {}
     coverage = skill_coverage(job, requirements, profile, policy)
+    matched, missing = _skill_matches(requirements, profile, required, coverage["lesser_alternatives"], coverage["alternatives"])
     min_weight = float((policy.get("skill_importance", default={}) or {}).get("min_weight_to_judge", 0))
     if coverage["items"] and coverage["weight_total"] < min_weight:
         # e.g. only "Agile" and "documentation": too little to judge coverage on, so treated like "none listed"
@@ -142,7 +181,7 @@ def eligibility(job, requirements, profile, gate: GateResult, policy) -> dict:
         years_value = 0.3
     elif gate.has_flag("years_slightly_short"):
         years_value = 0.7
-    elif gate.has_flag("years_unknown"):
+    elif gate.has_flag("years_unknown") or gate.has_flag("years_role_unconfirmed"):
         years_value, unknown = NEUTRAL, True
     elif gate.has_flag("years_preferred_short"):
         years_value = 0.85
@@ -169,7 +208,8 @@ def eligibility(job, requirements, profile, gate: GateResult, policy) -> dict:
 
 def candidate_fit(job, requirements, profile, policy) -> dict:
     all_types = ("hard_required", "required_with_equivalency", "ambiguous", "preferred", "responsibility")
-    matched, missing = _skill_matches(requirements, profile, all_types)
+    lesser, best_of = skill_groups.alternatives(requirements, policy, all_types, _skill_rank(job, requirements, profile, policy))
+    matched, missing = _skill_matches(requirements, profile, all_types, lesser, best_of)
     text_norm = norm(job.get("description_text") or "")
     dims = {}
 

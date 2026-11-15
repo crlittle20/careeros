@@ -33,6 +33,7 @@ hold them, which is why the public repository is a fresh snapshot with its own h
 | Gmail | Read-only queries for alert senders | Daily run, once connected |
 | The job seeker's private GitHub repository | Replies to recommendation issues and the seen-jobs index. **Job facts only**: company, title, location, links, dates. Never the profile, pay floor, labels, scores or rejection reasons. | Daily run, when configured |
 | Anthropic API (optional; only with a stored API key) | Public posting text only. Never the profile. | Only if AI reading is enabled |
+| The offsite folder the job seeker chooses (e.g. a OneDrive folder, which OneDrive then uploads) | One **encrypted** archive (GnuPG, AES-256) of the database and the hand-written vault folders. The passphrase stays in Windows Credential Manager and with the job seeker; nothing unencrypted is written there. | Daily run, only once set up (off by default) |
 
 Nothing else is sent. No application, message or email is ever sent on the job seeker's behalf.
 
@@ -57,7 +58,7 @@ Two cases need saying plainly:
 ## Keeping and deleting
 
 - History is kept on purpose: decisions are explainable and auditable. Delete everything by deleting the vault
-  folder, including its 14 most recent daily backups.
+  folder, including its 14 most recent daily backups, and the offsite folder's archives if you set one up (7 kept).
 - Disconnect Gmail with `careeros gmail disconnect` (it removes the stored credential). Remove other credentials in
   Windows Credential Manager.
 - Reports and exports built on private data (including a Power BI report pointed at a private export) are private.

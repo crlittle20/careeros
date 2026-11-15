@@ -52,13 +52,16 @@ The method: clone the repository into an empty folder, with no vault beside it. 
 `requirements-dev.lock`, hash-checked; the wheels came from the copies verified on 2026-10-13, so the install did not
 download anything. Then follow the README and `demo_walkthrough.md`. All 13 tasks succeeded.
 
+The evidence column records this gate's run; the demo world has grown since (`evidence/functional_mvp.json` holds the
+latest gate run: on 2026-11-14, for example, 14 jobs routed to the overnight profile).
+
 | # | Task | How | Evidence |
 |---|---|---|---|
 | 1 | Understand the business problem | README **Business problem** and **Solution**; `case_study.md` sections 1-2; `business_requirements.md` | The positioning and problem are on the first screen of the README |
 | 2 | Understand the architecture | README **Architecture** and **Workflow** (two diagrams); `architecture.md`; eight ADRs | Diagram blocks and links are checked by `test_docs` |
 | 3 | Install the portfolio build | The README's two setup commands | 51 packages installed, hash-checked, in 96 seconds |
 | 4 | Initialize Demo Mode | `careeros demo tour` (runs `init`) | Demo vault created with its marker; the tour finished in 9 seconds |
-| 5 | Process synthetic jobs | The tour's four days of `careeros run` | `careeros status`: `jobs: scored=27, rejected=13, closed=4, duplicate=1` |
+| 5 | Process synthetic jobs | The tour's four days of `careeros run` | `careeros status`: `jobs: scored=28, rejected=12, closed=4, duplicate=1` |
 | 6 | Observe employer verification | `careeros sources list`, `careeros sources explain greenhouse:quillon`, `careeros sources reviews` | 13 boards with their status; the impostor's chain shows the handshake passed and identity failed (`board names another company`) |
 | 7 | Observe duplicate prevention | `careeros explain greenhouse:meridianrx:102` | `decision: duplicate`, `of: greenhouse:meridianrx:101`, `reason: same_requisition` |
 | 8 | Observe scoring | `careeros explain greenhouse:meridianrx:101` | Every fit and career-value component with its basis; `apply_priority: 80.7` |
@@ -133,8 +136,8 @@ without its token is refused (HTTP 403).
 | S10 | G1: a posting whose location says only "Remote" is not placed in the U.S. from its text | Open: a rule change that re-evaluates every live job on the next run, so the owner should choose when |
 | S11 | G2 and G3: a failed suggestion is invisible, and review cases stay open after a completed migration (visible in `careeros sources reviews`) | Open: it changes the report and the review-case lifecycle of the live system; best done in a focused milestone with G4 and G5 |
 | S12 | G4 and G5: the demo shows no board contradicted by its employer's own site, and no overnight job that the overnight profile accepts | Open: it changes the demo world, its recorded totals, the committed analytics sample and the Power BI files, and re-saving the `.pbix` and screenshots needs Power BI Desktop |
-| S13 | R3: the runtime install (`requirements.lock`) is not hash-locked, and its pydantic is newer than 14 days | Open: from 2026-10-23 pydantic 2.14.0 meets the 14-day rule; the owner decides whether to hash-lock the engine's own environment |
-| S14 | Lead matching relies on the older identity check (`board_discovery._record_match`) | Open: a correctness review outside the demo, already recorded in `functional_mvp_report.md` section 6 |
+| S13 | R3: the runtime install (`requirements.lock`) is not hash-locked, and its pydantic is newer than 14 days | Closed 2026-11-03 (OPP-71): `requirements.lock` is hash-locked (PyPI's sha256 for every wheel, CPython 3.12 and 3.14, Windows x64 and Linux x86_64) and installed with `--require-hashes`; pydantic 2.14.0 meets the 14-day rule, and the development lock pins the same |
+| S14 | Lead matching relies on the older identity check (`board_discovery._record_match`) | Closed 2026-11-02 (lead resolution, ADR 0003 amendment): a match on a board discovery has just read is only recorded as `awaiting_board`, and a lead is linked only through a board in the daily scan |
 | S15 | Power BI cosmetics: some chart subtitles show raw field names, and one table scrolls sideways | **Mostly fixed (2026-10-31):** card titles fit (two rows of four), every field has a display name, screenshots re-captured; checked by `test_powerbi::test_titles_are_readable`. Still open: the Board health table scrolls sideways, and a few Roles-page legend labels are shortened |
 | S16 | `careeros explain` prints dense JSON fragments, and its SOURCE line names only the first channel | Open: presentation only; the walkthrough explains how to read it |
 
@@ -142,7 +145,7 @@ without its token is refused (HTTP 403).
 
 - Reading careers pages that build their job list with JavaScript (a decision due at the 2026-10-20 review).
 - More ATS providers; AI requirement reading as a default.
-- Splitting `cli.py`; working down the type-check baseline (164 older errors).
+- Splitting `cli.py`; working down the type-check baseline (164 older errors at this gate; 158 on 2026-11-14).
 - macOS support (Linux passes CI since 2026-10-15).
 - A short screen recording of the walkthrough, for reviewers who will not install anything.
 
@@ -161,10 +164,14 @@ hosted or multi-user deployment.
 | The AI-assisted development disclosure now quotes the owner's own account of the process (given 2026-10-13), and the case study and README follow it | `docs/ai_assisted_development.md`, `docs/case_study.md`, `README.md` | `test_portfolio_docs` |
 | Gate evidence regenerated after the G6 fix: 10 PASS, 3 PARTIAL, 0 FAIL | `evidence/functional_mvp.json`, `docs/functional_mvp_report.md` (section 8) | `test_portfolio_docs`, `tools/validate.py` |
 
-After these changes and the refactor of 2026-10-14: 925 automated tests pass. There are 749 planted defects. The spot checks reported at this gate proved
-nothing at the time: the tool's scratch copies lacked files some tests need, so every defect looked caught. After the
-fix (2026-10-14), full runs followed. The latest full run (2026-11-02) caught all 749, each by a real failing test with the whole suite loaded
-(`evidence/mutation-receipt.json`); the run history, with each run's survivors and what was fixed, is in [testing.md](testing.md).
+Current automated test inventory: 1627. This is a collection count; validation receipts distinguish passes, skips and unavailable checks.
+
+Historical gate result after these changes and the refactor of 2026-10-14: the suite passed. The spot checks
+reported at this gate proved nothing at the time: the tool's scratch copies lacked files some tests need, so every
+defect looked caught. After the fix (2026-10-14), full runs followed.
+
+Current mutation inventory (2026-11-14). There are 1826 planted defects. The latest full run (2026-11-05) caught all
+1066 defined at the time, each by a real failing test with the whole suite loaded (`evidence/mutation-receipt.json`). The run history, with each run's survivors and what was fixed, is in [testing.md](testing.md).
 `tools/validate.py` passes all seven checks.
 
 ## 7. Scope freeze

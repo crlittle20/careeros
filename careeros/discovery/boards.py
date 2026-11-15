@@ -107,9 +107,14 @@ def ashby_posting(name: str, item: dict) -> RawPosting:
         updated_at=from_external(item.get("updatedAt")), raw=item)
 
 
-def fetch_ashby(client: HttpClient, name: str) -> list[RawPosting]:
+def _ashby_items(client: HttpClient, name: str) -> list[dict]:
     data = client.get_json(f"https://api.ashbyhq.com/posting-api/job-board/{_token(name)}?includeCompensation=true")
-    return [ashby_posting(name, item) for item in data.get("jobs", []) if item.get("isListed", True)]
+    return [item for item in (data or {}).get("jobs", []) if isinstance(item, dict)]
+
+
+def fetch_ashby(client: HttpClient, name: str) -> list[RawPosting]:
+    """The board's listing: unlisted postings (isListed false) are left out, as the board itself leaves them out."""
+    return [ashby_posting(name, item) for item in _ashby_items(client, name) if item.get("isListed", True)]
 
 
 # --- Workable ----------------------------------------------------------------------------------------
@@ -175,7 +180,12 @@ def fetch_single(client: HttpClient, ats: str, token: str, job_id: str) -> RawPo
     if ats == "lever":
         item = client.get_json(f"https://api.lever.co/v0/postings/{_token(token)}/{_token(job_id)}")
         return lever_posting(token, item)
-    if ats in ("ashby", "workable"):  # no documented single-posting endpoint: read the board and pick the job
+    if ats == "ashby":   # no single-posting endpoint: read the board and pick the job, an unlisted one too (2026-11-02:
+        for item in _ashby_items(client, token):   # a link to an unlisted posting works, but the listing leaves it out)
+            if str(item.get("id")) == job_id:
+                return ashby_posting(token, item)
+        raise FetchError("not_found", 404)
+    if ats == "workable":  # no documented single-posting endpoint: read the board and pick the job
         for posting in FETCHERS[ats](client, token):
             if posting.external_id == job_id:
                 return posting

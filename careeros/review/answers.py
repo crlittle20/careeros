@@ -12,7 +12,7 @@ never writes it:
       question: "Are you legally authorized to work in the United States?"
       phrasings: ["Are you authorized to work in the US?"]   # other wordings you accept as the same question
       answer: "Yes"                     # quoted: an unquoted Yes, No, 02134 or 2:30 is read as something else
-      field: null                       # or a standard form field it fills: first_name, last_name, email, phone, ...
+      field: null                       # or a standard form field it fills: first_name, last_name, full_name, email, ...
       facts: []                         # ids of approved facts the answer rests on
       approved: 2026-10-21              # when you approved this wording
       expires: 2027-04-21               # optional: after this date it needs your review again
@@ -51,8 +51,8 @@ from pathlib import Path
 import yaml
 
 # Standard fields a form adapter can fill from an answer marked `field: ...`.
-STANDARD_FIELDS = ("first_name", "last_name", "preferred_name", "email", "phone", "location", "linkedin", "website",
-                   "github")
+STANDARD_FIELDS = ("first_name", "last_name", "preferred_name", "full_name", "email", "phone", "location", "linkedin",
+                   "website", "github")
 DOCUMENT_KINDS = ("resume", "cover_letter")
 # The questions each kind answers: whole-question shapes, matched against the entire normalize()d question (fourth
 # and fifth Claude reviews, 2026-10-22). A trigger word anywhere in a question was not enough: "visa" is in "Will you
@@ -232,6 +232,10 @@ FIELD_LABELS = {
     "first_name": r"(?:legal )?first name|given name|first",
     "last_name": r"(?:legal )?last name|surname|family name|last",
     "preferred_name": r"preferred (?:first )?name|nickname",
+    # the whole name in one box, as an Ashby form asks it (Tremendous, 2026-11-04): a printed name or a signature is
+    # an attestation ("full legal name" reads as one: SENSITIVE_CATEGORIES), and another person's or a company's name
+    # isn't yours, so only these labels as a whole
+    "full_name": r"(?:your )?(?:full |legal )?name",
     "email": r"(?:your )?e-?mail(?: address)?",
     "phone": r"(?:your )?(?:mobile |cell |home |primary )?(?:phone|telephone)(?: number)?",
     "location": r"(?:current )?location(?: \(city\))?|city",

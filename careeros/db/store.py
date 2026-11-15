@@ -9,17 +9,37 @@ from __future__ import annotations
 import json
 import sqlite3
 import uuid
+import weakref
 from contextlib import contextmanager
 from pathlib import Path
 
 from careeros import PROJECT_ID, __version__
-from careeros.core.clock import Clock, require_order
+from careeros.core.clock import Clock, parse_utc, require_order
 from careeros.core.fingerprint import canonical_json, fingerprint, text_fingerprint
 from careeros.core.records import CONTRACT_VERSION, validate_audit_event, validate_exception
 from careeros.core.transitions import Matrix
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schema"
 GENESIS = "0" * 64
+# Schema guards (OPP-50, D83). For a schema an older engine may still run on, the oldest such engine's schema. The
+# migration that reaches it records the value in the database, because the older engine cannot know it. 015 rebuilt
+# two tables with their rows and added columns older code never reads, and the schema-14 engine ran on it for real
+# (2026-11-03 07:00), so a rollback across it needs no restore. A schema not listed here opens only with code that
+# knows it.
+RUNS_ON_OLDER = {15: 14}
+
+
+def newest_schema() -> int:
+    """The newest schema this code can migrate to."""
+    return max(int(script.name.split("_", 1)[0]) for script in SCHEMA_DIR.glob("*.sql"))
+
+
+class SchemaTooNew(RuntimeError):
+    """The database is newer than this engine, and not marked safe for it."""
+
+
+class MigrationPending(RuntimeError):
+    """The database needs a migration, and this command may not apply one."""
 
 STATE_COLUMNS = {"current_state", "state_sequence", "entered_state_at"}
 JOB_COLUMNS_BY_COMPONENT = {
@@ -41,7 +61,7 @@ BOARD_LIFECYCLE_COLUMNS = {"entity_id", "career_site_id", "canonical_ats_url", "
 BOARD_OVERRIDE_COLUMNS = {"override_reason", "override_by", "override_at", "override_prev_status", "override_expires_at"}
 # Column limits on other mutable tables, per component (absent component = all non-state columns).
 COLUMN_LIMITS = {
-    ("leads", "review"): {"status"},
+    ("leads", "review"): {"status", "job_id", "status_reason", "status_at"},   # your confirmations and corrections (2026-11-02)
     ("applications", "tracker"): {"notes"},
     ("inbox_issues", "discovery"): {"closed"},
     ("lead_matches", "review"): {"audit", "audited_at"},
@@ -97,6 +117,9 @@ class Store:
             Path(self.path).parent.mkdir(parents=True, exist_ok=True)
         # The review server is single-threaded (one request at a time) but not the thread that opened the store.
         self.conn = sqlite3.connect(self.path, isolation_level=None, check_same_thread=False)
+        # A store that is discarded without close() closes its connection then, so Python 3.13+ never warns of an
+        # unclosed database from the garbage collector (a warning that can land in a test's captured output).
+        self._closer = weakref.finalize(self, self.conn.close)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")
         self.conn.execute("PRAGMA busy_timeout = 5000")
@@ -105,14 +128,38 @@ class Store:
         self.clock = clock
         self.policy_fingerprint = policy_fingerprint
         self._depth = 0
+        self.committed = 0   # rows changed by committed transactions: what a caller may tell you was saved
 
     def close(self) -> None:
-        self.conn.close()
+        self._closer()   # closes the connection once; later calls do nothing
 
     # --- schema -------------------------------------------------------------------------------------
-    def migrate(self) -> int:
+    def _meta(self, key: str) -> str | None:
         exists = self.conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='meta'").fetchone()
-        current = int(self.conn.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()[0]) if exists else 0
+        row = self.conn.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone() if exists else None
+        return row[0] if row else None
+
+    def schema_version(self) -> int:
+        return int(self._meta("schema_version") or 0)
+
+    def check_schema(self) -> int:
+        """The database's schema, if this code may use it as it is; SchemaTooNew or MigrationPending otherwise. Writes
+        nothing (OPP-50: a command without the writer lock never migrates)."""
+        current, newest = self.schema_version(), newest_schema()
+        if current > newest:
+            oldest = self._meta("oldest_engine_schema")
+            if oldest is None or newest < int(oldest):
+                raise SchemaTooNew(f"the database is at schema {current}, newer than this engine ({newest}), and not marked "
+                                   "safe for it: deploy the newer engine, or restore a backup made before the upgrade")
+        elif current < newest:
+            raise MigrationPending(f"the database is at schema {current} and this engine needs {newest}: a command that "
+                                   "writes applies the migration under the writer lock ('careeros migrate' backs up first)")
+        return current
+
+    def migrate(self) -> int:
+        current = self.schema_version()
+        if current > newest_schema():
+            return self.check_schema()   # an older engine on a newer database: allowed only where marked, never migrated
         for script in sorted(SCHEMA_DIR.glob("*.sql")):
             number = int(script.name.split("_", 1)[0])
             if number <= current:
@@ -121,19 +168,34 @@ class Store:
             self.conn.execute("INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', ?)", (str(number),))
             self.conn.execute("INSERT OR REPLACE INTO meta(key, value) VALUES ('contract_version', ?)", (CONTRACT_VERSION,))
             current = number
+        oldest = str(RUNS_ON_OLDER.get(current, current))   # also for a database migrated before this record existed
+        if current and self._meta("oldest_engine_schema") != oldest:
+            self.conn.execute("INSERT OR REPLACE INTO meta(key, value) VALUES ('oldest_engine_schema', ?)", (oldest,))
         return current
 
     @contextmanager
     def tx(self):
+        """One transaction. Nested, a savepoint: its own work is undone when it fails, so code that catches the failure
+        and goes on (one bad row of many) never keeps half of it inside an outer transaction (red team before Codex
+        Pass 3: a whole email is now one outer transaction)."""
         if self._depth:
             self._depth += 1
+            name = f"careeros_{self._depth}"
+            self.conn.execute(f"SAVEPOINT {name}")
             try:
                 yield
+            except BaseException:
+                self.conn.execute(f"ROLLBACK TO {name}")
+                self.conn.execute(f"RELEASE {name}")
+                raise
+            else:
+                self.conn.execute(f"RELEASE {name}")
             finally:
                 self._depth -= 1
             return
         self.conn.execute("BEGIN IMMEDIATE")
         self._depth = 1
+        start = self.conn.total_changes
         try:
             yield
         except BaseException:
@@ -141,6 +203,7 @@ class Store:
             raise
         else:
             self.conn.execute("COMMIT")
+            self.committed += self.conn.total_changes - start
         finally:
             self._depth = 0
 
@@ -287,6 +350,25 @@ class Writer:
                                  "subject_type": entity_type, "subject_id": entity_id, "new_status": "open"})
         return record["exception_id"]
 
+    def resolve_exception(self, exception_id: str, resolution: str) -> bool:
+        """Close an open problem that this component recorded, with the reason and an event (2026-11-09: a held-back
+        agency digest read in full later). False when it is not open or another component recorded it."""
+        if not (resolution or "").strip():
+            raise ValueError("resolution_required")
+        now = self.store.clock.now()
+        with self.store.tx():
+            row = self.store.one("SELECT occurred_at FROM exceptions WHERE exception_id = ? AND status != 'resolved' AND source = ?",
+                                 (exception_id, f"careeros.{self.component}"))
+            if row is None:
+                return False
+            if parse_utc(now) < parse_utc(row["occurred_at"]):   # a clock set back since: resolved as of its own time (L4-C2)
+                now = row["occurred_at"]
+            self.store.conn.execute("UPDATE exceptions SET status = 'resolved', resolution = ?, resolved_at = ? WHERE exception_id = ?",
+                                    (resolution[:500], now, exception_id))
+            self.event("exception_resolved", outcome="success", entity_type="exception", entity_id=exception_id,
+                       message=resolution[:500], occurred_at=now, metadata={"new_status": "resolved"})
+        return True
+
     def receipt(self, command: str, key: str, payload: dict, actor_id: str = "system") -> str:
         """'new' the first time; 'replay' for an identical repeat; IdempotencyCollision for a different payload."""
         if not key or not key.strip():
@@ -343,9 +425,18 @@ class Writer:
         return row
 
 
-def open_store(path, clock: Clock, policy_fingerprint: str | None = None) -> Store:
+def open_store(path, clock: Clock, policy_fingerprint: str | None = None, *, migrate: bool | None = True) -> Store:
+    """migrate=True migrates (a command holding the writer lock); False only checks the schema and refuses if it needs a
+    migration or is too new (a read-only command, OPP-50); None does neither (`careeros migrate`, which backs up first)."""
     store = Store(path, clock, policy_fingerprint)
-    store.migrate()
+    try:
+        if migrate:
+            store.migrate()
+        elif migrate is False:
+            store.check_schema()
+    except Exception:
+        store.close()
+        raise
     return store
 
 

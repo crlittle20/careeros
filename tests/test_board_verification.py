@@ -69,9 +69,14 @@ class FakeWeb:
         return lambda domain: SiteFetcher(domain, budget=budget, max_pages=max_pages, transport=httpx.MockTransport(self.handler),
                                           resolver=self.resolver, sleep=lambda s: None, min_interval=0)
 
-    def employer_site(self, domain, name, careers_body, home_extra=""):
-        self.page(f"https://{domain}/", html(f"{name} | Pharmacy benefits", f'<nav><a href="/careers">Careers</a></nav>{home_extra}'
-                                                                               f"<p>{name} helps plan members every day.</p>"))
+    def employer_site(self, domain, name, careers_body, home_extra="", site_name=True):
+        """The employer's own site. Its homepage declares its name (og:site_name), as most do; a hinted domain needs that
+        (ADR 0001; Codex CR-2026-11-02-LEAD-RESOLUTION F1, Pass 7). site_name=False builds one that declares none."""
+        home = html(f"{name} | Pharmacy benefits", f'<nav><a href="/careers">Careers</a></nav>{home_extra}'
+                                                    f"<p>{name} helps plan members every day.</p>")
+        if site_name:
+            home = home.replace("</head>", f'<meta property="og:site_name" content="{name}"></head>')
+        self.page(f"https://{domain}/", home)
         self.page(f"https://{domain}/careers", html(f"Careers at {name}", careers_body))
 
 
@@ -594,6 +599,111 @@ class OperationsTests(unittest.TestCase):
         m = board(store, mapping_id)
         self.assertLess(m["board_health_score"], 100)
         self.assertEqual((m["board_trust_score"], m["verification_status"], m["paused_reason"]), (trust, "active", None))
+
+    def test_no_board_is_fetched_or_kept_once_the_run_saw_its_settings_change(self):
+        """Codex Pass 4 (CR-AD-V2-07, CR-AD-V2-12): a board read while the settings changed is not kept, and no further
+        board is read once a change is seen; the stop is filed for the review page."""
+        import os
+        import shutil
+        import tempfile
+        from pathlib import Path
+
+        from careeros.core import private_sites
+        for moment, kept in (("while the board is read", 0), ("while its jobs are stored", 1),
+                             ("while the board is read and fails", 0)):   # no other check before the next board's fetch
+            with self.subTest(moment), tempfile.TemporaryDirectory() as tmp:
+                store, ctx = setup()
+                for token in ("alpha", "beta"):
+                    store.writer("admin").insert("employers", {
+                        "employer_id": f"greenhouse:{token}", "name": f"{token.title()} Co", "parent": f"{token.title()} Co",
+                        "ats": "greenhouse", "board_token": token, "status": "verified", "admitted_via": "legacy"})
+                settings, fetched = Path(tmp) / "private_sites.yaml", []
+                shutil.copy(Path(__file__).parent / "fixtures" / "private_sites.yaml", settings)
+
+                def edit(settings=settings):
+                    with open(settings, "a", encoding="utf-8") as file:
+                        file.write("# edited during the scan\n")
+
+                def result(token, moment=moment, edit=edit, fetched=fetched):
+                    fetched.append(token)
+                    if moment.startswith("while the board"):
+                        edit()
+                    if moment.endswith("fails"):
+                        return FetchError("server_error", 503, retryable=True)
+                    return [gh_job(101, "Claims Analyst", EX_TEXT, token)]
+
+                real = cli.ingest
+
+                def ingest(*args, moment=moment, edit=edit, real=real, **kwargs):
+                    out = real(*args, **kwargs)
+                    if moment.startswith("while its jobs"):
+                        edit()
+                    return out
+
+                with mock.patch.dict(os.environ, {private_sites.ENV: str(settings)}), private_sites.run(), \
+                        mock.patch.object(cli, "ingest", ingest):
+                    with self.assertRaises(cli.CommandStopped):   # the whole command ends there (D153 R2)
+                        scan(ctx, result)
+                self.assertEqual(fetched, ["alpha"])
+                self.assertEqual(store.one("SELECT COUNT(*) c FROM jobs")["c"], kept)
+                self.assertTrue(store.one("SELECT 1 FROM exceptions WHERE error_code = 'private_sites_changed'"))
+
+
+    def test_a_change_while_the_last_board_is_stored_ends_the_scan_there(self):
+        """D153 R2: nothing more of the scan once the change is seen: no health record, no matching, no refresh."""
+        import os
+        import shutil
+        import tempfile
+        from pathlib import Path
+
+        from careeros.core import private_sites
+        store, ctx = setup()
+        store.writer("admin").insert("employers", {
+            "employer_id": "greenhouse:alpha", "name": "Alpha Co", "parent": "Alpha Co", "ats": "greenhouse",
+            "board_token": "alpha", "status": "verified", "admitted_via": "legacy"})
+        real = cli.ingest
+        with tempfile.TemporaryDirectory() as tmp:
+            settings = Path(tmp) / "private_sites.yaml"
+            shutil.copy(Path(__file__).parent / "fixtures" / "private_sites.yaml", settings)
+
+            def ingest(*args, **kwargs):
+                out = real(*args, **kwargs)
+                with open(settings, "a", encoding="utf-8") as file:
+                    file.write("# edited while its jobs were stored\n")
+                return out
+
+            with mock.patch.dict(os.environ, {private_sites.ENV: str(settings)}), private_sites.run(), \
+                    mock.patch.object(cli, "ingest", ingest), mock.patch.object(cli, "_rematch_leads") as matched, \
+                    mock.patch.object(cli, "_settle_scan_failures") as settled, \
+                    mock.patch.object(cli, "_refresh_shortlisted") as refreshed, self.assertRaises(cli.CommandStopped):
+                scan(ctx, lambda token: [gh_job(101, "Claims Analyst", EX_TEXT, token)])
+        for step in (matched, settled, refreshed):
+            step.assert_not_called()
+
+    def test_no_shortlisted_posting_is_probed_once_the_run_saw_its_settings_change(self):
+        """Codex Pass 5 (D153 R2, CR-AD-V2-12): the scan stopped at its check, then its shortlist refresh still probed a
+        posting and wrote its last-seen time. Every probe is now preceded by the stop check."""
+        import os
+        import shutil
+        import tempfile
+        from pathlib import Path
+
+        from careeros.core import private_sites
+        store, ctx = setup()
+        with tempfile.TemporaryDirectory() as tmp:
+            settings = Path(tmp) / "private_sites.yaml"
+            shutil.copy(Path(__file__).parent / "fixtures" / "private_sites.yaml", settings)
+            with mock.patch.dict(os.environ, {private_sites.ENV: str(settings)}), private_sites.run(), \
+                    mock.patch.object(cli, "fetch_single") as probed, \
+                    mock.patch("careeros.review.shortlist.shortlisted_job_ids", return_value=["greenhouse:alpha:101"]):
+                private_sites.check()   # the run's reading
+                with open(settings, "a", encoding="utf-8") as file:
+                    file.write("# edited during the scan\n")
+                with self.assertRaises(private_sites.SettingsChanged):
+                    private_sites.check()   # seen by the scan's own check
+                with self.assertRaises(cli.CommandStopped):
+                    cli._refresh_shortlisted(ctx, None, store.clock.now())
+        probed.assert_not_called()
 
 
 # --- T22-T25, T27-T30: data model, injection, overrides, legacy, intelligence ------------------------------------------------------

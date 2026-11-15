@@ -21,13 +21,20 @@ reason. The whole history decides, not only the state now: an application that w
 A void application stays in the history and the applications list, and counts nowhere an application counts:
 `preflight` (so every "did I already apply?" check, and applying again needs no reason), the funnel, the follow-up
 nudges, `has_application` and the counts of the export, and the daily summary. Each of them asks through COUNTED.
+
+A follow-up you sent is an event, not a state (OPP-21, 2026-11-03): `record_follow_up` adds one to the audit chain and
+leaves the application's status and history as they were. Every view asks one rule, `follow_up_due` (QW-11): FR-062's
+14 days without a response, counted from the later of entering the waiting state and your latest follow-up. A nudge is
+a reminder, never outreach: CareerOS sends nothing.
 """
 from __future__ import annotations
 
 import json
 import uuid
 from dataclasses import dataclass, field
+from datetime import timedelta
 
+from careeros.core.clock import format_utc, parse_utc
 from careeros.core.transitions import Matrix, TransitionRejected, load_matrix
 from careeros.discovery.note import is_alert_source
 from careeros.db.store import Store
@@ -371,6 +378,62 @@ def update_application(store: Store, matrix: Matrix, app_id: str, to_state: str,
                               reason_code=reason, notes=(notes or "").strip()[:300] or None)
         except TransitionRejected as exc:
             raise ValueError(exc.code) from exc
+    return "new"
+
+
+FOLLOW_UP_DAYS = 14                     # FR-062: a follow-up nudge after 14 days without a response
+FOLLOWED_UP = "application_followed_up"  # the event of a follow-up you sent (OPP-21)
+WAITING = ("applied", "acknowledged")   # still in play, and nobody at the employer has answered yet
+
+
+@dataclass(frozen=True)
+class FollowUp:
+    due: bool              # FOLLOW_UP_DAYS or more without a response
+    days: int              # whole days since `since`
+    since: str             # when the count started: entering the current state, or your latest follow-up if later
+    after_follow_up: bool  # the count starts from your follow-up
+    due_at: str            # when the nudge starts
+
+
+def follow_ups(store: Store) -> dict[str, str]:
+    """Each application's latest recorded follow-up (its time), by application id."""
+    return {r["entity_id"]: r["at"] for r in store.all("SELECT entity_id, MAX(occurred_at) at FROM events WHERE event_type = ? "
+                                                       "GROUP BY entity_id", (FOLLOWED_UP,))}
+
+
+def follow_up_due(app, now: str, followed_up_at: str | None = None) -> FollowUp | None:
+    """The one follow-up rule for the review page, the shortlist and `careeros explain` (QW-11, OPP-21, 2026-11-03):
+    FR-062's FOLLOW_UP_DAYS without a response, counted from entering the current waiting state (applied or
+    acknowledged) or from your latest recorded follow-up, whichever is later. None when no follow-up applies: someone at
+    the employer answered, or the application is finished or void. A closed posting does not stop it: the employer may
+    still answer the applications it has."""
+    if app["current_state"] not in WAITING:
+        return None
+    entered: str = app["entered_state_at"]
+    since = followed_up_at if followed_up_at and parse_utc(followed_up_at) > parse_utc(entered) else entered
+    days = int((parse_utc(now) - parse_utc(since)) / timedelta(days=1))
+    return FollowUp(days >= FOLLOW_UP_DAYS, days, since, since != entered,
+                    format_utc(parse_utc(since) + timedelta(days=FOLLOW_UP_DAYS)))
+
+
+def record_follow_up(store: Store, app_id: str, *, notes: str | None = None, key: str) -> str:
+    """Record that you followed up on an application (OPP-21): an event in the audit chain, never a state, so the
+    status and its history stay as they were; the follow-up nudge counts again from it. Only while the application is
+    open (void and finished ones are refused). Nothing is sent: this records what you did."""
+    notes = (notes or "").strip()[:300] or None
+    writer = store.writer("tracker")
+    with store.tx():
+        if writer.receipt("record_follow_up", key, {"app_id": app_id, "notes": notes or ""}, actor_id="user") == "replay":
+            return "replay"
+        app = store.one("SELECT workflow_id, job_id, current_state FROM applications WHERE application_id = ?", (app_id,))
+        if app is None:
+            raise ValueError("unknown_application")
+        if app["current_state"] not in OPEN_STATES:
+            raise ValueError(f"not_open: the application is {app['current_state'].replace('_', ' ')}; a follow-up is "
+                             "recorded only while it is open")
+        writer.event(FOLLOWED_UP, outcome="success", entity_type="application", entity_id=app_id,
+                     workflow_id=app["workflow_id"], actor_type="human", actor_id="user",
+                     metadata={"job_id": app["job_id"], "state": app["current_state"], **({"notes": notes} if notes else {})})
     return "new"
 
 

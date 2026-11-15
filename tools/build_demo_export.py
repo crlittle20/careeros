@@ -22,6 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 SAMPLE = ROOT / "samples" / "analytics_demo"
 
+from careeros.core.scratch import remove_tree_or_say  # noqa: E402
+
 
 def demo_export(scratch: Path) -> Path:
     """Run the demo tour and the export in a demo vault under scratch; returns the export folder."""
@@ -47,7 +49,7 @@ def main() -> int:
         for new in out.iterdir():
             shutil.copy2(new, SAMPLE / new.name)
     finally:
-        shutil.rmtree(scratch, ignore_errors=True)
+        remove_tree_or_say(scratch)   # really removed, or said (item 10, 2026-11-02)
     print(f"samples/analytics_demo rebuilt: {', '.join(sorted(p.name for p in SAMPLE.iterdir()))}")
     return 0
 

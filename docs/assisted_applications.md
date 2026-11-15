@@ -14,7 +14,7 @@ answers:
   - id: first-name
     question: First Name
     answer: "Avery"
-    field: first_name                   # standard fields: first_name, last_name, preferred_name, email, phone, ...
+    field: first_name                   # standard fields: first_name, last_name, preferred_name, full_name, email, ...
     approved: 2026-10-21
   - id: work-authorization
     kind: work_authorization            # what the question is about (the list is below)

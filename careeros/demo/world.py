@@ -328,7 +328,9 @@ def _careers(slug: str, day: int) -> str:
 
 
 def _homepage(name: str) -> str:
-    return (f"<!doctype html><html><head><title>{html.escape(name)} | Fictional demo company</title></head><body>"
+    # The site declares its own name, as most do: a curated (hinted) website needs that (ADR 0001; Codex F1, Pass 7).
+    return (f"<!doctype html><html><head><title>{html.escape(name)} | Fictional demo company</title>"
+            f'<meta property="og:site_name" content="{html.escape(name)}"></head><body>'
             f'<nav><a href="/careers">Careers</a></nav><p>{html.escape(name)} is a fictional company used in the CareerOS demo.</p>'
             "</body></html>")
 

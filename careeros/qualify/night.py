@@ -17,11 +17,19 @@ import re
 
 from careeros.normalize.posting import contains_term, excluded_term, norm
 
-from .gate import (GateResult, annualize, comp_trusted, excluded_employer, held_rule, location_rules, requirement_rules,
-                   scam_rules)
+from .gate import (HOURS_PER_YEAR, GateResult, _pay_period_straddle, _pay_tiers_straddle, annualize, comp_trusted,
+                   excluded_employer, held_rule, location_rules, requirement_rules, scam_rules)
 from .profile import Profile
 
-NIGHT_VERSION = "night-2026-10-21a"  # 10-21a: Codex Pass 2 (the same hours on other days or zones are another schedule);
+NIGHT_VERSION = "night-2026-11-13a"  # 11-13a: NIGHT shares the gate's D149/D150 fail-safes; not yet deployed
+# 11-11a: NIGHT shares the gate's D140 certification rule (never a rejection on its own);
+# not yet deployed
+# 11-10a: NIGHT shares the PRIMARY gate's D123 corrections (residence, roles, pay);
+# not yet deployed
+# 11-09a: the combined candidate (11-04a) joined with the live
+# night-2026-11-09-schedule-review (schedule_unknown and daytime_hours_likely always material); not yet deployed;
+# 11-04a: pay by location straddling the floor is pay_tier_unknown, as the
+# PRIMARY gate, and a pay period left open across the floor is pay_period_unknown (2026-11-05; not yet deployed); 10-21a: Codex Pass 2 (the same hours on other days or zones are another schedule);
 # 10-20a: Codex review (each stated range measured, MDT, zone only from the shift's sentence, agency aliases); 10-18a: review fixes (days, zones, every stated range, both seasons, held families);
 # 10-17a: familiar names without a resolved identity; 10-16b: workload in real time
 # zones; 10-16a: family lookup for conflicts
@@ -336,7 +344,7 @@ def night_state(result: GateResult, policy) -> str:
         return "HOLD"
     material = set(policy.get("eligibility_states", "material_unknowns", default=[]) or [])
     material |= set(settings(policy).get("material_unknowns_extra") or [])
-    material.add("possible_day_job_overlap")   # always material, whatever a settings list says (2026-10-18)
+    material.update(("possible_day_job_overlap", "schedule_unknown", "daytime_hours_likely"))
     return "CONDITIONAL" if codes & material else "ELIGIBLE"
 
 
@@ -363,13 +371,21 @@ def screen(job: dict, profile: Profile, policy) -> GateResult:
     return result
 
 
-def _pay(result: GateResult, job: dict, mode: str, comp: dict) -> None:
+def _pay(result: GateResult, job: dict, mode: str, comp: dict, home: str | None = None) -> None:
     if mode == "supplemental":
         floor, top, unit = comp.get("floor_hourly"), _hourly(job.get("comp_max"), job.get("comp_period")), "hour"
     else:
         floor, top, unit = comp.get("floor_annual"), annualize(job.get("comp_max"), job.get("comp_period")), "year"
+    yearly = (floor * HOURS_PER_YEAR if unit == "hour" else floor) if floor else None
     if not floor:
         result.flag("night_pay_unconfigured", f"NIGHT {mode} pay floor not set: pay needs your decision")
+    elif _pay_tiers_straddle(job, yearly, home):   # as the PRIMARY gate (2026-11-04): never the first range alone
+        result.flag("pay_tier_unknown", f"pay is listed by location on both sides of your NIGHT {mode} floor and the "
+                                        "posting doesn't say which applies to you: confirm your range")
+    elif _pay_period_straddle(job, yearly, home):   # as the PRIMARY gate (2026-11-05): never a guessed period
+        result.flag("pay_period_unknown", f"the posting doesn't say plainly whether its pay is per hour, day, week, month "
+                                          f"or year, and the readings fall on both sides of your NIGHT {mode} floor: "
+                                          "confirm the period")
     elif top is not None and top < floor:
         if comp_trusted(job):
             result.fail("below_night_pay_floor", f"posted maximum ${top:,.2f}/{unit} is below your NIGHT {mode} floor",
@@ -415,7 +431,7 @@ def assess(job: dict, requirements: list, profile: Profile, policy, fresh_score:
     mode = mode_for(schedule, employment, policy)
     mode_cfg = (cfg.get("modes") or {}).get(mode) or {}
     comp = mode_cfg.get("compensation") or {}
-    _pay(result, job, mode, comp)
+    _pay(result, job, mode, comp, policy.get("location", "home_state") or profile.state)
     load, coi = None, None
     if mode == "supplemental":
         load = workload(text, schedule, policy, now=now, location=job.get("location_raw"))

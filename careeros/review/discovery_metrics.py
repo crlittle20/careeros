@@ -47,7 +47,8 @@ def metrics(store: Store, policy, days: int = 30) -> dict:
                          "verification_failure IN ('identity_mismatch','identity_changed')")
     audited = store.one("""SELECT SUM(audit = 'correct') ok, SUM(audit = 'wrong') bad FROM lead_matches
                            WHERE decision = 'matched' AND method != 'none' AND audit IS NOT NULL""")
-    auto = one("SELECT COUNT(*) c FROM lead_matches WHERE decision = 'matched' AND decided_at >= ?", since)
+    # links CareerOS made itself: not the ones you made by pasting or adding the posting (2026-11-02)
+    auto = one("SELECT COUNT(*) c FROM lead_matches WHERE decision = 'matched' AND method != 'manual_intake' AND decided_at >= ?", since)
     ambiguous = one("SELECT COUNT(*) c FROM lead_matches WHERE decision = 'ambiguous' AND audit IS NULL")
 
     # new opportunities: from activated discovered boards (after activation) or rescued titles, never already a lead
@@ -59,7 +60,9 @@ def metrics(store: Store, policy, days: int = 30) -> dict:
     rescued_ids = [r["job_id"] for r in rescued]
     rescued_qualified = _qualified(store, rescued_ids)
     new_qualified = sorted(set(_qualified(store, from_boards)) | set(rescued_qualified))
-    enriched = one("SELECT COUNT(DISTINCT lead_id) c FROM lead_matches WHERE decision = 'matched' AND job_id IS NOT NULL AND decided_at >= ?", since)
+    # a lead linked to its posting: automatically, or by your confirmation of a likely match (2026-11-02)
+    enriched = one("SELECT COUNT(DISTINCT lead_id) c FROM lead_matches WHERE decision IN ('matched','confirmed') AND job_id IS NOT NULL "
+                   "AND decided_at >= ?", since)
 
     distinct_qualified = one(f"""SELECT COUNT(*) c FROM jobs j JOIN scores s ON s.score_id = (SELECT score_id FROM scores WHERE job_id = j.job_id
                                  ORDER BY at DESC, rowid DESC LIMIT 1) WHERE s.tier IN {QUALIFIED} AND j.variant_of IS NULL

@@ -110,7 +110,7 @@ class FiguresTest(unittest.TestCase):
     def test_the_test_count_is_current(self):
         quoted = {name: re.findall(r"\b(\d+) (?:automated )?tests\b", body) for name, body in self.docs.items()}
         self.assertTrue(f"| {self.tests} automated tests |" in self.docs["README.md"], f"| {self.tests} automated tests |")
-        self.assertTrue(f"| Automated tests | {self.tests}, all passing" in self.docs["case_study.md"], f"| Automated tests | {self.tests}, all passing")
+        self.assertTrue(f"| Automated tests | {self.tests} collected" in self.docs["case_study.md"], f"| Automated tests | {self.tests} collected")
         self.assertTrue(f"The suite has {self.tests} tests" in self.docs["ai_assisted_development.md"], f"The suite has {self.tests} tests")
         self.assertEqual({name: set(found) - {str(self.tests)} for name, found in quoted.items()}, {n: set() for n in quoted})
 
@@ -121,6 +121,23 @@ class FiguresTest(unittest.TestCase):
         self.assertTrue(f"There are {count} such defects" in self.docs["ai_assisted_development.md"], f"There are {count} such defects")
         for name, body in self.docs.items():
             self.assertEqual(set(re.findall(r"\b(\d+) (?:planted|such) defects\b", body)) - {count}, set(), name)
+
+    def test_every_current_count_in_the_docs_is_current(self):
+        """The Fable review (2026-11-04): the overview still said "1030 defined now" after the counts moved, because only
+        three docs were checked. Every sentence that states today's count of tests or planted defects, in the README or
+        any doc, must match the code. A dated plan quotes the counts of its own day."""
+        tests, defects = str(self.tests), str(len(mutate.MUTATIONS))
+        current = {r"\((\d+) defined now\)": defects, r"# (\d+) tests\b": tests, r"# (\d+) deliberate defects": defects,
+                   r"There are (\d+) planted defects": defects, r"\b(\d+) automated tests pass\b": tests,
+                   r"All of them pass \((\d+) tests": tests}
+        dated = {"portfolio_v1_plan.md"}
+        for path in [README, *sorted((ENGINE_ROOT / "docs").glob("*.md"))]:
+            if path.name in dated:
+                continue
+            body = flat(text(path))
+            for pattern, count in current.items():
+                for found in re.findall(pattern, body):
+                    self.assertEqual(found, count, f"{path.name}: {pattern}")
 
     def test_the_latest_full_run_is_quoted_from_its_receipt(self):
         """The defined count above comes from the code; the run's date and count come from the committed receipt. The case
@@ -172,7 +189,7 @@ class FiguresTest(unittest.TestCase):
     def test_the_portfolio_gate_report_quotes_current_figures(self):
         body = flat(text(REPORT))
         grades = Counter(self.gate["grades"].values())
-        for phrase in (f"{self.tests} automated tests pass", f"There are {len(mutate.MUTATIONS)} planted defects",
+        for phrase in (f"Current automated test inventory: {self.tests}", f"There are {len(mutate.MUTATIONS)} planted defects",
                        f"{grades['PASS']} PASS, {grades['PARTIAL']} PARTIAL, {grades['FAIL']} FAIL"):
             self.assertTrue(phrase in body, phrase)
 
