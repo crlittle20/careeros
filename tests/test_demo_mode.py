@@ -111,8 +111,11 @@ class Jail:
 
 def close_log_files(under: Path) -> None:
     """cli.main adds a log file handler per call; close the ones pointing into the test folder so it can be removed."""
+    # both resolved: the vault path is, and a temporary folder given by its short (8.3) name, as on GitHub's Windows
+    # runners, would otherwise never match it, so the log stayed open (CI, 2026-11-15)
+    under = Path(under).resolve()
     for handler in list(cli.log.handlers):
-        if isinstance(handler, logging.FileHandler) and Path(handler.baseFilename).is_relative_to(under):
+        if isinstance(handler, logging.FileHandler) and Path(handler.baseFilename).resolve().is_relative_to(under):
             handler.close()
             cli.log.removeHandler(handler)
 

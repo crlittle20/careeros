@@ -665,7 +665,20 @@ class CodexPass2PrivateSitesTests(AlertImport):
         files = {"nested 3000 deep": self.DEEP, "a mapping nested 3000 deep": "sources: " + "{a: " * 3000 + "b" + "}" * 3000 + "\n"}
         stack.enter_context(mock.patch.dict(os.environ, {"CAREEROS_PRIVATE_SITES": self.write(files[name], f"{len(files[name])}.yaml")
                                                          if name in files else good}))
-        refused = mock.Mock(**{"exists.side_effect": PermissionError("synthetic-secret")})
+        # A path whose check is refused: Path.exists() outside a run and the stat a run reads it with, alike. The stat is
+        # refused only for this path, so the test holds on every system (before, the mock's own name, "<Mock ...>", was
+        # refused by Windows only as an invalid file name, and Linux read it as a missing file: CI, 2026-11-15)
+        refused_at = str(Path(self.tmp.name) / "refused.yaml")
+        refused = mock.MagicMock(**{"exists.side_effect": PermissionError("synthetic-secret")})
+        refused.__str__.return_value = refused_at
+        real_stat = os.stat
+
+        def stat(path, *args, **kwargs):
+            if isinstance(path, (str, os.PathLike)) and os.fspath(path) == refused_at:
+                raise PermissionError("synthetic-secret")
+            return real_stat(path, *args, **kwargs)
+        if name == "exists() refused":
+            stack.enter_context(mock.patch("os.stat", stat))
         patches = {"exists() refused": mock.patch("careeros.core.private_sites._path", return_value=refused),
                    "locating fails": mock.patch("careeros.core.private_sites._path", side_effect=OSError("synthetic-secret")),
                    "locating recurses": mock.patch("careeros.core.private_sites._path", side_effect=RecursionError("synthetic-secret")),

@@ -1,5 +1,5 @@
 {
- "at": "2026-11-15T05:49:02+00:00",
+ "at": "2026-11-15T06:56:33+00:00",
  "commit": "",
  "uncommitted_changes": false,
  "private_vault": "decoy",
@@ -76,7 +76,7 @@
     "check": "`careeros demo run --all` runs the four simulated days",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, 11.4s"
+    "evidence": "exit 0, 10.9s"
    },
    {
     "check": "each day is a completed production run (`careeros run`)",
@@ -144,7 +144,7 @@
     "check": "every job is placed in the US",
     "ok": false,
     "core": false,
-    "evidence": "{'US', 'unknown'}"
+    "evidence": "{'unknown', 'US'}"
    },
    {
     "check": "normalised titles are lower case and trimmed",
@@ -454,7 +454,7 @@
     "check": "a run with four failing boards (HTTP 503, invalid JSON, timeout, 1-hour rate limit) completes",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, run completed, 4.4s"
+    "evidence": "exit 0, run completed, 4.3s"
    },
    {
     "check": "each failure is recorded against its board with its own error code",
@@ -490,7 +490,7 @@
     "check": "a 1-hour Retry-After is reported, not slept through",
     "ok": true,
     "core": false,
-    "evidence": "4.4s"
+    "evidence": "4.3s"
    },
    {
     "check": "an unreadable email and an empty pasted file are reported and skipped",
@@ -548,13 +548,13 @@
     "check": "the GitHub inbox is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "Local\\Temp\\careeros-mvp-gate-vcn_0xvh\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
+    "evidence": "Local\\Temp\\careeros-mvp-gate-95_q5lzr\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
    },
    {
     "check": "the clipboard is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-vcn_0xvh\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
+    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-95_q5lzr\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
    },
    {
     "check": "Gmail is refused in Demo Mode",
