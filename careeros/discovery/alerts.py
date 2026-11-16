@@ -1015,7 +1015,10 @@ def agency_layout_report(data: bytes) -> dict | None:
     cards = _read_cards(digest, html_part.get_content())
 
     def job_like(item):   # a link outside the cards whose text, label or alt reads like a job, other than "see all jobs"
-        label, aria, alt = item.split("|")[0][2:], item.split("|a=")[1].split("|")[0], item.split("|alt=")[-1]
+        # alt stops at the element chain (|c=, Pass 5): the chain's attributes (a table's role="presentation") are not
+        # the link's label, and read as one they made every link "job-like" (2026-11-15)
+        label, aria = item.split("|")[0][2:], item.split("|a=")[1].split("|")[0]
+        alt = item.split("|alt=")[-1].split("|c=")[0]
         return any(t and not _LIST_LINK.fullmatch(t) and re.search(r"\b(apply|job|jobs|position|role|opening)\b", t)
                    for t in (label, aria, alt))
     return {"agency": digest.name, "cards": len(cards.cards), "headings": cards.heading_count, "buttons": cards.button_count,

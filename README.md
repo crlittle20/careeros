@@ -19,23 +19,27 @@ seeker" is Chris on the private system and a fictional person in Demo Mode.
 
 **Results**
 
-- The suite contains 1627 automated tests, run with outbound network refused. The public repository's CI runs the same
+- The suite contains 1629 automated tests, run with outbound network refused. The public repository's CI runs the same
   validation; this version's CI result comes with its publication.
-- 1826 planted defects: the latest full run (2026-11-05) caught all 1066 defined at the time, each with a failing test
+- 1831 planted defects: the latest full run (2026-11-05) caught all 1066 defined at the time, each with a failing test
   (`evidence/mutation-receipt.json`). Each change since was checked by hand instead of a new full run: every defect in
   a file it changed, or added since, was planted again, and the suite had to fail. Each check ended with every one
   caught: a survivor got a new or corrected test, and the few defects that depend on the Python version were caught
-  on 3.12.10, the runtime a rollback returns to. The latest check, after the last change (2026-11-14), planted 411
-  (`evidence/mutation-hand-check-370a4fe.json`); every check, with what it found, is in [testing.md](docs/testing.md).
+  on 3.12.10, the runtime a rollback returns to. The latest check, after the last change (2026-11-15), planted 468
+  (`evidence/mutation-hand-check-3e0dddf.json`); every check, with what it found, is in [testing.md](docs/testing.md).
 - Chris labelled 50 real postings (2026-10-16): the hard rules agreed with all 50 (in-sample), the ranking did not;
   ranking effectiveness is not demonstrated ([limitations](#limitations)).
 
-### Project status (2026-11-14)
+### Project status (2026-11-15)
 
-- First published 2026-10-15 (UTC). This version publishes the code as of 2026-11-14; the code published before it
-  was the snapshot of 2026-11-02 (published the same day: confirmations and undo on the review page, and the daily
-  run's redacted log and status).
-- New since then:
+- First published 2026-10-15 (UTC). This version publishes the code as of 2026-11-15. The snapshot before it
+  (2026-11-14) already carried everything listed below; this one adds the Functional MVP gate's full pass, 13 PASS,
+  0 PARTIAL, 0 FAIL. The five small gaps of its first assessment are closed: a posting that says it is remote in
+  the US is placed in the US; `careeros sources list` shows suggested boards that do not exist; a board migration
+  that completes closes the old board's review cases; and the demo world now has a board its employer's own site
+  contradicts and an overnight job that NIGHT accepts. It also fixes a false warning when an agency digest's layout
+  is recorded. The snapshot before 2026-11-14 was that of 2026-11-02.
+- New since 2026-11-02:
   - **Lead resolution** ([ADR 0003](docs/adr/0003-new-boards-are-quarantined.md) and
     [ADR 0001](docs/adr/0001-official-employer-sites-are-authoritative.md), amended 2026-11-02). A job seen only in a
     job alert or a recommendation is matched to the employer's own posting, on a board in the daily scan, by its own
@@ -74,7 +78,7 @@ seeker" is Chris on the private system and a fictional person in Demo Mode.
     form's full-name box is filled from an approved answer.
 - Codex (OpenAI) reviewed each batch. Its last review of the two largest batches still reported findings; the owner
   closed them with the fail-safe changes above, checked with targeted tests and planted defects, without a further
-  independent review.
+  independent review. The changes of 2026-11-15 were checked the same way, with no independent review.
 - The 50 labelled postings behind the calibration and the owner's Power BI report on real data stay private.
 
 ### For technical reviewers
@@ -282,9 +286,9 @@ Every control in the threat model is tied to a test and to a planted defect that
 
 | Layer | What it shows |
 |---|---|
-| 1627 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`); validation records passes, skips and unavailable checks separately |
-| 1826 planted defects | `tools/mutate.py` breaks each safety rule in a scratch copy, and the test suite must then fail. A defect that survives is an untested rule. |
-| Functional MVP gate | `tools/mvp_gate.py` runs the real command line in Demo Mode and makes 92 checks against expectations written from the postings and the policy, not read back from the system. Result: no requirement fails. Of 13, 10 are PASS and 3 are PARTIAL, with the gaps listed in the [report](docs/functional_mvp_report.md). |
+| 1629 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`); validation records passes, skips and unavailable checks separately |
+| 1831 planted defects | `tools/mutate.py` breaks each safety rule in a scratch copy, and the test suite must then fail. A defect that survives is an untested rule. |
+| Functional MVP gate | `tools/mvp_gate.py` runs the real command line in Demo Mode and makes 92 checks against expectations written from the postings and the policy, not read back from the system. Result: no requirement fails. Of 13, 13 are PASS and 0 are PARTIAL: the five gaps of the first assessment were closed on 2026-11-15 ([report](docs/functional_mvp_report.md)). |
 | Documentation tests | The documents' named files, tests, tables and commands must exist |
 | Static checks | ruff (pyflakes, bugbear and security rules), mypy against a recorded baseline of older errors, configuration checks |
 | Release and supply chain | The release scan for secrets, and pip-audit of both dependency locks |
@@ -300,14 +304,15 @@ One command runs it all, the same command the CI workflow (`.github/workflows/ci
 
 ## Demo Mode
 
-`careeros demo tour` runs four simulated days of the real daily run on 15 fictional employers, their job boards and
+`careeros demo tour` runs four simulated days of the real daily run on 16 fictional employers, their job boards and
 their websites (`*.example.com`), plus an alert email, a pasted posting and a fictional job seeker. It runs offline in
 a throwaway demo vault. While Demo Mode is on, the private vault cannot even be located, and the real network,
 credentials, mail, GitHub, the clipboard, the AI reader and notifications are all refused. The tests prove it under a
 "jail" that records any attempt to leave.
 
-**Synthetic results** (fictional data, fixed by the tests): 45 jobs, of which 28 scored, 12 rejected with stated
-reasons, 1 duplicate and 4 closed; 13 boards, of which 8 active, 1 rejected as an impostor and 1 awaiting review. These
+**Synthetic results** (fictional data, fixed by the tests): 46 jobs, of which 28 scored, 13 rejected with stated
+reasons, 1 duplicate and 4 closed; 15 boards, of which 8 active, 2 rejected (an impostor, and a board its employer's own
+site contradicts) and 1 awaiting review. These
 numbers describe a hand-written world chosen to exercise every rule, not a real job market. See
 [Demo Mode](docs/demo_mode.md) and the [reviewer walkthrough](docs/demo_walkthrough.md).
 
@@ -385,8 +390,8 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
   top-tier job, the recall figure rests on a private near-miss setting, and nothing in the test counts how many wanted
   jobs reach the top tiers ([calibration](docs/case_study.md#ranking-calibration-identify-measure-improve-validate)).
   The source-expansion targets are provisional.
-- **Known gaps.** The Functional MVP gate grades 3 of 13 requirements PARTIAL (5 small gaps, listed in its report).
-  Type checking runs against a baseline of 158 older errors.
+- **Known gaps.** Type checking runs against a baseline of 158 older errors. The Functional MVP gate's five small
+  gaps were closed on 2026-11-15 (13 PASS, 0 PARTIAL); the gate is Claude's own assessment, not an independent one.
 - **Generated, not mirrored.** The public repository's code is a snapshot generated from an allowlist, with fresh
   history ([release checklist](docs/public_release_checklist.md)). Its documentation and dependency locks were also
   updated directly in the public repository on 2026-10-29; the private development repository carries the same

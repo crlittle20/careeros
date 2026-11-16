@@ -324,6 +324,19 @@ def resolve_cases(store, *, resolution: str, mapping_id: str | None = None, case
                                                             "resolution": resolution[:300]}, " AND ".join(where), tuple(params))
 
 
+def complete_migration(store, mapping_id: str, *, component: str = "discovery") -> int:
+    """A board another board migrated to is now in the daily scan: the migration is verified, and the old board's open
+    review cases about the move (its board gone, the move detected) are answered (2026-11-15; the Functional MVP gate
+    found them left open). Returns the number of cases closed."""
+    old = [r["mapping_id"] for r in store.all("SELECT mapping_id FROM board_mappings WHERE migrated_to = ?", (mapping_id,))]
+    if not old:
+        return 0
+    _event(store, component, "ats_migration_verified", "success", mapping_id, migrated_from=",".join(old))
+    return sum(resolve_cases(store, mapping_id=m, reasons=("board_not_found", "migration_detected", "possible_migration"),
+                             resolution=f"migration completed: {mapping_id} is verified and in the daily scan", component=component)
+               for m in old)
+
+
 # --- identity signals and fingerprints ----------------------------------------------------------------------------------
 def identity_shares(postings: list, names: set[str], domain: str | None) -> dict:
     """How strongly the board's own postings point at the employer: the share naming it, and the share naming (or

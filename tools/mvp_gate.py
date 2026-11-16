@@ -286,8 +286,8 @@ def assess(gate: Gate, jail: Jail, demo: Path, private: Path, private_before: di
     gate.check(item, "remote scope, state limits, pay range and unit, and time zone match the posting text", not wrong, wrong or f"{len(expect)} postings")
     incomplete = [j for j, r in jobs.items() if not (r["title_norm"] and r["remote_scope"] and r["country"] and r["content_fingerprint"])]
     gate.check(item, "every job has a normalised title, remote scope, country and content fingerprint", not incomplete, incomplete)
-    gate.check(item, "every job is placed in the US", {r["country"] for r in jobs.values()} == {"US"}, {r["country"] for r in jobs.values()},
-               core=False)
+    gate.check(item, "every job is placed in the US", {r["country"] for r in jobs.values()} == {"US"},
+               {r["country"] for r in jobs.values()})
     untitled = [j for j, r in jobs.items() if r["title_norm"] != r["title_norm"].strip().lower()]
     gate.check(item, "normalised titles are lower case and trimmed", not untitled, untitled, core=False)
 
@@ -299,9 +299,11 @@ def assess(gate: Gate, jail: Jail, demo: Path, private: Path, private_before: di
             "workable:sterlingclaims": "active", "greenhouse:evergreenhealth": "active", "ashby:northwindbenefits": "active",
             "workable:cobaltclaims": "active", "ashby:harborlinehealth": "active", "greenhouse:harborline": "historical",
             "greenhouse:quillon": "rejected", "ashby:pinecrest": "review_required",
-            "workday:summitpayer.wd5.myworkdayjobs.com": "manual_only", "icims:careers-lakeviewrx.icims.com": "manual_only"}
+            "workday:summitpayer.wd5.myworkdayjobs.com": "manual_only", "icims:careers-lakeviewrx.icims.com": "manual_only",
+            "greenhouse:granitebenefits": "rejected", "workday:granitebenefits.wd1.myworkdayjobs.com": "manual_only"}
     gate.check(item, "each board ends in the status its story calls for", status == want,
-               {m: (status.get(m), w) for m, w in want.items() if status.get(m) != w} or "13 boards as expected")
+               {m: (status.get(m), w) for m, w in {**want, **{m: None for m in status if m not in want}}.items() if status.get(m) != w}
+               or f"{len(want)} boards as expected")
     auto = policy.get("board_verification", "auto_trust")
     weak = {m: (r["handshake_status"], r["identity_check"], r["board_trust_score"]) for m, r in boards.items()
             if r["verification_status"] == "active" and not (r["handshake_status"] == "confirmed" and r["identity_check"] == "confirmed"
@@ -323,9 +325,10 @@ def assess(gate: Gate, jail: Jail, demo: Path, private: Path, private_before: di
     report = (demo / "reports" / f"report-{world.day_start(world.DAYS)[:10]}.html").read_text(encoding="utf-8")
     code, listed = run("sources", "list")
     gate.check(item, "you can see that a suggested board does not exist (report or `careeros sources list`)",
-               "Atlas" in report or "atlasclaims" in listed, "only in the discovery_attempts table", core=False)
+               "Atlas" in report or "atlasclaims" in listed,
+               [line.strip() for line in listed.splitlines() if "atlasclaims" in line] or "not in the report or `sources list`")
     stale = [c for c in cases if c[0] == "greenhouse:harborline"]
-    gate.check(item, "a migration that verification has completed leaves no open review case", not stale, stale, core=False)
+    gate.check(item, "a migration that verification has completed leaves no open review case", not stale, stale or "none open")
     gate.check(item, "the ATS migration keeps the old board as history and verifies the new one",
                ("ashby:harborlinehealth", "ats_migration_verified") in events or any(e == "ats_migration_verified" for _, e in events),
                boards["greenhouse:harborline"]["migrated_to"])
@@ -335,8 +338,12 @@ def assess(gate: Gate, jail: Jail, demo: Path, private: Path, private_before: di
     gate.check(item, "manual-only systems (Workday, iCIMS) are never requested", not manual_hosts, manual_hosts)
     gate.check(item, "the staffing agency's client is never guessed", attempts.get("ridgewaystaffing") in (None, "skipped_policy")
                and not [h for h in jail.hosts if "ridgeway" in h and "example.com" not in h], attempts.get("ridgewaystaffing"))
-    gate.check(item, "a board contradicted by the employer's own website is shown", False,
-               "not in the demo world (covered by unit tests test_t03 / test_t06, not demonstrated)", core=False)
+    granite = boards.get("greenhouse:granitebenefits") or {}
+    shown = [line.strip() for line in listed.splitlines() if "greenhouse:granitebenefits" in line and "rejected" in line]
+    gate.check(item, "a board contradicted by the employer's own website is shown",
+               granite.get("verification_status") == "rejected" and granite.get("verification_failure") == "official_site_contradicts"
+               and ("greenhouse:granitebenefits", "employer_rejected") in events and bool(shown),
+               shown or (granite.get("verification_status"), granite.get("verification_failure")))
 
     # 5. DUPLICATE PREVENTION
     item = "duplicate prevention"
@@ -480,8 +487,10 @@ def assess(gate: Gate, jail: Jail, demo: Path, private: Path, private_before: di
     gate.check(item, "NIGHT routes jobs to its own section (CONDITIONAL when the hours are not stated)",
                routed and all(night[j]["state"] in ("ELIGIBLE", "CONDITIONAL") for j in routed) and "NIGHT · Supplemental" in report,
                f"{len(routed)} routed: " + str(sorted({night[j]['state'] for j in routed})))
-    gate.check(item, "an overnight posting that NIGHT accepts is shown", any(night[j]["schedule"] == "overnight" for j in routed),
-               "no overnight posting in the demo world passes NIGHT", core=False)
+    accepted = [j for j in routed if night[j]["schedule"] == "overnight"]
+    gate.check(item, "an overnight posting that NIGHT accepts is shown",
+               bool(accepted) and all(jobs[j]["title"] in report for j in accepted),
+               accepted or "no overnight posting in the demo world passes NIGHT")
     gate.check(item, "rejected, duplicate and closed jobs are never routed to a tier",
                not [j for j, r in jobs.items() if r["current_state"] != "scored" and j in scores and scores[j]["at"] > (gates.get(j) or {}).get("at", "")],
                "no tier after a rejection", core=False)
@@ -738,8 +747,10 @@ def main(argv: list[str] | None = None) -> int:
         with mock.patch.dict(os.environ, env), Jail() as jail:
             assess(gate, jail, demo, private, private_before, scratch)
     finally:
+        # both resolved: a temporary folder given by its short (8.3) name, as on GitHub's Windows runners, never matched
+        # the log's resolved path, so the log stayed open and the folder could not be removed (2026-11-15)
         for handler in list(cli.log.handlers):
-            if isinstance(handler, logging.FileHandler) and Path(handler.baseFilename).is_relative_to(scratch):
+            if isinstance(handler, logging.FileHandler) and Path(handler.baseFilename).resolve().is_relative_to(scratch.resolve()):
                 handler.close()
                 cli.log.removeHandler(handler)
         sandbox.install(None)

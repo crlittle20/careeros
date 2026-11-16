@@ -466,9 +466,37 @@ class OperationsTests(unittest.TestCase):
         self.assertEqual(store.one("SELECT COUNT(*) c FROM jobs")["c"], 1)  # history kept
         self.assertTrue(store.one("SELECT 1 FROM events WHERE event_type = 'ats_migration_detected'"))
         self.assertFalse(reg.scan_gate(store, employer_row(store, old_id), POLICY)[0])
+        self.assertTrue(store.one("SELECT 1 FROM board_reviews WHERE mapping_id = ? AND reason_code = 'migration_detected' "
+                                  "AND status = 'open'", (old_id,)))
+        reg.open_case(store, mapping_id=old_id, entity_id=entity_id, reason_code="board_not_found", detail="the old board is gone")
+        reg.open_case(store, mapping_id=old_id, entity_id=entity_id, reason_code="site_unreadable", detail="not about the move")
         store.clock.advance(hours=1)
         self.assertEqual(validate(ctx, boards, new["mapping_id"]), "active")
         self.assertTrue(store.one("SELECT 1 FROM events WHERE event_type = 'ats_migration_verified'"))
+        # the move is complete: the old board's cases about it are answered (the Functional MVP gate, 2026-11-15); a case
+        # about something else stays open
+        open_cases = [r["reason_code"] for r in store.all("SELECT reason_code FROM board_reviews WHERE mapping_id = ? AND status = 'open'",
+                                                          (old_id,))]
+        self.assertEqual(open_cases, ["site_unreadable"])
+        closed = store.one("SELECT resolution FROM board_reviews WHERE mapping_id = ? AND reason_code = 'migration_detected'", (old_id,))
+        self.assertIn(f"migration completed: {new['mapping_id']}", closed["resolution"])
+
+    def test_a_migration_completed_by_activating_the_new_board_yourself_closes_the_old_boards_cases(self):
+        from careeros.discovery import board_discovery as bd
+        store, ctx = setup()
+        entity_id, old_id, web, boards = make_active(store, ctx)
+        web.employer_site("examplehealth.com", EX, '<a href="https://jobs.ashbyhq.com/examplehealth">Open roles</a>'
+                                                   '<a href="https://jobs.ashbyhq.com/examplehealth/eeeeeeee-1111-2222-3333-444444444444">Claims Analyst</a>')
+        boards.ashby["examplehealth"] = [ashby_job("eeeeeeee-1111-2222-3333-444444444444", "Claims Analyst", EX_TEXT, "examplehealth"),
+                                         ashby_job("ffffffff-1111-2222-3333-444444444444", "Data Analyst", EX_TEXT, "examplehealth")]
+        store.clock.advance(days=8)
+        verify(ctx, web, boards, entity_id, old_id, kind="reverify")
+        new = store.one("SELECT * FROM board_mappings WHERE ats = 'ashby'")
+        self.assertEqual(new["verification_status"], "quarantined")
+        reg.update_board(store, new["mapping_id"], {"validation_status": "passed"})   # validated, waiting for you (auto-activate off)
+        bd.activate(store, new["mapping_id"])
+        self.assertTrue(store.one("SELECT 1 FROM events WHERE event_type = 'ats_migration_verified' AND entity_id = ?", (new["mapping_id"],)))
+        self.assertFalse(store.one("SELECT 1 FROM board_reviews WHERE mapping_id = ? AND status = 'open'", (old_id,)))
 
     def test_t18_a_changed_board_fingerprint_pauses_before_anything_is_ingested(self):
         store, ctx = setup()

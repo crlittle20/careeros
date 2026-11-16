@@ -708,6 +708,10 @@ def detect_country(location: str, text: str, remote_type: str) -> str:
     body = norm(text[:3000])
     if re.search(r"\b(united states|u s based|us based|within the us)\b", body):
         return "US"
+    # "This role is remote in the US" (2026-11-15: the demo's pasted posting said so and was placed nowhere); "us" only
+    # after "in the", so "contact us" or "join us" never counts
+    if re.search(r"\b(remote|remotely|based|located|reside|residing|live|living|work|working) (anywhere )?in the (us|u s|usa)\b", body):
+        return "US"
     if remote_type == "remote" and not loc.replace("remote", "").strip():
         return "unknown"
     return "unknown"

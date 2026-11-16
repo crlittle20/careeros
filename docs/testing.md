@@ -93,6 +93,8 @@ The agency-digest batch (54fdb33, its own hand checks outside this repository) w
 
 The owner's D156 then replaced the hold proposed at the merge: a review link the combined code keeps under a link the agency batch keeps local is kept as a review lead, stored as a local lead (never exported, published or matched). It was checked on 370a4fe: the 2 defects new since 60a404d and every defect in the three source files it changed, 411, were planted the same way on Python 3.14.10: 407 caught there, the three that depend on the Python version caught on 3.12.10, and the export one by its own test in a git checkout (`evidence/mutation-hand-check-370a4fe.json`).
 
+The Functional MVP gate's five gaps were then closed (2026-11-15: a posting's country read from "remote in the US", suggested boards that do not exist listed, a completed migration's review cases closed, and two demo scenarios). It was checked on 3e0dddf: the 5 defects new since d7b02b1 and every defect in the six source files it changed, 468, were planted the same way on Python 3.14.10: 418 caught by the tests of an earlier receipt, 45 by the related modules, 4 by the whole suite, and the export one by its own test in a git checkout (`evidence/mutation-hand-check-3e0dddf.json`).
+
 Receipts committed before 2026-10-14 (95 to 259 defects, every one reported caught) are void: the tool's scratch
 copies lacked files some tests need, so every defect looked caught. The tool now refuses to run unless an unmutated
 copy passes.

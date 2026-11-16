@@ -5224,6 +5224,27 @@ MUTATIONS = [
      '                known = None if review else _known_job(ctx, link.url)',
      '                known = _known_job(ctx, link.url)',
      'merge: a review link from alert mail matched to a job CareerOS tracks (D140 F2)'),
+    # the Functional MVP gate's five gaps, closed 2026-11-15
+    ('careeros/normalize/posting.py',
+     '    if re.search(r"\\b(remote|remotely|based|located|reside|residing|live|living|work|working) (anywhere )?in the (us|u s|usa)\\b", body):',
+     '    if False:',
+     'G1: a posting whose text says it is remote in the US left with no country'),
+    ('careeros/cli.py',
+     '        if absent:\n            print("Suggested boards that do not exist',
+     '        if False:\n            print("Suggested boards that do not exist',
+     'G2: a suggested board that does not exist is not shown by sources list'),
+    ('careeros/discovery/board_registry.py',
+     '    return sum(resolve_cases(store, mapping_id=m, reasons=("board_not_found", "migration_detected", "possible_migration"),',
+     '    return sum(resolve_cases(store, mapping_id=m, reasons=("possible_migration",),',
+     'G3: review cases about a completed migration left open'),
+    ('careeros/discovery/board_verifier.py',
+     '        reg.complete_migration(store, mapping_id)',
+     '        pass',
+     'G3: a migration completed by the validation scan neither verified nor its cases closed'),
+    ('careeros/discovery/board_discovery.py',
+     '    registry.complete_migration(store, mapping_id, component="admin")   # activated by you: a migration completes here too',
+     '    pass',
+     'G3: a migration completed by activating the new board yourself leaves its cases open'),
 ]
 
 

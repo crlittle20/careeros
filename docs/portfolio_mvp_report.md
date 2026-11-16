@@ -32,7 +32,7 @@ CI run passed all seven checks on Windows and Linux on 2026-10-15 ([run](https:/
 
 | Definition of Done item | Status |
 |---|---|
-| Functional MVP: the demo runs on a fresh clone, offline and credential-free, deterministic, all stages, explainable, golden test | **Met.** The Functional MVP gate grades 10 PASS, 3 PARTIAL, 0 FAIL |
+| Functional MVP: the demo runs on a fresh clone, offline and credential-free, deterministic, all stages, explainable, golden test | **Met.** The Functional MVP gate grades 13 PASS, 0 PARTIAL, 0 FAIL (10 PASS and 3 PARTIAL at this gate; the five gaps were closed on 2026-11-15) |
 | Documents present and accurate: README, requirements, architecture, data flow, security, setup, 3-minute demo, case study | **Met** after this gate added the walkthrough (`demo_walkthrough.md`) and corrected three statements |
 | Analytics: the export loads into Power BI as the data dictionary describes | **Met.** Checked in Power BI Desktop on 2026-10-13 (`powerbi_dashboard_spec.md`, section 6) |
 | CI green: tests, demo, lint, release scan | **Not met at the gate; met since 2026-10-15.** The first CI run on the public repository passed all seven checks on Windows and Linux (B2) |
@@ -61,8 +61,8 @@ latest gate run: on 2026-11-14, for example, 14 jobs routed to the overnight pro
 | 2 | Understand the architecture | README **Architecture** and **Workflow** (two diagrams); `architecture.md`; eight ADRs | Diagram blocks and links are checked by `test_docs` |
 | 3 | Install the portfolio build | The README's two setup commands | 51 packages installed, hash-checked, in 96 seconds |
 | 4 | Initialize Demo Mode | `careeros demo tour` (runs `init`) | Demo vault created with its marker; the tour finished in 9 seconds |
-| 5 | Process synthetic jobs | The tour's four days of `careeros run` | `careeros status`: `jobs: scored=28, rejected=12, closed=4, duplicate=1` |
-| 6 | Observe employer verification | `careeros sources list`, `careeros sources explain greenhouse:quillon`, `careeros sources reviews` | 13 boards with their status; the impostor's chain shows the handshake passed and identity failed (`board names another company`) |
+| 5 | Process synthetic jobs | The tour's four days of `careeros run` | `careeros status`: `jobs: scored=28, rejected=13, closed=4, duplicate=1` |
+| 6 | Observe employer verification | `careeros sources list`, `careeros sources explain greenhouse:quillon`, `careeros sources reviews` | 15 boards with their status; the impostor's chain shows the handshake passed and identity failed (`board names another company`) |
 | 7 | Observe duplicate prevention | `careeros explain greenhouse:meridianrx:102` | `decision: duplicate`, `of: greenhouse:meridianrx:101`, `reason: same_requisition` |
 | 8 | Observe scoring | `careeros explain greenhouse:meridianrx:101` | Every fit and career-value component with its basis; `apply_priority: 80.7` |
 | 9 | Observe routing | `careeros shortlist`, `careeros status`, `careeros review` | Tier B and near-miss jobs with next steps; 13 jobs routed to the overnight profile |
@@ -87,7 +87,7 @@ without its token is refused (HTTP 403).
 | README | Good | The 16 required sections; claims checked by `test_portfolio_docs` |
 | Requirements and traceability | Good | 113 numbered requirements; tests cited in the traceability are checked to exist |
 | Architecture | Good | Diagrams, eight ADRs with alternatives; `portfolio_v1_plan.md` now says it is a historical plan |
-| Demo Mode | Good | Offline, deterministic, isolated under a jail; three demo scenarios still missing (G4, G5) |
+| Demo Mode | Good | Offline, deterministic, isolated under a jail; the demo scenarios missing at this gate (G4, G5) were added on 2026-11-15 |
 | Analytics | Good | Validated and reconciled export; five-page report checked in Desktop; cosmetic issues remain |
 | Security | Good | Threat model with tests and planted defects; R1 and R2 fixed here; personal settings still in code (B1) |
 | CI | Green on the public repository (Windows and Linux, 2026-10-15) | No secrets, a read-only token, actions pinned to commits (B2) |
@@ -101,8 +101,8 @@ without its token is refused (HTTP 403).
 |---|---|---|
 | Business Value | 80 | The problem and the objective are clear, and the system runs daily on a real search. But its value is argued, not yet measured: the Phase 1 exit test (at least 50 labels with measured agreement) has not been reached, and the pilot's targets are provisional. |
 | Architecture | 88 | Strong separation of duties, an audit chain, policy fingerprints, demo isolation and recorded decisions. But `cli.py` is a 1,400-line module that mixes commands with orchestration, operations are tied to Windows, and lead matching still uses an older identity check that board verification has replaced. |
-| Functionality | 88 | All 13 reviewer tasks work, and the gate grades 10 of 13 requirements PASS. Five gaps remain: a bare "Remote" is not placed in the U.S. (G1); a failed suggestion is invisible (G2); stale review cases after a migration (G3); and two scenarios missing from the demo (G4, G5). |
-| Data Quality | 87 | DQ-001 to DQ-010 are implemented and tested, and the export reconciles with the application. But G1 leaves some jobs' country unknown, lead matching relies on the older identity check, and the type-check baseline includes arithmetic on values that may be empty in the scoring modules. |
+| Functionality | 88 | All 13 reviewer tasks work, and the gate grades 10 of 13 requirements PASS. Five gaps remain: a bare "Remote" is not placed in the U.S. (G1); a failed suggestion is invisible (G2); stale review cases after a migration (G3); and two scenarios missing from the demo (G4, G5). All five were closed on 2026-11-15, and the gate now grades 13 of 13 PASS. |
+| Data Quality | 87 | DQ-001 to DQ-010 are implemented and tested, and the export reconciles with the application. But G1 left some jobs' country unknown (closed 2026-11-15), lead matching relies on the older identity check, and the type-check baseline includes arithmetic on values that may be empty in the scoring modules. |
 | Automation | 82 | The daily run, its failure isolation and one-command validation are automated. At the gate, CI had never run, Linux was unverified, the full planted-defect run was manual and slow, and the snapshot generator did not exist yet (built 2026-10-14). |
 | Analytics | 86 | A validated star schema, a reconciled export, a five-page report with 46 measures, a byte-stable demo sample, and tests that hold the model to the export. But some chart subtitles show raw field names, one table scrolls sideways, the report needs Power BI Desktop on Windows, and it has only ever shown synthetic data publicly. |
 | Security | 86 | Every control in the threat model has a test and a planted defect; the website fetcher was probed; the release scan never prints values; the supply chain is checked; CI has least privilege. R1 and R2 were fixed here. At the gate, personal settings remained in shippable code (B1, since resolved); the runtime install is not hash-locked (R3), and the lead-matching identity check is a residual risk. |
@@ -133,9 +133,9 @@ without its token is refused (HTTP 403).
 | S7 | Opening the Power BI project on another computer needs a parameter change that only the private-data instructions mentioned | **Fixed:** `powerbi_dashboard_spec.md` section 6 and the walkthrough |
 | S8 | The documentation writes `careeros <command>`, which a reviewer does not have as a command | **Fixed:** the README and the walkthrough explain `python -m careeros <command>` |
 | S9 | `portfolio_v1_plan.md` reads as current ("no CI yet", "the README is an operator manual") | **Fixed:** a status line marks it as the Milestone 1 plan |
-| S10 | G1: a posting whose location says only "Remote" is not placed in the U.S. from its text | Open: a rule change that re-evaluates every live job on the next run, so the owner should choose when |
-| S11 | G2 and G3: a failed suggestion is invisible, and review cases stay open after a completed migration (visible in `careeros sources reviews`) | Open: it changes the report and the review-case lifecycle of the live system; best done in a focused milestone with G4 and G5 |
-| S12 | G4 and G5: the demo shows no board contradicted by its employer's own site, and no overnight job that the overnight profile accepts | Open: it changes the demo world, its recorded totals, the committed analytics sample and the Power BI files, and re-saving the `.pbix` and screenshots needs Power BI Desktop |
+| S10 | G1: a posting whose location says only "Remote" is not placed in the U.S. from its text | **Closed 2026-11-15:** a posting whose text says it is remote in the US is placed in the US. It needed no re-evaluation of live jobs (the country is read when a posting is normalized, which no policy fingerprint covers), so it applies to new and changed postings |
+| S11 | G2 and G3: a failed suggestion is invisible, and review cases stay open after a completed migration (visible in `careeros sources reviews`) | **Closed 2026-11-15:** `careeros sources list` lists suggested boards that do not exist, and a board's review cases about a move are closed once the board it moved to is verified and in the daily scan (automatically or by `careeros sources activate`) |
+| S12 | G4 and G5: the demo shows no board contradicted by its employer's own site, and no overnight job that the overnight profile accepts | **Closed 2026-11-15:** the demo world gained Granite Benefit Partners (a suggested board its own site contradicts) and a part-time overnight role NIGHT accepts; the recorded totals and the analytics sample were updated. The saved `.pbix` and its screenshots still show the earlier demo export until they are refreshed in Power BI Desktop |
 | S13 | R3: the runtime install (`requirements.lock`) is not hash-locked, and its pydantic is newer than 14 days | Closed 2026-11-03 (OPP-71): `requirements.lock` is hash-locked (PyPI's sha256 for every wheel, CPython 3.12 and 3.14, Windows x64 and Linux x86_64) and installed with `--require-hashes`; pydantic 2.14.0 meets the 14-day rule, and the development lock pins the same |
 | S14 | Lead matching relies on the older identity check (`board_discovery._record_match`) | Closed 2026-11-02 (lead resolution, ADR 0003 amendment): a match on a board discovery has just read is only recorded as `awaiting_board`, and a lead is linked only through a board in the daily scan |
 | S15 | Power BI cosmetics: some chart subtitles show raw field names, and one table scrolls sideways | **Mostly fixed (2026-10-31):** card titles fit (two rows of four), every field has a display name, screenshots re-captured; checked by `test_powerbi::test_titles_are_readable`. Still open: the Board health table scrolls sideways, and a few Roles-page legend labels are shortened |
@@ -164,13 +164,13 @@ hosted or multi-user deployment.
 | The AI-assisted development disclosure now quotes the owner's own account of the process (given 2026-10-13), and the case study and README follow it | `docs/ai_assisted_development.md`, `docs/case_study.md`, `README.md` | `test_portfolio_docs` |
 | Gate evidence regenerated after the G6 fix: 10 PASS, 3 PARTIAL, 0 FAIL | `evidence/functional_mvp.json`, `docs/functional_mvp_report.md` (section 8) | `test_portfolio_docs`, `tools/validate.py` |
 
-Current automated test inventory: 1627. This is a collection count; validation receipts distinguish passes, skips and unavailable checks.
+Current automated test inventory: 1629. This is a collection count; validation receipts distinguish passes, skips and unavailable checks.
 
 Historical gate result after these changes and the refactor of 2026-10-14: the suite passed. The spot checks
 reported at this gate proved nothing at the time: the tool's scratch copies lacked files some tests need, so every
 defect looked caught. After the fix (2026-10-14), full runs followed.
 
-Current mutation inventory (2026-11-14). There are 1826 planted defects. The latest full run (2026-11-05) caught all
+Current mutation inventory (2026-11-14). There are 1831 planted defects. The latest full run (2026-11-05) caught all
 1066 defined at the time, each by a real failing test with the whole suite loaded (`evidence/mutation-receipt.json`). The run history, with each run's survivors and what was fixed, is in [testing.md](testing.md).
 `tools/validate.py` passes all seven checks.
 

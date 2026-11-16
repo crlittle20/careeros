@@ -153,9 +153,9 @@ command, the same command as the CI workflow.
 
 | Measure | Result |
 |---|---|
-| Automated tests | 1627 collected; validation distinguishes passes and skips. Repeated full runs of the earlier revision on 2026-10-13, including a fresh clone, showed no flaky test |
-| Planted defects | 1826 defined. The latest full run (2026-11-05) caught all 1066 defined at the time, each by a real failing test with the whole suite loaded (`evidence/mutation-receipt.json`). Each change since was checked by hand instead of a new full run: every defect in a file it changed, or added since, was planted again. Each check ended with every one caught, a survivor only after a new or corrected test, and the few defects that depend on the Python version on 3.12.10; the latest, after the last change (2026-11-14), planted 411 (`evidence/mutation-hand-check-370a4fe.json`). Every full run since the first, with the survivors each one exposed and the fixes that followed (the first survivor, a weak test, is in the table below), is in [testing.md](testing.md); every defect and the tests that caught it are in [defect_coverage.md](defect_coverage.md). |
-| Functional MVP gate | 92 checks: no requirement fails; 10 PASS, 3 PARTIAL (5 small gaps, listed in `functional_mvp_report.md`) |
+| Automated tests | 1629 collected; validation distinguishes passes and skips. Repeated full runs of the earlier revision on 2026-10-13, including a fresh clone, showed no flaky test |
+| Planted defects | 1831 defined. The latest full run (2026-11-05) caught all 1066 defined at the time, each by a real failing test with the whole suite loaded (`evidence/mutation-receipt.json`). Each change since was checked by hand instead of a new full run: every defect in a file it changed, or added since, was planted again. Each check ended with every one caught, a survivor only after a new or corrected test, and the few defects that depend on the Python version on 3.12.10; the latest, after the last change (2026-11-15), planted 468 (`evidence/mutation-hand-check-3e0dddf.json`). Every full run since the first, with the survivors each one exposed and the fixes that followed (the first survivor, a weak test, is in the table below), is in [testing.md](testing.md); every defect and the tests that caught it are in [defect_coverage.md](defect_coverage.md). |
+| Functional MVP gate | 92 checks: no requirement fails; 13 PASS, 0 PARTIAL (the 5 small gaps of the first assessment were closed on 2026-11-15; `functional_mvp_report.md`) |
 | Release scan | No secret in the files or the Git history. Anyone can repeat the public repository's scan (`python tools/release_scan.py --history`); the private repository's result is reported, not inspectable. |
 | Dependency audit | At release, the first CI run's pip-audit, in the public repository (2026-10-15), found no known vulnerabilities in either lock. Advisories published afterwards affected three pinned packages, which were raised to fixed versions with hashes checked against PyPI: certifi on 2026-10-20, filelock on 2026-10-23 and msgpack on 2026-10-29. After the last update, pip-audit of both locks (2026-10-29) found no known vulnerabilities. Two of the fixed releases were under 14 days old; the lock's header records them as exceptions the owner approved. |
 
@@ -179,12 +179,12 @@ Fictional employers and postings, four simulated days, fixed by the tests:
 
 | Measure | SYNTHETIC result |
 |---|---|
-| World | 15 fictional employers, 13 boards, an alert email and a pasted posting |
-| Boards | 8 active, 1 historical after an ATS migration, 2 manual-only, 1 rejected as an impostor, 1 awaiting review |
-| Jobs | 45 jobs: 28 scored, 12 rejected with stated reasons, 1 duplicate, 4 closed |
+| World | 16 fictional employers, 15 boards, an alert email and a pasted posting |
+| Boards | 8 active, 1 historical after an ATS migration, 3 manual-only, 2 rejected (an impostor, and a board its employer's own site contradicts), 1 awaiting review |
+| Jobs | 46 jobs: 28 scored, 13 rejected with stated reasons, 1 duplicate, 4 closed |
 | Tiers of the scored jobs | 5 Tier B, 15 near-miss, 8 archive |
-| Other routes | 14 routed to NIGHT, the separate overnight and part-time profile; 3 alert-email leads |
-| Isolation | 182 requests, all answered by the synthetic world; nothing reached the network or the private vault |
+| Other routes | 15 routed to NIGHT, the separate overnight and part-time profile; 3 alert-email leads |
+| Isolation | 192 requests, all answered by the synthetic world; nothing reached the network or the private vault |
 
 These numbers describe a small hand-written world built to exercise every rule. They say nothing about a real job
 market.

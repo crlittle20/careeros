@@ -1164,6 +1164,17 @@ class NormalizeTests(unittest.TestCase):
         self.assertNotEqual(canonical_url("https://acme.com/careers/job?gh_jid=81"), canonical_url("https://acme.com/careers/job?gh_jid=82"))
         self.assertEqual(detect_country("Dhaka, Bangladesh", "", "onsite"), "non_US")
 
+    def test_a_remote_posting_that_says_it_is_remote_in_the_us_is_placed_in_the_us(self):
+        # the demo's pasted posting said only "Location: Remote" and, in its text, "This role is remote in the US" (2026-11-15)
+        self.assertEqual(detect_country("Remote", "Pay is good. This role is remote in the US.", "remote"), "US")
+        self.assertEqual(detect_country("Remote", "You may work remotely in the U.S. from any state.", "remote"), "US")
+        self.assertEqual(detect_country("Remote", "Candidates based in the USA are welcome.", "remote"), "US")
+        # "us" as a word on its own is not a country: "join us", "contact us in the morning"
+        self.assertEqual(detect_country("Remote", "Join us! Contact us in the morning.", "remote"), "unknown")
+        self.assertEqual(detect_country("Remote", "Tell us about the tools you use.", "remote"), "unknown")
+        # a stated foreign location still wins over the body
+        self.assertEqual(detect_country("London, UK", "This role is remote in the US.", "onsite"), "non_US")
+
     def test_requirements_fingerprint_tolerates_missing_years(self):
         from careeros.extract.model import Extraction, Requirement
         ex = Extraction("t", [Requirement("skill", "sql", "hard_required", "a", 0.9, None),

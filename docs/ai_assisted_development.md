@@ -142,10 +142,10 @@ review by a person or a tool outside this chain is still recommended.
 ## 4. How tests validated behavior
 
 - **Tests come with the change.** Each milestone that changed system behaviour or documentation added or updated tests
-  for the change. The suite has 1627 tests on synthetic fixtures, fake transports and fixed clocks, and
+  for the change. The suite has 1629 tests on synthetic fixtures, fake transports and fixed clocks, and
   `tools/validate.py` runs it with outbound network refused.
 - **Planted defects check the tests themselves.** `tools/mutate.py` deliberately breaks each safety rule, one at a
-  time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 1826
+  time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 1831
   such defects. The latest full run (2026-11-05) caught all 1066 defined at the time, each by a real failing test with the whole suite
   loaded (`evidence/mutation-receipt.json`). Every full run since the first, with what each survivor exposed, is in [testing.md](testing.md). Spot checks made
   between 2026-10-13 and the first full run (2026-10-14) proved nothing: the tool's scratch copies lacked files some
@@ -252,8 +252,8 @@ the documents true to the code.
 - **Privacy slipped early.** During fast early iteration, personal settings entered code comments, defaults and test
   fixtures. The repository test of that time checked only email addresses and API keys. A release scan with a private
   denylist found them, and on 2026-10-14 they were moved into the vault; the tests now use fictional values.
-- **Known gaps:** a type-check baseline of 158 older errors; three PARTIAL items in the Functional MVP gate; Linux is
-  checked only by the informational CI job.
+- **Known gaps:** a type-check baseline of 158 older errors; Linux is checked only by the informational CI job. (The
+  Functional MVP gate's three PARTIAL items were closed on 2026-11-15.)
 - **Human inspection was targeted, not line by line.** See section 3.
 - **Provenance.** Git history names Claude as co-author on every commit, but it does not record who originated each
   idea. This account rests on the session records and the owner's statement. Points those records do not settle are

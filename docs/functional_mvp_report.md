@@ -8,8 +8,9 @@
 - Assessed: commit `4a27420` plus the two fixes in section 4.
 - Method: Demo Mode only, using `tools/mvp_gate.py`. The evidence is in `evidence/functional_mvp.json`.
 - Companion to `demo_mode.md`, `job_lifecycle.md` and `requirements_traceability.md`.
-- Updated: 2026-10-13, at the Portfolio MVP gate (Prompt 12): G6 is fixed, and the gate now grades 10 PASS,
-  3 PARTIAL, 0 FAIL (section 8). The sections below record the assessment as it was made.
+- Updated: 2026-10-13, at the Portfolio MVP gate (Prompt 12): G6 is fixed, and the gate graded 10 PASS,
+  3 PARTIAL, 0 FAIL. Updated 2026-11-15: G1 to G5 are closed, and the gate grades 13 PASS, 0 PARTIAL, 0 FAIL
+  (section 8). The sections below record the assessment as it was made.
 
 ## 1. Verdict
 
@@ -206,3 +207,18 @@ G4 and G5 change the demo's recorded totals, so the `RECORDED` summary and `demo
 `test_demo_mode::test_commands_with_demo_mode_on_use_the_demo_vault` and a planted defect. The gate was run again on
 the same 92 checks: 10 PASS, 3 PARTIAL, 0 FAIL. Failure handling is now PASS, and `evidence/functional_mvp.json` was
 regenerated. G1 to G5 remain open; `portfolio_mvp_report.md` explains why each was left.
+
+**2026-11-15, the five gaps closed** (at the owner's request: "close the 5 gaps to get a full pass"). Each check
+that recorded a gap now tests the behaviour, and the checks that were informational are now core:
+- G1: a posting whose text says it is remote in the US ("remote in the US", "based in the USA") is placed in the US;
+  "us" counts only after "in the", so "join us" never does. The pasted posting is now in the US.
+- G2: `careeros sources list` lists suggested boards that do not exist (Atlas), under their own heading.
+- G3: once the board an employer moved to is verified and in the daily scan, the old board's review cases about the
+  move (`board_not_found`, `migration_detected`, `possible_migration`) are closed, whether the board was activated
+  automatically or by `careeros sources activate`. Harborline's two cases now close.
+- G4: the demo world has Granite Benefit Partners, whose suggested Greenhouse board is real but whose own careers
+  site uses Workday. The board is rejected (`official_site_contradicts`) and shown as rejected by `sources list`.
+- G5: Sterling has a part-time overnight auditor at $28-30/h. NIGHT accepts it as Supplemental work (eligible,
+  overnight); the main profile rejects it as part-time work.
+The demo now has 16 employers, 15 boards and 46 jobs; the recorded totals, the documents and the analytics sample
+were updated with it. The gate: 92 checks, 13 PASS, 0 PARTIAL, 0 FAIL (`evidence/functional_mvp.json`).

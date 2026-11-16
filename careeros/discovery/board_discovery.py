@@ -507,7 +507,9 @@ def activate(store, mapping_id: str, *, actor: str = "user") -> str:
     elif mapping["verification_status"] != "active":
         raise ValueError(f"not verified ({mapping['verification_status']}): the employer's own site must link to this board "
                          f"(careeros sources check {mapping_id}) or you approve it (careeros sources approve {mapping_id} --reason ...)")
-    return registry.admit(store, mapping_id, via="override" if mapping["override_reason"] else "verified", actor=actor)
+    employer_id = registry.admit(store, mapping_id, via="override" if mapping["override_reason"] else "verified", actor=actor)
+    registry.complete_migration(store, mapping_id, component="admin")   # activated by you: a migration completes here too
+    return employer_id
 
 
 def verify(store, mapping_id: str, *, domain: str | None = None, note: str | None = None, actor: str = "user",

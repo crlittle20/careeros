@@ -8,8 +8,9 @@
 7,ashby:northwindbenefits,northwind benefits,ashby,initial,20261102,20261102,verified,1,,100,3,1,9,100
 8,workable:cobaltclaims,cobalt claims technology,workable,initial,20261102,20261102,verified,1,,100,3,1,9,100
 9,ashby:pinecrest,pinecrest care navigation,ashby,initial,20261102,20261102,no_handshake,0,no_handshake,,3,0,4,5
-10,greenhouse:quillon,quillon health,greenhouse,initial,20261102,20261102,review_required,0,review_required,60,3,2,8,60
-11,greenhouse:harborline,harborline health,greenhouse,reverify,20261103,20261103,verified,1,,95,3,1,9,95
-12,ashby:northwindbenefits,northwind benefits,ashby,validation,20261103,20261103,active,1,,100,0,1,1,0
-13,workable:cobaltclaims,cobalt claims technology,workable,validation,20261103,20261103,active,1,,100,0,1,1,0
-14,ashby:harborlinehealth,harborline health,ashby,validation,20261104,20261104,active,1,,95,0,1,1,0
+10,greenhouse:granitebenefits,granite benefit partners,greenhouse,initial,20261102,20261102,manual_only,0,,,3,0,5,5
+11,greenhouse:quillon,quillon health,greenhouse,initial,20261102,20261102,review_required,0,review_required,60,3,2,8,60
+12,greenhouse:harborline,harborline health,greenhouse,reverify,20261103,20261103,verified,1,,95,3,1,9,95
+13,ashby:northwindbenefits,northwind benefits,ashby,validation,20261103,20261103,active,1,,100,0,1,1,0
+14,workable:cobaltclaims,cobalt claims technology,workable,validation,20261103,20261103,active,1,,100,0,1,1,0
+15,ashby:harborlinehealth,harborline health,ashby,validation,20261104,20261104,active,1,,95,0,1,1,0

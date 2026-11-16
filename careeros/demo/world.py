@@ -94,6 +94,9 @@ EMPLOYERS = [
      "story": "A board named like it, linked from its site, actually belongs to Quillon Logistics: identity mismatch, rejected."},
     {"name": "Pinecrest Care Navigation", "slug": "pinecrestcare", "kind": "curated", "ats": "ashby", "token": "pinecrest",
      "story": "Its careers page loads jobs with a script and shows no board link: sent to manual review."},
+    {"name": "Granite Benefit Partners", "slug": "granitebenefits", "kind": "curated", "ats": "greenhouse", "token": "granitebenefits",
+     "story": "A real board was suggested, but the employer's own careers site uses Workday: the site contradicts the "
+              "suggestion, so the board is rejected and never scanned (2026-11-15)."},
     {"name": "Atlas Claims Group", "slug": "atlasclaims", "kind": "curated", "ats": "lever", "token": "atlasclaims",
      "story": "The suggested board does not exist: an invalid source, nothing admitted."},
     {"name": "Ridgeway Staffing", "slug": "ridgewaystaffing", "kind": "lead", "ats": None,
@@ -116,6 +119,7 @@ def _postings(token: str, day: int) -> list[dict] | None:
         "cobaltclaims": "Cobalt Claims Technology automates claims operations for payers. Learn more at cobaltclaims.example.com.",
         "quillon": "Quillon Logistics moves freight across North America. Learn more at quillonlogistics.example.com.",
         "pinecrest": "Pinecrest Care Navigation helps members find care. Learn more at pinecrestcare.example.com.",
+        "granitebenefits": "Granite Benefit Partners administers benefits for public employers. Learn more at granitebenefits.example.com.",
     }.get(token, "")
     if token == "meridianrx":
         jobs = [job(101, "PBM Operations Analyst", "Remote (United States)",
@@ -234,7 +238,13 @@ def _postings(token: str, day: int) -> list[dict] | None:
                          "Pay range: $72,000 - $84,000 per year")),
                 job("SC4004", "Senior Claims Analyst", "Remote - US",
                     body(about, ["Adjudicate complex medical claims", "Train examiners on claim edits"], CLAIMS_REQS, REMOTE_US,
-                         "Pay range: $36 - $40 per hour"))]
+                         "Pay range: $36 - $40 per hour")),
+                # part-time overnight work NIGHT accepts as Supplemental (the Functional MVP gate, 2026-11-15)
+                job("SC4005", "Overnight Claims Quality Auditor (Part-Time)", "Remote - US",
+                    body(about, ["Review processed pharmacy claims for accuracy overnight", "Flag claims errors for the day team"],
+                         ["1+ year of claims experience required", "Excel skills required"],
+                         "This role is remote. Back office work, no phone queue.",
+                         "Pay range: $28 - $30 per hour", "Schedule: part-time, 20 hours a week, overnight shift, 11pm to 3am, Monday to Friday."))]
     if token == "evergreenhealth":
         return []  # a real, empty board
     if token == "northwindbenefits":
@@ -273,6 +283,12 @@ def _postings(token: str, day: int) -> list[dict] | None:
                     body(about, ["Process freight damage claims for shipments"], ["2+ years of logistics experience"], "On-site in Dallas.")),
                 job(902, "Dispatch Analyst", "Dallas, TX", body(about, ["Plan truck routes"], ["Logistics experience"], "On-site in Dallas.")),
                 job(903, "Warehouse Supervisor", "Dallas, TX", body(about, ["Run the night shift"], ["Supervisory experience"], "On-site."))]
+    if token == "granitebenefits":
+        return [job(951, "Benefits Analyst", "Remote - US",
+                    body(about, ["Reconcile benefit enrollment for public employers", "Answer eligibility questions"], CLAIMS_REQS,
+                         REMOTE_US, "Pay range: $68,000 - $78,000 per year")),
+                job(952, "Benefits Reporting Analyst", "Remote - US",
+                    body(about, ["Report enrollment trends to clients"], DATA_REQS, REMOTE_US, "Pay range: $70,000 - $80,000 per year"))]
     if token == "pinecrest":
         return [job("e5b4a7f6-0000-4000-8000-000000000701", "Care Navigation Specialist", "Remote - US",
                     body(about, ["Help members find in-network care"], ["Customer service experience"], REMOTE_US)),
@@ -282,7 +298,7 @@ def _postings(token: str, day: int) -> list[dict] | None:
 
 
 BOARD_NAMES = {"meridianrx": "Meridian Rx", "harborline": "Harborline Health", "evergreenhealth": "Evergreen Health Analytics",
-               "quillon": "Quillon Logistics"}   # Greenhouse board names (the identity check reads them)
+               "quillon": "Quillon Logistics", "granitebenefits": "Granite Benefit Partners"}   # Greenhouse board names (the identity check reads them)
 BOARD_INTROS = {"evergreenhealth": "<p>Evergreen Health Analytics careers. See evergreenhealth.example.com for who we are.</p>"}
 WORKABLE_NAMES = {"sterlingclaims": "Sterling Claims Services", "cobaltclaims": "Cobalt Claims Technology"}
 
@@ -322,6 +338,8 @@ def _careers(slug: str, day: int) -> str:
         return '<a href="https://careers-lakeviewrx.icims.com/jobs">View openings</a>'
     if slug == "quillonhealth":
         return '<script src="https://boards.greenhouse.io/embed/job_board/js?for=quillon"></script>'
+    if slug == "granitebenefits":   # its own site sends applicants to Workday, not to the suggested Greenhouse board
+        return '<a href="https://granitebenefits.wd1.myworkdayjobs.com/Careers">Search jobs</a>'
     if slug == "pinecrestcare":
         return "<div id='jobs'></div><script src='/static/careers.js'></script><p>Our openings load here.</p>"
     return "<p>We are not hiring right now.</p>"

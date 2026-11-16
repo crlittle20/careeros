@@ -71,8 +71,8 @@ The tour runs four days of `careeros run`: board scans, an alert email, a pasted
 verification, then processing. Afterwards, `careeros status` shows the totals:
 
 ```
-jobs: scored=28, rejected=12, closed=4, duplicate=1
-NIGHT profile: on; supplemental/archive=3, supplemental/near_miss=11
+jobs: scored=28, rejected=13, closed=4, duplicate=1
+NIGHT profile: on; supplemental/archive=3, supplemental/near_miss=12
 ```
 
 ### 6. Observe employer verification
@@ -81,12 +81,18 @@ NIGHT profile: on; supplemental/archive=3, supplemental/near_miss=11
 
 ```
 greenhouse:harborline   historical        Harborline Health
-greenhouse:quillon      rejected          Quillon Health
-ashby:pinecrest         review_required   Pinecrest Care Navigation
+greenhouse:quillon          rejected          Quillon Health
+greenhouse:granitebenefits  rejected          Granite Benefit Partners
+ashby:pinecrest             review_required   Pinecrest Care Navigation
+Suggested boards that do not exist (nothing admitted; correct or remove the suggestion):
+  Atlas Claims Group      https://jobs.lever.co/atlasclaims
 ```
 
-Harborline moved to another provider, so its old board is history. Quillon is the impostor. Pinecrest's careers page
-shows no board link, so a person decides. `careeros sources explain greenhouse:quillon` prints the evidence chain:
+Harborline moved to another provider, so its old board is history, and its review cases about the move are closed once
+the new board is verified. Quillon is the impostor. Granite's suggested board is real, but Granite's own careers site
+sends applicants to Workday, so the site contradicts the suggestion: the board is rejected and the Workday system is
+recorded as manual only. Pinecrest's careers page shows no board link, so a person decides. Atlas's suggested board
+does not exist: nothing is admitted, and the list says so. `careeros sources explain greenhouse:quillon` prints the evidence chain:
 
 ```
 status=rejected

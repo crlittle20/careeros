@@ -758,8 +758,7 @@ def validate_board(ctx, mapping_id: str, ats_client, *, provider_degraded: bool 
         reg.admit(store, mapping_id, via="override" if m["override_reason"] else "verified", actor="careeros:validation")
         reg._event(store, "discovery", "employer_auto_approved", "success", mapping_id, trust=m["board_trust_score"])
         reg._event(store, "discovery", "board_active", "success", mapping_id)
-        if store.one("SELECT 1 FROM board_mappings WHERE migrated_to = ?", (mapping_id,)):
-            reg._event(store, "discovery", "ats_migration_verified", "success", mapping_id)
+        reg.complete_migration(store, mapping_id)
         _leads_after_admission(ctx, mapping_id)
         outcome = "active"
     else:

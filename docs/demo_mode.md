@@ -98,7 +98,7 @@ boards are fictional boards on the four supported providers, answered from memor
 | Bluepeak Health Plan | legacy Lever board | Health plan. It has a pay change (meaningful), a wording change (cosmetic), a hybrid role, an onsite role, a role limited to NY/NJ, and a role added on day 2. |
 | Harborline Health | legacy Greenhouse, then Ashby | Moves to Ashby on day 2. This is an ATS migration: the old board is kept as history, its jobs close with it, and the new board is verified. |
 | Cascade Health Data | legacy Lever board | Reporting and data roles, a manager role, a role that must work Eastern hours, and a poor fit. |
-| Sterling Claims Services | legacy Workable board | A full-time overnight claims role, which NIGHT judges as Replacement work and rejects for pay ($26-30/h is below the $70,000 floor). Also a below-floor role and an hourly role. |
+| Sterling Claims Services | legacy Workable board | A full-time overnight claims role, which NIGHT judges as Replacement work and rejects for pay ($26-30/h is below the $70,000 floor), and a part-time overnight one, which NIGHT accepts as Supplemental work ($28-30/h, above its $25 floor; the main profile rejects part-time work). Also a below-floor role and an hourly role. |
 | Evergreen Health Analytics | legacy Greenhouse board | A real board with no open jobs. It is verified and stays active as empty, never treated as fake. |
 | Northwind Benefits | suggested (curated), Ashby | A new employer. It is verified at its own site, quarantined, validated, then scanned. It has benefits roles and a poor fit. |
 | Cobalt Claims Technology | suggested, Workable | A new employer with automation and payment-integrity roles. |
@@ -106,7 +106,8 @@ boards are fictional boards on the four supported providers, answered from memor
 | Lakeview Pharmacy Solutions | suggested, iCIMS | Manual only. |
 | Quillon Health | suggested, Greenhouse | Its site links a board that belongs to Quillon Logistics. This is an identity mismatch: the board is rejected and nothing is ingested. |
 | Pinecrest Care Navigation | suggested, Ashby | Its careers page shows no board link, so it goes to manual review. |
-| Atlas Claims Group | suggested, Lever | The suggested board does not exist. It is an invalid source: nothing is admitted, and the failed attempt is recorded (`slug_absent`). The report does not show it yet (a gap found by the Functional MVP gate). |
+| Granite Benefit Partners | suggested, Greenhouse | The suggested board is real, but the employer's own careers site sends applicants to Workday. The site contradicts the suggestion: the board is rejected (`official_site_contradicts`) and never scanned, and the Workday system is recorded as manual only. |
+| Atlas Claims Group | suggested, Lever | The suggested board does not exist. It is an invalid source: nothing is admitted, the failed attempt is recorded (`slug_absent`), and `careeros sources list` lists it under "Suggested boards that do not exist". |
 | Ridgeway Staffing | alert email (LinkedIn link) | A staffing agency. The LinkedIn link is listed as a lead and never fetched, and the agency's client is never guessed. |
 | Brightwater Benefits | pasted text | A posting with scam signals (a chat-app interview, a check deposit). It is rejected. |
 
@@ -119,15 +120,16 @@ and the overnight (NIGHT) profile on. On days 3 and 4 they act, through the func
 
 This gives the analytics export (`careeros export`) an application pipeline to show.
 
-Totals after four days: **45 jobs**.
+Totals after four days: **46 jobs**.
 - 28 scored.
-- 12 rejected, with reasons: title excluded, no target family, not remote, below pay floor, scam signals.
+- 13 rejected, with reasons: title excluded, no target family, not remote, below pay floor, employment type (the
+  part-time overnight role, which NIGHT accepts), scam signals.
   The NY/NJ-only role is scored with a residence check to verify, not rejected: no state in a location field rejects
   on its own (D151).
 - 1 duplicate.
 - 4 closed.
 
-Also: 3 alert-email leads, 13 boards, 8 discovery attempts, and 14 jobs routed to NIGHT. These counts are recorded in the
+Also: 3 alert-email leads, 15 boards, 9 discovery attempts, and 15 jobs routed to NIGHT. These counts are recorded in the
 tests (`RECORDED` in `tests/test_demo_mode.py`). A change to the world or to the rules that moves any of them fails a
 test until the record and this document are updated together.
 
@@ -138,7 +140,8 @@ test until the record and this document are updated together.
 | Supported ATS providers | Greenhouse (Meridian, Evergreen), Lever (Bluepeak, Cascade), Ashby (Northwind, Harborline), Workable (Sterling, Cobalt) | Active boards on all four, scanned daily |
 | Manual-only ATS | Summit (Workday), Lakeview (iCIMS) | `manual_only` boards, never read |
 | Verified employer | Northwind, Cobalt, Harborline (new board) | Official-site handshake, quarantine, validation scan, then active |
-| Invalid employer | Atlas | `slug_absent` discovery outcome; nothing admitted |
+| Invalid employer | Atlas | `slug_absent` discovery outcome; nothing admitted; listed by `careeros sources list` |
+| Board contradicted by the employer's site | Granite | Rejected `official_site_contradicts`; its Workday system recorded `manual_only` |
 | Duplicates | Meridian 101 / 102 (same requisition) | `duplicate` (same_requisition) |
 | Updated jobs | Bluepeak, day 2 | One meaningful change (pay) and one cosmetic change (wording) |
 | Remote nationwide | Meridian 101 / 108, Cascade, Cobalt | `US_nationwide` |
@@ -157,14 +160,14 @@ test until the record and this document are updated together.
 | Poor fit | Meridian, Cascade, Northwind, Cobalt | Software / data / QA engineer, nurse, account executive, office coordinator: rejected by the title screen |
 | Director-level rejection | Meridian | Director of Pharmacy Operations: `title_excluded` |
 | Identity mismatch | Quillon | Board rejected, `identity_mismatch` event and review case |
-| ATS migration | Harborline | `ats_migration_detected` / `ats_migration_verified`; old board `historical`, its jobs closed `board_retired` |
+| ATS migration | Harborline | `ats_migration_detected` / `ats_migration_verified`; old board `historical`, its jobs closed `board_retired`; its review cases about the move closed once the new board is verified |
 | Empty board | Evergreen | Active with activity `empty` |
 | Quarantine | Northwind, Cobalt, Harborline (new) | `board_quarantined`, then `validation_scan_passed` |
 | Manual review | Pinecrest, Quillon, Harborline | `review_required` board and open review cases |
 | Below pay floor | Meridian, Sterling | Rejected `below_pay_floor`, with the posting's pay quoted |
 | Scam | Brightwater (pasted) | Rejected `scam_signals` |
 | Closed job | Meridian 103 | Closed `no_longer_listed` after complete scans without it |
-| NIGHT routing | 14 daytime roles with no hours stated; Sterling's overnight auditor | NIGHT section of the report: the 14 are routed to NIGHT Supplemental as conditional; the overnight role is judged as Replacement work and rejected for pay. No overnight role passes NIGHT in this world. |
+| NIGHT routing | 14 daytime roles with no hours stated; Sterling's two overnight auditors | NIGHT section of the report: the 14 are routed to NIGHT Supplemental as conditional; the part-time overnight auditor is accepted (Supplemental, eligible); the full-time one is judged as Replacement work and rejected for pay. |
 | Leads never fetched | LinkedIn link in the alert | A lead with status `new`; nothing fetched |
 
 ## 6. The same production logic
@@ -194,7 +197,7 @@ those identifiers before comparing.
 
 ## 8. Limits
 
-- The world is small and hand-written: 45 jobs, chosen to exercise every rule once or twice. It is not a realistic
+- The world is small and hand-written: 46 jobs, chosen to exercise every rule once or twice. It is not a realistic
   volume or mix.
 - Three cases are not in the world yet (see `functional_mvp_report.md`): an overnight role that NIGHT accepts, a
   suggested board contradicted by the employer's own website, and a pasted posting whose location line says only

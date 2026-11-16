@@ -960,6 +960,22 @@ class ParseTests(unittest.TestCase):
         with contextlib.redirect_stdout(out):
             cmd_agency_layout(None, {}, Namespace(files=[str(self.write(listing, "l.eml"))]))
         self.assertNotIn("job-like", out.getvalue())
+        # the elements around a link are not its label: a footer link in a table with role="presentation" (as in the
+        # real template) is not job-like, while one whose picture's alt text reads like a job still is (2026-11-15)
+        footer = agency_email(agency_card("Claims Analyst", AG_1) + '<table role="presentation"><tr><td>'
+                              f'<a href="{AG_2}">Privacy Policy</a></td></tr></table>')
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            cmd_agency_layout(None, {}, Namespace(files=[str(self.write(footer, "p.eml"))]))
+        self.assertIn("1 cards read", out.getvalue())
+        self.assertNotIn("job-like", out.getvalue())
+        pictured = agency_email(agency_card("Claims Analyst", AG_1) + '<table role="presentation"><tr><td>'
+                                f'<a href="{AG_2}"><img src="https://cdn.example.com/x.png" alt="Open position"></a>'
+                                '</td></tr></table>')
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            cmd_agency_layout(None, {}, Namespace(files=[str(self.write(pictured, "i.eml"))]))
+        self.assertIn("1 link(s) outside the job cards have a job-like label", out.getvalue())
 
     def test_mail_from_the_agency_sender_is_held_in_a_plain_text_or_new_host_form(self):
         from email.message import EmailMessage

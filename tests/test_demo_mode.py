@@ -46,18 +46,23 @@ from careeros.ops import notify
 # moves any of these numbers must be a deliberate one: update this record and the document together.
 RECORDED = {
     "day": 4, "of_days": 4,
-    "boards": {"active": 8, "historical": 1, "manual_only": 2, "rejected": 1, "review_required": 1},
-    "jobs": {"closed": 4, "duplicate": 1, "rejected": 12, "scored": 28},
+    # 2026-11-15 (the Functional MVP gate's five gaps): Granite Benefit Partners (a suggested board its own site
+    # contradicts: rejected, and the Workday system the site does use recorded as manual only), Sterling's part-time
+    # overnight auditor (NIGHT accepts it; PRIMARY rejects part-time work), the pasted posting placed in the US, and
+    # Harborline's review cases closed once its migration is verified
+    "boards": {"active": 8, "historical": 1, "manual_only": 3, "rejected": 2, "review_required": 1},
+    "jobs": {"closed": 4, "duplicate": 1, "rejected": 13, "scored": 28},
     "tiers": {"near_miss": 15, "B": 5, "archive": 8},
-    "remote_scopes": {"US_nationwide": 6, "US_unspecified": 34, "unknown": 1, "hybrid": 1, "onsite": 1, "US_restricted_states": 2},
-    "review_cases": {"site_unreadable": 1, "board_not_found": 1, "migration_detected": 1, "identity_mismatch": 1},
+    "remote_scopes": {"US_nationwide": 6, "US_unspecified": 36, "hybrid": 1, "onsite": 1, "US_restricted_states": 2},
+    "review_cases": {"site_unreadable": 1, "identity_mismatch": 1},
     # D151: the NY/NJ-only role is no longer rejected state_not_eligible (no state in a location field rejects)
-    "rejections": {"scam_signals": 1, "not_remote": 2, "title_excluded": 4, "below_pay_floor": 3, "no_target_family": 2},
+    "rejections": {"scam_signals": 1, "not_remote": 2, "title_excluded": 4, "below_pay_floor": 3, "employment_type": 1,
+                   "no_target_family": 2},
     "board_activity": {"active": 8, "unavailable": 1, "empty": 1},
-    "discovery_outcomes": {"verified": 3, "manual_only": 2, "no_qualified_roles": 1, "slug_absent": 1, "skipped_policy": 1},
-    "lifecycle_events": {"board_active": 9, "board_quarantined": 3, "identity_mismatch": 1, "employer_rejected": 1,
-                         "ats_migration_detected": 1, "validation_scan_passed": 3, "ats_migration_verified": 1},
-    "leads": 3, "changes": {"meaningful": 1, "cosmetic": 1}, "night_routed": 14,
+    "discovery_outcomes": {"verified": 4, "manual_only": 2, "no_qualified_roles": 1, "slug_absent": 1, "skipped_policy": 1},
+    "lifecycle_events": {"board_active": 9, "board_quarantined": 3, "employer_manual_only": 1, "employer_rejected": 2,
+                         "identity_mismatch": 1, "ats_migration_detected": 1, "validation_scan_passed": 3, "ats_migration_verified": 1},
+    "leads": 3, "changes": {"meaningful": 1, "cosmetic": 1}, "night_routed": 15,
 }
 SECRET = "PRIVATE-SENTINEL-4f9a2c"   # planted in the decoy private vault: must never appear in anything the demo writes; release-scan: fake
 
@@ -203,7 +208,7 @@ class DemoTourTest(unittest.TestCase):
 
     # --- the scenarios the demo promises ---------------------------------------------------------------------------------
     def test_the_tour_produces_exactly_the_recorded_result(self):
-        self.assertEqual(len(world.EMPLOYERS), 15)
+        self.assertEqual(len(world.EMPLOYERS), 16)
         self.assertEqual({k: v for k, v in self.status.items() if k != "vault"}, RECORDED)
         self.assertTrue(40 <= sum(RECORDED["jobs"].values()) <= 60)
 
@@ -214,13 +219,21 @@ class DemoTourTest(unittest.TestCase):
             by_status.setdefault(r["verification_status"], set()).add((r["employer_name"], r["ats"]))
         self.assertEqual({ats for _, ats in by_status["active"]}, {"greenhouse", "lever", "ashby", "workable"})  # supported ATSs
         self.assertIn(("Northwind Benefits", "ashby"), by_status["active"])                    # a newly verified employer
-        self.assertEqual({name for name, _ in by_status["manual_only"]}, {"Summit Payer Services", "Lakeview Pharmacy Solutions"})
-        self.assertEqual(by_status["rejected"], {("Quillon Health", "greenhouse")})             # identity mismatch
+        self.assertEqual({name for name, _ in by_status["manual_only"]},
+                         {"Summit Payer Services", "Lakeview Pharmacy Solutions", "Granite Benefit Partners"})
+        self.assertEqual(by_status["rejected"], {("Quillon Health", "greenhouse"),               # identity mismatch
+                                                 ("Granite Benefit Partners", "greenhouse")})   # its own site uses Workday
+        granite = ctx.store.one("SELECT verification_failure FROM board_mappings WHERE mapping_id = 'greenhouse:granitebenefits'")
+        self.assertEqual(granite["verification_failure"], "official_site_contradicts")
         self.assertEqual(by_status["review_required"], {("Pinecrest Care Navigation", "ashby")})  # manual review
         self.assertEqual(by_status["historical"], {("Harborline Health", "greenhouse")})        # ATS migration: old board kept
         self.assertIn(("Harborline Health", "ashby"), by_status["active"])                     # ... and the new one verified
         self.assertEqual(self.status["discovery_outcomes"]["slug_absent"], 1)                  # invalid employer (Atlas)
-        self.assertIn("board_not_found", self.status["review_cases"])
+        # Harborline's old board was reported gone and its move detected; once the new board is verified both cases are
+        # closed, not left open (the Functional MVP gate, 2026-11-15)
+        harborline = {(r["reason_code"], r["status"]) for r in ctx.store.all(
+            "SELECT reason_code, status FROM board_reviews WHERE mapping_id = 'greenhouse:harborline'")}
+        self.assertEqual(harborline, {("board_not_found", "resolved"), ("migration_detected", "resolved")})
         self.assertEqual(self.status["discovery_outcomes"]["skipped_policy"], 1)               # the staffing agency
         events = self.status["lifecycle_events"]
         for event in ("board_quarantined", "validation_scan_passed", "identity_mismatch", "ats_migration_detected", "ats_migration_verified"):
@@ -263,6 +276,14 @@ class DemoTourTest(unittest.TestCase):
         migrated = ctx.store.all("SELECT title FROM jobs WHERE current_state = 'closed' AND job_id LIKE 'greenhouse:harborline:%'")
         self.assertEqual(len(migrated), 3)                                                       # closed with the retired board
         self.assertGreaterEqual(self.status["night_routed"], 1)
+        # NIGHT accepts overnight work: the part-time overnight auditor is routed (PRIMARY rejects part-time work), while
+        # the full-time overnight one is judged as Replacement work and rejected on pay (the Functional MVP gate, 2026-11-15)
+        night = {r["job_id"]: r for r in ctx.store.all("SELECT * FROM night_results n WHERE rowid = (SELECT MAX(rowid) "
+                                                      "FROM night_results WHERE job_id = n.job_id)")}
+        part_time = night["workable:sterlingclaims:SC4005"]
+        self.assertEqual((part_time["decision"], part_time["mode"], part_time["schedule"]), ("eligible", "supplemental", "overnight"))
+        self.assertEqual(night["workable:sterlingclaims:SC4001"]["decision"], "rejected")
+        self.assertEqual(ctx.store.one("SELECT country FROM jobs WHERE employer_name = 'Brightwater Benefits'")["country"], "US")
         late = ctx.store.one("SELECT first_seen_at FROM jobs WHERE job_id = 'greenhouse:meridianrx:108'")
         self.assertEqual(late["first_seen_at"], world.day_start(3))                              # a role that appears mid-demo
         self.assertEqual(ctx.store.one("SELECT status FROM leads WHERE site = 'linkedin'")["status"], "new")  # recorded, never fetched
@@ -337,10 +358,12 @@ class DemoTourTest(unittest.TestCase):
 
     def test_the_reviewer_walkthrough_shows_what_the_commands_print(self):
         """docs/demo_walkthrough.md quotes these lines (Portfolio Prompt 12); each must be real output and in the document."""
-        quoted = {("status",): ["jobs: scored=28, rejected=12, closed=4, duplicate=1",
-                                "NIGHT profile: on; supplemental/archive=3, supplemental/near_miss=11"],
+        quoted = {("status",): ["jobs: scored=28, rejected=13, closed=4, duplicate=1",
+                                "NIGHT profile: on; supplemental/archive=3, supplemental/near_miss=12"],
                   ("sources", "list"): ["greenhouse:harborline historical Harborline Health", "greenhouse:quillon rejected Quillon Health",
-                                        "ashby:pinecrest review_required Pinecrest Care Navigation"],
+                                        "greenhouse:granitebenefits rejected Granite Benefit Partners",
+                                        "ashby:pinecrest review_required Pinecrest Care Navigation",
+                                        "Suggested boards that do not exist", "Atlas Claims Group https://jobs.lever.co/atlasclaims"],
                   ("sources", "explain", "greenhouse:quillon"): ["status=rejected", "identity=mismatch",
                                                                  "board names another company: Quillon Logistics"],
                   ("explain", "greenhouse:meridianrx:102"): ["decision: duplicate", "of: greenhouse:meridianrx:101", "reason: same_requisition"],

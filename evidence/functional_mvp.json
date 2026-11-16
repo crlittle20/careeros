@@ -1,19 +1,19 @@
 {
- "at": "2026-11-15T06:56:33+00:00",
+ "at": "2026-11-16T00:41:15+00:00",
  "commit": "",
  "uncommitted_changes": false,
  "private_vault": "decoy",
- "seconds": 44,
- "overall": "PARTIAL",
+ "seconds": 66,
+ "overall": "PASS",
  "grades": {
   "fresh demo initialization": "PASS",
   "synthetic ingestion": "PASS",
-  "normalization": "PARTIAL",
-  "employer verification": "PARTIAL",
+  "normalization": "PASS",
+  "employer verification": "PASS",
   "duplicate prevention": "PASS",
   "eligibility": "PASS",
   "scoring": "PASS",
-  "routing": "PARTIAL",
+  "routing": "PASS",
   "evidence generation": "PASS",
   "output": "PASS",
   "failure handling": "PASS",
@@ -76,7 +76,7 @@
     "check": "`careeros demo run --all` runs the four simulated days",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, 10.9s"
+    "evidence": "exit 0, 17.4s"
    },
    {
     "check": "each day is a completed production run (`careeros run`)",
@@ -124,7 +124,7 @@
     "check": "the total is within the 40-60 synthetic jobs asked for",
     "ok": true,
     "core": false,
-    "evidence": "45"
+    "evidence": "46"
    }
   ],
   "normalization": [
@@ -142,9 +142,9 @@
    },
    {
     "check": "every job is placed in the US",
-    "ok": false,
-    "core": false,
-    "evidence": "{'unknown', 'US'}"
+    "ok": true,
+    "core": true,
+    "evidence": "{'US'}"
    },
    {
     "check": "normalised titles are lower case and trimmed",
@@ -158,7 +158,7 @@
     "check": "each board ends in the status its story calls for",
     "ok": true,
     "core": true,
-    "evidence": "13 boards as expected"
+    "evidence": "15 boards as expected"
    },
    {
     "check": "every active board has the official-site handshake, a confirmed identity and trust >= 85",
@@ -186,15 +186,15 @@
    },
    {
     "check": "you can see that a suggested board does not exist (report or `careeros sources list`)",
-    "ok": false,
-    "core": false,
-    "evidence": "only in the discovery_attempts table"
+    "ok": true,
+    "core": true,
+    "evidence": "['Atlas Claims Group                       https://jobs.lever.co/atlasclaims  (checked 2026-11-05)']"
    },
    {
     "check": "a migration that verification has completed leaves no open review case",
-    "ok": false,
-    "core": false,
-    "evidence": "[('greenhouse:harborline', 'board_not_found'), ('greenhouse:harborline', 'migration_detected')]"
+    "ok": true,
+    "core": true,
+    "evidence": "none open"
    },
    {
     "check": "the ATS migration keeps the old board as history and verifies the new one",
@@ -222,9 +222,9 @@
    },
    {
     "check": "a board contradicted by the employer's own website is shown",
-    "ok": false,
-    "core": false,
-    "evidence": "not in the demo world (covered by unit tests test_t03 / test_t06, not demonstrated)"
+    "ok": true,
+    "core": true,
+    "evidence": "['greenhouse:granitebenefits               rejected              Granite Benefit Partners     trust=None health=None relevant=1']"
    }
   ],
   "duplicate prevention": [
@@ -288,7 +288,7 @@
     "check": "pay-floor rejections quote the posting's pay text",
     "ok": true,
     "core": true,
-    "evidence": "{'pay rejections': 3, 'unquoted': []}"
+    "evidence": "{'pay rejections': 4, 'unquoted': []}"
    },
    {
     "check": "a posting with no pay is not rejected; pay is shown as an unknown to check",
@@ -358,13 +358,13 @@
     "check": "NIGHT routes jobs to its own section (CONDITIONAL when the hours are not stated)",
     "ok": true,
     "core": true,
-    "evidence": "14 routed: ['CONDITIONAL']"
+    "evidence": "15 routed: ['CONDITIONAL', 'ELIGIBLE']"
    },
    {
     "check": "an overnight posting that NIGHT accepts is shown",
-    "ok": false,
-    "core": false,
-    "evidence": "no overnight posting in the demo world passes NIGHT"
+    "ok": true,
+    "core": true,
+    "evidence": "['workable:sterlingclaims:SC4005']"
    },
    {
     "check": "rejected, duplicate and closed jobs are never routed to a tier",
@@ -375,13 +375,13 @@
   ],
   "evidence generation": [
    {
-    "check": "`careeros explain JOB --json` answers all 14 questions for every job (45)",
+    "check": "`careeros explain JOB --json` answers all 14 questions for every job (46)",
     "ok": true,
     "core": true,
-    "evidence": "45 jobs"
+    "evidence": "46 jobs"
    },
    {
-    "check": "`careeros sources explain` explains every board (13)",
+    "check": "`careeros sources explain` explains every board (15)",
     "ok": true,
     "core": true,
     "evidence": "[]"
@@ -440,7 +440,7 @@
     "check": "`careeros status` reports the same job counts as the database",
     "ok": true,
     "core": true,
-    "evidence": "({'scored': '28', 'rejected': '12', 'closed': '4', 'duplicate': '1'}, {'scored': 28, 'rejected': 12, 'closed': 4, 'duplicate': 1})"
+    "evidence": "({'scored': '28', 'rejected': '13', 'closed': '4', 'duplicate': '1'}, {'scored': 28, 'rejected': 13, 'closed': 4, 'duplicate': 1})"
    },
    {
     "check": "`careeros demo status` summarises the demo",
@@ -454,7 +454,7 @@
     "check": "a run with four failing boards (HTTP 503, invalid JSON, timeout, 1-hour rate limit) completes",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, run completed, 4.3s"
+    "evidence": "exit 0, run completed, 4.9s"
    },
    {
     "check": "each failure is recorded against its board with its own error code",
@@ -490,7 +490,7 @@
     "check": "a 1-hour Retry-After is reported, not slept through",
     "ok": true,
     "core": false,
-    "evidence": "4.3s"
+    "evidence": "4.9s"
    },
    {
     "check": "an unreadable email and an empty pasted file are reported and skipped",
@@ -548,13 +548,13 @@
     "check": "the GitHub inbox is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "Local\\Temp\\careeros-mvp-gate-95_q5lzr\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
+    "evidence": "Local\\Temp\\careeros-mvp-gate-icqqlysd\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
    },
    {
     "check": "the clipboard is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-95_q5lzr\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
+    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-icqqlysd\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
    },
    {
     "check": "Gmail is refused in Demo Mode",
@@ -566,7 +566,7 @@
     "check": "nothing tried to reach the real network, another program, a credential, a mailbox or the AI key",
     "ok": true,
     "core": true,
-    "evidence": "182 requests, all answered by the synthetic world"
+    "evidence": "192 requests, all answered by the synthetic world"
    },
    {
     "check": "every request went to one of the four job-board APIs or a fictional *.example.com site",

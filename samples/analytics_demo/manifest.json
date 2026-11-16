@@ -11,13 +11,13 @@
   },
   "dim_employer": {
    "file": "dim_employer.csv",
-   "rows": 14,
-   "sha256": "f1da91beeeff17e7ffa1c13c0a546f938c225507089ce617ab9536991b3c62e0"
+   "rows": 15,
+   "sha256": "124ea007f82c74442a715fcbcfa3635dd0dcd987115907a936e6ce2ab9489d9d"
   },
   "dim_board": {
    "file": "dim_board.csv",
-   "rows": 14,
-   "sha256": "d78efd20e14bb02e78c22764f744ae440a8c57bffbd3dc66c6d8c9a4c7eafc67"
+   "rows": 16,
+   "sha256": "4d50659b9c617b57da4af79b7d542482e035db2644ebfdd3db348e7b0b381756"
   },
   "dim_ats": {
    "file": "dim_ats.csv",
@@ -36,33 +36,33 @@
   },
   "dim_location": {
    "file": "dim_location.csv",
-   "rows": 8,
-   "sha256": "f50094c9a27b81e99d24992038f1917224818ba8a073149090533cd9a0ee46f8"
+   "rows": 7,
+   "sha256": "7b61e4508f5ca7810f96081fdffccba6f16df217fc8ac1c1f37cc7cab5e74301"
   },
   "dim_job": {
    "file": "dim_job.csv",
-   "rows": 46,
-   "sha256": "b2a5e6522494e4d6d13435621c1a147760bf6682be7e2e2f94df46ec8b0b9faa"
+   "rows": 47,
+   "sha256": "adaf19ed8526f6f5d87f32d178326a2ebe7ed7a2ad84a3b4899a0d84827f8958"
   },
   "fact_job_evaluation": {
    "file": "fact_job_evaluation.csv",
-   "rows": 45,
-   "sha256": "7e10669d4256e304861f2700fdd8ea5776d8de96882bddeca83381e1979c9ef5"
+   "rows": 46,
+   "sha256": "7d53dc11a7e9311c23b18a9f6020280f77755d425b73f4873d3a8b89bda53591"
   },
   "fact_job_observation": {
    "file": "fact_job_observation.csv",
-   "rows": 50,
-   "sha256": "434a3b88385c6435f0643cde939dd04851d0b4f1edddfa7e708a67d8e5e9c985"
+   "rows": 51,
+   "sha256": "4fd4ad557732884d660e33349e7a72d8193a09ff7d8bbe18d1de774885494eab"
   },
   "fact_board_scan": {
    "file": "fact_board_scan.csv",
    "rows": 27,
-   "sha256": "962a9212b4e56b6e2380c803565d50a726a6c2eec8325be163c64f7a7288f853"
+   "sha256": "1d3e0813a7ef06cfd641a203cd1a9af5336d6062998323a5d0eafd99804d1d5c"
   },
   "fact_verification": {
    "file": "fact_verification.csv",
-   "rows": 14,
-   "sha256": "3943509038e9f3061cba9344b7085c97d4b28a3047d8c6ddf38841a10a4ed5ce"
+   "rows": 15,
+   "sha256": "b0437477b8f7b06f059fa8f1e5f3f4e759ffa22194e9faff9c152f7d7a5478d1"
   },
   "fact_application": {
    "file": "fact_application.csv",
@@ -71,22 +71,22 @@
   }
  },
  "kpis": {
-  "jobs_discovered": 45,
-  "distinct_openings": 44,
-  "jobs_evaluated": 40,
+  "jobs_discovered": 46,
+  "distinct_openings": 45,
+  "jobs_evaluated": 41,
   "jobs_qualified": 20,
   "jobs_recommended": 5,
-  "jobs_rejected": 12,
+  "jobs_rejected": 13,
   "jobs_manual_review": 15,
-  "manual_review_rate": 0.375,
+  "manual_review_rate": 0.366,
   "duplicates_prevented": 3,
   "cross_source_sightings": 2,
   "verified_employers": 8,
   "average_fit": 86.0,
-  "board_verification_rate": 0.8,
-  "new_board_verification_rate": 0.6,
+  "board_verification_rate": 0.727,
+  "new_board_verification_rate": 0.5,
   "scan_reliability": 0.963,
-  "night_routed": 14,
+  "night_routed": 15,
   "applications": 4,
   "applications_open": 3,
   "interview_rate": 0.0
@@ -106,12 +106,12 @@
   {
    "check": "dim_employer: the primary key employer_key is present and unique",
    "ok": true,
-   "detail": "14 rows"
+   "detail": "15 rows"
   },
   {
    "check": "dim_board: the primary key board_key is present and unique",
    "ok": true,
-   "detail": "14 rows"
+   "detail": "16 rows"
   },
   {
    "check": "dim_ats: the primary key ats_key is present and unique",
@@ -131,22 +131,22 @@
   {
    "check": "dim_location: the primary key location_key is present and unique",
    "ok": true,
-   "detail": "8 rows"
+   "detail": "7 rows"
   },
   {
    "check": "dim_job: the primary key job_key is present and unique",
    "ok": true,
-   "detail": "46 rows"
+   "detail": "47 rows"
   },
   {
    "check": "fact_job_evaluation: the primary key job_key is present and unique",
    "ok": true,
-   "detail": "45 rows"
+   "detail": "46 rows"
   },
   {
    "check": "fact_job_observation: the primary key observation_key is present and unique",
    "ok": true,
-   "detail": "50 rows"
+   "detail": "51 rows"
   },
   {
    "check": "fact_board_scan: the primary key scan_key is present and unique",
@@ -156,7 +156,7 @@
   {
    "check": "fact_verification: the primary key verification_key is present and unique",
    "ok": true,
-   "detail": "14 rows"
+   "detail": "15 rows"
   },
   {
    "check": "fact_application: the primary key application_key is present and unique",
@@ -421,7 +421,7 @@
   {
    "check": "fact_job_evaluation has one row per source record",
    "ok": true,
-   "detail": "45 vs 45"
+   "detail": "46 vs 46"
   },
   {
    "check": "fact_board_scan has one row per source record",
@@ -431,7 +431,7 @@
   {
    "check": "fact_verification has one row per source record",
    "ok": true,
-   "detail": "14 vs 14"
+   "detail": "15 vs 15"
   },
   {
    "check": "fact_application has one row per source record",
@@ -441,17 +441,17 @@
   {
    "check": "fact_job_observation has one row per source record",
    "ok": true,
-   "detail": "50 vs 50"
+   "detail": "51 vs 51"
   },
   {
    "check": "dim_board has every board (plus the (none) member)",
    "ok": true,
-   "detail": "14"
+   "detail": "16"
   },
   {
    "check": "jobs by state match the application",
    "ok": true,
-   "detail": "{'closed': 4, 'duplicate': 1, 'rejected': 12, 'scored': 28}"
+   "detail": "{'closed': 4, 'duplicate': 1, 'rejected': 13, 'scored': 28}"
   },
   {
    "check": "dismissed jobs (by their latest reason) match the application",
@@ -466,12 +466,12 @@
   {
    "check": "remote classifications match the application",
    "ok": true,
-   "detail": "{'US_nationwide': 6, 'US_restricted_states': 2, 'US_unspecified': 34, 'hybrid': 1, 'onsite': 1, 'unknown': 1}"
+   "detail": "{'US_nationwide': 6, 'US_restricted_states': 2, 'US_unspecified': 36, 'hybrid': 1, 'onsite': 1}"
   },
   {
    "check": "boards by verification status match the application",
    "ok": true,
-   "detail": "{'active': 8, 'historical': 1, 'manual_only': 2, 'rejected': 1, 'review_required': 1}"
+   "detail": "{'active': 8, 'historical': 1, 'manual_only': 3, 'rejected': 2, 'review_required': 1}"
   },
   {
    "check": "jobs_qualified equals the application's own figure",
@@ -496,7 +496,7 @@
   {
    "check": "new_board_verification_rate equals the application's own figure",
    "ok": true,
-   "detail": "export 0.6, application 0.6"
+   "detail": "export 0.5, application 0.5"
   },
   {
    "check": "the only email addresses are fictional example.com ones",

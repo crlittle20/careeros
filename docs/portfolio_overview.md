@@ -94,7 +94,7 @@ excerpts a test checks against the real commands.
 | Command | What you'll see | What it shows |
 |---|---|---|
 | None: the README's top and the Executive Overview screenshot | On synthetic data, 45 postings come in, 18 qualify (27 pass the hard rules and are scored; 18 of those reach a review tier) and 5 are recommended; every rejection has a reason | Problem framing and KPI design |
-| `careeros status` | `jobs: scored=28, rejected=12, closed=4, duplicate=1` | End-to-end automation and deterministic processing: four simulated days of the real daily run, with totals the tests pin |
+| `careeros status` | `jobs: scored=28, rejected=13, closed=4, duplicate=1` | End-to-end automation and deterministic processing: four simulated days of the real daily run, with totals the tests pin |
 | `careeros sources explain greenhouse:quillon` | `status=rejected`, `identity=mismatch`, `board names another company: Quillon Logistics` | Requirement to rule to evidence (FR-032): a board is admitted only when the employer's own website links to it and the board agrees who it belongs to |
 | `careeros explain greenhouse:meridianrx:102` | `decision: duplicate`, `of: greenhouse:meridianrx:101`, `reason: same_requisition` | Data quality (FR-021): one opening arriving through several channels is recorded once and cannot be applied to twice |
 | `careeros explain greenhouse:meridianrx:101`, the ROUTING lines | `tier: near_miss`, `apply_priority: 80.7` | Explainability and audit trail (FR-074): every job answers the same 14 questions from recorded decisions, and a fact the posting does not state is a flag, never a match |

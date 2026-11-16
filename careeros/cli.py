@@ -2206,6 +2206,15 @@ def cmd_sources(ctx: Context, paths, args) -> None:
         for m in store.all("SELECT * FROM board_mappings ORDER BY verification_status, updated_at DESC"):
             print(f"  {m['mapping_id']:40} {m['verification_status']:21} {m['employer_name'][:28]:28} trust={m['board_trust_score']} "
                   f"health={m['board_health_score']} relevant={m['relevant_roles']}" + (f"  PAUSED: {m['paused_reason']}" if m["paused_reason"] else ""))
+        # a board you (or a lead) named that does not exist: nothing is admitted, and you can see it here (the Functional
+        # MVP gate, 2026-11-15: it was only in the discovery_attempts table)
+        absent = store.all("SELECT employer_name, board_url, updated_at FROM discovery_queue WHERE board_url IS NOT NULL "
+                           "AND last_outcome = 'slug_absent' ORDER BY employer_name")
+        if absent:
+            print("Suggested boards that do not exist (nothing admitted; correct or remove the suggestion):")
+            for suggestion in absent:
+                print(f"  {suggestion['employer_name'][:40]:40} {suggestion['board_url']}  "
+                      f"(checked {(suggestion['updated_at'] or '')[:10]})")
         return
     if action == "health":
         registry.sync_legacy(store)
