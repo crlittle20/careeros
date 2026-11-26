@@ -12,7 +12,9 @@
   3 PARTIAL, 0 FAIL. Updated 2026-11-15: G1 to G5 are closed, and the gate grades 13 PASS, 0 PARTIAL, 0 FAIL
   (section 8). The sections below record the assessment as it was made.
 
-## 1. Verdict
+**Latest result (November 15):** 13 PASS, 0 PARTIAL, 0 FAIL across 92 synthetic checks. See [the dated update](#8-later-changes). This is the build assistant’s assessment, not independent release approval. A later independent review of the screening rules found open issues, including how G1 below reads a job's country from its posting text; fixes are not in this snapshot.
+
+## 1. Original October assessment
 
 **The Functional MVP gate passes: no requirement fails.** Of the 13 requirements, 9 are PASS and 4 are PARTIAL. A
 PARTIAL means the stage works but a supporting check does not hold.

@@ -2,12 +2,11 @@
 
 **An evidence-driven job-search operations and decision-support platform:** CareerOS discovers openings, verifies their
 source, rejects those that fail a stated hard requirement, ranks the rest for a person to review and records the reason
-for every decision. It does not apply for jobs; no code in it submits an application or contacts an employer or
-recruiter.
+for every decision. This public snapshot does not submit job applications or contact employers or recruiters.
 
 ![The Executive Overview page of the CareerOS Power BI report, on synthetic demo data](powerbi/screenshots/executive.png)
 
-*Executive Overview page, on Demo Mode data: every number in the screenshots is synthetic.*
+*Executive Overview from an earlier synthetic demo run. The November 15 walkthrough and gate use the updated fixture.*
 
 **Built by Christopher Little**, product owner and business systems analyst, for their own job search. Chris supplied
 or approved the requirements and screening rules, made the product, privacy and release decisions, reviewed the work
@@ -17,17 +16,25 @@ independently; ChatGPT helped design it. Full account: [My role](docs/portfolio_
 overview and [AI-assisted development](docs/ai_assisted_development.md). Below, "I" and "the owner" are Chris; "the job
 seeker" is Chris on the private system and a fictional person in Demo Mode.
 
+## Start here
+
+- **Hiring managers:** [What I owned](docs/portfolio_overview.md#my-role) · [Case study](docs/case_study.md).
+- **No-install demo:** [Read the checked demo examples](docs/demo_walkthrough.md#view-without-installing) · [synthetic dashboard screenshots](powerbi/screenshots/).
+- **Power BI:** [My separate Power BI showcase](https://github.com/crlittle20/careeros-powerbi-showcase) has the Power Query grouping column, DAX measures and report page I built, with AI guidance, on this project's synthetic demo export; its README credits each part.
+- **Technical reviewers:** the demo runs offline on synthetic data and needs no credentials: [Quickstart](#quickstart), then the [reviewer walkthrough](docs/demo_walkthrough.md). Read next: [Architecture](docs/architecture.md) · [AI-assisted development](docs/ai_assisted_development.md) · [Demo Mode](docs/demo_mode.md) · [security architecture](docs/security_architecture.md) · [business requirements](docs/business_requirements.md) · [November 15 demo gate](docs/functional_mvp_report.md#8-later-changes) (the build assistant's self-assessment) · [CI for this snapshot](https://github.com/crlittle20/careeros/actions/runs/43783162055).
+
 **Results**
 
 - The suite contains 1629 automated tests, run with outbound network refused. The public repository's CI runs the same
-  validation; this version's CI result comes with its publication.
+  validation. [GitHub CI for snapshot 017fb69 completed successfully](https://github.com/crlittle20/careeros/actions/runs/43783162055).
 - 1831 planted defects: the latest full run (2026-11-05) caught all 1066 defined at the time, each with a failing test
   (`evidence/mutation-receipt.json`). Each change since was checked by hand instead of a new full run: every defect in
   a file it changed, or added since, was planted again, and the suite had to fail. Each check ended with every one
   caught: a survivor got a new or corrected test, and the few defects that depend on the Python version were caught
   on 3.12.10, the runtime a rollback returns to. The latest check, after the last change (2026-11-15), planted 468
   (`evidence/mutation-hand-check-3e0dddf.json`); every check, with what it found, is in [testing.md](docs/testing.md).
-- Chris labelled 50 real postings (2026-10-16): the hard rules agreed with all 50 (in-sample), the ranking did not;
+- In Chris's 50-posting calibration (2026-10-16), all six jobs the hard rules rejected were labelled Skip, and none of
+  the 33 Apply or Stretch postings were hard-rejected. This is an in-sample check, not an accuracy estimate;
   ranking effectiveness is not demonstrated ([limitations](#limitations)).
 
 ### Project status (2026-11-15)
@@ -79,17 +86,10 @@ seeker" is Chris on the private system and a fictional person in Demo Mode.
 - Codex (OpenAI) reviewed each batch. Its last review of the two largest batches still reported findings; the owner
   closed them with the fail-safe changes above, checked with targeted tests and planted defects, without a further
   independent review. The changes of 2026-11-15 were checked the same way, with no independent review.
+- After this snapshot, an independent review of its screening rules found open issues, including reading a job's
+  country from its posting text and matching postings by requisition number. Fixes are in progress and are not in
+  this snapshot.
 - The 50 labelled postings behind the calibration and the owner's Power BI report on real data stay private.
-
-### For technical reviewers
-
-- **Try it:** the demo runs offline on synthetic data and needs no credentials: [quickstart](#quickstart), then the
-  [reviewer walkthrough](docs/demo_walkthrough.md).
-- **Read next:** [case study](docs/case_study.md) · [architecture](docs/architecture.md) ·
-  [AI-assisted development](docs/ai_assisted_development.md) · [Demo Mode](docs/demo_mode.md) ·
-  [security architecture](docs/security_architecture.md) · [business requirements](docs/business_requirements.md)
-- **Chris's own Power BI work:** the [CareerOS Power BI showcase](https://github.com/crlittle20/careeros-powerbi-showcase),
-  the measures Chris wrote (Power Query and DAX), rebuilt on this project's synthetic demo export.
 
 ## Project summary
 
@@ -335,14 +335,17 @@ or Linux x64, and on nothing else yet: Windows 10 and 11 are where the owner run
 verified by the CI job. On macOS, or with another Python version, the install fails because no hashed wheel matches;
 the [reviewer walkthrough](docs/demo_walkthrough.md) says what can be checked without installing.
 
+First clone or download this repository and open its folder. Initial dependency installation generally needs internet
+access; the demo itself then runs offline.
+
 ```
 python -m venv .venv-dev
 .venv-dev\Scripts\python.exe -m pip install --require-hashes --only-binary :all: --no-deps -r requirements-dev.lock
 .venv-dev\Scripts\python.exe -m careeros demo tour
 ```
 
-The commands are written for Windows. On Linux, use `python3` to create the environment and `.venv-dev/bin/python`
-wherever they say `.venv-dev\Scripts\python.exe`.
+The commands are written for Windows. On Linux, use `python3` to create the virtual environment and
+`.venv-dev/bin/python` for the later commands.
 
 Then explore the result with Demo Mode on (Command Prompt syntax; in PowerShell use `$env:CAREEROS_DEMO_MODE = "true"`;
 on Linux, `export CAREEROS_DEMO_MODE=true` to switch it on and `unset CAREEROS_DEMO_MODE` to switch it off):
@@ -399,8 +402,9 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
 
 ## Roadmap
 
-**Portfolio release:**
-1. Close the remaining Functional MVP gaps.
+**Portfolio release:** The November 15 snapshot closed the original Functional MVP gaps in the synthetic demo gate.
+See the [dated results](docs/functional_mvp_report.md#8-later-changes). This is not an independent review or deployment
+approval: a later independent review found open issues in the screening rules ([project status](#project-status-2026-11-15)).
 
 **Product:**
 - Improve the tier rule that the 2026-10-16 calibration found weak, test any change side by side on new labels before
@@ -419,4 +423,4 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
 channel to automatic submission after a clean record, under its own decision record
 ([ADR 0007](docs/adr/0007-human-approval-at-selected-stages.md)).
 
-**Not planned:** hosted or multi-user deployment.
+**Scope:** a local, single-user desktop tool; not a hosted or multi-user product.

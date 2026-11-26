@@ -8,6 +8,16 @@ This walkthrough shows each part of CareerOS working, in Demo Mode, in about ten
 **synthetic**: fictional employers on `example.com`, a fictional job seeker, and four simulated days. Nothing reaches
 the internet, and no credential is needed.
 
+## View without installing
+
+Start with the [synthetic dashboard screenshots](../powerbi/screenshots/). They come from an earlier synthetic demo
+run, so their counts differ slightly from the examples below. Then read the recorded examples:
+[employer verification](#6-observe-employer-verification), with the impostor board CareerOS rejected, and
+[the evidence behind a job decision](#8-observe-scoring), with [how it is audited](#10-inspect-evidence). The examples
+are checked against the real commands by `tests/test_demo_mode.py`, and the synthetic export behind the analytics is in
+[`samples/analytics_demo/`](../samples/analytics_demo/). You can read all of it in your browser without Python,
+Power BI Desktop or any credentials. The steps below run the demo yourself, which needs setup.
+
 **Before you start** (CPython 3.14 or 3.12 on Windows x64 or Linux x64: the hash-locked install supports nothing else yet, and
 on macOS or another Python version it fails rather than installing), set up once from the repository folder, as in the
 README:
@@ -26,10 +36,6 @@ After the tour, switch Demo Mode on for the other commands:
 - Linux shell: `export CAREEROS_DEMO_MODE=true`
 
 The output excerpts below are checked against the real commands by `tests/test_demo_mode.py`, so they stay true.
-
-**Without installing** (on macOS, for example): steps 1, 2 and 13 are mostly reading; the quoted output in the other
-steps is that checked output, so it can be read as the result; the five Power BI pages are in `powerbi/screenshots/`
-and the synthetic export behind them in `samples/analytics_demo/`.
 
 ## The 3-minute demo
 
