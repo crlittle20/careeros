@@ -37,7 +37,7 @@ OVERVIEW = ENGINE_ROOT / "docs" / "portfolio_overview.md"   # the hiring-manager
 RECEIPT = ENGINE_ROOT / "evidence" / "mutation-receipt.json"
 TESTING = ENGINE_ROOT / "docs" / "testing.md"   # planted defects in plain language (2026-10-31)
 COVERAGE = ENGINE_ROOT / "docs" / "defect_coverage.md"   # generated from the receipt by tools/defect_coverage.py
-README_SECTIONS = ["Project summary", "Business problem", "Solution", "Key capabilities", "Architecture", "Workflow",
+README_SECTIONS = ["Start here", "Project summary", "Business problem", "Solution", "Key capabilities", "Architecture", "Workflow",
                    "Employer verification", "Data quality", "Analytics", "Security", "Testing", "Demo Mode", "Tech stack",
                    "Quickstart", "Limitations", "Roadmap"]
 CASE_SECTIONS = ["Situation", "Problem", "Requirements", "Analysis", "Design", "Implementation", "Controls", "Testing",
@@ -96,7 +96,7 @@ class StructureTest(unittest.TestCase):
     def test_the_readme_presents_decision_support_not_an_application_bot(self):
         opening = flat(text(README)[:900])
         self.assertTrue("evidence-driven job-search operations and decision-support platform" in opening, "positioning")
-        self.assertTrue("It does not apply for jobs" in opening, "no application bot")
+        self.assertTrue("does not submit job applications" in opening, "no application bot")
 
 
 class FiguresTest(unittest.TestCase):
