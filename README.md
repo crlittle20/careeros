@@ -8,7 +8,7 @@ for every decision. This public snapshot does not submit job applications or con
 
 *Executive Overview from an earlier synthetic demo run. The November 15 walkthrough and gate use the updated fixture.*
 
-**Built by Christopher Little**, product owner and business systems analyst, for their own job search. Chris supplied
+**Built by Christopher Little**, product owner and business systems analyst, for his own job search. Chris supplied
 or approved the requirements and screening rules, made the product, privacy and release decisions, reviewed the work
 by using it, labelled the 50 postings behind the calibration and wrote the private Power BI measures. Claude
 (Anthropic) implemented the code, tests and documentation under Chris's direction; Codex (OpenAI) reviewed it
@@ -39,7 +39,7 @@ seeker" is Chris on the private system and a fictional person in Demo Mode.
   the 33 Apply or Stretch postings were hard-rejected. This is an in-sample check, not an accuracy estimate;
   ranking effectiveness is not demonstrated ([limitations](#limitations)).
 
-### Project status (2026-11-26)
+### Project status (2026-11-27)
 
 - First published 2026-10-15 (UTC). This version publishes the code as of 2026-11-26: the fixes from Codex's
   independent review of the screening rules, which ran nineteen passes after the 2026-11-15 snapshot; the nineteenth
@@ -49,6 +49,9 @@ seeker" is Chris on the private system and a fictional person in Demo Mode.
   again from a fresh preview. Only the same posting, by its exact link, is a duplicate; postings that only look
   alike are linked for review, never merged. The review's findings and fixes are listed below. These results come
   from the synthetic demo and tests, not from measured live use.
+- 2026-11-27, documentation only (the code is the 2026-11-26 code): the case study's section 11 no longer lists the
+  five Functional MVP gaps as remaining. Like the MVP report, it says they closed on 2026-11-15, by the build
+  assistant's own assessment.
 - The 2026-11-15 snapshot (the 2026-11-14 one already carried the items under "New since 2026-11-02") added the
   Functional MVP gate's full pass, 13 PASS, 0 PARTIAL, 0 FAIL. The five small gaps of its first assessment are closed:
   a posting whose location field says only
@@ -536,7 +539,7 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
 **Portfolio release:** The November 15 snapshot closed the original Functional MVP gaps in the synthetic demo gate;
 this one adds the fixes from the independent review that followed, whose nineteenth pass found no unresolved
 blocker. See the [dated results](docs/functional_mvp_report.md#8-later-changes) and the
-[project status](#project-status-2026-11-26). The demo gate is the build assistant's self-assessment, not deployment
+[project status](#project-status-2026-11-27). The demo gate is the build assistant's self-assessment, not deployment
 approval.
 
 **Product:**

@@ -164,7 +164,7 @@ review by a person or a tool outside this chain is still recommended.
 **What the tests do not show.** They check specified behaviour, mostly on synthetic data. They do not measure whether
 CareerOS's recommendations agree with the owner's own judgement. That is the Phase 1 exit test. A first calibration
 against 50 of the owner's labels (2026-10-16) found that the hard rules agreed with the owner's 50 labels (in-sample)
-and that the ranking did not separate the jobs the owner wanted from those they would skip, so the test is not claimed
+and that the ranking did not separate the jobs the owner wanted from those he would skip, so the test is not claimed
 (see the case study's ranking calibration).
 
 ## 5. How security-sensitive changes were validated

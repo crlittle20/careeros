@@ -1,7 +1,8 @@
 # CareerOS: case study
 
-- Version: 1.1
-- Date: 2026-10-29 (first version 2026-10-13; ranking calibration and dependency audit added)
+- Version: 1.2
+- Date: 2026-11-27 (first version 2026-10-13; ranking calibration and dependency audit added 2026-10-29; section 11
+  brought up to date 2026-11-27)
 - Companions: `README.md` (overview), `architecture.md`, `business_requirements.md`, `functional_mvp_report.md`,
   `ai_assisted_development.md`.
 
@@ -278,11 +279,16 @@ Shadow scoring is built for that check: `careeros eval --scoring` compares it wi
 
 ## 11. Next iteration
 
-1. Close the five remaining Functional MVP gaps, including a demo employer whose own website contradicts a board and an overnight
-   role that the overnight profile accepts.
-2. Improve the tier rule that the calibration found weak, test any change side by side on new labels before adopting
+The five gaps from the first Functional MVP assessment closed on November 15, 2026: the build assistant (Claude)
+assessed all 13 requirements with 92 synthetic checks that day, and all 13 passed. The November 26 public snapshot
+includes the later screening fixes; the build assistant recorded 13 passing requirements across 95 synthetic checks.
+These are its own assessments, not independent approval. Codex's nineteenth review of the screening changes found no
+unresolved blocker within its scope; its recommendation was advisory.
+[Assessment and review history](functional_mvp_report.md#8-later-changes)
+
+1. Improve the tier rule that the calibration found weak, test any change side by side on new labels before adopting
    it, and add to the exit test a measure of how many wanted jobs reach the top tiers; then measure the
    source-expansion pilot.
-3. Decide how to handle careers pages that build their job lists with JavaScript, after a week of verification results.
-4. Reduce the type-check baseline. (The lead-matching path that used an older identity check was replaced by lead
+2. Decide how to handle careers pages that build their job lists with JavaScript, after a week of verification results.
+3. Reduce the type-check baseline. (The lead-matching path that used an older identity check was replaced by lead
    resolution on 2026-11-02.)

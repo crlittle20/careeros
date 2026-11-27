@@ -496,7 +496,7 @@ the demo, and that some checks could pass with the output missing. Changed:
   H13, linkless pages merging across employers; H14, refused imports filed as imported); a Claude red team then found
   and the corrections above closed further routes in this area and in older code (D179). Codex's passes 11 to 18
   each found further gaps, corrected as described above and in the README's
-  [project status](../README.md#project-status-2026-11-26); its nineteenth pass found no new Critical or High problem.
+  [project status](../README.md#project-status-2026-11-27); its nineteenth pass found no new Critical or High problem.
 
 **2026-11-26, after Codex's nineteenth pass.** Codex's nineteenth pass (CR-2026-11-15-GATE-FIXES) found no
 unresolved blocker and no new Critical or High problem; like every pass, its recommendation is advisory, not

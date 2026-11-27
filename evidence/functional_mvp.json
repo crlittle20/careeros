@@ -1,9 +1,9 @@
 {
- "at": "2026-11-27T01:08:38+00:00",
+ "at": "2026-11-27T16:18:38+00:00",
  "commit": "",
  "uncommitted_changes": false,
  "private_vault": "decoy",
- "seconds": 60,
+ "seconds": 54,
  "overall": "PASS",
  "grades": {
   "fresh demo initialization": "PASS",
@@ -76,7 +76,7 @@
     "check": "`careeros demo run --all` runs the four simulated days",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, 16.4s"
+    "evidence": "exit 0, 12.5s"
    },
    {
     "check": "each day is a completed production run (`careeros run`)",
@@ -472,7 +472,7 @@
     "check": "a run with four failing boards (HTTP 503, invalid JSON, timeout, 1-hour rate limit) completes",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, run completed, 4.6s"
+    "evidence": "exit 0, run completed, 4.8s"
    },
    {
     "check": "each failure is recorded against its board with its own error code",
@@ -508,7 +508,7 @@
     "check": "a 1-hour Retry-After is reported, not slept through",
     "ok": true,
     "core": false,
-    "evidence": "4.6s"
+    "evidence": "4.8s"
    },
    {
     "check": "an unreadable email and an empty pasted file are reported and skipped",
@@ -566,13 +566,13 @@
     "check": "the GitHub inbox is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "Local\\Temp\\careeros-mvp-gate-8nn4soj3\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
+    "evidence": "Local\\Temp\\careeros-mvp-gate-1qothdm6\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
    },
    {
     "check": "the clipboard is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-8nn4soj3\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
+    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-1qothdm6\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
    },
    {
     "check": "Gmail is refused in Demo Mode",
