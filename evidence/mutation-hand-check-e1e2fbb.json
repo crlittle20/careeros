@@ -1,0 +1,1061 @@
+{
+  "what": "The corrections for Codex CR-2026-11-15-GATE-FIXES Pass 6 (H2, H3, F1, F8), planted by hand in stages (D152) as in mutation-hand-check-739bf0f.json: the tests of the earlier receipts that caught the defect first, then the related modules, then the whole suite.",
+  "scope": "every defect new or re-anchored since 9b0502e and every defect in the three source files the corrections changed (discovery/manual_intake.py, pipeline.py, qualify/facts.py)",
+  "base": "9b0502ee71e2f00532e053c2a91c55c00a7489e3",
+  "rev": "e1e2fbb006772ec9ee0feeeea3286149a052c824",
+  "python": "3.14.10",
+  "node_version": "v24.22.1",
+  "defined": 1884,
+  "checked": 60,
+  "caught": 60,
+  "by_scope": {
+    "stage 0: the tests that caught it before": 53,
+    "modules": 7
+  },
+  "note": "round 7 planted plain copies of the worktree at the commit; defects in the other files keep their results in the earlier receipts (mutation-hand-check-739bf0f.json, 6c62676, 953b604, e14b63b, f59f6c7)",
+  "previous": "evidence/mutation-hand-check-739bf0f.json",
+  "results": [
+    {
+      "kind": "shared",
+      "mutation": "delisted jobs never closed",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured",
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_demo_mode.DemoTourTest.test_jobs_cover_every_outcome"
+      ],
+      "flaky_failed": false,
+      "seconds": 22.8,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "requisition dedupe disabled",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured",
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_demo_mode.DemoTourTest.test_jobs_cover_every_outcome"
+      ],
+      "flaky_failed": false,
+      "seconds": 22.8,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "stale job family used after policy change",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.TitleRescueTests.test_a_rule_change_can_take_a_rescue_back"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "the card shows no state limit where a residence sentence names one",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_gate_fails_a_role_limited_to_one_other_state"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "AI daily cap ignored",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_ai.PipelineAITests.test_daily_cap_limits_calls"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.0,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "the pay fact judged on the first tier when nobody named yours",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_the_gate_quotes_your_tier_and_a_straddle_is_conditional"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "pay read better recorded as a change the employer made",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_pay_read_better_is_not_a_change_the_employer_made"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "a change in the board's own pay fields taken for pay read better",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_pay_reread_needs_the_same_words_and_pay_read_from_them"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "a new requisition or address in the same scan as pay read better left unrecorded",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_pay_reread_needs_the_same_words_and_pay_read_from_them"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "a board that dropped its own pay fields taken for pay read better",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_pay_reread_needs_the_same_words_and_pay_read_from_them"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "state limits read better in the same scan recorded as an employer change",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_pay_reread_needs_the_same_words_and_pay_read_from_them"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "the pay card judged a guessed pay period against the floor",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_pay_period_the_posting_leaves_open_never_decides_the_floor"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.7,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "your state never given to the pay reader",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_the_pay_stored_is_your_states_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "rule-code changes not re-evaluated",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.ReevaluationTests.test_rules_version_change_reevaluates_existing_decisions"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "stale stored fields never refreshed",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.ReevaluationTests.test_stale_stored_states_are_refreshed_and_job_reevaluated",
+        "tests.test_pipeline.PipelineTests.test_employment_type_stated_in_the_title_wins_and_is_refreshed",
+        "tests.test_v22_night.PipelineTests.test_a_country_in_the_title_rejects_new_and_stored_postings"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.8,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "operational settings re-evaluate every job",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 1,
+      "errors": 2,
+      "failing": [
+        "tests.test_assist.SecondReviewTests.test_greenhouse_filling_stays_off_until_you_turn_it_on_after_the_installed_check",
+        "tests.test_assist.ThirdReviewTests.test_the_documented_switch_loads_from_the_overrides_file",
+        "tests.test_ops.DecisionFingerprintTests.test_night_settings_re_check_night_only"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT settings re-evaluate every PRIMARY job",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_ops.DecisionFingerprintTests.test_night_settings_re_check_night_only",
+        "tests.test_worktime.ConfirmationTests.test_night_settings_never_change_primary_decisions"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT settings changes never re-check NIGHT jobs",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_ops.DecisionFingerprintTests.test_night_settings_re_check_night_only"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "stored jobs keep a wrong country",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v22_night.PipelineTests.test_a_country_in_the_title_rejects_new_and_stored_postings"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT runs while switched off",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v22_night.PipelineTests.test_results_are_separate_idempotent_and_off_by_default"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "stored employment types never corrected",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_employment_type_stated_in_the_title_wins_and_is_refreshed"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT re-assesses every job every run",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_job_lifecycle.IdempotencyTests.test_seeing_and_processing_the_same_postings_again_changes_nothing",
+        "tests.test_job_lifecycle.StuckJobTests.test_a_job_the_title_screen_now_rejects_is_not_sent_back_on_every_run",
+        "tests.test_job_lifecycle.StuckJobTests.test_a_review_parked_before_review_decisions_were_recorded_is_rechecked_once"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.6,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "title rescues not capped per run",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.TitleRescueTests.test_relevant_ambiguous_titles_are_rescued_within_budget_and_recorded"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "rescues spent on jobs the remote rule rejects anyway",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.TitleRescueTests.test_rescues_are_not_spent_on_jobs_the_rest_of_the_screen_rejects_and_nothing_churns"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "a stale rescued family survives a rule change",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.TitleRescueTests.test_a_rule_change_can_take_a_rescue_back"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "a rescue rule change re-checks nothing",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.TitleRescueTests.test_a_rule_change_can_take_a_rescue_back"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "skipped rescues bounce between rejected and normalized every run",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.TitleRescueTests.test_rescues_are_not_spent_on_jobs_the_rest_of_the_screen_rejects_and_nothing_churns"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "a range that straddles the minimum treated as compatible",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.EligibilityFactTests.test_pay_units_tiers_and_variable_pay"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "geographic pay tiers ignored",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.EligibilityFactTests.test_pay_units_tiers_and_variable_pay"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "bonus / commission counted as base pay",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.EligibilityFactTests.test_pay_units_tiers_and_variable_pay"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "a reappearing closed posting stays closed",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.OpeningTests.test_reposts_and_reopenings_keep_application_history"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "cosmetic edits counted as meaningful changes",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_full_flow",
+        "tests.test_v26_discovery.ChangeTests.test_meaningful_versus_cosmetic_and_timestamps"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "identical titles with different requisitions merged as variants",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.ManualIntakeAmbiguityTests.test_adding_one_of_two_same_title_postings_does_not_link_a_lead_either_could_be",
+        "tests.test_v26_discovery.IdentityTests.test_supplied_domain_verifies_and_the_lead_becomes_a_graded_posting_without_joining_the_daily_scan",
+        "tests.test_v26_discovery.OpeningTests.test_identical_titles_with_different_requisitions_stay_separate_and_both_can_be_applied_to"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "one missed scan closes a posting",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_pipeline.PipelineTests.test_full_flow",
+        "tests.test_v26_discovery.OpeningTests.test_reposts_and_reopenings_keep_application_history"
+      ],
+      "flaky_failed": false,
+      "seconds": 13.8,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pasted posting is not deduplicated",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_pasted_postings_are_graded_without_any_fetch"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "reviews parked before decisions were recorded stay parked",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_job_lifecycle.StuckJobTests.test_a_review_parked_before_review_decisions_were_recorded_is_rechecked_once"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "jobs parked for review are never re-checked",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_job_lifecycle.StuckJobTests.test_a_job_parked_for_review_is_rechecked_when_the_rules_change"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.2,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "a review outcome is not recorded as a decision",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_job_lifecycle.StuckJobTests.test_too_few_readable_requirements_is_a_recorded_review_decision"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "a job that cannot close with its board is skipped silently",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_job_lifecycle.BoardClosureTests.test_a_job_that_cannot_close_is_recorded_never_silent"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT's right-to-represent check treats an unfinished search as clearance",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_applications.ApplicationLogicTests.test_an_unfinished_duplicate_search_is_never_clearance"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "title-screen rejections re-sent on every run after a vocabulary change",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_job_lifecycle.StuckJobTests.test_a_job_the_title_screen_now_rejects_is_not_sent_back_on_every_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.0,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT: a hold change not re-judging NIGHT",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_submission.FingerprintTests.test_submission_settings_and_releases_never_re_judge_a_job"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "submission settings re-judging every job",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_submission.AuthorizationTests.test_a_release_is_for_the_employer_it_was_granted_under",
+        "tests.test_submission.AuthorizationTests.test_an_identity_correction_suspends_and_an_unresolved_identity_never_authorizes",
+        "tests.test_submission.CodexReviewTests.test_authorization_needs_the_current_profile"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "ingest: a new requisition or address on unchanged text ignored",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.ChangeTests.test_meaningful_versus_cosmetic_and_timestamps"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT: identity settings changed without re-judging NIGHT jobs",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_submission.FingerprintTests.test_identity_settings_re_judge_night_only"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "the card does not say which role or function to verify",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.GateTests.test_the_card_says_which_line_to_verify"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "a new skill-word exclusion never re-reads postings",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.SkillWordTests.test_a_new_exclusion_re_reads_postings"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "F2: an unchanged rescan leaves an older country beside the new remote scope",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_country_read_better_on_unchanged_text_is_stored_with_the_scope_and_re_screens"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "a cached title-screen rejection regraded on requirements from an older text",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_title_screen_regrade_reads_current_text_even_with_cached_requirements"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "F2: a country read better on an unchanged rescan is never re-screened",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_country_read_better_on_unchanged_text_is_stored_with_the_scope_and_re_screens"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 4 F1: the location question never shows the text's US hint",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_foreign_opening_keeps_its_location_question_through_the_pipeline",
+        "tests.test_pipeline.PipelineTests.test_a_foreign_opening_keeps_its_location_question_through_the_pipeline",
+        "tests.test_pipeline.PipelineTests.test_a_foreign_opening_keeps_its_location_question_through_the_pipeline"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 5 F1: a state list from the text clears the location question of a job its location field does not place",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.EligibilityFactTests.test_a_state_list_from_the_text_never_clears_an_unknown_country"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 5 F1: a paste takes its location field from a phrase in its prose ('Previously advertised as Remote - US')",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_paste_takes_its_location_only_from_its_location_line_or_yours"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 6 H3: a blank Location label takes the next line of prose as the location field",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 210,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_blank_location_label_never_takes_the_next_line"
+      ],
+      "flaky_failed": false,
+      "seconds": 208.3,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 6 H2: a location an older parser took from a paste's prose places the job again at the next processing run",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 210,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.QueueTests.test_a_paste_saved_by_an_older_parser_routes_no_standing_package_until_you_confirm_its_location",
+        "tests.test_v26_discovery.IntakeTests.test_a_paste_saved_by_an_older_parser_is_placed_only_by_a_declared_location"
+      ],
+      "flaky_failed": false,
+      "seconds": 209.7,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 6 H2: a paste whose location is its own Location line loses it as if unconfirmed",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 210,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_paste_saved_by_an_older_parser_is_placed_only_by_a_declared_location"
+      ],
+      "flaky_failed": false,
+      "seconds": 206.1,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 6 H2: a posting added another way (a saved file, add-url) loses its location as if it were an unconfirmed paste",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 210,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_paste_saved_by_an_older_parser_is_placed_only_by_a_declared_location"
+      ],
+      "flaky_failed": false,
+      "seconds": 208.3,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 6 H2: an older paste counts as declared and the location you confirm does not",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 210,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.QueueTests.test_a_paste_saved_by_an_older_parser_routes_no_standing_package_until_you_confirm_its_location",
+        "tests.test_v26_discovery.IntakeTests.test_a_paste_saved_by_an_older_parser_is_placed_only_by_a_declared_location"
+      ],
+      "flaky_failed": false,
+      "seconds": 204.7,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 6 H2: pasting a tracked posting again with --location leaves its old location in place",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 210,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_paste_saved_by_an_older_parser_is_placed_only_by_a_declared_location"
+      ],
+      "flaky_failed": false,
+      "seconds": 206.5,
+      "python": "3.14.10",
+      "round": 7
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 6 H2: the location question does not say a pasted location was read by an earlier rule and needs confirming",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 210,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_paste_saved_by_an_older_parser_is_placed_only_by_a_declared_location"
+      ],
+      "flaky_failed": false,
+      "seconds": 191.5,
+      "python": "3.14.10",
+      "round": 7
+    }
+  ]
+}

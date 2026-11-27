@@ -21,31 +21,44 @@ seeker" is Chris on the private system and a fictional person in Demo Mode.
 - **Hiring managers:** [What I owned](docs/portfolio_overview.md#my-role) · [Case study](docs/case_study.md).
 - **No-install demo:** [Read the checked demo examples](docs/demo_walkthrough.md#view-without-installing) · [synthetic dashboard screenshots](powerbi/screenshots/).
 - **Power BI:** [My separate Power BI showcase](https://github.com/crlittle20/careeros-powerbi-showcase) has the Power Query grouping column, DAX measures and report page I built, with AI guidance, on this project's synthetic demo export; its README credits each part.
-- **Technical reviewers:** the demo runs offline on synthetic data and needs no credentials: [Quickstart](#quickstart), then the [reviewer walkthrough](docs/demo_walkthrough.md). Read next: [Architecture](docs/architecture.md) · [AI-assisted development](docs/ai_assisted_development.md) · [Demo Mode](docs/demo_mode.md) · [security architecture](docs/security_architecture.md) · [business requirements](docs/business_requirements.md) · [November 15 demo gate](docs/functional_mvp_report.md#8-later-changes) (the build assistant's self-assessment) · [CI for this snapshot](https://github.com/crlittle20/careeros/actions/runs/43783162055).
+- **Technical reviewers:** the demo runs offline on synthetic data and needs no credentials: [Quickstart](#quickstart), then the [reviewer walkthrough](docs/demo_walkthrough.md). Read next: [Architecture](docs/architecture.md) · [AI-assisted development](docs/ai_assisted_development.md) · [Demo Mode](docs/demo_mode.md) · [security architecture](docs/security_architecture.md) · [business requirements](docs/business_requirements.md) · [November 26 demo gate](docs/functional_mvp_report.md#8-later-changes) (the build assistant's self-assessment) · [CI runs](https://github.com/crlittle20/careeros/actions/workflows/ci.yml?query=branch%3Amain).
 
 **Results**
 
-- The suite contains 1629 automated tests, run with outbound network refused. The public repository's CI runs the same
-  validation. [GitHub CI for snapshot 017fb69 completed successfully](https://github.com/crlittle20/careeros/actions/runs/43783162055).
-- 1831 planted defects: the latest full run (2026-11-05) caught all 1066 defined at the time, each with a failing test
+- The suite contains 2187 automated tests, run with outbound network refused. The public repository's CI runs the same
+  validation; this version's CI result comes with its publication.
+- 2529 planted defects: the latest full run (2026-11-05) caught all 1066 defined at the time, each with a failing test
   (`evidence/mutation-receipt.json`). Each change since was checked by hand instead of a new full run: every defect in
   a file it changed, or added since, was planted again, and the suite had to fail. Each check ended with every one
-  caught: a survivor got a new or corrected test, and the few defects that depend on the Python version were caught
-  on 3.12.10, the runtime a rollback returns to. The latest check, after the last change (2026-11-15), planted 468
-  (`evidence/mutation-hand-check-3e0dddf.json`); every check, with what it found, is in [testing.md](docs/testing.md).
+  caught: a survivor got a new or corrected test (or its code, which no route ran any more, was removed), and the few
+  defects that depend on the Python version were caught on 3.12.10, the runtime a rollback returns to. The latest
+  check, after the last change (2026-11-26), scoped to the fix for Codex's eighteenth pass, planted 30 and
+  caught 30 (`evidence/mutation-hand-check-67bbb76.json`). Every check, with what it found, is in
+  [testing.md](docs/testing.md).
 - In Chris's 50-posting calibration (2026-10-16), all six jobs the hard rules rejected were labelled Skip, and none of
   the 33 Apply or Stretch postings were hard-rejected. This is an in-sample check, not an accuracy estimate;
   ranking effectiveness is not demonstrated ([limitations](#limitations)).
 
-### Project status (2026-11-15)
+### Project status (2026-11-26)
 
-- First published 2026-10-15 (UTC). This version publishes the code as of 2026-11-15. The snapshot before it
-  (2026-11-14) already carried everything listed below; this one adds the Functional MVP gate's full pass, 13 PASS,
-  0 PARTIAL, 0 FAIL. The five small gaps of its first assessment are closed: a posting that says it is remote in
-  the US is placed in the US; `careeros sources list` shows suggested boards that do not exist; a board migration
-  that completes closes the old board's review cases; and the demo world now has a board its employer's own site
-  contradicts and an overnight job that NIGHT accepts. It also fixes a false warning when an agency digest's layout
-  is recorded. The snapshot before 2026-11-14 was that of 2026-11-02.
+- First published 2026-10-15 (UTC). This version publishes the code as of 2026-11-26: the fixes from Codex's
+  independent review of the screening rules, which ran nineteen passes after the 2026-11-15 snapshot; the nineteenth
+  found no unresolved blocker (its recommendation is advisory, not release approval). Two rules change how the job
+  seeker's decisions are kept. An Apply or Stretch label now approves exactly the posting it is given on, from a
+  preview of that posting as read; if what the posting states changes later, the label holds until it is given
+  again from a fresh preview. Only the same posting, by its exact link, is a duplicate; postings that only look
+  alike are linked for review, never merged. The review's findings and fixes are listed below. These results come
+  from the synthetic demo and tests, not from measured live use.
+- The 2026-11-15 snapshot (the 2026-11-14 one already carried the items under "New since 2026-11-02") added the
+  Functional MVP gate's full pass, 13 PASS, 0 PARTIAL, 0 FAIL. The five small gaps of its first assessment are closed:
+  a posting whose location field says only
+  "Remote" but whose text says the role is remote in the US shows that sentence as a hint with its location question
+  (the text never sets the country, after Codex's review); `careeros sources list` shows suggested boards a probe found do not
+  exist; a board migration that completes closes the old board's review cases about the move; and the demo world now
+  has a board its employer's own site contradicts and an overnight job that NIGHT accepts. It also fixes a false
+  warning when an agency digest's layout is recorded. These results come from the synthetic demo and tests, not from
+  measured live use, and they were revised on 2026-11-16 after each pass of Codex's review (below and in the
+  [report](docs/functional_mvp_report.md)). The snapshot before 2026-11-14 was that of 2026-11-02.
 - New since 2026-11-02:
   - **Lead resolution** ([ADR 0003](docs/adr/0003-new-boards-are-quarantined.md) and
     [ADR 0001](docs/adr/0001-official-employer-sites-are-authoritative.md), amended 2026-11-02). A job seen only in a
@@ -83,12 +96,130 @@ seeker" is Chris on the private system and a fictional person in Demo Mode.
     seeker sent is recorded as an event, and every view uses one reminder rule: while an application waits for a
     response, a follow-up is due 14 days after the later of entering that state and the latest recorded follow-up. A
     form's full-name box is filled from an approved answer.
-- Codex (OpenAI) reviewed each batch. Its last review of the two largest batches still reported findings; the owner
-  closed them with the fail-safe changes above, checked with targeted tests and planted defects, without a further
-  independent review. The changes of 2026-11-15 were checked the same way, with no independent review.
-- After this snapshot, an independent review of its screening rules found open issues, including reading a job's
-  country from its posting text and matching postings by requisition number. Fixes are in progress and are not in
-  this snapshot.
+- Codex (OpenAI) reviewed each batch up to 2026-11-14. Its last review of the two largest batches still reported
+  findings; the owner closed them with the fail-safe changes above, checked with targeted tests and planted defects,
+  without a further independent review. Codex reviewed the changes of 2026-11-15 after they were published: its first
+  pass found one High and five Medium problems (the US placement read wording about a team, clients or work
+  authorization; migration and missing-board records could be wrong; some gate checks could pass with the output
+  missing), and two Low ones. Fixes followed on 2026-11-16, and the older rule that placed any posting naming
+  "United States" went with them. Codex's second pass found three resolved and five partly resolved (the US placement
+  among them), its third pass two more resolved and three still partly resolved, and its fourth pass the
+  link replacement resolved with the US placement still open: new wordings beat every text rule. The owner then chose
+  to make the text a hint only: the location field alone sets the country, and the location question quotes the
+  text's US sentence for you to check. Its fifth pass confirmed that, and found three routes that still skipped the
+  location check (a state list in the text, a paste's location read from its prose, and scores made under the old
+  rule before the first re-screen); those were corrected. Its sixth pass confirmed the hold on old scores and found
+  two more routes: a blank "Location:" label took the next line of prose as the location, and a paste saved by the
+  older parser kept a location read from its prose, which one re-screen made eligible again. Now a label's value must
+  be on the label's own line, and an older paste whose location is neither its own "Location:" line nor one you gave
+  places nothing until you confirm it (paste it again with `--location`). Its seventh pass found four more routes: a
+  vertical tab, form feed or next-line control after a blank "Location:" was deleted before the label was read,
+  joining the label to the prose; a later sighting changed how a job got its location, and a paste whose sighting was
+  lost read as one added another way; a paste of a different opening (same employer and title, another link) could
+  confirm its location onto a tracked posting; and an interrupted confirmation, or a score made before the provenance
+  rule, could still route a package before processing. Now every line-ending control ends a line before anything is
+  stripped; where a manual job's location came from is recorded with it, in one transaction, and a later sighting
+  never changes that; only the same posting pasted again (its own link, or the same text when neither has a link)
+  with `--location` confirms a location; a job waiting to be re-screened gets no standing package (by batch, `package
+  prepare` or readiness), while a job you labelled keeps its route, by the owner's choice, and assistance refuses it
+  until its eligibility is current; and a new rule version holds every older score until the job is re-screened. A
+  manual job saved before this rule is placed by its stored location only when that is its own same-line "Location:"
+  that does not run past a sentence end, or when those words are not in its text at all; otherwise you confirm it
+  first. Its eighth pass confirmed those, and found two ways one opening could still stand in for another: two
+  openings of one portal whose links differ only after "#" ("/portal/#/opening/R-1101" and "...R-1102") counted as the
+  same posting, and two employers whose names make the same job ID ("A&B Health", "A B Health") let the second paste
+  overwrite the first job. Now the same posting means the same link with its part after "#" (tracking parameters
+  aside), or the same text when neither has a link, and never a different requisition number; and a new posting whose
+  generated ID another posting holds gets its own ID, linked to the other as a possible duplicate, while the existing
+  job is never touched (the owner's choices). Its ninth pass confirmed the portal case on a paste and found where the
+  rule still fell short: two links that are not full addresses ("jobs.example.com/apply/...") counted as the same
+  posting; `add-url --text-file` and the saved-file import still dropped the part after "#", so a second opening
+  overwrote the first; and retrying a colliding saved import added a row each time and finally never finished. Now a
+  link confirms only when both sides are full http(s) links (otherwise it says why); every manual route keeps the
+  opening's own link and writes a job ID only when it holds this same posting, whatever the employer; a posting that
+  comes again finds the job it was given before, the search for a free ID is bounded, and leads link to the job
+  actually written. Its tenth pass confirmed the full-link rule and found three last gaps: the older duplicate check
+  and lead linking still ignored the part after "#", so a second portal opening was made a duplicate of the first and
+  its lead went to the first; two saved pages with no link and the same description merged across employers; and a
+  refused or failed import was still filed as imported. Now the duplicate check and lead linking keep the "#" part
+  (a second opening is linked for review, never made a duplicate); with no link, the same posting needs the same text,
+  employer and title; and leads are linked and a file filed as imported only after a committed write, while a refused
+  or failed file goes to the inbox's failed folder (the owner's choices). Before the eleventh pass, a Claude red team
+  (four reviewers, each reproducing what it found) turned up more, all corrected: a location field naming the US and
+  another country ("Remote - Canada (US hours)") or excluding the US now places a posting nowhere (a location
+  question), and a saved page's country code ("CA") is read as the country, never a US state; a prose line such as
+  "Location-based pay: ..." is no label; only an app route ("#/opening/R-1101") after "#" names an opening, never a
+  page anchor ("#app"); two openings at one shared link are the same posting only under the same title with no other
+  requisition, and a link that is not a full address is kept, never dropped; with no link, the location must agree
+  too; the duplicate check reads every job at a link; and an alert's link that could not be stored keeps its lead open
+  and its email in the failed folder. Codex's eleventh pass confirmed three of those and found six more gaps: a
+  posting from another employer at a shared careers link could stand in for the tracked one; a lead or alert at a
+  shared link joined an opening whose title or requisition differed; a requisition number hid another opening at a
+  shared link; an alert email read a portal link without its "#" route; an alert line not stored was skipped when the
+  email was read again; and location fields such as "Remote - Ecuador (US hours)" still placed a posting in the US.
+  Each text rule had been beaten in turn, so the owner chose a structural fix (D180). Standing preparation now picks
+  only a job board's own scan whose location field is plainly a US place: every part a US place or a neutral word
+  ("Remote", a US time zone), else the location stays a question. A posting you paste, add or save, or one read for an
+  alert, waits for your Apply or Stretch label. A paste never changes a tracked job's location; you set it by naming
+  the job (`careeros location JOB "..."`). Everything a posting states (its link with the "#" route, title,
+  requisition, employer) must agree before one stands in for another; an alert keeps a portal link's route; and an
+  alert line not stored is read again. Generated property tests check both rules over thousands of combinations.
+  A second Claude red team on that build (four reviewers again) reproduced about 16 High and 10 Medium problems, all
+  corrected under the owner's choices (D181): the location field is read only as plain text (a part in another script
+  or with look-alike letters left it US), "US" before a time word is a time zone, never a place, a state code a country
+  shares counts only in a list of state codes or as "City, ST, US", and a filler word alone ("In") is no neutral part;
+  Lever and Ashby postings now show every location their board lists; the duplicate check and lead matching compare
+  the employer and a requisition however it is written, and at a link several openings share, the title (a stated
+  level or Remote/Onsite must agree); a second opening at a shared link in another place gets its own job; alert links
+  keep the query that names their opening, and a careers page in an alert keeps one lead per title; a score made under
+  an earlier profile, or a Skip anywhere in the role, holds standing preparation. Codex's twelfth pass found three
+  more routes into standing preparation (a single-link fetch replaced a scanned posting's location while keeping the
+  scan's authority; "Remote - US?" read as a US place; Workable's typed country codes read as state codes) and four
+  identity gaps at shared links. The owner chose (D182) to fix those routes in place and never to merge at a page
+  several openings share: standing preparation needs a location the board's own listing scan wrote or confirmed; a
+  field that asks, trails off or leaves a bracket open places nothing; a provider's typed country is written out
+  ("Canada", never "CA"); at a link that names no single posting, nothing is made a duplicate, linked or matched by
+  the link, so each posting and lead there stays for your review; a year in a link is no job number; an alert card
+  keeps its stated employer, place and requisition; and an alert whose retry fails stays pending. A third Claude red
+  team, on those corrections only (the owner asked to run only on the blockers), reproduced 19 more problems, all
+  corrected: a link names one posting only in a strict form (a job number right after a job route, a job site's id
+  key, a portal route such as "#/opening/R-1", a Workday requisition), never a search, listing or filter page; a
+  paste matches by its link only when that link names one posting; an alert card's identity is everything its line
+  states but its age; "US" beside a time zone ("Time Zone: US") is no place; a listing scan that cannot store a
+  posting withdraws the earlier scan's confirmation; and an alert line not stored keeps its email or GitHub issue
+  open, a Gmail one read again by its id. Codex's thirteenth pass then found three more inputs that reached standing
+  preparation (a failed database write left an earlier scan's US location in force; "Remote (US: Time Zone)"; a
+  Workable job's own country dropped) and three identity gaps. The owner turned standing preparation off (D183): no
+  package is prepared, and no assistance opens, without your Apply or Stretch label. "US" beside a time zone, in either
+  order, places nothing; a Workable job's own country abroad is written; a year or date in a job query or portal route
+  names no posting; a second opening at a careers page never takes the first one's place; and a Greenhouse id on a
+  careers-page link joins a job only when the line agrees. Codex's fourteenth pass found three more gaps: an assisted
+  handoff issued under standing preparation before the change could still be returned by its key; a Greenhouse
+  link guessed from a careers page linked a lead the conflict check had refused; and "/jobs/archive_2026" still
+  named one posting, so a second opening there took the first one's Apply label. The owner chose to end that class of
+  link findings (D184): only a job board's posting link (Greenhouse, Lever, Ashby, Workable, Workday) or a job
+  site's id (LinkedIn, Indeed, Glassdoor) names one posting, and any employer careers page is treated as shared. A
+  standing session's handoff is withdrawn. A Greenhouse link suggested by a shared careers page stays a notice for
+  you, and a link CareerOS fetches for an alert line becomes that line's posting only when the link names one posting
+  by itself (a job board's posting link or a job site's id), never because its title agrees with the line.
+  Codex's fifteenth pass found five more gaps (D199): the label card did not show everything the approval covers
+  (the posting's text and other fields, a copy cut short, pay rounded); a saved page's unrecognized pay unit was cut
+  to 40 characters; a board read of one posting could clear a hold that reaches every job; P1 read the pending-holds
+  file twice for one decision; and that file was rewritten in place. Each is fixed with tests that fail on the
+  build it reviewed; the card now shows the whole posting, from one renderer, on every surface. Codex's sixteenth
+  pass found three more (D200): a copy's stored pay and employer entry were hidden behind their summary lines (a
+  stored 0–0 per hour showed only "not stated"); a paste running past the 60,000-character limit was answered by the
+  receipt of the same posting ending at it, so its cut mark never reached the label check; and a read-only check
+  could miss a hold moving from the pending-holds file into the database. Each is fixed with tests that fail on the
+  build it reviewed. A stored 0–0 still reads as pay not stated, and every such line says what is stored (the owner's
+  choice). Codex's seventeenth pass found one more (D201): a paste whose typed title, company or location ran past
+  its limit could keep other words under the same receipt, so a changed reading never reached the label check. The
+  receipt now binds what was kept, a blank typed field counts as not given, and a typed company is read from its
+  canonical form, as is add-url's employer for its job id; tests fail on the build it reviewed. Codex's eighteenth
+  pass found one more (D203): a copy that stated, in the same words, a value the stored record marked as filled in or
+  cut read as unchanged when that was the record's last mark, so its sighting never reached the label check. Such a
+  copy now counts as a change, and the comparison only gains changes; tests fail on the build it reviewed. Codex's
+  nineteenth pass confirmed this fix and the one for its seventeenth pass, and found no new Critical or High problem.
 - The 50 labelled postings behind the calibration and the owner's Power BI report on real data stay private.
 
 ## Project summary
@@ -286,9 +417,9 @@ Every control in the threat model is tied to a test and to a planted defect that
 
 | Layer | What it shows |
 |---|---|
-| 1629 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`); validation records passes, skips and unavailable checks separately |
-| 1831 planted defects | `tools/mutate.py` breaks each safety rule in a scratch copy, and the test suite must then fail. A defect that survives is an untested rule. |
-| Functional MVP gate | `tools/mvp_gate.py` runs the real command line in Demo Mode and makes 92 checks against expectations written from the postings and the policy, not read back from the system. Result: no requirement fails. Of 13, 13 are PASS and 0 are PARTIAL: the five gaps of the first assessment were closed on 2026-11-15 ([report](docs/functional_mvp_report.md)). |
+| 2187 automated tests | Unit and integration tests on synthetic fixtures, fake transports and fixed clocks, run with outbound network refused (`tools/offline_tests.py`); validation records passes, skips and unavailable checks separately |
+| 2529 planted defects | `tools/mutate.py` breaks each safety rule in a scratch copy, and the test suite must then fail. A defect that survives is an untested rule. |
+| Functional MVP gate | `tools/mvp_gate.py` runs the real command line in Demo Mode and makes 95 checks against expectations written from the postings and the policy, not read back from the system. Result: no requirement fails. Of 13, 13 are PASS and 0 are PARTIAL: the five gaps of the first assessment were closed on 2026-11-15 ([report](docs/functional_mvp_report.md)). |
 | Documentation tests | The documents' named files, tests, tables and commands must exist |
 | Static checks | ruff (pyflakes, bugbear and security rules), mypy against a recorded baseline of older errors, configuration checks |
 | Release and supply chain | The release scan for secrets, and pip-audit of both dependency locks |
@@ -310,8 +441,8 @@ a throwaway demo vault. While Demo Mode is on, the private vault cannot even be 
 credentials, mail, GitHub, the clipboard, the AI reader and notifications are all refused. The tests prove it under a
 "jail" that records any attempt to leave.
 
-**Synthetic results** (fictional data, fixed by the tests): 46 jobs, of which 28 scored, 13 rejected with stated
-reasons, 1 duplicate and 4 closed; 15 boards, of which 8 active, 2 rejected (an impostor, and a board its employer's own
+**Synthetic results** (fictional data, fixed by the tests): 46 jobs, of which 29 scored, 13 rejected with stated
+reasons and 4 closed; 15 boards, of which 8 active, 2 rejected (an impostor, and a board its employer's own
 site contradicts) and 1 awaiting review. These
 numbers describe a hand-written world chosen to exercise every rule, not a real job market. See
 [Demo Mode](docs/demo_mode.md) and the [reviewer walkthrough](docs/demo_walkthrough.md).
@@ -402,9 +533,11 @@ approved profile and policy overrides in the vault, and `careeros run` once a da
 
 ## Roadmap
 
-**Portfolio release:** The November 15 snapshot closed the original Functional MVP gaps in the synthetic demo gate.
-See the [dated results](docs/functional_mvp_report.md#8-later-changes). This is not an independent review or deployment
-approval: a later independent review found open issues in the screening rules ([project status](#project-status-2026-11-15)).
+**Portfolio release:** The November 15 snapshot closed the original Functional MVP gaps in the synthetic demo gate;
+this one adds the fixes from the independent review that followed, whose nineteenth pass found no unresolved
+blocker. See the [dated results](docs/functional_mvp_report.md#8-later-changes) and the
+[project status](#project-status-2026-11-26). The demo gate is the build assistant's self-assessment, not deployment
+approval.
 
 **Product:**
 - Improve the tier rule that the 2026-10-16 calibration found weak, test any change side by side on new labels before

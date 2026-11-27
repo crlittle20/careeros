@@ -211,11 +211,14 @@ class NotInQualificationTests(unittest.TestCase):
     def test_only_submission_permission_and_night_conflicts_use_the_resolver(self):
         """Submission holds (R2) and NIGHT's same-employer-family check (R3) use it; the gate, scores and board discovery
         don't. Since 2026-11-02 lead resolution uses it too (the owner's decision D68: a lead reaches its posting only when
-        the lead's and the board's employer resolve to the same one); it decides which job a lead is, never a job's tier."""
+        the lead's and the board's employer resolve to the same one); it decides which job a lead is, never a job's tier.
+        Since part 3 of the owner's D192 build alert notices use it to group notices by the employer each names and to show
+        the tracked postings beside one (display only: never a link, a match or a tier)."""
         uses = re.compile(r"normalize\.employer_identity|normalize import employer_identity|from \.employer_identity")
         users = sorted(p.relative_to(ENGINE_ROOT).as_posix() for p in (ENGINE_ROOT / "careeros").rglob("*.py")
                        if p.name != "employer_identity.py" and uses.search(p.read_text(encoding="utf-8")))   # rglob order differs by OS
-        self.assertEqual(users, ["careeros/discovery/lead_resolution.py", "careeros/qualify/night.py", "careeros/review/submission.py"])
+        self.assertEqual(users, ["careeros/cli.py", "careeros/discovery/lead_resolution.py", "careeros/qualify/night.py",
+                                 "careeros/review/notices.py", "careeros/review/submission.py"])
 
     def test_the_existing_hold_rule_is_unchanged(self):
         """Today's gate compares exact names (changed only in a later, approved step): an alias-only name isn't held there,

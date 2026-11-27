@@ -1,0 +1,923 @@
+{
+  "what": "The corrections for Codex CR-2026-11-15-GATE-FIXES Pass 13 (H28-H33) and the owner's D183 (standing preparation off), planted by hand in stages (D152) as in mutation-hand-check-d2caeea.json: the tests of the earlier receipts that caught the defect first, then the related modules, then the whole suite.",
+  "scope": "the owner's request, only the blockers: every defect new or re-anchored since c1a93dd and every defect whose anchor lies in a function or statement the corrections changed in careeros/cli.py, careeros/discovery/board_discovery.py, careeros/discovery/boards.py, careeros/discovery/manual_intake.py, careeros/normalize/posting.py, careeros/qualify/gate.py, careeros/review/packages.py (scope13.py)",
+  "base": "c1a93dd914a95b94c2619dff85b67fc6a5632743",
+  "rev": "0da9e3e6cc6e8b5075297b9f927785d60018b862",
+  "python": "3.14.10",
+  "node_version": "v24.22.1",
+  "defined": 2059,
+  "checked": 51,
+  "caught": 51,
+  "by_scope": {
+    "stage 0: the tests that caught it before": 20,
+    "modules": 12,
+    "stage 0: the D153 tests": 17,
+    "related modules (tests.test_intake_identity)": 2
+  },
+  "note": "round 14 planted plain copies of the worktree at the code commit; defects outside the scope keep their results in the earlier receipts (mutation-hand-check-d2caeea.json and those before it)",
+  "retired": [],
+  "previous": "evidence/mutation-hand-check-d2caeea.json",
+  "results": [
+    {
+      "kind": "shared",
+      "mutation": "an alert link is matched to a job tracked at a review link (D142 R-b)",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.Round12AnyReadingTests.test_the_alert_path_never_matches_a_job_tracked_at_a_review_link",
+        "tests.test_intake_hotfix.Round12AnyReadingTests.test_the_alert_path_never_matches_a_job_tracked_at_a_review_link"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.8,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: a package prepared for a job you labelled Skip",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.PackageTests.test_nothing_is_prepared_for_a_job_nobody_chose_and_skip_or_dismissal_always_win"
+      ],
+      "flaky_failed": false,
+      "seconds": 222.8,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: a package prepared for a job you dismissed",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.PackageTests.test_nothing_is_prepared_for_a_job_nobody_chose_and_skip_or_dismissal_always_win"
+      ],
+      "flaky_failed": false,
+      "seconds": 223.3,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 7 H4: a different opening's link confirms a tracked posting's location",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 645,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_rules_properties.IdentityRuleTests.test_a_posting_that_contradicts_a_stored_one_is_never_it",
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_a_colliding_saved_import_retried_reuses_its_own_job_and_links_its_lead",
+        "tests.test_packages.QueueTests.test_a_file_based_opening_never_overwrites_another_at_the_same_generated_id"
+      ],
+      "flaky_failed": false,
+      "seconds": 223.4,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 7 H4: with no link, a different posting's text confirms a tracked posting's location",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.LinkTests.test_linkless_postings_at_another_location_are_two"
+      ],
+      "flaky_failed": false,
+      "seconds": 13.4,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 9 H9: two links that are not full addresses (both None) count as the same posting",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_two_links_that_are_not_full_addresses_are_one_posting_only_when_typed_the_same"
+      ],
+      "flaky_failed": false,
+      "seconds": 12.8,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 7 H6: scores made before the provenance rule stay current",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_score_made_under_the_earlier_country_rule_is_made_again_by_the_next_processing_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 220.1,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 8 H7: a paste stating a different requisition confirms the tracked posting's location",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_rules_properties.IdentityRuleTests.test_a_posting_that_contradicts_a_stored_one_is_never_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 224.5,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "D180 (H20): a word left over in a location field ('Ecuador', 'hours', 'outside') is ignored, so it places the job",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing",
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_lever_and_ashby_postings_show_every_location_their_board_lists",
+        "tests.test_rules_properties.PlainUsPlaceTests.test_a_field_with_any_part_that_is_not_plainly_a_us_place_never_places_it_in_the_us"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D179): two openings at one shared link under different titles are one posting",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_another_title_at_a_posting_link_is_another_opening",
+        "tests.test_intake_identity.IdentityConflictTests.test_a_requisition_never_hides_another_opening_at_a_shared_link"
+      ],
+      "flaky_failed": false,
+      "seconds": 13.6,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 10 H13: with no link, the same text from another employer counts as the same posting",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 645,
+      "failures": 1,
+      "errors": 1,
+      "failing": [
+        "tests.test_packages.QueueTests.test_a_new_paste_never_takes_over_another_posting_at_the_same_generated_id",
+        "tests.test_rules_properties.IdentityRuleTests.test_a_posting_that_contradicts_a_stored_one_is_never_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 225.2,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D179): with no link, a posting at another location is the same posting",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.LinkTests.test_linkless_postings_at_another_location_are_two"
+      ],
+      "flaky_failed": false,
+      "seconds": 13.5,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "D181 (red team): a second opening at a shared link, same title, is written over the first in another place",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_nothing_is_a_terminal_duplicate_at_a_shared_page",
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_a_location_you_set_stays_until_you_set_another"
+      ],
+      "flaky_failed": false,
+      "seconds": 13.5,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D179): an alert link to a portal is matched to one of its openings",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_an_alert_link_without_a_route_never_takes_an_opening_with_one"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.2,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 11 H16: an alert link at a shared link is matched to the tracked opening there whatever its title or requisition",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.IdentityConflictTests.test_a_lead_at_a_shared_link_joins_only_the_opening_it_names",
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_an_alert_or_lead_at_a_shared_link_joins_only_an_opening_whose_employer_title_and_requisition_agree"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.2,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D179): a retry with a link that is not a full address gets another row each time",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.LinkTests.test_a_retry_with_a_link_that_is_not_a_full_address_reuses_its_job",
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_two_links_that_are_not_full_addresses_are_one_posting_only_when_typed_the_same"
+      ],
+      "flaky_failed": false,
+      "seconds": 15.3,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 10 H13: with no link, the same text under another title counts as the same posting",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 645,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_rules_properties.IdentityRuleTests.test_a_posting_that_contradicts_a_stored_one_is_never_it",
+        "tests.test_packages.QueueTests.test_linkless_saved_pages_are_one_posting_only_with_the_same_employer_and_title"
+      ],
+      "flaky_failed": false,
+      "seconds": 233.8,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 11 H15: a saved posting from another employer at a shared link is the same posting",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_two_links_that_are_not_full_addresses_are_one_posting_only_when_typed_the_same"
+      ],
+      "flaky_failed": false,
+      "seconds": 14.2,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D181): a part in another script or with look-alike letters vanishes, so the rest of the field decides",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "red team (D179): scores made under the earlier country rule stay current",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_score_made_under_the_earlier_country_rule_is_made_again_by_the_next_processing_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 232.2,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D181): a location field of any length is read",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "D180: scores made under the D179 country rule stay current",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_score_made_under_the_earlier_country_rule_is_made_again_by_the_next_processing_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 232.3,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D181): 'US' as a time zone ('US Time Zone', 'US Timezone') places the job in the US",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing",
+        "tests.test_rules_properties.PlainUsPlaceTests.test_a_field_with_any_part_that_is_not_plainly_a_us_place_never_places_it_in_the_us"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D181): a state code inside a part places the job with no city before it ('Remote OK')",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing",
+        "tests.test_rules_properties.PlainUsPlaceTests.test_a_field_with_any_part_that_is_not_plainly_a_us_place_never_places_it_in_the_us"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D181): an alert is recorded on a duplicate rather than its original",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_an_alert_on_a_duplicate_is_recorded_on_its_original"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D181): a time zone's name ('US/Eastern') places the job in the US",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 244.9,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 12 H22: a field that trails off or leaves a bracket open places the posting",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 12 H27: a job number anywhere in a path names a posting",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_a_year_in_a_link_names_no_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 12 H27: any number in a query names a posting",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_a_year_in_a_link_names_no_posting",
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_another_posting_on_the_same_site_or_in_another_country_is_never_seen_before"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "red team after Pass 12 (RT2-1): a time zone's part before 'US' reads it as a place ('Time Zone: US')",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "red team after Pass 12 (RT2-1): 'US/EST' reads as a place",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team after Pass 12 (RT2-4): a part that trails off ('US based in') places the posting",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team after Pass 12 (RT2-4): 'Remote - US...' places the posting",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team after Pass 12 (RT2-4): a field in single quotes places the posting",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team after Pass 12 (RT2-5): 'US-IN' reads India's code as the word 'in'",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team after Pass 12 (RT2-6): Workable's countryCode is dropped",
+      "file": "careeros/discovery/boards.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_a_providers_typed_country_is_written_out"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D181): a part of filler words alone ('In', 'Any') is ignored",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 245.5,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 12 H22/H23: scores made under the earlier location rule stay current",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_score_made_under_the_earlier_country_rule_is_made_again_by_the_next_processing_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 245.0,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team after Pass 12 (RT3-2): a page's name after a route names a posting ('#/jobs/search')",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_a_year_in_a_link_names_no_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.9,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 13 (D183): standing preparation routes a job without your label",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 4,
+      "errors": 2,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_a_single_link_fetch_is_recorded_as_one_never_as_the_scans",
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing",
+        "tests.test_intake_identity.CodexPass13Tests.test_a_second_opening_at_a_shared_page_never_takes_the_first_ones_place"
+      ],
+      "flaky_failed": false,
+      "seconds": 14.8,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 13 (D183): the standing batch picks every scored job",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_a_single_link_fetch_is_recorded_as_one_never_as_the_scans",
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing",
+        "tests.test_intake_identity.CountryTests.test_a_score_made_under_the_earlier_country_rule_is_made_again_by_the_next_processing_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 13.2,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 13 H29/H30: scores made under the earlier time-zone rule stay current",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_score_made_under_the_earlier_country_rule_is_made_again_by_the_next_processing_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 15.5,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 13 H30: a Workable job's own country abroad is dropped when a place names another",
+      "file": "careeros/discovery/boards.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass13Tests.test_a_workable_jobs_own_country_abroad_is_written"
+      ],
+      "flaky_failed": false,
+      "seconds": 14.1,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 13 H31: a year or date in a job query names a posting",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass13Tests.test_a_year_or_date_in_a_query_or_app_route_names_no_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 16.4,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 13 H31: a year in an app route names a posting",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass13Tests.test_a_year_or_date_in_a_query_or_app_route_names_no_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 15.6,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 13 H32: a shared page's link places a second opening at the first's id",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass13Tests.test_a_second_opening_at_a_shared_page_never_takes_the_first_ones_place",
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_a_second_opening_at_a_shared_link_in_another_place_is_its_own_job"
+      ],
+      "flaky_failed": false,
+      "seconds": 15.3,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 13 H32: a shared page's copy with no requisition stated is taken for an edit",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass13Tests.test_a_second_opening_at_a_shared_page_never_takes_the_first_ones_place",
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_a_second_opening_at_a_shared_link_in_another_place_is_its_own_job"
+      ],
+      "flaky_failed": false,
+      "seconds": 16.3,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 13 H33: the gh_jid fallback ignores an app route naming another opening",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass13Tests.test_the_greenhouse_id_fallback_checks_what_the_line_states"
+      ],
+      "flaky_failed": false,
+      "seconds": 14.5,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 13 H33: the gh_jid fallback links a lead stating another title, employer or requisition",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the D153 tests",
+      "ran": 54,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass13Tests.test_the_greenhouse_id_fallback_checks_what_the_line_states"
+      ],
+      "flaky_failed": false,
+      "seconds": 16.0,
+      "python": "3.14.10",
+      "round": 14
+    },
+    {
+      "mutation": "red team after Pass 12 (RT2-6): a Workable job's own country abroad is dropped",
+      "file": "careeros/discovery/boards.py",
+      "python": "3.14.10",
+      "result": "CAUGHT",
+      "failing": [
+        "test_a_providers_typed_country_is_written_out.test_a_providers_typed_country_is_written_out"
+      ],
+      "scope": "related modules (tests.test_intake_identity)",
+      "baseline": {
+        "exit": 0,
+        "failed": [],
+        "tail": [
+          "    ! could not read https://boards.greenhouse.io/foohealth/jobs/4400001: http_503 (kept as a lead)"
+        ]
+      },
+      "tail": [
+        "    ! could not read https://boards.greenhouse.io/foohealth/jobs/4400001: http_503 (kept as a lead)"
+      ],
+      "note_again": "planted again on 0da9e3e (after its two tests) against the related module",
+      "round": "14b",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again on 0da9e3e (after its two tests) against the related module"
+    },
+    {
+      "mutation": "red team after Pass 12 (RT3-1): an id key with no id ('jobid=all') names a posting",
+      "file": "careeros/discovery/board_discovery.py",
+      "python": "3.14.10",
+      "result": "CAUGHT",
+      "failing": [
+        "test_a_year_in_a_link_names_no_posting.test_a_year_in_a_link_names_no_posting"
+      ],
+      "scope": "related modules (tests.test_intake_identity)",
+      "baseline": {
+        "exit": 0,
+        "failed": [],
+        "tail": [
+          "    ! could not read https://boards.greenhouse.io/foohealth/jobs/4400001: http_503 (kept as a lead)"
+        ]
+      },
+      "tail": [
+        "    ! could not read https://boards.greenhouse.io/foohealth/jobs/4400001: http_503 (kept as a lead)"
+      ],
+      "note_again": "planted again on 0da9e3e (after its two tests) against the related module",
+      "round": "14b",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again on 0da9e3e (after its two tests) against the related module"
+    }
+  ]
+}

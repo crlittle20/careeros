@@ -36,23 +36,23 @@
   },
   "dim_location": {
    "file": "dim_location.csv",
-   "rows": 7,
-   "sha256": "7b61e4508f5ca7810f96081fdffccba6f16df217fc8ac1c1f37cc7cab5e74301"
+   "rows": 8,
+   "sha256": "f50094c9a27b81e99d24992038f1917224818ba8a073149090533cd9a0ee46f8"
   },
   "dim_job": {
    "file": "dim_job.csv",
    "rows": 47,
-   "sha256": "adaf19ed8526f6f5d87f32d178326a2ebe7ed7a2ad84a3b4899a0d84827f8958"
+   "sha256": "5373d3d56e6cf7bc55ee797f7bec546b25a3a078ff6b407b31c54c3b1dfcb0f1"
   },
   "fact_job_evaluation": {
    "file": "fact_job_evaluation.csv",
    "rows": 46,
-   "sha256": "7d53dc11a7e9311c23b18a9f6020280f77755d425b73f4873d3a8b89bda53591"
+   "sha256": "d03e33a01fcc58d09acdde0b44765f4ee9e387907b0c43e5d7a8bc44e2a79b6f"
   },
   "fact_job_observation": {
    "file": "fact_job_observation.csv",
-   "rows": 51,
-   "sha256": "4fd4ad557732884d660e33349e7a72d8193a09ff7d8bbe18d1de774885494eab"
+   "rows": 53,
+   "sha256": "4fb7bc03e4eb4dff4b2a62852e7d32f296953540e6e77628f2ba4ba2cb058480"
   },
   "fact_board_scan": {
    "file": "fact_board_scan.csv",
@@ -72,13 +72,13 @@
  },
  "kpis": {
   "jobs_discovered": 46,
-  "distinct_openings": 45,
-  "jobs_evaluated": 41,
-  "jobs_qualified": 20,
+  "distinct_openings": 46,
+  "jobs_evaluated": 42,
+  "jobs_qualified": 21,
   "jobs_recommended": 5,
   "jobs_rejected": 13,
-  "jobs_manual_review": 15,
-  "manual_review_rate": 0.366,
+  "jobs_manual_review": 16,
+  "manual_review_rate": 0.381,
   "duplicates_prevented": 3,
   "cross_source_sightings": 2,
   "verified_employers": 8,
@@ -86,7 +86,7 @@
   "board_verification_rate": 0.727,
   "new_board_verification_rate": 0.5,
   "scan_reliability": 0.963,
-  "night_routed": 15,
+  "night_routed": 16,
   "applications": 4,
   "applications_open": 3,
   "interview_rate": 0.0
@@ -131,7 +131,7 @@
   {
    "check": "dim_location: the primary key location_key is present and unique",
    "ok": true,
-   "detail": "7 rows"
+   "detail": "8 rows"
   },
   {
    "check": "dim_job: the primary key job_key is present and unique",
@@ -146,7 +146,7 @@
   {
    "check": "fact_job_observation: the primary key observation_key is present and unique",
    "ok": true,
-   "detail": "51 rows"
+   "detail": "53 rows"
   },
   {
    "check": "fact_board_scan: the primary key scan_key is present and unique",
@@ -441,7 +441,7 @@
   {
    "check": "fact_job_observation has one row per source record",
    "ok": true,
-   "detail": "51 vs 51"
+   "detail": "53 vs 53"
   },
   {
    "check": "dim_board has every board (plus the (none) member)",
@@ -451,7 +451,7 @@
   {
    "check": "jobs by state match the application",
    "ok": true,
-   "detail": "{'closed': 4, 'duplicate': 1, 'rejected': 13, 'scored': 28}"
+   "detail": "{'closed': 4, 'rejected': 13, 'scored': 29}"
   },
   {
    "check": "dismissed jobs (by their latest reason) match the application",
@@ -466,7 +466,7 @@
   {
    "check": "remote classifications match the application",
    "ok": true,
-   "detail": "{'US_nationwide': 6, 'US_restricted_states': 2, 'US_unspecified': 36, 'hybrid': 1, 'onsite': 1}"
+   "detail": "{'US_nationwide': 6, 'US_restricted_states': 2, 'US_unspecified': 35, 'hybrid': 1, 'onsite': 1, 'unknown': 1}"
   },
   {
    "check": "boards by verification status match the application",
@@ -476,7 +476,7 @@
   {
    "check": "jobs_qualified equals the application's own figure",
    "ok": true,
-   "detail": "export 20, application 20"
+   "detail": "export 21, application 21"
   },
   {
    "check": "duplicates_prevented equals the application's own figure",

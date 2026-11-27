@@ -1,0 +1,532 @@
+{
+ "what": "The Codex Pass 16 fixes (the owner's D200: H42-H44, the release-scan fixture, the H44 follow-up), built on codex-p1-gatefixes after Pass 15's fixes: the end-of-round hand check, planted by hand in stages (D152) as in mutation-hand-check-2be781c.json, each defect alone in a plain copy of the worktree.",
+ "scope": "every defect whose anchor lies in a function or module statement of careeros/ that changed between 2959575 and e19262e (scratchpad b5_scope.py), planted at e19262e",
+ "base": "2959575",
+ "rev": "e19262e",
+ "python": "3.14.10",
+ "node_version": "v24.22.1",
+ "defined": 2503,
+ "checked": 72,
+ "caught": 72,
+ "stages": {
+  "stage 1": {
+   "rev": "e19262e",
+   "against": "the 15 related modules: tests.test_pass16 tests.test_pass15 tests.test_batch5 tests.test_p1 tests.test_review_page tests.test_packages tests.test_intake_hotfix tests.test_v26_discovery tests.test_core tests.test_d190 tests.test_applications tests.test_intake_identity tests.test_d192 tests.test_batch3 tests.test_observability",
+   "defects": 72
+  },
+  "stage 2": {
+   "rev": "e19262e",
+   "against": "the other 48 test modules, failfast (stage 1's survivors)",
+   "defects": 6
+  }
+ },
+ "survived": [],
+ "note": "the tool records each defect's verdict (CAUGHT when the planted copy's run fails), not the failing tests' names; stage 2 settles a stage-1 survivor; the round's commits each ran their own new and re-anchored defects at the commit, every one caught",
+ "previous": "evidence/mutation-hand-check-2be781c.json",
+ "results": [
+  {
+   "mutation": "form key not bound to its action and target",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "tracker may rewrite how you applied",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "review token check disabled",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "a posting pasted on the review page never links its lead",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "a pasted posting never links its lead (careeros paste)",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Demo Mode reads the clipboard",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "the review component may rewrite what a lead's source said",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "a discarded store leaves its connection for the garbage collector, which Python 3.13+ warns of",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "the review page's Confirm links whatever likely match waits now, not the one its card showed",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "an unexpected error drops the connection instead of showing a page",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "error pages carry no Content-Security-Policy header",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "a form already used drops the connection instead of answering 409",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "F3 (Pass 2): a refusal after part of a form was saved says \"Not recorded\"",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "F3: the page after a partial paste does not name the posting saved",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "F3: an error after part of a form was saved says \"Not recorded\"",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex Pass 4: a tracking link pasted on the review page leaves its host unenrolled",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex Pass 5 (D153 R4): a paste saved although its tracking hosts could not be enrolled",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "red team before Pass 4: a review page request reads the settings anew part-way through",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "hr1-routes-0: a hold kept beside the database holds nothing",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "B.5: this engine's own failure is dropped once the job's last read is no older",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "D191 (H9): the deployed engine may open a database at schema 16",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "D190 P1 part 2: an engine without P1 may write a database that holds P1 approvals",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "D190 P1 part 2: a preview's captured digest can be rewritten after it is shown",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "part 3: the review page's dismiss leaves the notice",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "D190 P1 part 2: the review component cannot write a preview",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "D190 P1 part 2: a hold kept beside the database cannot be cleared with its read's write",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "D190 P1 part 6a (section 3, Reads and writes): a read sees writes committed during it",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "D190 P1 part 7b (section 7): a file hold its read's committed transaction cleared still holds",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "D190 P1 part 7b (section 7): a file hold cleared by a committed transaction is never pruned",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "D190 P1 part 7b (section 7): the pending-holds file is rewritten inside an open transaction",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "D190 P1 part 7b (Z5; Codex H24's pattern): a paste padded past the cap shares a compact one's receipt",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "BATCH_5 A2: a line of the pending-holds file that is not a hold is not a problem",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "BATCH_5 A1: an unreadable pending-holds file is not a problem",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "BATCH_5 C1: a label surface shows every pay as yearly dollars",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "BATCH_5 A2: pruning the pending holds drops a line that is not a hold",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "BATCH_5 C1: a pay with one end is shown as a range made from it",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "BATCH_5 C1: the card's pay makes a range from one end",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "BATCH_5 D1: a label surface does not say what CareerOS read by heuristic",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "BATCH_5 C1: the card's pay names no currency",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "BATCH_5 C: a differing copy's values are captured without the card facts it states otherwise",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Z8: a hold reaching every job is shown on another job's card as that job's own failed read",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "BATCH_5 B3: a joined twin's copy is shown as the job of record's own",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H40: the file's health is read apart from the decision's reading",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "BATCH_5 C: a differing copy's long text is shown by its first characters, not where it differs",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "BATCH_5 D1: the card does not say a pay unit was stated but not understood",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H39: open_holds asked for the posting's own holds gives every-job ones too",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H37: the card leaves out the countries the board types (a named key dropped)",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H39: a hold that reaches every job no longer holds another job's label",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H37: the review page's pay row rounds the amounts",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H37: a differing copy's text is cut at 400 characters",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H37: a differing copy's field is cut at 160 characters",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H37: a copy's field whose card fact is the same is not shown, though the field differs",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H42: a copy's employer entry is left to its employer line when that differs",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H42: a copy's stored pay is left to its pay line when that differs",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H42: where a copy's location came from is left to its location line when that differs",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H42: an employer entry key the card does not name is left out of a copy",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H42: a copy's null employer id is not shown beside the job of record's",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H42 (D200): pay read as not stated does not say what is stored",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H42 (D200): one stored end of 0 is said to be 0–0",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H42 (D200): pay storing only nulls is said to store something",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H43: a paste with nothing cut gains a cut key, so its older receipt no longer answers it",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H42 (D200): the card's pay summary does not say what is stored",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H43: a paste's request leaves out what its reading cut",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H43: the review page refuses another paste under a form key without saying why",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H43: the request reads its cut marks from the kept text only",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H43: careeros paste ends a refused retry by --operation in a traceback",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H44: a line whose hold a row already carries is counted again",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H44: a read transaction does not read the pending-holds file before its snapshot",
+   "file": "careeros/db/store.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H44: a decision in a read transaction reads the pending-holds file at P1, after its snapshot started",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H44: pending_file_problem given no reading reads the file now, inside a read transaction too",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H44: a line a committed clearance cleared still counts as a line",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  },
+  {
+   "mutation": "Codex H44: open_holds given no reading reads the file now, inside a read transaction too",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "e19262e"
+  }
+ ]
+}

@@ -377,7 +377,7 @@ class CodexPass1PrivateSitesTests(AlertImport):
         codes = [r["error_code"] for r in self.store.all("SELECT error_code FROM exceptions")]
         self.assertEqual(codes, ["private_sites_invalid", "private_sites_invalid"])
         with mock.patch.dict(os.environ, {"CAREEROS_PRIVATE_SITES": self.write("sources: {}\n")}):   # corrected: retried
-            self.assertEqual(self.run_import(data)["lead_new"], 1)
+            self.assertEqual(self.run_import(data)["notice_new"], 1)   # a careers page's card: a notice (D192 part 3)
 
     def test_a_broken_file_leaves_every_github_inbox_issue_open(self):
         """The fix-check of 84a47b1, N1: the GitHub recommendations inbox swallowed the loader's error per link and
@@ -606,12 +606,15 @@ class CodexPass2AlertIdTests(AlertImport):
                        "https://www.linkedin.com/jobs/search/?currentJobId=unavailable",
                        "https://www.linkedin.com/jobs/search/?CurrentJobId=1111111&JOBID=2222222",
                        "https://www.linkedin.com/slink?code=synthetic"):
-            for via in ("saved", "gmail"):
-                with self.subTest(review=review, via=via):
-                    self.fresh()
-                    self.import_both(review, DEFINITE, via)
-                    self.assertEqual(self.store.one("SELECT COUNT(*) c FROM leads WHERE url = ?", (DEFINITE,))["c"], 1)
-                    self.assertEqual(self.store.one("SELECT COUNT(*) c FROM leads WHERE url = ?", (review,))["c"], 1)
+            # the same site, and another site (a job board's link to the same title: since 2026-11-18 another posting on
+            # the same site is never seen before anyway, so only the other site tests the review rule itself)
+            for definite in (DEFINITE, "https://www.indeed.com/viewjob?jk=abc123def456"):
+                for via in ("saved", "gmail"):
+                    with self.subTest(review=review, definite=definite, via=via):
+                        self.fresh()
+                        self.import_both(review, definite, via)
+                        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM leads WHERE url = ?", (definite,))["c"], 1)
+                        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM leads WHERE url = ?", (review,))["c"], 1)
 
     def test_a_definite_link_first_is_kept_whatever_follows(self):
         for via in ("saved", "gmail"):
@@ -629,12 +632,12 @@ class CodexPass2AlertIdTests(AlertImport):
         counts = self.import_both(DEFINITE, other, "saved")
         self.assertEqual(counts["lead_seen_before"], 1)
         self.assertEqual(self.store.one("SELECT COUNT(*) c FROM leads")["c"], 1)
-        for via in ("saved", "gmail"):   # the same job through another site: one lead, by employer and title
+        for via in ("saved", "gmail"):   # another site's job, same employer and title: its own lead (the owner's D188)
             with self.subTest(via=via):
                 self.fresh()
                 counts = self.import_both(DEFINITE, "https://www.indeed.com/viewjob?jk=abcdef0123456789", via)
-                self.assertEqual(counts["lead_seen_before"], 1)
-                self.assertEqual(self.store.one("SELECT COUNT(*) c FROM leads")["c"], 1)
+                self.assertEqual(counts["lead_seen_before"], 0)
+                self.assertEqual(self.store.one("SELECT COUNT(*) c FROM leads")["c"], 2)
 
 
 class CodexPass2PrivateSitesTests(AlertImport):
@@ -1180,13 +1183,14 @@ class CodexPass3AlertOrderTests(AlertImport):
     def test_a_review_link_after_a_definite_one_is_kept(self):
         for review in (self.BOTH, "https://www.linkedin.com/jobs/search/?currentJobId=unavailable",
                        "https://www.linkedin.com/slink?code=synthetic"):
-            for via in ("saved", "gmail"):
-                with self.subTest(review=review, via=via):
-                    CodexPass2AlertIdTests.fresh(self)
-                    counts = CodexPass2AlertIdTests.import_both(self, self.DIRECT, review, via)
-                    self.assertEqual(counts["lead_seen_before"], 0)
-                    for url in (self.DIRECT, review):
-                        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM leads WHERE url = ?", (url,))["c"], 1)
+            for direct in (self.DIRECT, "https://www.indeed.com/viewjob?jk=abc123def456"):   # the same site, another site
+                for via in ("saved", "gmail"):
+                    with self.subTest(review=review, direct=direct, via=via):
+                        CodexPass2AlertIdTests.fresh(self)
+                        counts = CodexPass2AlertIdTests.import_both(self, direct, review, via)
+                        self.assertEqual(counts["lead_seen_before"], 0)
+                        for url in (direct, review):
+                            self.assertEqual(self.store.one("SELECT COUNT(*) c FROM leads WHERE url = ?", (url,))["c"], 1)
 
     def test_the_very_same_review_link_is_dropped(self):
         """The control: the same review link twice is one lead, as before."""
@@ -1718,12 +1722,18 @@ class CodexPass4ReviewLinkTrackedJobTests(unittest.TestCase):
                 self.assertIn(self.lead(self.REVIEW)["status"], ("new", "no_match"))   # shown on the review page
 
     def test_a_definite_link_to_the_same_title_is_still_matched(self):
-        """The control: a definite link with the same title, employer and location is the tracked job, as before."""
+        """The control: since the owner's D188 a definite link is the tracked job only when it names that very posting
+        (its board link); another site's definite link with the same title, employer and location stays an open lead."""
         path = self.inbox / "alert.eml"
         path.write_bytes(self.email(self.DEFINITE))
         counts = _import_alert(self.ctx, path, self.client, self.inbox, "2026-11-11")
+        self.assertEqual((counts["lead_ingested"], counts["lead_new"]), (0, 1))
+        self.assertIsNone(self.lead(self.DEFINITE)["job_id"])
+        own = "https://job-boards.greenhouse.io/foohealth/jobs/71"
+        path.write_bytes(self.email(own))
+        counts = _import_alert(self.ctx, path, self.client, self.inbox, "2026-11-12")
         self.assertEqual(counts["lead_ingested"], 1)
-        self.assertEqual(self.lead(self.DEFINITE)["job_id"], "greenhouse:foohealth:71")
+        self.assertEqual(self.lead(own)["job_id"], "greenhouse:foohealth:71")
 
 
 class CodexPass5AgreementTests(unittest.TestCase):
@@ -1871,8 +1881,9 @@ class CodexPass5ReviewLinkTests(CodexPass4ReviewLinkTrackedJobTests):
         from types import SimpleNamespace
 
         from careeros.discovery import board_discovery as bd
-        posting = SimpleNamespace(url=self.TRACKED, requisition_id="R-9", external_id="71", title="Claims Analyst",
-                                  location="Remote", key="greenhouse:foohealth:71", ats="greenhouse", slug="foohealth")
+        # the LinkedIn job you added (its identity is its link: the owner's D188)
+        posting = SimpleNamespace(url=self.TRACKED, requisition_id="R-9", external_id="1111111", title="Claims Analyst",
+                                  location="Remote", key="manual:foo-health:1111111", ats="manual", slug="foo-health")
         for url, decision in ((self.FRAGMENT, "no_match"), (self.TRACKED + "&gh_jid=71&jobId=2", "no_match"),
                               (self.TRACKED, "matched")):   # the control: a definite link matches as before
             with self.subTest(url=url):
@@ -1939,16 +1950,17 @@ class Round10ManualIntakeReviewLeadTests(unittest.TestCase):
 
     def test_a_definite_lead_of_another_employer_or_an_agency_is_never_linked(self):
         """A posting you paste, add or import never links a definite lead at another employer, or an agency's lead, by
-        its title (planted defect #784; its old test's lead, jk=bar, has been a review link since round 9). The control:
-        the same employer and title is linked."""
+        its title (planted defect #784; its old test's lead, jk=bar, has been a review link since round 9). Since the
+        owner's D188 the same employer and title never link it either: only the lead's own link (the control)."""
         posting = "https://foohealth.example/careers/claims-analyst"   # a different link: only the title can match
         for route in ("paste", "add-url", "import"):
-            for name, context, expected in (("another employer", "Bar Health · Remote", ("new", False)),
-                                            ("an agency's lead", "Foo Health · Remote · agency=yes", ("new", False)),
-                                            ("control: the same employer", "Foo Health · Remote", ("ingested", True))):
+            for name, context, link, expected in (("another employer", "Bar Health · Remote", posting, ("new", False)),
+                                                  ("the same employer", "Foo Health · Remote", posting, ("new", False)),
+                                                  ("an agency's lead", "Foo Health · Remote · agency=yes", posting, ("new", False)),
+                                                  ("control: its own link", "Foo Health · Remote", self.VIEW, ("ingested", True))):
                 with self.subTest(route=route, case=name):
                     self.assertFalse(kept_for_review(self.VIEW))
-                    self.assertEqual(self.run_route(route, self.VIEW, posting, context), expected)
+                    self.assertEqual(self.run_route(route, self.VIEW, link, context), expected)
 
     def test_the_controls_still_link(self):
         """A definite lead with a trailing slash or a utm variant is linked as before; a byte-identical review URL is not
@@ -2278,7 +2290,8 @@ class Round12AnyReadingTests(unittest.TestCase):
         from careeros.discovery import board_discovery as bd
         tracked = SimpleNamespace(url=self.B, requisition_id="R-9", external_id="x1", title="Claims Analyst", location="Remote",
                                   key="manual:foo:1", ats="manual", slug="foo", remote_type="remote")
-        definite = SimpleNamespace(**{**vars(tracked), "url": "https://www.linkedin.com/jobs/view/4444444"})
+        # the same LinkedIn id as the lead's own link: another id is another posting (the red team before Pass 15, RT-19)
+        definite = SimpleNamespace(**{**vars(tracked), "url": "https://www.linkedin.com/jobs/view/3333333"})
         for name, fields in (("requisition", {"requisition_id": "R-9"}), ("title", {})):
             candidate = bd.Candidate(employer_name="Foo Health", origin="alert", posting_url=self.F, title="Claims Analyst",
                                      location="Remote", **fields)
@@ -2297,7 +2310,9 @@ class Round12AnyReadingTests(unittest.TestCase):
                                                  ("greenhouse:foohealth:71",))
                 counts = self.alert(ctx, "https://careers.foohealth.example/jobs?gh_jid=71", via, "Foo Health")
                 self.assertEqual(counts["lead_ingested"], 0)
-                self.assertEqual(self.leads(store), [("new", None)])
+                # a careers page's card is a notice, never a lead, and never linked (D192 part 3)
+                self.assertEqual((self.leads(store), [tuple(r) for r in store.all("SELECT state, job_id FROM alert_notices")]),
+                                 ([], [("new", None)]))
 
     def test_controls(self):
         """A definite alert link to a tracked job still links it; the owner's dismiss closes a review lead."""
@@ -2592,15 +2607,16 @@ class D149D151FailClosedTests(D149IntakeHelpers, unittest.TestCase):
 
     def test_controls(self):
         """A plain scanner wrapper over the definite Greenhouse 71 still ingests against it; a definite LinkedIn view link
-        with no conflicting reading still title-matches the tracked job; on both routes."""
+        with no conflicting reading is a definite lead of its own, never the tracked job by its title (the owner's D188);
+        on both routes."""
         for via in ("saved", "gmail"):
             with self.subTest(via=via):
                 store, _ctx, counts = self.run_alert(carrying("https://scanner-1.example/r", GH71, "u"), via, "Foo Health")
                 self.assertEqual((counts["lead_ingested"], Round12AnyReadingTests.leads(self, store)),
                                  (1, [("ingested", "greenhouse:foohealth:71")]))
                 store, _ctx, counts = self.run_alert("https://www.linkedin.com/jobs/view/3333333", via, "Foo Health")
-                self.assertEqual((counts["lead_ingested"], Round12AnyReadingTests.leads(self, store)),
-                                 (1, [("ingested", "greenhouse:foohealth:71")]))
+                self.assertEqual((counts["lead_ingested"], counts["lead_new"], Round12AnyReadingTests.leads(self, store)),
+                                 (0, 1, [("new", None)]))
         self.assertFalse(kept_for_review("https://www.linkedin.com/jobs/view/3333333?currentJobId=3333333"))   # one job, twice
 
 def _query(base: str, *pairs) -> str:
@@ -2660,17 +2676,24 @@ class D149D155Pass3Tests(D149IntakeHelpers, unittest.TestCase):
         self.assertEqual((alert.links, alert.skipped), ([], {"malformed": 1}))
 
     def test_controls(self):
-        """A single definite scanner wrapper still links Greenhouse 71; the same one-value redirect, scheme-relative,
-        still links it; a plain LinkedIn view link stays definite and title-matches; on saved email and Gmail."""
-        for href in (carrying("https://scanner-1.example/r", GH71, "u"),
-                     _query("https://scanner.example.net/rd", ("redirect", "//job-boards.greenhouse.io/foohealth/jobs/71")),
-                     "https://www.linkedin.com/jobs/view/3333333"):
+        """A single definite scanner wrapper still links Greenhouse 71; the same one-value redirect, scheme-relative, and
+        a plain LinkedIn view link stay definite leads, open (since the owner's D188 nothing but the posting's own link
+        links a lead, and a scheme-relative value is not unwrapped into one); on saved email and Gmail."""
+        for href, linked in ((carrying("https://scanner-1.example/r", GH71, "u"), True),
+                             (_query("https://scanner.example.net/rd", ("redirect", "//job-boards.greenhouse.io/foohealth/jobs/71")),
+                              False),
+                             ("https://www.linkedin.com/jobs/view/3333333", False)):
             self.assertFalse(kept_for_review(href))
             for via in ("saved", "gmail"):
                 with self.subTest(href=href, via=via):
                     store, _ctx, counts = self.run_alert(href, via, "Foo Health")
-                    self.assertEqual((counts["lead_ingested"], Round12AnyReadingTests.leads(self, store)),
-                                     (1, [("ingested", "greenhouse:foohealth:71")]))
+                    leads = Round12AnyReadingTests.leads(self, store)
+                    notices = [tuple(r) for r in store.all("SELECT state, job_id FROM alert_notices")]
+                    if href.startswith("https://scanner.example.net"):   # its own link names no posting: a notice (D192 part 3)
+                        self.assertEqual((counts["lead_ingested"], leads, notices), (0, [], [("new", None)]))
+                        continue
+                    self.assertEqual((counts["lead_ingested"], leads),
+                                     (1, [("ingested", "greenhouse:foohealth:71")]) if linked else (0, [("new", None)]))
 
 
 class AgencyMergeLocalLinkTests(D149IntakeHelpers, unittest.TestCase):
@@ -2750,23 +2773,26 @@ class AgencyMergeHandCheckTests(D149IntakeHelpers, unittest.TestCase):
 
     def test_an_agency_card_whose_tracking_link_carries_gh_jid_is_never_matched_to_the_greenhouse_job(self):
         """An agency's tracking link is kept whole: its query is never a destination (CR-AD-02), so a card whose link
-        happens to carry gh_jid=71 is not matched to the tracked Greenhouse 71, and nothing is fetched for it."""
+        happens to carry gh_jid=71 is not matched to the tracked Greenhouse 71, and nothing is fetched for it; not even
+        when its line names that job's employer and title, which the Greenhouse-id lookup would otherwise accept (since
+        Codex Pass 13 H33 a line naming the agency is refused there anyway: the round-15 hand check found the guard
+        untested)."""
         from careeros.cli import _record_alert
         from careeros.discovery.alerts import AlertEmail, Link
         from tests import test_board_verification as tbv
         from tests.test_alerts import AG_1
-        store, ctx = Round12AnyReadingTests.store(self)
-        card = Link(url=AG_1 + "&gh_jid=71", site="harborstaffing", text="Claims Analyst", context="Harbor Staffing · Remote",
-                    job_like=True)
-        alert = AlertEmail("Job Alerts", "Your jobs", None, [card], digest_status="complete")
-        client = tbv.FakeBoards().client()
-        try:
-            with contextlib.redirect_stdout(io.StringIO()):
-                counts = _record_alert(ctx, alert, client)
-        finally:
-            client.close()
-        self.assertEqual((counts["lead_ingested"], counts["lead_new"]), (0, 1))
-        self.assertEqual(Round12AnyReadingTests.leads(self, store), [("new", None)])
+        for context in ("Harbor Staffing · Remote", "Foo Health · Remote"):
+            store, ctx = Round12AnyReadingTests.store(self)
+            card = Link(url=AG_1 + "&gh_jid=71", site="harborstaffing", text="Claims Analyst", context=context, job_like=True)
+            alert = AlertEmail("Job Alerts", "Your jobs", None, [card], digest_status="complete")
+            client = tbv.FakeBoards().client()
+            try:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    counts = _record_alert(ctx, alert, client)
+            finally:
+                client.close()
+            self.assertEqual((counts["lead_ingested"], counts["lead_new"]), (0, 1), context)
+            self.assertEqual(Round12AnyReadingTests.leads(self, store), [("new", None)], context)
 
     def test_a_posting_whose_canonical_link_is_a_review_link_never_links_the_lead_at_its_own_link(self):
         """The owner's D142 R-b checks both of a posting's stored links. The board matcher refuses a posting tracked at a

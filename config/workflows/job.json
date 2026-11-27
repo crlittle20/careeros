@@ -13,7 +13,7 @@
     "closed": "cancelled"
   },
   "initial_state": "discovered",
-  "terminal": ["duplicate"],
+  "terminal": [],
   "allowed": [
     {"from": "discovered", "to": "normalized", "requires_reason": false},
     {"from": "discovered", "to": "duplicate", "requires_reason": true},
@@ -37,7 +37,15 @@
     {"from": "eligible", "to": "closed", "requires_reason": true},
     {"from": "scored", "to": "closed", "requires_reason": true},
     {"from": "rejected", "to": "closed", "requires_reason": true},
-    {"from": "closed", "to": "normalized", "requires_reason": true}
+    {"from": "closed", "to": "normalized", "requires_reason": true},
+    {"from": "duplicate", "to": "normalized", "requires_reason": true},
+    {"from": "normalized", "to": "duplicate", "requires_reason": true},
+    {"from": "extracted", "to": "duplicate", "requires_reason": true},
+    {"from": "needs_review", "to": "duplicate", "requires_reason": true},
+    {"from": "eligible", "to": "duplicate", "requires_reason": true},
+    {"from": "scored", "to": "duplicate", "requires_reason": true},
+    {"from": "rejected", "to": "duplicate", "requires_reason": true},
+    {"from": "closed", "to": "duplicate", "requires_reason": true}
   ],
   "self_transitions": false
 }

@@ -1,0 +1,504 @@
+{
+ "what": "The Codex Pass 17 fixes (the owner's D201: H45, a blank typed field, add-url, the typed company's ends, add-url's manual id; the release-scan scanner), built on codex-p1-gatefixes after Pass 16's fixes: the end-of-round hand check, planted by hand in stages (D152) as in mutation-hand-check-e19262e.json, each defect alone in a plain copy of the worktree.",
+ "scope": "every defect whose anchor lies in a function or module statement of careeros/ that changed between 2280a59 and 07cc6e4 (scratchpad b5_scope.py), planted at 07cc6e4",
+ "base": "2280a59",
+ "rev": "07cc6e4",
+ "python": "3.14.10",
+ "node_version": "v24.22.1",
+ "defined": 2515,
+ "checked": 68,
+ "caught": 68,
+ "stages": {
+  "stage 1": {
+   "rev": "07cc6e4",
+   "against": "the 16 related modules, failfast: tests.test_pass17 tests.test_pass16 tests.test_pass15 tests.test_batch5 tests.test_p1 tests.test_review_page tests.test_packages tests.test_intake_hotfix tests.test_v26_discovery tests.test_core tests.test_d190 tests.test_applications tests.test_intake_identity tests.test_d192 tests.test_batch3 tests.test_observability",
+   "defects": 68
+  },
+  "stage 2": {
+   "rev": "07cc6e4",
+   "against": "the other 48 test modules, failfast (stage 1's survivors)",
+   "defects": 8
+  }
+ },
+ "survived": [],
+ "note": "the tool records each defect's verdict (CAUGHT when the planted copy's run fails), not the failing tests' names; stage 2 settles a stage-1 survivor; the round's commits each ran their own new and re-anchored defects at the commit, every one caught",
+ "previous": "evidence/mutation-hand-check-dd218b2.json (this round's first receipt, before the add-url slug commit; e19262e's before it)",
+ "results": [
+  {
+   "mutation": "a pasted posting is not deduplicated",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "form key not bound to its action and target",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "review token check disabled",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Demo Mode reads the clipboard",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "a posting pasted on the review page never links its lead",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "an added posting never links its lead (careeros add-url)",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "error pages carry no Content-Security-Policy header",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "an unexpected error drops the connection instead of showing a page",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "red team before Pass 4: a review page request reads the settings anew part-way through",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "a pasted posting never links its lead (careeros paste)",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "a form already used drops the connection instead of answering 409",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "F3: the page after a partial paste does not name the posting saved",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Pass 7 H2: add-url's --location is not recorded as yours",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "F3 (Pass 2): a refusal after part of a form was saved says \"Not recorded\"",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "the review page's Confirm links whatever likely match waits now, not the one its card showed",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Pass 10 H14: a paste that could not be stored is reported as added",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Pass 5 F1: a paste takes its location field from a phrase in its prose ('Previously advertised as Remote - US')",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Codex Pass 5 (D153 R4): a paste saved although its tracking hosts could not be enrolled",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "F3: an error after part of a form was saved says \"Not recorded\"",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Codex Pass 4: a tracking link pasted on the review page leaves its host unenrolled",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Pass 9 H10: add-url --text-file drops the part after '#' from the opening's link and generated id",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Pass 8 H8: a posting given its own id is not linked to the job it collided with",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "red team (D181): add-url with a board link drops --location silently",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Pass 10 H14: add-url carries on after a refused or failed write",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "red team (D179): add-url --text-file does not read the requisition",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "red team (D179): add-url with a board link carries on after the posting was not stored",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "batch 3 B.3 (gr1-saved-3): add-url's board branch never sweeps",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "red team (D181): a paste of a board posting with --location suggests careeros location, which refuses it",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "RT-28: a paste's location is cut at 120 characters",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D190 P1 part 1: a paste's company makes its id as typed",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D190 P1 part 7a (Codex M5): a paste's retry is taken in again",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D190 P1 part 7b (section 6): a paste whose posting was not written commits without it",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "BATCH_5 D1: a paste's value cut to length is recorded as stated",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Codex H38: a paste's text past its limit is cut unmarked",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Codex H43: the request reads its cut marks from the kept text only",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Codex H45: a cut location's kept value is bound without its source",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D201: a paste of a tracked job with a blank --location offers to set that blank location",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D201: a typed company cut at its limit is kept whole",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "RT-26: a job site's section heading is taken as the title",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "RT-26: the first line is cut at ' at ' though a Company line names the employer",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D190 P1 part 3a: add-url --text-file drops your --parent",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D190 P1 part 7a (Codex M5): a new paste records no receipt with its job",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D190 P1 part 7b (Z5; Codex H24's pattern): a paste padded past the cap shares a compact one's receipt",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "BATCH_5 D1: a paste's posting drops what its reader inferred or cut",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Codex H38: blank space past a paste's limit marks its text cut",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Codex H43: careeros paste ends a refused retry by --operation in a traceback",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Codex H45: a paste with nothing cut gains a kept key, so its older receipt no longer answers it",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D201: add-url --text-file reads a blank argument as given",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D201: a typed company's ends are stripped once, not until none is left",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "part 3: the review page's dismiss leaves the notice",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D190 P1 part 6a (part d): a paste found already tracked records no sighting",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D190 P1 part 7a (Codex M5): add-url --text-file's retry is taken in again",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "BATCH_5 D1: a paste's title taken from its first line is recorded as stated",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Codex H38: a paste's location lines longer than the limit are cut unmarked",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "part 4: a paste with --location of a board job its field leaves unknown never says how to settle it",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Codex H43: a paste with nothing cut gains a cut key, so its older receipt no longer answers it",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Codex H45: a paste's request leaves out the value kept of a field cut at its limit",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D201: a typed field of invisible characters only is given",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D201: a typed company's ends are stripped as typed, before its canonical form",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D190 P1 part 3a: a paste's entry is not resolved by the one resolver",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D190 P1 part 7a (Codex M5): a paste of a tracked job records no receipt with its sighting",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "BATCH_5 D1: a paste's company read from a Workday link's host is recorded as stated",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "HC2: careeros add-url for a posting that cannot be read ends with a traceback",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Codex H43: a paste's request leaves out what its reading cut",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "Codex H43: the review page refuses another paste under a form key without saying why",
+   "file": "careeros/review/server.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D201: parse_pasted reads a blank typed title, company or location as given",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D201: add-url --text-file reads a blank --parent as your parent",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  },
+  {
+   "mutation": "D201: add-url's manual id is made from the employer as typed, not its canonical form",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "07cc6e4"
+  }
+ ]
+}

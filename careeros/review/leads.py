@@ -69,7 +69,14 @@ def eligible(store: Store, policy, lead_id: str, row, job) -> bool:
             return False
     resolver = Resolver(SimpleNamespace(store=store, policy=policy))
     key = resolver.key(facts.employer_name)
-    return bool(key) and key == resolver.key(job["employer_name"], job["parent"])
+    if not key or key != resolver.key(job["employer_name"], job["parent"]):
+        return False
+    # the current matcher would still propose this job for this lead: a proposal an older engine stored under rules
+    # since withdrawn (a lead whose own link names another posting, D188) is never shown or confirmed (the red team's
+    # gr1-alerts-3)
+    from careeros.discovery.lead_resolution import _tracked
+    again = bd.match_lead(facts, [_tracked(job)], policy, store.clock.now())
+    return again["decision"] in ("likely", "matched") and again["candidates"] == [job["job_id"]]
 
 
 def pending_all(store: Store, policy) -> list[dict]:

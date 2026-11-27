@@ -121,15 +121,16 @@ and the overnight (NIGHT) profile on. On days 3 and 4 they act, through the func
 This gives the analytics export (`careeros export`) an application pipeline to show.
 
 Totals after four days: **46 jobs**.
-- 28 scored.
+- 29 scored.
 - 13 rejected, with reasons: title excluded, no target family, not remote, below pay floor, employment type (the
   part-time overnight role, which NIGHT accepts), scam signals.
   The NY/NJ-only role is scored with a residence check to verify, not rejected: no state in a location field rejects
   on its own (D151).
-- 1 duplicate.
 - 4 closed.
 
-Also: 3 alert-email leads, 15 boards, 9 discovery attempts, and 15 jobs routed to NIGHT. These counts are recorded in the
+Also: 3 alert-email leads, 15 boards, 9 discovery attempts, and 16 jobs routed to NIGHT. Meridian 102 shares 101's
+requisition: it is scored on its own and linked to 101 as a possible duplicate (only one exact posting link makes two
+postings one job, 2026-11-19). These counts are recorded in the
 tests (`RECORDED` in `tests/test_demo_mode.py`). A change to the world or to the rules that moves any of them fails a
 test until the record and this document are updated together.
 
@@ -142,7 +143,7 @@ test until the record and this document are updated together.
 | Verified employer | Northwind, Cobalt, Harborline (new board) | Official-site handshake, quarantine, validation scan, then active |
 | Invalid employer | Atlas | `slug_absent` discovery outcome; nothing admitted; listed by `careeros sources list` |
 | Board contradicted by the employer's site | Granite | Rejected `official_site_contradicts`; its Workday system recorded `manual_only` |
-| Duplicates | Meridian 101 / 102 (same requisition) | `duplicate` (same_requisition) |
+| Possible duplicates | Meridian 101 / 102 (same requisition, two postings) | 102 scored and linked to 101 for review (`possible_duplicate`), never merged |
 | Updated jobs | Bluepeak, day 2 | One meaningful change (pay) and one cosmetic change (wording) |
 | Remote nationwide | Meridian 101 / 108, Cascade, Cobalt | `US_nationwide` |
 | Remote, restricted states | Meridian 103 (CO/TX/AZ), Bluepeak (NY/NJ) | `US_restricted_states`; the NY/NJ role is scored with `residence_limit_check` to verify (D151) |

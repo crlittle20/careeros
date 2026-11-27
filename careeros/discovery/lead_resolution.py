@@ -39,6 +39,13 @@ def _now(store) -> str:
     return store.clock.now()
 
 
+# why a posting is proposed to you as a lead's likely match (board_discovery.match_lead): since the owner's D188
+# (2026-11-19, "Exact links only") none of these links a lead by itself
+LIKELY_WHY = {"requisition": "the same requisition id, the same title and a place that can be the lead's",
+              "title_location": "the same title, the same seniority and a compatible location",
+              "likely_title": "a near-identical title, the same seniority and a compatible location"}
+
+
 class Resolver:
     """One pass of lead matching (a scan run, an admission): the identity inputs are read once and each open lead's
     employer is resolved once."""
@@ -100,7 +107,8 @@ class Resolver:
         rows = self.store.all(f"SELECT * FROM jobs WHERE employer_id IN ({marks}) AND current_state NOT IN ('duplicate','closed') "
                               "ORDER BY first_seen_at, job_id", tuple(employer_ids))
         return [bd.TrackedPosting(key=r["job_id"], title=r["title"] or "", url=r["url"], requisition_id=r["requisition_id"],
-                                  external_id=r["external_id"], location=r["location_raw"] or "", remote_type=r["remote_type"] or "unknown")
+                                  external_id=r["external_id"], location=r["location_raw"] or "", remote_type=r["remote_type"] or "unknown",
+                                  employer=r["employer_name"], parent=r["parent"])
                 for r in rows]
 
     def covered(self, key: str) -> bool:
@@ -156,9 +164,8 @@ class Resolver:
             return "linked"
         if decision == "likely":   # never linked here: the owner confirms or rejects it (careeros leads, the review page)
             posting = match["posting"]
-            note = (f"likely match: {posting.title} at {name} (a near-identical title, the same seniority, a compatible "
-                    f"location; {why}); confirm or reject it")
-            self._record(lead, "likely", "likely_title", posting.key, mapping_id, match["candidates"], note, status="new")
+            note = f"likely match: {posting.title} at {name} ({LIKELY_WHY[match['method']]}; {why}); confirm or reject it"
+            self._record(lead, "likely", match["method"], posting.key, mapping_id, match["candidates"], note, status="new")
             return "likely"
         if decision == "ambiguous":
             note = f"{len(match['candidates'])} postings at {name} could be this lead ({why}); it is not linked"
@@ -253,18 +260,20 @@ def after_admission(ctx, mapping_id: str) -> Counter:
 
 def link_same_posting(ctx, job_id: str | None, *, via: str) -> Counter:
     """You pasted or added a posting yourself (careeros paste, the review page's paste box, careeros add-url, careeros
-    import): a lead for the same posting is linked to it (ADR 0003, amendment of 2026-11-02). The same link links it
-    whatever the names say; otherwise the lead's employer must resolve to the job's (employer_identity) and the same
-    requisition or the same title match it (board_discovery.match_lead), and a likely match is proposed to you as after a
-    scan. The match is made against every open tracked job of that employer, not this job alone (Codex
-    CR-2026-11-02-LEAD-RESOLUTION F4): a lead that two postings could be stays unlinked, and only the same link or a
-    requisition that one posting alone carries picks one out. Open and closed leads are linked; a dismissed one stays
-    dismissed, and a job you rejected or unlinked for a lead is never linked to it. This is your own evidence, so it needs
-    no admitted board."""
+    import): a lead for the same posting is linked to it (ADR 0003, amendment of 2026-11-02). By the owner's D188
+    (2026-11-19, "Exact links only") only the lead's own link naming this very posting (board_discovery.job_identity)
+    links it; otherwise, when the lead's employer resolves to the job's (employer_identity), the same requisition or the
+    same title only proposes the job to you, as after a scan (board_discovery.match_lead: a likely match). The match is
+    made against every open tracked job of that employer, not this job alone (Codex CR-2026-11-02-LEAD-RESOLUTION F4): a
+    lead that two postings could be gets no proposal. Open and closed leads are linked; a dismissed one stays dismissed,
+    and a job you rejected or unlinked for a lead is never linked to it. This is your own evidence, so it needs no
+    admitted board."""
     store, counts = ctx.store, Counter[str]()
     job = store.one("SELECT * FROM jobs WHERE job_id = ?", (job_id,)) if job_id else None
     if job is not None and job["current_state"] == "duplicate" and job["duplicate_of"]:
-        job = store.one("SELECT * FROM jobs WHERE job_id = ?", (job["duplicate_of"],))
+        original = store.one("SELECT * FROM jobs WHERE job_id = ?", (job["duplicate_of"],))
+        if original is not None:   # a duplicate is its original's posting (D188), and stands for it
+            job = original
     if job is None:
         return counts
     if any(u and kept_for_review(u) for u in (job["url"], job["canonical_url"])):
@@ -273,7 +282,7 @@ def link_same_posting(ctx, job_id: str | None, *, via: str) -> Counter:
     key = resolver.key(job["employer_name"], job["parent"])
     pool = _employer_pool(store, resolver, key, job) if key else [_tracked(job)]   # the job, and the employer's other open jobs
     states = (*OPEN_STATES, "closed")
-    from careeros.discovery.alerts import agency_setting_problem, local_only_urls
+    from careeros.discovery.alerts import agency_setting_problem, is_agency_lead, local_only_urls
     local = local_only_urls(store)
     for lead in store.all(f"SELECT * FROM leads WHERE status IN ({','.join('?' * len(states))}) ORDER BY first_seen_at, lead_id", states):
         if job["job_id"] in resolver.refused(lead["lead_id"]):
@@ -283,10 +292,17 @@ def link_same_posting(ctx, job_id: str | None, *, via: str) -> Counter:
             # one with its byte-identical URL: it stays open on the review page until you dismiss it, checked first
             # (CR-2026-11-09-INTAKE-HOTFIX Pass 6, CR-HF-01, the owner's D140 F2)
             continue
-        if bd._same_link(lead["url"], job["url"]):
+        own = bd.posting_identity(lead["url"])
+        if own is not None and own == bd.job_identity(job) and not is_agency_lead(lead, local):
+            # the one automatic link (D188): the lead's own link names this very posting
             if link(store, lead["lead_id"], job["job_id"], method="manual_intake", mapping_id=None, candidates=[job["job_id"]],
                     reason=f"you {via} the same posting (the same link)", states=states):
                 counts["leads_linked"] += 1
+            continue
+        if bd._same_link(lead["url"], job["url"]):
+            # the same link but another title or requisition (H16, Pass 11), or the lead's own link names another
+            # opening of the same portal (it differs after "#"): never this job by name or title (Codex
+            # CR-2026-11-15-GATE-FIXES H12, Pass 10)
             continue
         facts = bd.candidate_from_lead(lead, ctx.policy, local)
         if not key or facts is None or facts.relationship != "employer" or resolver.key(facts.employer_name) != key:
@@ -304,15 +320,63 @@ def link_same_posting(ctx, job_id: str | None, *, via: str) -> Counter:
                     states=states):
                 counts["leads_linked"] += 1
         elif match["decision"] == "likely" and lead["status"] in OPEN_STATES:
-            note = f"likely match: {job['title']} at {job['employer_name']}, which you {via}; confirm or reject it"
-            resolver._record(lead, "likely", "likely_title", job["job_id"], None, [job["job_id"]], note, status="new")
+            note = (f"likely match: {job['title']} at {job['employer_name']}, which you {via} ({LIKELY_WHY[match['method']]}); "
+                    "confirm or reject it")
+            resolver._record(lead, "likely", match["method"], job["job_id"], None, [job["job_id"]], note, status="new")
             counts["leads_likely"] += 1
+    return counts
+
+
+# the identity rules the stored lead links are checked against (recheck_linked_leads), named in each reopened lead's reason
+IDENTITY_RULES = "identity-2026-11-19b"   # 11-19b: exact links only (the owner's D188)
+
+
+def recheck_linked_leads(ctx) -> Counter:
+    """At every processing run (the owner's D188, 2026-11-19, "Exact links only"): every lead linked to a job stays
+    linked only when its own link names that very posting (board_discovery.job_identity), or when you made or confirmed
+    that link yourself (the latest record of that lead and that job is yours, never only an earlier unlink or rejection:
+    the red team's fr1-alerts-3). Any other link (made by title, requisition, place or a shared page, by this engine or
+    an older one, before or after a rollback) is undone: the lead is open again for you, and the job is not refused for
+    it. Run every time, never once: nothing the current rules make is undone (the red team's fr1-alerts-1 and
+    fr1-faults-1). Returns counts."""
+    from careeros.discovery.alerts import agency_setting_problem, is_agency_lead, local_only_urls
+    store, counts = ctx.store, Counter[str]()
+    if agency_setting_problem(store):
+        # an agency entry missing from the private settings: no lead can be told from an agency's, so nothing is
+        # undone until it is restored, as alert intake and lead matching stop (D125; the red team's gr1-alerts-2)
+        counts["leads_recheck_held"] += 1
+        return counts
+    local = local_only_urls(store)
+    now = store.clock.now()
+    writer = store.writer("discovery")
+    for lead in store.all("SELECT * FROM leads WHERE status = 'ingested' AND job_id IS NOT NULL ORDER BY first_seen_at, lead_id"):
+        latest = store.one("SELECT actor FROM lead_matches WHERE lead_id = ? AND job_id = ? ORDER BY decided_at DESC, rowid DESC "
+                           "LIMIT 1", (lead["lead_id"], lead["job_id"]))
+        if latest is not None and latest["actor"] == "user":
+            continue   # you made or confirmed this very link
+        job = store.one("SELECT * FROM jobs WHERE job_id = ?", (lead["job_id"],))
+        if job is None:
+            continue
+        own = bd.posting_identity(lead["url"])
+        if own is not None and own == bd.job_identity(job) and not is_agency_lead(lead, local):
+            continue   # its own link names this very posting
+        reason = (f"reopened: under the identity rules of {IDENTITY_RULES[9:]} (exact links only, D188) this line is not "
+                  f"{job['title']} at {job['employer_name']} ({job['job_id']}) by its own link; confirm it yourself if it is")
+        with store.tx():
+            if writer.update("leads", {"status": "new", "job_id": None, "status_reason": reason[:300], "status_at": now},
+                             "lead_id = ? AND status = 'ingested'", (lead["lead_id"],)):
+                writer.insert("lead_matches", _match_row(lead["lead_id"], None, None, "none", "no_match", [job["job_id"]], now,
+                                                         actor="careeros", reason=reason))
+                counts["leads_reopened"] += 1
+    if counts:
+        writer.event("lead_links_rechecked", outcome="success", metadata={"rules": IDENTITY_RULES, **counts})
     return counts
 
 
 def _tracked(row) -> bd.TrackedPosting:
     return bd.TrackedPosting(key=row["job_id"], title=row["title"] or "", url=row["url"], requisition_id=row["requisition_id"],
-                             external_id=row["external_id"], location=row["location_raw"] or "", remote_type=row["remote_type"] or "unknown")
+                             external_id=row["external_id"], location=row["location_raw"] or "", remote_type=row["remote_type"] or "unknown",
+                             employer=row["employer_name"], parent=row["parent"])
 
 
 def _employer_pool(store, resolver: Resolver, key: str, job) -> list:

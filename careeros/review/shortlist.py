@@ -24,7 +24,9 @@ from careeros.review.dismiss import dismissed_sql
 
 
 def _latest_label(store: Store, job_id: str):
-    return store.one("SELECT * FROM labels WHERE job_id = ? AND profile = 'primary' ORDER BY at DESC, rowid DESC LIMIT 1", (job_id,))
+    # the label written last is in force, whatever the clock said when each was written (an older engine's Skip after a
+    # rollback included: the red team's gr1-upgrade-1, B.6)
+    return store.one("SELECT * FROM labels WHERE job_id = ? AND profile = 'primary' ORDER BY rowid DESC LIMIT 1", (job_id,))
 
 
 def shortlisted_job_ids(store: Store) -> list[str]:
@@ -35,9 +37,9 @@ def shortlisted_job_ids(store: Store) -> list[str]:
                         LEFT JOIN scores s ON s.score_id = (SELECT score_id FROM scores WHERE job_id = j.job_id ORDER BY at DESC, rowid DESC LIMIT 1)
                         WHERE j.current_state NOT IN ('duplicate', 'closed')
                           AND (s.tier IN ('A','B') OR (SELECT label FROM labels l WHERE l.job_id = j.job_id AND l.profile = 'primary'
-                                                        ORDER BY at DESC, rowid DESC LIMIT 1) IN ('apply','stretch'))
+                                                        ORDER BY rowid DESC LIMIT 1) IN ('apply','stretch'))
                           AND COALESCE((SELECT label FROM labels l WHERE l.job_id = j.job_id AND l.profile = 'primary'
-                                        ORDER BY at DESC, rowid DESC LIMIT 1), '') != 'skip'
+                                        ORDER BY rowid DESC LIMIT 1), '') != 'skip'
                           AND NOT {dismissed_sql('j.job_id')}
                         ORDER BY s.apply_priority DESC""")
     return [r["job_id"] for r in rows]
@@ -155,24 +157,63 @@ def shortlist(store: Store, policy=None) -> list[dict]:
 def draft(store: Store, profile, job_id: str, folder: Path, policy=None, facts: list | None = None) -> Path:
     """An application brief for an opening you chose to pursue, from approved profile facts only. Your approved facts
     (careeros/review/approved_facts.py) are quoted word for word, and the brief checks its own wording against them."""
-    label = _latest_label(store, job_id)
-    if not label or label["label"] not in ("apply", "stretch"):
-        raise ValueError("not_pursued: label it Apply or Stretch first (drafts are only for openings you chose to pursue)")
-    lines, issues = brief_lines(store, profile, job_id, policy, facts,
-                                f"- Your label: {label['label']}" + (f" ({label['reason']})" if label["reason"] else ""))
+    from careeros.core.fingerprint import fingerprint
+
+    from .packages import route_for
+
+    def render() -> tuple[dict, list[str], list[dict]]:
+        """The route and the brief, read in the caller's transaction: (what they digest, lines, wording issues)."""
+        route, basis = route_for(store, policy, job_id, profile)
+        if route is None:
+            raise ValueError(f"not_pursued: {basis} (drafts are only for openings you chose to pursue, while your label "
+                             "stands)")
+        label = _latest_label(store, job_id)
+        lines, issues = brief_lines(store, profile, job_id, policy, facts,
+                                    f"- Your label: {label['label']}" + (f" ({label['reason']})" if label["reason"] else ""))
+        return {"route": route, "basis": basis, "label_id": label["label_id"], "lines": lines}, lines, issues
+
+    # a brief is issued only when its draft is recorded (Codex H13): captured in one read, checked again and recorded
+    # in one write transaction, and only then written, never over an earlier brief
+    with store.read():
+        captured, lines, issues = render()
+    digest = fingerprint(captured)
+    with store.tx():
+        again, _, _ = render()
+        if fingerprint(again) != digest:
+            raise ValueError("draft_changed: the job or your label changed while the brief was drafted; draft it again")
+        store.writer("review").event("draft_created", outcome="success", entity_type="job", entity_id=job_id,
+                                     actor_type="human", actor_id="user",
+                                     metadata={"digest": digest, "wording_issues": len(issues)})
+    return _issue_brief(folder, f"{store.clock.now()[:10]}-{job_id.replace(':', '_')}", "\n".join(lines) + "\n",
+                        digest)
+
+
+def _issue_brief(folder: Path, stem: str, body: str, digest: str) -> Path:
+    """Write a brief at the first free numbered name, never over an earlier one (you may have edited it): written to a
+    temporary name, then linked at the final name (exclusive), else created exclusively there; the temporary file is
+    removed (never os.replace, which overwrites). The brief carries its digest."""
+    import os
+    import secrets
     folder.mkdir(parents=True, exist_ok=True)
-    stem = f"{store.clock.now()[:10]}-{job_id.replace(':', '_')}"
-    path, n = folder / f"{stem}.md", 2
-    while True:   # never overwrite an earlier brief (you may have edited it): a later one the same day gets a number
-        try:
-            with path.open("x", encoding="utf-8") as handle:
-                handle.write("\n".join(lines) + "\n")
-            break
-        except FileExistsError:
-            path, n = folder / f"{stem}-{n}.md", n + 1
-    store.writer("review").event("draft_created", outcome="success", entity_type="job", entity_id=job_id,
-                                 actor_type="human", actor_id="user", metadata={"path": path.name, "wording_issues": len(issues)})
-    return path
+    text = body + f"\n<!-- careeros draft {digest} -->\n"
+    temporary = folder / f".{stem}.{secrets.token_hex(4)}.tmp"
+    temporary.write_text(text, encoding="utf-8")
+    try:
+        path, n = folder / f"{stem}.md", 2
+        while True:
+            try:
+                try:
+                    os.link(temporary, path)
+                except OSError as exc:
+                    if isinstance(exc, FileExistsError):
+                        raise
+                    with path.open("x", encoding="utf-8") as handle:   # no hard links here: created exclusively
+                        handle.write(text)
+                return path
+            except FileExistsError:
+                path, n = folder / f"{stem}-{n}.md", n + 1
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def brief_lines(store: Store, profile, job_id: str, policy, facts: list | None, why: str) -> tuple[list[str], list[dict]]:

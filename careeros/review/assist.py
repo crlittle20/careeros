@@ -4,7 +4,7 @@ A session is a reservation for one role while you apply, in one of three modes:
 - `manual`: you copy from the package's answer panel (answers.md);
 - `native`: you use the employer's own autofill (e.g. MyGreenhouse), with the package as your reference;
 - `assisted`: the CareerOS browser extension fills the fields its fixed adapter knows, after showing you every value.
-  It never clicks, submits or uploads.
+  It never clicks, submits or uploads. PAUSED in this release (the owner's D191): opening one is refused (FILL_PAUSED).
 
 Opening a session needs, at that moment:
 - a package that is ready (careeros/review/packages.py: prepared, current, approved when it must be);
@@ -16,7 +16,8 @@ Opening a session needs, at that moment:
   yourself, in your vault overrides, once you have run the installed-extension check on it (see `assistance_policy`).
 
 An assisted session writes a handoff file for the extension. It holds only the values for that form, is bound to the
-destination's origin and posting address, and expires after two hours.
+destination's origin and posting address, and expires after two hours. While browser Fill is paused no handoff is
+written, and every sweep removes every handoff file in the vault (one an earlier version wrote included).
 
 You close a session yourself:
 - `submitted`: the application is recorded, with its evidence: your statement, or the confirmation you saw;
@@ -32,6 +33,7 @@ from __future__ import annotations
 import json
 import re
 import uuid
+import weakref
 from datetime import date, timedelta
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -45,9 +47,16 @@ from . import packages as pkg
 
 MODES = ("manual", "native", "assisted")
 OUTCOMES = ("submitted", "not_submitted", "uncertain")
+WAITING = ("open", "uncertain")   # a session not closed yet: its handoff may still be used
 CAPABILITIES = ("allowed", "supervised_only", "unknown", "blocked")
 FILLABLE = ("allowed", "supervised_only")
 HANDOFF_HOURS = 2
+# Browser Fill is paused in this release (the owner's D191, after Codex's D190 design review H1): the extension cannot
+# learn that CareerOS withdrew a handoff it already loaded, so no handoff is written. Assisted mode is refused here, in
+# code, whatever the site policy or a vault override says; manual and native assistance stay. The fill code (the
+# handoff, the adapters, the extension) stays in the repository, inert, for a later design review (U1). Tests of that
+# inert code switch this off.
+FILL_PAUSED = True
 # Fixed, reviewed form adapters, by the hosts their forms live on (careeros/review/adapters.py builds their fields).
 ADAPTER_HOSTS = {"greenhouse": ("job-boards.greenhouse.io", "boards.greenhouse.io")}
 
@@ -169,13 +178,40 @@ def open_session(store: Store, policy, profile, job_id: str, mode: str, *, facts
         raise ValueError("unknown_mode")
     writer = store.writer("assist")
     written: Path | None = None
+    _ROOTS[store] = Path(vault_root)   # where this store's handoffs are written, for a later withdrawal (D188)
+    withdraw_handoffs(store, policy, profile, vault_root)   # first: no handoff survives an open (H34; D191)
     try:
         with store.tx():   # the same key again returns the first result before any check (Codex review of ac83e00)
             if writer.receipt("assist_open", key, {"job_id": job_id, "mode": mode}, actor_id="user") == "replay":
                 first = (_replayed(store, "assist_session_opened", key) or {}).get("result") or {}
-                # the first result, and what became of that session since: a closed one is no reservation
-                return {"replay": True, **first,
-                        **({"state": session_state(store, first["session_id"])} if first.get("session_id") else {})}
+                sid = first.get("session_id")
+                state = session_state(store, sid) if sid else None
+                if sid and state is not None and state != "open":
+                    # a session no longer open (closed, or uncertain: its outcome unknown) returns its recorded state,
+                    # with no answers path and nothing reserved (the D190 design, section 3, "Session replay"; Codex H14)
+                    return {"replay": True, "session_id": sid, "mode": first.get("mode"), "state": state,
+                            "package_id": first.get("package_id"),
+                            "handoff_withdrawn": f"the session is not open ({state.replace('_', ' ')})"}
+                why = _replay_refused(store, policy, profile, job_id, sid, first, facts=facts, library=library,
+                                      vault_root=vault_root, questions=questions) if sid and state == "open" else None
+                if why:
+                    # the first result no longer stands: its package, answers or label moved on, or there is no route now
+                    # (Codex CR-2026-11-15-GATE-FIXES H34, Pass 14; the D190 design, H14). The session stays for you to
+                    # close; the refusal names it for reconciliation and carries no answers path
+                    raise SessionRefused(f"{why}; its handoff is withdrawn. Close session {sid} with what really happened "
+                                         "(careeros assist close), then label the job Apply or Stretch and prepare it "
+                                         "again")
+                # the first result of a session still open whose checks pass now; with browser Fill paused (D191) an
+                # assisted open's handoff is never handed over again (the red team before Codex Pass 15, RT-01)
+                if FILL_PAUSED and first.get("mode") == "assisted":
+                    return {"replay": True, **{k: v for k, v in first.items() if k != "handoff"},
+                            **({"state": state} if state is not None else {}),
+                            "handoff_withdrawn": "browser Fill is paused in this release (D191): use the answers file, or "
+                                                 "close this session and open one in manual mode"}
+                return {"replay": True, **first, **({"state": state} if state is not None else {})}
+            if FILL_PAUSED and mode == "assisted":
+                raise SessionRefused("assisted_paused: browser Fill is paused in this release (the owner's D191); open the "
+                                     "session in manual mode (careeros assist open JOB) and copy from the answers file")
             out, data = _open(store, writer, policy, profile, job_id, mode, facts=facts, library=library,
                               vault_root=vault_root, questions=questions, key=key)
             if data is not None:   # written before the session is committed: a file that can't be written refuses it
@@ -190,6 +226,80 @@ def open_session(store: Store, policy, profile, job_id: str, mode: str, *, facts
             written.unlink(missing_ok=True)
         raise
     return out
+
+
+def _replay_refused(store: Store, policy, profile, job_id: str, sid: str, first: dict, *, facts: list, library: dict,
+                    vault_root: Path, questions: list[dict] | None) -> str | None:
+    """Why an open session's replay may not return its first result now, or None (the D190 design, section 3, "Session
+    replay"; Codex H14): its own package must be ready (a manifest equal to a fresh build, the latest version, its files
+    as recorded), P1 must accept the job, a fresh authorization for its channel (direct) must pass, and no other session
+    of the role may be open or uncertain. In the caller's transaction."""
+    from .applications import sessions_waiting
+    from .submission import authorize
+    row = store.one("SELECT p.route FROM assist_sessions s JOIN packages p ON p.package_id = s.package_id "
+                    "WHERE s.session_id = ?", (sid,))
+    if row is not None and row["route"] == "standing":
+        return "session_withdrawn: its package was prepared under standing preparation, which is off"
+    route, basis = pkg.route_for(store, policy, job_id, profile)
+    if route is None:
+        return f"session_withdrawn: {basis}"
+    ready = pkg.readiness(store, policy, profile, job_id, facts=facts, library=library, vault_root=vault_root,
+                          questions=questions, package=first.get("package_id"))
+    if ready["state"] != "ready":
+        return f"session_superseded: its package is {ready['state'].replace('_', ' ')} ({'; '.join(ready['reasons'])})"
+    auth = authorize(store, policy, job_id, "direct", profile=profile)
+    if not auth.allowed:
+        return "session_withdrawn: " + "; ".join(f"{r['code']}: {r['detail']}" for r in auth.reasons)
+    others = sessions_waiting(store, job_id, session=sid)
+    if others:
+        return f"session_superseded: session {others[0]['session_id']} of this role is {others[0]['state']}"
+    return None
+
+
+def _handoff_file(vault_root: Path, session_id: str) -> Path:
+    return vault_root / "handoff" / f"{session_id.replace(':', '_')}.json"
+
+
+# the vault each store in this process wrote handoffs to (open_session): a store with no vault file of its own (one held
+# in memory) still finds the handoffs to withdraw
+_ROOTS: weakref.WeakKeyDictionary[Store, Path] = weakref.WeakKeyDictionary()
+
+
+def vault_root_of(store: Store) -> Path | None:
+    """The vault a store belongs to: a file-backed store's (its database is <vault>/data/careeros.db), else the vault this
+    process wrote its handoffs to (open_session), or None."""
+    if store.path != ":memory:":
+        db = Path(store.path)
+        if db.parent.name == "data":
+            return db.parent.parent
+    return _ROOTS.get(store)
+
+
+def remove_all_handoffs(root: Path) -> int:
+    """Remove every handoff file in the vault: with browser Fill paused (D191) no handoff may be loaded, so none is
+    legitimate. Reads no database; a file that cannot be removed is left for the next sweep. Returns how many it
+    removed."""
+    folder, removed = Path(root) / "handoff", 0
+    try:
+        files = sorted(folder.glob("*.json")) if folder.is_dir() else []
+    except OSError:
+        return 0
+    for file in files:
+        try:
+            file.unlink(missing_ok=True)
+            removed += 1
+        except OSError:
+            continue
+    return removed
+
+
+def withdraw_handoffs(store: Store, policy, profile, vault_root: Path, *, locked: bool = True) -> int:
+    """Remove every handoff file the extension could load. With browser Fill paused (the owner's D191) no handoff is
+    legitimate, so the sweep removes them all, with no database read: at every command's start and end, in a command
+    refused at the writer lock, around every review-page action and before any session is opened. The sessions and
+    their records stay, for you to close with what really happened. The arguments other than `vault_root` are kept for
+    the callers. Returns how many it removed."""
+    return remove_all_handoffs(vault_root)
 
 
 def _replayed(store: Store, event_type: str, key: str) -> dict | None:
@@ -263,10 +373,12 @@ def _open(store: Store, writer, policy, profile, job_id: str, mode: str, *, fact
 def close_session(store: Store, matrix, policy, session_id: str, outcome: str, *, key: str, evidence: str | None = None,
                   minutes: float | None = None, corrections: int | None = None, custom_questions: int | None = None,
                   login_steps: int | None = None, notes: str | None = None, reapply: str | None = None,
-                  confirm: str | None = None) -> dict:
+                  confirm: str | None = None, vault_root: Path | None = None) -> dict:
     """Close a session with what happened, by your account. `submitted` records the application (direct channel) with
     its evidence, through the same checks as `careeros applied`; `uncertain` blocks a new session for the role until a
-    later close says what really happened. A session already closed submitted or not submitted can't be closed again."""
+    later close says what really happened. A session already closed submitted or not submitted can't be closed again.
+    With `vault_root`, a session closed submitted or not submitted has its handoff file removed at once: the extension
+    can't load it again (the red team before Codex Pass 15, RT-01)."""
     if outcome not in OUTCOMES:
         raise ValueError("unknown_outcome")
     if outcome == "submitted":
@@ -309,6 +421,8 @@ def close_session(store: Store, matrix, policy, session_id: str, outcome: str, *
                      actor_type="human", actor_id="user",
                      metadata={"session_id": session_id, "outcome": outcome, "evidence": evidence, "application_id": app_id,
                                "reconciles": state == "uncertain", "outcome_id": outcome_id, "key": key})
+    if vault_root is not None and outcome != "uncertain":
+        _handoff_file(vault_root, session_id).unlink(missing_ok=True)
     return {"outcome_id": outcome_id, "application_id": app_id, "reconciled": state == "uncertain"}
 
 

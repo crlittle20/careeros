@@ -77,9 +77,11 @@ def init() -> Path:
     day0 = (parse_utc(world.day_start(1)) - timedelta(days=1)).isoformat(timespec="milliseconds").replace("+00:00", "Z")
     clock = FixedClock(day0)
     store = open_store(p["db"], clock)
+    from careeros.normalize.sanitize import canonical   # the registry write (the D190 design, section 3a, point 6)
     for e in world.legacy_boards():  # boards a pre-existing CareerOS already scanned (legacy, awaiting verification)
         store.writer("admin").insert("employers", {
-            "employer_id": f"{e['ats']}:{e['token']}", "name": e["name"], "parent": e["name"], "ats": e["ats"],
+            "employer_id": f"{e['ats']}:{e['token']}", "name": canonical(e["name"]), "parent": canonical(e["name"]),
+            "ats": e["ats"],
             "board_token": e["token"], "industry": "healthcare", "status": "verified", "verified_at": day0, "admitted_via": "legacy"})
     store.close()
     install_world(p)
@@ -127,13 +129,18 @@ def _act(ctx, day: int) -> None:
     Fixed idempotency keys keep the demo repeatable."""
     from careeros.pipeline import process
     from careeros.review.applications import application_matrix, record_application, update_application
-    from careeros.review.labels import record_label
+    from careeros.review.labels import capture, record_label, write_preview
     matrix = application_matrix()
     actions = world.ACTIVITY.get(day, [])
     for n, (action, job_id, value, *rest) in enumerate(actions):
         key = f"demo:{day}:{n}"
         if action == "label":
-            record_label(ctx.store, job_id, value, rest[0] if rest else None, key=key)
+            # an Apply or Stretch label from a preview of the job, as you give one (the D190 design, section 3)
+            preview = None
+            if value in ("apply", "stretch"):
+                preview = write_preview(ctx.store, capture(ctx.store, ctx.policy, ctx.profile, str(job_id)))
+            record_label(ctx.store, job_id, value, rest[0] if rest else None, key=key, preview=preview,
+                         policy=ctx.policy, applicant=ctx.profile)
         elif action == "apply":
             record_application(ctx.store, matrix, job_id, value, policy=ctx.policy, key=key)
         else:

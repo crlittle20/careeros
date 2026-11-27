@@ -26,7 +26,30 @@ from . import role_years
 from .profile import DEGREE_RANK, Profile, alternatives
 
 # Bump when gate logic changes: results recorded under an older version are re-evaluated automatically.
-RULES_VERSION = "gate-2026-11-13a"  # 11-13a: 11-11a with the D149/D150 fail-safes (Codex Pass 2 of the combined
+RULES_VERSION = "gate-2026-11-24"  # 11-24: the D190 design (P1): every open job is screened once more after the
+# upgrade, its source record recorded with each screening
+# 11-19b: the title never places a posting abroad (the red team's fr1-boards-3),
+# an older saved file's location waits for you (fr1-upgrade-2; the owner's D188)
+# 11-19a: a title naming a place abroad only takes the US away (the field sets the
+# country), a US region or state whose name holds a country's ("New England") is no place abroad, a Workable job's
+# country abroad beside a US state holding its name is written, a saved page's applicant locations and every Location
+# line are read whole (the red team before Codex Pass 15, RT-27 to RT-31; the owner's D186)
+# 11-18c: "US" beside a time zone's part, in either order, places nowhere (Codex
+# CR-2026-11-15-GATE-FIXES H29, Pass 13; the owner's D183); a Workable job's own country abroad is written (H30)
+# 11-18b: a field with a question mark, a quote or another sign, an empty
+# alternative or an open bracket places nowhere; a provider's typed country is written out (Codex CR-2026-11-15-GATE-FIXES
+# H22 and H23, Pass 12; the owner's D182)
+# 11-18a: a location field places a posting in the US only when every part of it is
+# plainly a US place or a neutral word (the owner's D180, after Codex CR-2026-11-15-GATE-FIXES H20, Pass 11)
+# 11-17b: a location field naming the US and another country, or excluding the
+# US, places a posting nowhere; a prose "Location-..." line is no label (D179, the red team before Codex Pass 11)
+# 11-17a: a pasted posting's location places it only when it is its own same-line
+# "Location:" or one you gave with --location for that posting, recorded with the write (Codex CR-2026-11-15-GATE-FIXES
+# H2-H6, Pass 7); every score made before it is re-screened once before it routes a standing package
+# 11-16a: the text never sets the country (Codex CR-2026-11-15-GATE-FIXES F1,
+# Passes 4-5): an unknown country keeps the location question even beside a state list in the text, and a score made
+# under an earlier version never routes a standing package (packages.route_for) until the job is re-screened
+# 11-13a: 11-11a with the D149/D150 fail-safes (Codex Pass 2 of the combined
 # candidate): a role years shortfall never rejects on its own; pay tiers and periods read every way when unclear; a
 # location conflict is to verify when the description names the home state; one new version, so every result is
 # judged again exactly once (not yet deployed)

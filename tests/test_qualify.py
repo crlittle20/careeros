@@ -4,7 +4,7 @@ from pathlib import Path
 from careeros.core.policy import load_policy
 from careeros.extract.rules import extract
 from careeros.normalize.posting import (canonical_url, classify_family, detect_country, detect_remote, employment_type,
-                                        excluded_term, home_pay_tier, norm, parse_comp, remote_states)
+                                        excluded_term, home_pay_tier, norm, parse_comp, remote_states, us_text_hint)
 from careeros.normalize.sanitize import html_to_text
 from careeros.paths import CONFIG_DIR
 from careeros.qualify.gate import evaluate
@@ -44,6 +44,15 @@ OSCAR_TIERS = ("Pay Transparency: The base pay for this role in the states of Ca
 # D155 (F6): "You are also eligible for monthly vacation accrual." holds an eligibility term, so the full Oscar wording
 # chooses no tier by label (pay_tier_unknown when it straddles the floor); the tier tests read it without that sentence
 OSCAR_PLAIN = OSCAR_TIERS.replace(" You are also eligible for monthly vacation accrual.", "")
+
+
+def text_country(location: str, text: str, remote_type: str) -> str:
+    """What the text says, as the hint the location question shows: "US" when the text gives a US hint, otherwise the
+    country the location field gives. The text alone never changes the stored country (Codex CR-2026-11-15-GATE-FIXES
+    F1, Pass 4; the owner's choice), and that is checked on every call."""
+    country = detect_country(location, text, remote_type)
+    assert country == detect_country(location, "", remote_type), f"the text changed the stored country: {text[:80]!r}"
+    return "US" if country == "unknown" and us_text_hint(text, location) else country
 
 
 class PayTests(unittest.TestCase):
@@ -1164,16 +1173,137 @@ class NormalizeTests(unittest.TestCase):
         self.assertNotEqual(canonical_url("https://acme.com/careers/job?gh_jid=81"), canonical_url("https://acme.com/careers/job?gh_jid=82"))
         self.assertEqual(detect_country("Dhaka, Bangladesh", "", "onsite"), "non_US")
 
-    def test_a_remote_posting_that_says_it_is_remote_in_the_us_is_placed_in_the_us(self):
+    def test_a_remote_posting_that_says_it_is_remote_in_the_us_gets_a_us_hint(self):
+        # text_country: the hint the location question shows; the text never sets the country (Pass 4)
         # the demo's pasted posting said only "Location: Remote" and, in its text, "This role is remote in the US" (2026-11-15)
-        self.assertEqual(detect_country("Remote", "Pay is good. This role is remote in the US.", "remote"), "US")
-        self.assertEqual(detect_country("Remote", "You may work remotely in the U.S. from any state.", "remote"), "US")
-        self.assertEqual(detect_country("Remote", "Candidates based in the USA are welcome.", "remote"), "US")
+        self.assertEqual(text_country("Remote", "Pay is good. This role is remote in the US.", "remote"), "US")
+        self.assertEqual(text_country("Remote", "This role is remote in the U.S. from any state.", "remote"), "US")
+        self.assertEqual(text_country("Remote", "Candidates based in the USA are welcome.", "remote"), "US")
         # "us" as a word on its own is not a country: "join us", "contact us in the morning"
-        self.assertEqual(detect_country("Remote", "Join us! Contact us in the morning.", "remote"), "unknown")
-        self.assertEqual(detect_country("Remote", "Tell us about the tools you use.", "remote"), "unknown")
+        self.assertEqual(text_country("Remote", "Join us! Contact us in the morning.", "remote"), "unknown")
+        self.assertEqual(text_country("Remote", "Tell us about the tools you use.", "remote"), "unknown")
         # a stated foreign location still wins over the body
-        self.assertEqual(detect_country("London, UK", "This role is remote in the US.", "onsite"), "non_US")
+        self.assertEqual(text_country("London, UK", "This role is remote in the US.", "onsite"), "non_US")
+        self.assertEqual(text_country("Remote - Canada", "This role is remote in the US.", "remote"), "non_US")
+        self.assertEqual(text_country("Remote", "The role can be performed from anywhere in the US.", "remote"), "US")
+        self.assertEqual(text_country("Remote", "Applicants must reside in the US.", "remote"), "US")
+
+    def test_us_wording_that_is_not_about_where_the_role_is_worked_leaves_the_country_open(self):
+        # Codex CR-2026-11-15-GATE-FIXES F1: a Canada-only role labelled "Remote" was placed in the US by these lines
+        for line in ("Our team is based in the US.", "Support clients based in the US.", "Must be authorized to work in the US.",
+                     "This role is not remote in the US.", "Applicants must not reside in the US.",
+                     "We work with partners in the US."):
+            with self.subTest(line=line):
+                self.assertEqual(text_country("Remote", f"Help our members. {line}", "remote"), "unknown")
+        # conflicting wording: the US statement beside another country leaves the question open
+        self.assertEqual(text_country("Remote", "This role is remote in the US. Candidates in Canada are welcome too.",
+                                        "remote"), "unknown")
+        # the control: the same posting without the other country is placed
+        self.assertEqual(text_country("Remote", "This role is remote in the US. Candidates are welcome.", "remote"), "US")
+
+    def test_united_states_named_anywhere_no_longer_places_a_posting(self):
+        # the owner's follow-up to F1 (2026-11-16): the older rule placed any text naming "united states" (or "US-based",
+        # "within the US") in the US, so a foreign role asking for US work authorization was placed
+        for line in ("Must be authorized to work in the United States.", "Must be legally authorized to work in the U.S. without sponsorship.",
+                     "Our team is based in the United States.", "We serve clients across the United States.",
+                     "Headquartered in the United States, we hire globally.", "The largest insurer in the United States.",
+                     "Our US-based team supports you.", "We have 30 locations in the US.", "Please contact us only by email.",
+                     "This role is not remote in the United States."):
+            with self.subTest(line=line):
+                self.assertEqual(text_country("Remote", f"Help our members. {line}", "remote"), "unknown")
+        # the controls: a sentence that starts with the role or its candidates, or the posting's own location line
+        for line in ("Candidates must reside in the United States.", "This position is remote within the United States.",
+                     "Location: Remote, United States", "Remote (United States)", "Work location: United States",
+                     "Applicants must be based in the U.S.A."):
+            with self.subTest(line=line):
+                self.assertEqual(text_country("Remote", f"Help our members.\n{line}", "remote"), "US")
+        self.assertEqual(text_country("Remote", "Location: United States. Also hiring in Canada.", "remote"), "unknown")
+
+    def test_only_a_sentence_about_this_role_or_its_candidates_places_a_posting(self):
+        # Codex CR-2026-11-15-GATE-FIXES Pass 2, F1: a Calgary opening was placed in the US by a negated line, a line about
+        # a team's support, and a pointer to another role. The owner chose strict sentences (2026-11-16).
+        calgary = "This opening is based in Calgary. "
+        self.assertEqual(text_country("Remote", calgary, "remote"), "unknown")   # the control
+        for line in ("Not open to remote United States applicants.", "This team provides remote U.S. support to customers.",
+                     "For a US-based remote role, see our other openings.",
+                     # loose wordings the strict rule no longer reads
+                     "You may work remotely in the U.S. from any state.", "Must reside in the United States.", "US residents only.",
+                     "This is a US-based remote role.", "This position is open to candidates located in the U.S.",
+                     # the statement must open the sentence
+                     "We welcome candidates based in the US.", "Unlike our Calgary openings, the role is remote in the US."):
+            with self.subTest(line=line):
+                self.assertEqual(text_country("Remote", calgary + line, "remote"), "unknown")
+                self.assertEqual(text_country("Remote", line, "remote"), "unknown")
+        # the role said to be somewhere else conflicts with a US sentence; a negation in the sentence never places
+        self.assertEqual(text_country("Remote", "This role is remote in the US. " + calgary, "remote"), "unknown")
+        self.assertEqual(text_country("Remote", "This position is based in the US but not in California.", "remote"), "unknown")
+        # "U.S." before a capital letter ends its sentence: the next sentence's negation is not read into this one
+        self.assertEqual(text_country("Remote", "This role is remote in the U.S. Pay is good.", "remote"), "US")
+        self.assertEqual(text_country("Remote", "This role is remote in the U.S. No relocation is needed.", "remote"), "US")
+
+    def test_the_whole_text_is_read_for_a_conflict_before_a_us_sentence_places_a_posting(self):
+        # Codex CR-2026-11-15-GATE-FIXES Pass 3, F1; the owner chose the whole-text veto (2026-11-16)
+        us = "This role is remote in the US."
+        pad = " Benefits include health coverage and paid time off." * 80   # past the old 3,000-character window
+        for text, why in ((us + pad + " Applicants must reside in Canada.", "another country late in a long description"),
+                          ("Location: Remote, United States\nWork Location: Calgary", "a second location line naming somewhere else"),
+                          (us + "\nWork Location: Calgary", "a location line naming somewhere else"),
+                          (us + " Candidates must reside in Calgary.", "the candidates said to be somewhere else"),
+                          (us + " The work will be performed in Calgary.", "the work said to be done somewhere else"),
+                          ("This role is remote in the US and candidates must reside in Calgary.", "a second clause in the same sentence"),
+                          (us + " This opening is based in Calgary and does not require travel.", "an unrelated negation beside the place"),
+                          ("This role is remote in the US and candidates in the US are ineligible.", "'ineligible' is a negation")):
+            with self.subTest(why=why):
+                self.assertEqual(text_country("Remote", text, "remote"), "unknown")
+        # the location field naming somewhere else is a conflict too
+        self.assertEqual(text_country("Calgary", us, "remote"), "unknown")
+        # the controls: the same US statements with nothing against them, or with a consistent location or state
+        for text in (us + pad, "Location: Remote, United States\n" + us, "Location: Remote - Texas\n" + us,
+                     us + " You may work remotely from anywhere in the US.",
+                     "Candidates must reside in the United States. Our employees are located in all 50 states.",
+                     "Location: Remote\n" + us, us + " Candidates must reside in Texas or Ohio.",
+                     us + " Candidates may be located in all 50 states.", us + " Applicants may live in any state."):
+            with self.subTest(text=text[:60]):
+                self.assertEqual(text_country("Remote", text, "remote"), "US")
+        self.assertEqual(text_country("", us, "remote"), "US")
+        self.assertEqual(text_country("Remote, US", "Work Location: Calgary", "remote"), "US")   # the stated field decides first
+        # a description too long to read whole never places
+        self.assertEqual(text_country("Remote", us + " x" * 100_001, "remote"), "unknown")
+
+    def test_the_text_never_sets_the_country_it_is_a_hint_with_the_location_question(self):
+        # Codex CR-2026-11-15-GATE-FIXES Pass 4, F1: wordings that beat every text rule; the owner chose "text is a hint
+        # only": the stored country comes from the location field alone
+        us = "This role is remote in the US. "
+        for text in (us + "The work will be performed only in Calgary.",
+                     "Location: Remote, United States\nWork Location: Calgary (US travel only)",
+                     us + "U.S. applicants are ineligible.", "This role is remote in the US or Calgary.",
+                     us + "Applicants must be Calgary residents.", us + "Only Calgary applicants may apply.",
+                     "This role is remote in the US during training and must be performed in Calgary afterward.",
+                     us, "Location: Remote, United States", "Candidates must reside in the United States."):
+            with self.subTest(text=text[:60]):
+                self.assertEqual(detect_country("Remote", text, "remote"), "unknown")
+                self.assertEqual(detect_country("", text, "remote"), "unknown")
+        # the hint is the posting's own sentence or location line
+        self.assertEqual(us_text_hint("Pay is good. This role is remote in the US. Apply now.", "Remote"), "This role is remote in the US")
+        self.assertEqual(us_text_hint("Help.\nLocation: Remote, United States", "Remote"), "Location: Remote, United States")
+        self.assertIsNone(us_text_hint("Our team is based in the US.", "Remote"))
+        # the location field still decides
+        self.assertEqual(detect_country("Remote - US", "This opening is based in Calgary.", "remote"), "US")
+        self.assertEqual(detect_country("Remote - Canada", us, "remote"), "non_US")
+        self.assertEqual(detect_country("Austin, TX", "", "onsite"), "US")
+
+    def test_the_state_list_reader_keeps_its_own_exclusion_words(self):
+        # Codex Pass 3 (F1 recommendation): the sentence negation added on 2026-11-16 took the state-list reader's name,
+        # so these exclusions were read as the only states allowed
+        from careeros.normalize.posting import _state_lists
+        for text in ("We are unable to hire in the following states: Florida, Georgia.",
+                     "Excluding the following states: Florida, Georgia.", "Ineligible states: Florida, Georgia."):
+            with self.subTest(text=text):
+                rows = [(sorted(a), sorted(b)) for _, a, b, _ in _state_lists(text)]
+                self.assertTrue(rows)
+                self.assertTrue(all(row == ([], ["FL", "GA"]) for row in rows), rows)
+        self.assertEqual([(sorted(a), sorted(b)) for _, a, b, _ in _state_lists("Open to residents of the following states: Florida, Georgia.")],
+                         [(["FL", "GA"], [])])   # the control: a plain list limits the role
 
     def test_requirements_fingerprint_tolerates_missing_years(self):
         from careeros.extract.model import Extraction, Requirement

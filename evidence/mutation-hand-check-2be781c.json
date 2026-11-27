@@ -1,0 +1,685 @@
+{
+ "what": "The Codex Pass 15 fixes (the owner's D199: H37-H41, F8, the release-scan fixture), built on codex-p1-gatefixes after BATCH_5: the end-of-round hand check, planted by hand in stages (D152) as in mutation-hand-check-579bd31.json, each defect alone in a plain copy of the worktree.",
+ "scope": "every defect whose anchor lies in a function or module statement of careeros/ that changed between a1bff5e and 2be781c (scratchpad b5_scope.py), planted at 3249904 (careeros/ is the same at 2be781c)",
+ "base": "a1bff5e",
+ "rev": "2be781c",
+ "python": "3.14.10",
+ "node_version": "v24.22.1",
+ "defined": 2483,
+ "checked": 93,
+ "caught": 92,
+ "stages": {
+  "stage 1": {
+   "rev": "3249904",
+   "against": "the 15 related modules: tests.test_pass15 tests.test_batch5 tests.test_p1 tests.test_alerts tests.test_gmail tests.test_d188 tests.test_d190 tests.test_d192 tests.test_intake_identity tests.test_v26_discovery tests.test_saved tests.test_pipeline tests.test_review_page tests.test_packages tests.test_batch3",
+   "defects": 93
+  },
+  "stage 2": {
+   "rev": "2be781c",
+   "against": "the other 47 test modules, failfast (stage 1's survivors)",
+   "defects": 3
+  }
+ },
+ "survived": [
+  {
+   "mutation": "BATCH_5 C2: the apply link a preview binds is never shown",
+   "file": "careeros/review/labels.py",
+   "why": "equivalent since H37 (d30d4e6): the defect blanks the apply link in card_facts, which now only feeds the copy comparison; the card shows the record's apply link in its record section (record_items, guarded by the H37 defects on a named or unnamed key), and a copy's differing apply link by the generic line, both values whole, so every surface shows the same values; survives the whole suite at 2be781c (stage 2); kept for a decision, not retired (a re-anchor onto record_items would test the card's own line)"
+  }
+ ],
+ "note": "the tool records each defect's verdict (CAUGHT when the planted copy's run fails), not the failing tests' names; stage 2 settles a stage-1 survivor; the round's commits each ran their own new and re-anchored defects at the commit, every one caught",
+ "previous": "evidence/mutation-hand-check-579bd31.json",
+ "results": [
+  {
+   "mutation": "RT-26: a job site's section heading is taken as the title",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "2be781c"
+  },
+  {
+   "mutation": "Pass 5 F1: a paste takes its location field from a phrase in its prose ('Previously advertised as Remote - US')",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "RT-26: the first line is cut at ' at ' though a Company line names the employer",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "2be781c"
+  },
+  {
+   "mutation": "batch 3 B.5 (gr1-faults-0): a posting read but not stored leaves the label routing",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "RT-28/29: a paste keeps its first Location line, cut at 120 characters",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "RT-28: a paste's location is cut at 120 characters",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "B.5: this engine's own failure is dropped once the job's last read is no older",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "hr1-routes-0: a hold recorded for the posting under another id never reaches its job of record",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "hr1-routes-0: a hold kept beside the database holds nothing",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 6a (part d): a differing copy recorded after the preview leaves its digest unchanged",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 1: a paste's company makes its id as typed",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 6a: the review page keeps no preview, so its Apply never records",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 6a (Codex H25): a hold that reaches the job after the preview leaves its digest unchanged",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 6b (part b): a label routes after a reader update changed a value its card showed",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 6b (part c): a label routes while the job waits for screening",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 6b (part a): a label routes for a posting that changed after its preview",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 6b (part d): a label routes past a copy that says something else, recorded after it",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 6b (Codex H25): a label routes past a hold its preview never showed",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 6b (part c): a label routes after the screening's flags changed from those its card showed",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 7b (Codex H18): a write-ahead hold holds nothing",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 7b (section 7): a file hold its read's committed transaction cleared still holds",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 6b: a label is checked with no applicant profile, its screening never shown current",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 7b (Codex H21 to H24): a copy's stored read lifts every hold",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 7b (Z1): a board read of one occurrence clears the write-ahead hold of another of the batch",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "D190 P1 part 7b (Codex H20): a write-ahead hold is never cleared by its own read",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 A1: an unreadable pending-holds file is not a problem",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 A2: a line of the pending-holds file that is not a hold is not a problem",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 A1/A2: a pending-holds file that cannot be read in full holds no label",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C4: a label surface shows only the first eight flags its preview binds",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C1: a pay with one end is shown as a range made from it",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 A2: a rewrite of the pending-holds file drops a line that is not a hold",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C2: the time zone a preview binds is never shown",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C2: the excluded states a preview binds are never shown",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C1: a label surface shows every pay as yearly dollars",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C2: the deadline a preview binds is never shown",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C2: a label surface does not show the holds its preview acknowledges",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C2: the apply link a preview binds is never shown",
+   "file": "careeros/review/labels.py",
+   "result": "SURVIVED",
+   "stage": "stage 2",
+   "rev": "2be781c"
+  },
+  {
+   "mutation": "BATCH_5 C: the CLI preview shows part of what the label approves",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C: the review page's card shows part of what its label approves",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C2: a label surface names a differing copy but not what it says",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C1: the card's pay names no currency",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 D1: a saved page's pay in months, weeks or days is read as a year",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C1: the card's pay makes a range from one end",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 D1: a currency the saved page leaves out is recorded as stated",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 D1: one stated amount is recorded as a stated range",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 D1: a pay period the saved page leaves out is recorded as stated",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 D1: a paste's title taken from its first line is recorded as stated",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 D1: a paste's value cut to length is recorded as stated",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 D1: a paste's company read from a Workday link's host is recorded as stated",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Z8: a legacy hold whose posting cannot be read reaches no job",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Z8: a hold reaching every job keeps reaching every job once a job has its id",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 D1: a label surface does not say what CareerOS read by heuristic",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 B3: a joined twin's copy is shown as the job of record's own",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C: a differing copy's values are captured without the card facts it states otherwise",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Z8: a hold reaching every job is shown on another job's card as that job's own failed read",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C: the card leaves out each value a differing copy states otherwise",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 B3: a held label names the job of record, not the twin whose copy holds it",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C: a differing copy is captured as an observation id, so a surface shows no value",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 D1: a saved page's unit CareerOS does not understand is recorded as a stated year",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 D1: the card does not say a pay unit was stated but not understood",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "BATCH_5 C: a differing copy's long text is shown by its first characters, not where it differs",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H41: the replacement of the pending-holds file is not synced before it replaces the file",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H41: the pending-holds file is written over in place after its replacement is written",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H41: the pending-holds file is rewritten in place (a full disk empties it)",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H40: P1 reads the pending-holds file again for the holds it keeps",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H40: the capture reads the pending-holds file again for the holds it shows",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H41: a replacement that failed is left beside the pending-holds file",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H40: the file's health is read apart from the decision's reading",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H40: a file a check says is missing holds nothing, though it is there",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H40: a capture offers a preview while the pending-holds file cannot be read",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H39: a board read clears the holds that reach its job only through every_job",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H39: the posting's own failed reads include those that reach every job",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H40: any error reading the pending-holds file counts as no file",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H39: a hold that reaches every job no longer holds another job's label",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H38: a saved page's pay unit not understood is kept to 40 characters",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H39: open_holds asked for the posting's own holds gives every-job ones too",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H38: a paste's text past its limit is cut unmarked",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H38: blank space past a paste's limit marks its text cut",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H38: a paste's location lines longer than the limit are cut unmarked",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: the card leaves out the countries the board types (a named key dropped)",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: the card leaves out the posting's text",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: a source-record key the card does not name is left out",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: the review page puts the posting's text in unescaped",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: a pay amount is rounded to two decimals on the card",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: the review page's card leaves out the posting's text",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: a pay or employer field the card does not name is left out",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: the card leaves out where the location came from",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: the review page's pay row rounds the amounts",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: a differing copy's field is cut at 160 characters",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: a differing copy's text is cut at 400 characters",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: the card shows a screening failure or flag by its detail only",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: a copy's field whose card fact is the same is not shown, though the field differs",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  },
+  {
+   "mutation": "Codex H37: a differing copy's whole text is not shown",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "3249904"
+  }
+ ]
+}

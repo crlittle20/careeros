@@ -142,15 +142,15 @@ review by a person or a tool outside this chain is still recommended.
 ## 4. How tests validated behavior
 
 - **Tests come with the change.** Each milestone that changed system behaviour or documentation added or updated tests
-  for the change. The suite has 1629 tests on synthetic fixtures, fake transports and fixed clocks, and
+  for the change. The suite has 2187 tests on synthetic fixtures, fake transports and fixed clocks, and
   `tools/validate.py` runs it with outbound network refused.
 - **Planted defects check the tests themselves.** `tools/mutate.py` deliberately breaks each safety rule, one at a
-  time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 1831
+  time, in a scratch copy, and the suite must fail; a defect that survives is a rule with no real test. There are 2529
   such defects. The latest full run (2026-11-05) caught all 1066 defined at the time, each by a real failing test with the whole suite
   loaded (`evidence/mutation-receipt.json`). Every full run since the first, with what each survivor exposed, is in [testing.md](testing.md). Spot checks made
   between 2026-10-13 and the first full run (2026-10-14) proved nothing: the tool's scratch copies lacked files some
   tests need, so every defect looked caught. The tool now refuses to run unless an unmutated copy passes.
-- **Expectations do not come from the system.** The Functional MVP gate derives its 92 checks from the postings and the
+- **Expectations do not come from the system.** The Functional MVP gate derives its 95 checks from the postings and the
   policy. For example, it recomputes tiers from the thresholds rather than reading the stored tier.
 - **Proof that a gate can fail.** Both fixes prompted by the Functional MVP gate were proven by running the gate against
   the code from before each fix: it graded the affected requirement FAIL.

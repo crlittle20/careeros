@@ -42,9 +42,9 @@ class ApplicationLogicTests(unittest.TestCase):
     def setUp(self):
         self.store, self.clock = new_store()
         add_job(self.store, "gh:acme:1")
-        add_job(self.store, "gh:acme:2", variant_of="gh:acme:1")  # same requisition, other location
+        add_job(self.store, "gh:acme:2", duplicate_of="gh:acme:1")  # the same posting at another link (D188: only a duplicate is one role)
         add_job(self.store, "gh:acme:3", duplicate_of="gh:acme:1")
-        add_job(self.store, "gh:acme:4", repost_of="gh:acme:2")  # the same role listed again later
+        add_job(self.store, "gh:acme:4", duplicate_of="gh:acme:2")  # the same posting at a third link
         add_job(self.store, "gh:acme:9", title="Claims Analyst", title_norm="claims analyst")
 
     def record(self, job="gh:acme:1", channel="direct", key="k1", **kw):
@@ -86,7 +86,7 @@ class ApplicationLogicTests(unittest.TestCase):
             with self.subTest(final=final):
                 store, _ = new_store()
                 add_job(store, "gh:acme:1")
-                add_job(store, "gh:acme:2", variant_of="gh:acme:1")
+                add_job(store, "gh:acme:2", duplicate_of="gh:acme:1")
                 app_id = record_application(store, APP, "gh:acme:1", "direct", policy=POLICY, key="a1")
                 for n, state in enumerate(steps):
                     update_application(store, APP, app_id, state, key=f"s{n}")
@@ -184,7 +184,7 @@ class ApplicationLogicTests(unittest.TestCase):
             with self.subTest(path=name):
                 store, clock = new_store()
                 add_job(store, "gh:acme:1")
-                add_job(store, "gh:acme:2", variant_of="gh:acme:1")
+                add_job(store, "gh:acme:2", duplicate_of="gh:acme:1")
                 app_id = record_application(store, APP, "gh:acme:1", "agency", agency="Synthetic Agency", policy=POLICY, key="a1")
                 for n, step in enumerate(steps):
                     clock.advance(seconds=1)
@@ -300,6 +300,9 @@ class ApplicationLogicTests(unittest.TestCase):
         self.assertEqual((args.state, args.followed_up, args.notes), (None, True, "called"))
 
     def test_a_possible_duplicate_or_the_same_title_elsewhere_holds_until_confirmed(self):
+        """The owner's D188: only one exact posting link makes two postings one job, so a possible duplicate or the same
+        title elsewhere is shown on the card and as a warning, never held; a same-opening link you made still holds. (The
+        name, from before D188, is the one the mutation receipt and docs/defect_coverage.md record.)"""
         add_job(self.store, "gh:acme:20", title="Pricing Analyst", title_norm="pricing analyst", location_raw="Boston")
         add_job(self.store, "gh:acme:21", title="Pricing Analyst", title_norm="pricing analyst", location_raw="New York")
         add_job(self.store, "gh:acme:30", title="Claims Specialist", title_norm="claims specialist")
@@ -311,9 +314,10 @@ class ApplicationLogicTests(unittest.TestCase):
         for applied, other in (("gh:acme:20", "gh:acme:21"), ("gh:acme:30", "gh:acme:31")):
             self.record(applied, key=f"a{applied}")
             self.assertEqual(application_status(self.store, other)["possibly_applied"], [applied])  # the card says so too
-            with self.assertRaisesRegex(ApplicationHold, "may be the same role"):
-                self.record(other, key=f"b{other}")
-            self.record(other, key=f"c{other}", confirm="different team and requisition per the recruiter")
+            check = preflight(self.store, other, "direct")
+            self.assertEqual(check.decision, "clear")
+            self.assertTrue(any("may be the same role" in r["detail"] for r in check.reasons if r["level"] == "warn"), check)
+            self.record(other, key=f"b{other}")
         self.record("gh:acme:40", key="d1")
         with self.assertRaisesRegex(ApplicationHold, "you applied to this role on"):  # a same-opening link is the same role
             self.record("gh:acme:41", key="d2")
@@ -339,7 +343,7 @@ class ApplicationLogicTests(unittest.TestCase):
     def test_an_unfinished_duplicate_search_is_never_clearance(self):
         add_job(self.store, "gh:big:0", title="Ops Analyst", title_norm="ops analyst")
         for n in range(1, 205):
-            add_job(self.store, f"gh:big:{n}", title="Ops Analyst", title_norm="ops analyst", variant_of="gh:big:0")
+            add_job(self.store, f"gh:big:{n}", title="Ops Analyst", title_norm="ops analyst", duplicate_of="gh:big:0")
         members, complete = role_group_resolved(self.store, "gh:big:7")
         self.assertFalse(complete)
         with self.assertRaisesRegex(ApplicationHold, "check by hand"):

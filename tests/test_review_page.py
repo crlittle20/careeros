@@ -12,10 +12,9 @@ from types import SimpleNamespace
 from careeros import cli
 from careeros.pipeline import Context
 from careeros.review.explain import _verdict
-from careeros.review.labels import record_label
 from careeros.review.report import _plain_card, build_report
 
-from tests.helpers import JOB_MATRIX, add_job
+from tests.helpers import JOB_MATRIX, add_job, make_previewable, stored_label
 from tests.test_label_findings import PROFILE
 from tests.test_observability import NOW, StatusMixin, ago, scored
 from tests.test_saved import POLICY
@@ -40,7 +39,7 @@ class JobIdTests(StatusMixin, unittest.TestCase):
         return out.getvalue()
 
     def test_the_plain_card_the_shortlist_card_and_the_applications_card_show_the_id(self):
-        record_label(self.store, scored(self.store, "gh:a&b:1", "B", title="Claims Analyst"), "apply", None, key="k1")
+        stored_label(self.store, scored(self.store, "gh:a&b:1", "B", title="Claims Analyst"), "apply", None, key="k1")
         self.store.writer("tracker").insert("applications", {
             "application_id": "app:<1>", "workflow_id": "application:app:1", "job_id": "gh:a&b:1", "channel": "direct",
             "applied_at": ago(2), "first_seen_at": ago(2), "current_state": "applied", "entered_state_at": ago(2)})
@@ -55,7 +54,7 @@ class JobIdTests(StatusMixin, unittest.TestCase):
     def test_the_shortlist_command_prints_the_id_on_each_item(self):
         self.assertIn("Shortlist is empty", self.shortlist_cli())
         scored(self.store, "gh:a:1", "A", title="Claims Analyst", employer_name="Synth Health")
-        record_label(self.store, scored(self.store, "gh:a:2", "near_miss", title="Rebate Analyst"), "stretch", None, key="k1")
+        stored_label(self.store, scored(self.store, "gh:a:2", "near_miss", title="Rebate Analyst"), "stretch", None, key="k1")
         items = [line for line in self.shortlist_cli().splitlines() if line.startswith("- ")]
         self.assertEqual(sorted(items), ["- gh:a:1 | Claims Analyst | Synth Health | open | tier A None",
                                          "- gh:a:2 | Rebate Analyst | Acme Health | open | tier near_miss None"])
@@ -333,22 +332,25 @@ class FollowUpRuleTests(StatusMixin, unittest.TestCase):
 
 
 class ShortlistFormTests(StatusMixin, unittest.TestCase):
-    """OPP-75: the shortlist card has the label and "I applied" forms beside Dismiss: the plain card's own form helpers, so
-    they post to the same endpoints with the server's protections (token, one-time key bound to action and target)."""
+    """OPP-75: the shortlist card has the "I applied" form beside Dismiss: the plain card's own form helpers, so they
+    post to the same endpoints with the server's protections (token, one-time key bound to action and target). It offers
+    no label: it does not show everything a label approves, so it links to the job's own card, which does (BATCH_5 C3)."""
 
     def test_the_shortlist_card_offers_label_i_applied_and_dismiss(self):
         from tests.test_applications import forms
-        record_label(self.store, scored(self.store, "gh:f:1", "near_miss"), "stretch", None, key="k1")
+        stored_label(self.store, make_previewable(self.store, POLICY, PROFILE, scored(self.store, "gh:f:1", "near_miss")),
+                     "stretch", None, key="k1")
         static = card_of(build_report(self.store, PROFILE, POLICY), "sl-gh:f:1")   # no server: the commands instead
-        for hint in ("careeros label gh:f:1 apply|stretch|skip", "careeros applied gh:f:1 --channel direct",
+        for hint in ("careeros label gh:f:1 apply", "careeros applied gh:f:1 --channel direct",
                      "careeros dismiss gh:f:1 --reason REASON"):
             self.assertIn(hint, static)
         keys: dict = {}
         card = card_of(build_report(self.store, PROFILE, POLICY, token="t", form_keys=keys), "sl-gh:f:1")
         found = forms(card)
-        self.assertEqual([(a, t) for a, t, _ in found], [("label", "gh:f:1"), ("apply", "gh:f:1"), ("dismiss", "gh:f:1")])
-        self.assertEqual([keys[k] for _, _, k in found], [("label", "gh:f:1"), ("apply", "gh:f:1"), ("dismiss", "gh:f:1")])
-        self.assertIn('<button name="label" value="apply">Apply</button>', card)
+        self.assertEqual([(a, t) for a, t, _ in found], [("apply", "gh:f:1"), ("dismiss", "gh:f:1")])
+        self.assertEqual([keys[k] for _, _, k in found], [("apply", "gh:f:1"), ("dismiss", "gh:f:1")])
+        self.assertNotIn('name="label"', card)
+        self.assertIn('href="#gh:f:1"', card)   # to the card that shows what a label approves
         self.assertIn("<button>I applied</button>", card)
 
     def test_label_and_i_applied_from_the_shortlist_card_through_the_server(self):
@@ -360,15 +362,20 @@ class ShortlistFormTests(StatusMixin, unittest.TestCase):
 
         from careeros.review.server import make_handler
         from tests.test_applications import forms
-        record_label(self.store, scored(self.store, "gh:f:2", "near_miss"), "stretch", None, key="k1")
+        stored_label(self.store, make_previewable(self.store, POLICY, PROFILE, scored(self.store, "gh:f:2", "near_miss")),
+                     "stretch", None, key="k1")
         token = "shortlist-form-token"
         server = HTTPServer(("127.0.0.1", 0), make_handler(self.store, PROFILE, POLICY, token, Path(self.tmp.name) / "writer.lock", {}))
         threading.Thread(target=server.serve_forever, daemon=True).start()
         base = f"http://127.0.0.1:{server.server_address[1]}"
         try:
             card = lambda: forms(card_of(httpx.get(f"{base}/?t={token}").text, "sl-gh:f:2"))
-            label_key = next(k for a, t, k in card() if a == "label")
-            reply = httpx.post(f"{base}/label?t={token}", data={"target": "gh:f:2", "key": label_key, "label": "apply", "reason": ""})
+            page = card_of(httpx.get(f"{base}/?t={token}").text, "gh:f:2")   # the job's own card (BATCH_5 C3)
+            label_key = next(k for a, t, k in forms(page) if a == "label")
+            import re
+            digest = re.search(r'name="digest" value="([^"]+)"', page).group(1)   # the card's preview (the D190 design)
+            reply = httpx.post(f"{base}/label?t={token}", data={"target": "gh:f:2", "key": label_key, "label": "apply", "reason": "",
+                                                                 "digest": digest})
             self.assertEqual(reply.status_code, 303)
             self.assertEqual(self.store.one("SELECT label FROM labels WHERE job_id = 'gh:f:2' ORDER BY at DESC, rowid DESC")["label"],
                              "apply")
@@ -380,7 +387,7 @@ class ShortlistFormTests(StatusMixin, unittest.TestCase):
                                                                          "agency": "", "from": "sl"})
             self.assertEqual(reply.status_code, 303)
             self.assertEqual(self.store.one("SELECT job_id FROM applications")["job_id"], "gh:f:2")
-            self.assertEqual([a for a, _, _ in card()], ["label", "dismiss"])   # applied: no second "I applied"
+            self.assertEqual([a for a, _, _ in card()], ["dismiss"])   # applied: no second "I applied"
         finally:
             server.shutdown()
             server.server_close()
@@ -510,7 +517,7 @@ class ConfirmationTests(ServerMixin, unittest.TestCase):
                          [(job, "pay", "below <my> floor")])
 
     def test_i_applied_names_the_posting_and_channel_and_returns_to_its_card(self):
-        record_label(self.store, scored(self.store, "gh:c:2", "B", title="Rebate Analyst"), "apply", None, key="k1")
+        stored_label(self.store, scored(self.store, "gh:c:2", "B", title="Rebate Analyst"), "apply", None, key="k1")
         page = self.get()
         for origin, card_id in (("card", "gh:c:2"), ("sl", "sl-gh:c:2")):   # the posting's card, then the shortlist card
             key = self.form(card_of(page, card_id), "apply", "gh:c:2")
@@ -531,7 +538,7 @@ class ConfirmationTests(ServerMixin, unittest.TestCase):
                          ["gh:c:2", "sl-gh:c:2", "night-gh:c:2", "gh:c:2"])
 
     def test_i_applied_shows_the_assist_close_command_instead_of_confirm_and_recording_checks_again(self):
-        record_label(self.store, scored(self.store, "gh:c:3", "B"), "apply", None, key="k1")
+        stored_label(self.store, scored(self.store, "gh:c:3", "B"), "apply", None, key="k1")
         package_at(self.store, "gh:c:3", 1, days=1)
 
         def session(sid: str) -> None:
@@ -753,7 +760,7 @@ class VoidApplicationTests(ServerMixin, unittest.TestCase):
         from careeros.review.applications import application_matrix, record_application
         from careeros.review.shortlist import shortlist
         job = scored(self.store, "gh:v:1", "B", title="Claims <Analyst>")
-        record_label(self.store, job, "apply", None, key="k1")
+        stored_label(self.store, job, "apply", None, key="k1")
         app_id = record_application(self.store, application_matrix(), job, "direct", policy=POLICY, key="a1")
         page = self.get()
         card = card_of(page, app_id)
@@ -834,7 +841,7 @@ class SafeFormTests(ServerMixin, unittest.TestCase):
     def application(self):
         from careeros.review.applications import application_matrix, record_application
         job = scored(self.store, "gh:s:1", "B", title="Claims Analyst")
-        record_label(self.store, job, "apply", None, key="k1")
+        stored_label(self.store, job, "apply", None, key="k1")
         return job, record_application(self.store, application_matrix(), job, "direct", policy=POLICY, key="a1")
 
     def test_no_status_is_preselected_and_enter_in_a_note_records_nothing(self):
@@ -846,7 +853,7 @@ class SafeFormTests(ServerMixin, unittest.TestCase):
         reply = self.post("status", target=app_id, key=self.form(card, "status", app_id), state="", notes="pressed Enter")
         self.assertEqual(reply.status_code, 400)   # a submission without a choice records nothing
         self.assertEqual(self.store.one("SELECT current_state FROM applications")["current_state"], "applied")
-        for html in (card_of(page, job), _night_label_form(job, self.token, {})):
+        for html in (card_of(page, job), _night_label_form(self.store, job, self.token, {})):
             with self.subTest(form=html[:40]):
                 first = html.index("<button")
                 self.assertEqual(html[first:first + len(NO_ENTER)], NO_ENTER)   # Enter submits with the first button
@@ -855,8 +862,10 @@ class SafeFormTests(ServerMixin, unittest.TestCase):
     def test_a_form_already_used_answers_409_and_records_nothing_more(self):
         job = scored(self.store, "gh:s:2", "B", title="Claims Analyst")
         key = self.form(self.get(), "label", job)
-        self.assertEqual(self.post("label", target=job, key=key, label="skip", reason="").status_code, 303)
-        again = self.post("label", target=job, key=key, label="apply", reason="")   # a second click on another button
+        from careeros.review.labels import opening_digest, opening_of
+        seen = opening_digest(opening_of(self.store, job))   # the opening the card showed (the red team's batch 3, B.2)
+        self.assertEqual(self.post("label", target=job, key=key, label="skip", reason="", seen=seen).status_code, 303)
+        again = self.post("label", target=job, key=key, label="apply", reason="", seen=seen)   # another button
         self.assertEqual(again.status_code, 409)
         self.assertIn("already used for a different choice", again.text)
         self.assertEqual([r["label"] for r in self.store.all("SELECT label FROM labels")], ["skip"])

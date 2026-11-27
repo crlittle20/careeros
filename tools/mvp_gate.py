@@ -21,6 +21,7 @@ timestamps, hashes of files up to 20 MB) to prove the demo never touched it.
 from __future__ import annotations
 
 import hashlib
+import html
 import imaplib
 import io
 import json
@@ -34,6 +35,7 @@ import sys
 import tempfile
 import time
 import webbrowser
+from types import SimpleNamespace
 from contextlib import ExitStack, redirect_stderr, redirect_stdout
 from datetime import datetime, timezone
 from pathlib import Path
@@ -53,6 +55,10 @@ from careeros.core.locks import SingleWriterLock  # noqa: E402
 from careeros.core.policy import load_policy  # noqa: E402
 from careeros.demo import sandbox, world  # noqa: E402
 from careeros.discovery.http import PROVIDER_HOSTS  # noqa: E402
+from careeros.normalize.posting import RawPosting, detect_country, us_text_hint  # noqa: E402
+from careeros.pipeline import job_view, normalized_fields  # noqa: E402
+from careeros.qualify.facts import decisive_unknowns, eligibility_facts  # noqa: E402
+from careeros.qualify.gate import GateResult  # noqa: E402
 from careeros.extract import ai  # noqa: E402
 from careeros.review.explain import FIELDS  # noqa: E402
 
@@ -286,8 +292,52 @@ def assess(gate: Gate, jail: Jail, demo: Path, private: Path, private_before: di
     gate.check(item, "remote scope, state limits, pay range and unit, and time zone match the posting text", not wrong, wrong or f"{len(expect)} postings")
     incomplete = [j for j, r in jobs.items() if not (r["title_norm"] and r["remote_scope"] and r["country"] and r["content_fingerprint"])]
     gate.check(item, "every job has a normalised title, remote scope, country and content fingerprint", not incomplete, incomplete)
-    gate.check(item, "every job is placed in the US", {r["country"] for r in jobs.values()} == {"US"},
-               {r["country"] for r in jobs.values()})
+    # G1 (Codex CR-2026-11-15-GATE-FIXES F1, Pass 4; the owner's choice "text is a hint only"): only a posting's location
+    # field places it. The pasted posting's field says only "Remote" and its text says "remote in the US": it stays
+    # open, and its location question quotes that sentence as a hint, so standing preparation waits for you.
+    gate.check(item, "every board job is placed in the US by its location field",
+               {jobs[j]["country"] for j in board_jobs} == {"US"}, {jobs[j]["country"] for j in board_jobs})
+    question = []
+    for row in pasted:
+        facts = eligibility_facts(job_view(row), [], GateResult("eligible"), policy)
+        question = [f for f in decisive_unknowns(facts) if f["facet"] == "location_state"]
+    gate.check(item, "the pasted posting (location field 'Remote', text 'remote in the US') stays unplaced, and its location "
+                     "question quotes the text as a hint",
+               len(pasted) == 1 and pasted[0]["country"] == "unknown" and len(question) == 1
+               and "the text says the role is in the US" in question[0]["detail"]
+               and "remote in the US" in (question[0]["evidence"] or ""),
+               [(p["country"], question) for p in pasted])
+    # the demo has only US postings, so the rule is also asked about wording that must not place a posting (Codex
+    # CR-2026-11-15-GATE-FIXES F6: a rule that placed everything in the US passed the check above), in the parser and
+    # through the ingest step that stores the country (pipeline.normalized_fields; Pass 2, F6). Since Pass 4 no text
+    # places a posting, whatever it says; only the location field does.
+    calgary = "This opening is based in Calgary. "
+    us = "This role is remote in the US. "
+    probes = {("Remote", us): "unknown", ("Remote", "Location: Remote, United States"): "unknown",
+              ("", "Candidates must reside in the United States."): "unknown",
+              ("Remote", "Our team is based in the US."): "unknown", ("Remote", "Must be authorized to work in the US."): "unknown",
+              ("Remote", calgary + "Not open to remote United States applicants."): "unknown",
+              ("Remote", calgary + "For a US-based remote role, see our other openings."): "unknown",
+              ("Remote", us + "Candidates must reside in Calgary."): "unknown",
+              ("Remote", us + "The work will be performed only in Calgary."): "unknown",
+              ("Remote", "This role is remote in the US or Calgary."): "unknown",
+              ("Remote", us + "Applicants must be Calgary residents."): "unknown",
+              ("Remote - Canada", us): "non_US", ("Remote - US", calgary): "US", ("Austin, TX", ""): "US"}
+    ingest_ctx = SimpleNamespace(policy=policy, profile=SimpleNamespace(state=None))
+
+    def stored_country(loc, text):
+        posting = RawPosting("greenhouse", "gateprobe", "1", "Claims Analyst", loc, description_text=text)
+        return normalized_fields(ingest_ctx, None, posting)["country"]
+    misplaced = {text: (found, want) for (loc, text), want in probes.items()
+                 if (found := (detect_country(loc, text, "remote"), stored_country(loc, text))) != (want, want)}
+    gate.check(item, "only the location field places a posting, in the parser and as ingest stores it; the text never does",
+               not misplaced, misplaced or f"{len(probes)} wordings as expected")
+    hints = {us: True, "Location: Remote, United States": True, "Our team is based in the US.": False,
+             calgary + "Not open to remote United States applicants.": False, us + "Candidates must reside in Calgary.": False,
+             us + "Candidates in Canada are welcome too.": False}
+    wrong_hints = {text: bool(us_text_hint(text, "Remote")) for text, want in hints.items() if bool(us_text_hint(text, "Remote")) != want}
+    gate.check(item, "the text's own US sentence is offered as a hint, and wording about something else is not",
+               not wrong_hints, wrong_hints or f"{len(hints)} wordings as expected")
     untitled = [j for j, r in jobs.items() if r["title_norm"] != r["title_norm"].strip().lower()]
     gate.check(item, "normalised titles are lower case and trimmed", not untitled, untitled, core=False)
 
@@ -324,14 +374,29 @@ def assess(gate: Gate, jail: Jail, demo: Path, private: Path, private_before: di
                attempts.get("atlasclaims") == "slug_absent" and not [m for m in boards if "atlasclaims" in m], attempts.get("atlasclaims"))
     report = (demo / "reports" / f"report-{world.day_start(world.DAYS)[:10]}.html").read_text(encoding="utf-8")
     code, listed = run("sources", "list")
-    gate.check(item, "you can see that a suggested board does not exist (report or `careeros sources list`)",
-               "Atlas" in report or "atlasclaims" in listed,
-               [line.strip() for line in listed.splitlines() if "atlasclaims" in line] or "not in the report or `sources list`")
-    stale = [c for c in cases if c[0] == "greenhouse:harborline"]
-    gate.check(item, "a migration that verification has completed leaves no open review case", not stale, stale or "none open")
+    lines = listed.splitlines()
+    heading = next((i for i, line in enumerate(lines) if line.startswith("Suggested boards that do not exist")), None)
+    under = []
+    for line in lines[heading + 1:] if heading is not None else []:
+        if not line.startswith("  "):
+            break
+        under.append(" ".join(line.split()))
+    atlas = [line for line in under if line.startswith("Atlas Claims Group https://jobs.lever.co/atlasclaims (checked ")]
+    gate.check(item, "`careeros sources list` names the suggested board that does not exist, under its heading",
+               code == 0 and len(atlas) == 1, atlas or (code, under or "no such heading"))
+    moved = {(r["reason_code"], r["status"], (r["resolution"] or "").startswith("migration completed: ashby:harborlinehealth "))
+             for r in rows(demo, "SELECT * FROM board_reviews WHERE mapping_id = 'greenhouse:harborline'")}
+    elsewhere = [c for c in cases if c[0] != "greenhouse:harborline"]
+    gate.check(item, "a migration that verification has completed closes the old board's cases about the move, and no other",
+               moved == {("board_not_found", "resolved", True), ("migration_detected", "resolved", True)}
+               and {("ashby:pinecrest", "site_unreadable"), ("greenhouse:quillon", "identity_mismatch")} <= set(elsewhere),
+               {"old board": sorted(moved), "still open": elsewhere})
+    old = boards["greenhouse:harborline"]
+    completed = [json.loads(r["metadata_json"]).get("migrated_from") for r in
+                 rows(demo, "SELECT metadata_json FROM events WHERE event_type = 'ats_migration_verified' AND entity_id = 'ashby:harborlinehealth'")]
     gate.check(item, "the ATS migration keeps the old board as history and verifies the new one",
-               ("ashby:harborlinehealth", "ats_migration_verified") in events or any(e == "ats_migration_verified" for _, e in events),
-               boards["greenhouse:harborline"]["migrated_to"])
+               old["verification_status"] == "historical" and old["migrated_to"] == "ashby:harborlinehealth"
+               and completed == ["greenhouse:harborline"], (old["verification_status"], old["migrated_to"], completed))
     gate.check(item, "the real but empty board stays active and is recorded as empty",
                boards["greenhouse:evergreenhealth"]["board_activity"] == "empty", boards["greenhouse:evergreenhealth"]["board_activity"])
     manual_hosts = [h for h in jail.hosts if "myworkdayjobs" in h or "icims" in h]
@@ -347,17 +412,21 @@ def assess(gate: Gate, jail: Jail, demo: Path, private: Path, private_before: di
 
     # 5. DUPLICATE PREVENTION
     item = "duplicate prevention"
-    gate.check(item, "two postings of one requisition: the second is a duplicate of the first",
-               jobs[jid("meridianrx", 102)]["current_state"] == "duplicate" and jobs[jid("meridianrx", 102)]["duplicate_of"] == jid("meridianrx", 101),
-               (jobs[jid("meridianrx", 102)]["current_state"], jobs[jid("meridianrx", 102)]["duplicate_of"]))
+    # since the owner's D188 (2026-11-19, "Exact links only") only one exact posting link makes two postings one job: a
+    # shared requisition is a suggestion, linked for review, never a merge
+    linked = {(r["job_id"], r["other_id"], r["relation"]) for r in rows(demo, "SELECT job_id, other_id, relation FROM opening_links")}
+    gate.check(item, "two postings of one requisition: the second is kept and linked to the first for review, never merged",
+               jobs[jid("meridianrx", 102)]["current_state"] != "duplicate"
+               and (jid("meridianrx", 102), jid("meridianrx", 101), "possible_duplicate") in linked,
+               (jobs[jid("meridianrx", 102)]["current_state"], sorted(r for r in linked if jid("meridianrx", 102) in r)))
     for job_id in (jid("meridianrx", 101), jid("bluepeakhealth", BLUEPEAK + "202")):
         seen = {r["source_kind"] for r in rows(demo, "SELECT source_kind FROM observations WHERE job_id = ?", job_id)}
         gate.check(item, f"the same job from an alert email and a board scan is one job ({job_id.split(':')[1]})",
                    seen == {"alert", "ats_scan"} and sum(1 for j in jobs if j == job_id) == 1, sorted(seen))
-    gate.check(item, "after the ATS migration the re-posted roles are linked to the old ones, not new openings",
-               jobs[jid("harborlinehealth", HARBOR + "311")]["repost_of"] == jid("harborline", 301)
-               and jobs[jid("harborlinehealth", HARBOR + "312")]["repost_of"] == jid("harborline", 302),
-               (jobs[jid("harborlinehealth", HARBOR + "311")]["repost_of"], jobs[jid("harborlinehealth", HARBOR + "312")]["repost_of"]))
+    gate.check(item, "after the ATS migration the re-posted roles are linked to the old ones as possible reposts",
+               (jid("harborlinehealth", HARBOR + "311"), jid("harborline", 301), "possible_repost") in linked
+               and (jid("harborlinehealth", HARBOR + "312"), jid("harborline", 302), "possible_repost") in linked,
+               sorted(r for r in linked if r[2] == "possible_repost"))
     same_title = [r for r in jobs.values() if r["title"] == "Payment Integrity Analyst"]
     gate.check(item, "the same title at two employers stays two jobs", len(same_title) == 2 and len({r["employer_name"] for r in same_title}) == 2,
                [r["job_id"] for r in same_title], core=False)
@@ -488,9 +557,12 @@ def assess(gate: Gate, jail: Jail, demo: Path, private: Path, private_before: di
                routed and all(night[j]["state"] in ("ELIGIBLE", "CONDITIONAL") for j in routed) and "NIGHT · Supplemental" in report,
                f"{len(routed)} routed: " + str(sorted({night[j]['state'] for j in routed})))
     accepted = [j for j in routed if night[j]["schedule"] == "overnight"]
-    gate.check(item, "an overnight posting that NIGHT accepts is shown",
-               bool(accepted) and all(jobs[j]["title"] in report for j in accepted),
-               accepted or "no overnight posting in the demo world passes NIGHT")
+    visible = re.sub(r"<!--.*?-->", "", report, flags=re.S)
+    start, end = visible.find('<h2 id="night-supplemental"'), visible.find('<h2 id="night-replacement"')
+    supplemental = visible[start:end] if 0 <= start < end else ""
+    missing = [j for j in accepted if f'id="night-{html.escape(j)}"' not in supplemental]
+    gate.check(item, "an overnight posting that NIGHT accepts has its card in the NIGHT · Supplemental section",
+               bool(accepted) and not missing, missing or accepted or "no overnight posting in the demo world passes NIGHT")
     gate.check(item, "rejected, duplicate and closed jobs are never routed to a tier",
                not [j for j, r in jobs.items() if r["current_state"] != "scored" and j in scores and scores[j]["at"] > (gates.get(j) or {}).get("at", "")],
                "no tier after a rejection", core=False)
@@ -676,10 +748,10 @@ def assess(gate: Gate, jail: Jail, demo: Path, private: Path, private_before: di
     item = "duplicate prevention"
     apps_before = count(demo, "applications")   # the demo's job seeker has applied to a few jobs already
     code1, out1 = run("applied", jid("meridianrx", 101), "--channel", "direct")
-    code2, out2 = run("applied", jid("meridianrx", 102), "--channel", "agency", "--agency", "Fictional Staffing")
+    code2, out2 = run("applied", jid("meridianrx", 101), "--channel", "agency", "--agency", "Fictional Staffing")
     code3, out3 = run("applied", jid("meridianrx", 101), "--channel", "direct")
     apps = count(demo, "applications")
-    gate.check(item, "one application per role: applying to its duplicate or applying twice is refused",
+    gate.check(item, "one application per role: applying through a second channel or applying twice is refused",
                code1 == 0 and code2 != 0 and code3 != 0 and apps == apps_before + 1,
                (out2.strip()[-120:], out3.strip()[-120:], f"applications {apps_before} -> {apps}"))
 

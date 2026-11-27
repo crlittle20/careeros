@@ -577,7 +577,11 @@ class ParseTests(unittest.TestCase):
         alert = parse_eml(self.write(alert_email()))
         self.assertEqual(alert.sender, "LinkedIn Job Alerts <jobalerts@example.com>")
         self.assertEqual(alert.received_at, "2026-10-10T13:15:00.000Z")
-        links = {l.url: l for l in alert.links}
+        links: dict = {}
+        for link in alert.links:   # every occurrence is kept (part 3 of D192): the first one with a title, by link
+            if link.text:
+                links.setdefault(link.url, link)
+        self.assertEqual(sum(l.url == "https://www.linkedin.com/jobs/view/4012345678" for l in alert.links), 3)   # logo, title, "View job"
         first = links["https://www.linkedin.com/jobs/view/4012345678"]
         self.assertEqual((first.text, first.site, first.job_like), ("Claims Business Analyst", "linkedin", True))
         self.assertIn("Synthetic Health · United States (Remote)", first.context)
@@ -976,6 +980,16 @@ class ParseTests(unittest.TestCase):
         with contextlib.redirect_stdout(out):
             cmd_agency_layout(None, {}, Namespace(files=[str(self.write(pictured, "i.eml"))]))
         self.assertIn("1 link(s) outside the job cards have a job-like label", out.getvalue())
+        # the separators of the described form in the mail itself (Codex CR-2026-11-15-GATE-FIXES F7): an alt holding
+        # "|c=" is still read whole, and an attribute around the link holding "|alt=" is still not the link's label
+        for name, html_, job_like in (
+                ("split.eml", f'<a href="{AG_2}"><img src="https://cdn.example.com/x.png" alt="Open |c= position"></a>', True),
+                ("chain.eml", f'<table title="x|alt=Open position"><tr><td><a href="{AG_2}">Privacy Policy</a></td></tr></table>', False)):
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                cmd_agency_layout(None, {}, Namespace(files=[str(self.write(agency_email(agency_card("Claims Analyst", AG_1) + html_),
+                                                                            name))]))
+            self.assertEqual("job-like" in out.getvalue(), job_like, name)
 
     def test_mail_from_the_agency_sender_is_held_in_a_plain_text_or_new_host_form(self):
         from email.message import EmailMessage
@@ -1475,19 +1489,23 @@ class ImportTests(unittest.TestCase):
         # only the Greenhouse link was fetched; LinkedIn, Indeed and NHG were never contacted
         self.assertEqual(self.requests, ["https://boards-api.greenhouse.io/v1/boards/synth/jobs/555"])
         leads = {r["site"]: r for r in self.store.all("SELECT * FROM leads WHERE family IS NOT NULL")}
-        self.assertEqual(sorted(leads), ["greenhouse", "indeed", "linkedin", "nhg"])
+        self.assertEqual(sorted(leads), ["greenhouse", "indeed", "linkedin"])
+        # the careers page's card (its link names no posting) is a notice, never a lead (part 3 of D192)
+        self.assertEqual([r["site"] for r in self.store.all("SELECT site FROM alert_notices")], ["nhg"])
         self.assertEqual((leads["greenhouse"]["status"], leads["greenhouse"]["job_id"]), ("ingested", "greenhouse:synth:555"))
         self.assertEqual(self.store.one("SELECT title FROM jobs WHERE job_id = 'greenhouse:synth:555'")["title"],
                          "Pharmacy Benefits Systems Analyst")
         self.assertEqual((leads["linkedin"]["title"], leads["linkedin"]["status"]), ("Claims Business Analyst", "new"))
         nurse = self.store.one("SELECT * FROM leads WHERE title = 'Registered Nurse'")
         self.assertEqual((nurse["family"], nurse["status"]), (None, "new"))  # kept for audit, hidden from the review page
-        self.assertEqual((counts["lead_ingested"], counts["lead_new"], counts["lead_other_family"]), (1, 3, 1))
+        self.assertEqual((counts["lead_ingested"], counts["lead_new"], counts["lead_other_family"], counts["notice_new"]),
+                         (1, 2, 1, 1))
         columns = {r["name"] for r in self.store.all("PRAGMA table_info(leads)")}
         self.assertNotIn("candidate@example.com", " ".join(str(v) for r in self.store.all("SELECT * FROM leads") for v in r))
         self.assertEqual(columns, {"lead_id", "url", "site", "title", "title_norm", "family", "context", "sender", "subject",
                                    "received_at", "first_seen_at", "status", "job_id", "profile",
-                                   "status_reason", "status_at", "fetch_failure"})   # schema 15: CareerOS's own reasons, never mail text
+                                   "status_reason", "status_at", "fetch_failure",   # schema 15: CareerOS's own reasons, never mail text
+                                   "repeat_of"})   # schema 16: a possible repeat (an earlier lead's id)
         self.assertEqual({k: leads["linkedin"][k] for k in ("status_reason", "status_at", "fetch_failure")},
                          {"status_reason": None, "status_at": None, "fetch_failure": None})
         self.assertEqual(list(self.inbox.glob("*.eml")), [])

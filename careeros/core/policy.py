@@ -47,4 +47,8 @@ def load_policy(defaults_path: Path, overrides_path: Path | None = None) -> Poli
     if overrides_path and Path(overrides_path).exists():
         data = deep_merge(data, load_yaml(overrides_path))
         files[Path(overrides_path).name] = file_fingerprint(overrides_path)
+    # every string you configured in the canonical form, so a term matches posting text however it was typed (the
+    # D190 design, section 3a, point 7); a policy already in that form keeps its fingerprint
+    from careeros.normalize.sanitize import canonical_values
+    data = canonical_values(data)
     return PolicyBundle(data=data, fingerprint=fingerprint(data), files=files)

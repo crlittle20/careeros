@@ -833,6 +833,10 @@ class CorrectionBatchRolesTests(unittest.TestCase):
                                            {"name": "product management", "years": 0.3, "evidence": "direct"}]},
                        fingerprint="d120-both")
         self.assertEqual(self.outcome("5+ years as a Product Manager", both), ("CONDITIONAL", {"years_role_unconfirmed"}))
+        # Since role years never reject on their own (D149), the outcome above is the same whichever record is found, so
+        # check the record itself (the staged campaign of 2026-11-17 found this defect surviving the whole suite)
+        found = both.years_match("Product Manager", role_only=True)
+        self.assertEqual((found["item"], found["years"], bool(found.get("partial"))), ("product management", 0.3, False))
         self.assertTrue(doer("claims reporting", 6).years_match("Claims Reporter", role_only=True)["partial"])
 
     def test_d120_one_figure_stated_for_two_demands_judges_both(self):

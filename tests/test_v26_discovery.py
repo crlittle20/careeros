@@ -29,7 +29,7 @@ from careeros.review.labels import record_label
 from careeros.review.shortlist import draft, shortlist
 
 from tests.test_saved import POLICY as TEST_POLICY
-from tests.helpers import JOB_MATRIX
+from tests.helpers import JOB_MATRIX, give_label
 from tests.test_pipeline import as_greenhouse_html
 from tests.test_v21_policy import policy_with
 from tests.test_v25_audit import MID
@@ -148,7 +148,7 @@ class IdentityTests(unittest.TestCase):
         self.assertIn("employer's own site", str(refused.exception))
         self.assertEqual(store.one("SELECT verification_status FROM board_mappings")["verification_status"], "candidate")
         self.assertEqual(store.one("SELECT COUNT(*) c FROM employers")["c"], 0)
-        # admitted: your approval, then its validation scan; the first scan ingests the postings and links the lead
+        # admitted: your approval, then its validation scan; the first scan ingests the postings and proposes the lead's
         self.assertEqual(registry.approve(store, "greenhouse:foohealth", reason="its careers page links it"), "quarantined")
         client = client_for(fake)
         self.assertEqual(bv.validate_board(ctx, "greenhouse:foohealth", client), "active")
@@ -156,8 +156,10 @@ class IdentityTests(unittest.TestCase):
         self.assertIsNone(store.one("SELECT job_id FROM leads")["job_id"])   # nothing ingested at admission
         with mock.patch.object(cli, "fetch_board", lambda c, ats, token: [greenhouse_posting(token, i) for i in fake.greenhouse[token]["jobs"]]):
             cli.cmd_discover(ctx, None, SimpleNamespace(employer=None))
-        self.assertEqual(store.one("SELECT job_id FROM leads")["job_id"], "greenhouse:foohealth:12")
-        self.assertEqual(store.one("SELECT method FROM lead_matches WHERE decision = 'matched'")["method"], "requisition")
+        # since the owner's D188 the requisition proposes the posting to you; it is never linked by itself
+        self.assertIsNone(store.one("SELECT job_id FROM leads")["job_id"])
+        match = store.one("SELECT job_id, method FROM lead_matches WHERE decision = 'likely'")
+        self.assertEqual(tuple(match), ("greenhouse:foohealth:12", "requisition"))
 
     def test_identical_titles_without_a_requisition_stay_ambiguous(self):
         store, ctx = setup()
@@ -336,6 +338,122 @@ class BackfillTests(unittest.TestCase):
         self.assertGreater(lead_requests, 0)  # lead-derived discovery still ran after the curated share ran out
 
 
+# --- Codex CR-2026-11-15-GATE-FIXES F5: "suggested boards that do not exist" only from a probe of that exact board ---------
+class AbsentSuggestionTests(unittest.TestCase):
+    GH = "https://job-boards.greenhouse.io/zentrixbenefits"
+
+    def run_queue(self, ctx, fake):
+        client = client_for(fake)
+        try:
+            return dq.run(ctx, budget=client.budget, client=client)
+        finally:
+            client.close()
+
+    def test_a_probed_missing_board_is_listed_by_its_own_address_and_probe_date(self):
+        store, ctx = setup()
+        dq.enqueue(store, bd.Candidate(employer_name="Zentrix Benefits", origin="curated",
+                                       board_url=self.GH + "?gh_src=private-ref&utm_source=mine"), 8)
+        self.run_queue(ctx, FakeATS())   # 404
+        probed = store.one("SELECT attempted_at FROM discovery_attempts WHERE ats = 'greenhouse'")["attempted_at"]
+        self.assertEqual(bd.absent_suggestions(store), [("Zentrix Benefits", self.GH, probed)])   # never the stored query string
+        # the queue row touched later moves nothing: the date is the probe's
+        store.clock.advance(days=3)
+        dq.enqueue(store, bd.Candidate(employer_name="Zentrix Benefits", origin="curated"), 9)
+        self.assertEqual(bd.absent_suggestions(store)[0][2], probed)
+
+    def test_a_board_never_probed_is_not_called_missing(self):
+        # an unrecognised site link: only guessed names were tried, none of them the link itself
+        store, ctx = setup()
+        dq.enqueue(store, bd.Candidate(employer_name="Zentrix Benefits", origin="curated",
+                                       board_url="https://careers.zentrixbenefits.com/openings"), 8)
+        self.run_queue(ctx, FakeATS())
+        self.assertTrue(store.one("SELECT 1 FROM discovery_attempts WHERE outcome = 'slug_absent'"))   # the guesses
+        self.assertEqual(bd.absent_suggestions(store), [])
+        # a board on a system CareerOS may not read: no request, so not "does not exist"
+        store, ctx = setup()
+        dq.enqueue(store, bd.Candidate(employer_name="Zentrix Benefits", origin="curated", board_url=self.GH), 8)
+        fake = FakeATS()
+        with mock.patch("careeros.discovery.sources.status", lambda s: "manual" if s == "greenhouse" else "allowed"):
+            self.run_queue(ctx, fake)
+        self.assertEqual(fake.requests, [])
+        self.assertEqual(store.one("SELECT last_outcome FROM discovery_queue")["last_outcome"], "skipped_policy")
+        self.assertEqual(bd.absent_suggestions(store), [])
+
+    def test_a_corrected_link_replaces_a_missing_board_and_is_checked_again(self):
+        store, ctx = setup()
+        dq.enqueue(store, bd.Candidate(employer_name="Zentrix Benefits", origin="curated", board_url=self.GH), 8)
+        fake = FakeATS()
+        self.run_queue(ctx, fake)
+        self.assertEqual(len(bd.absent_suggestions(store)), 1)
+        fixed = "https://job-boards.greenhouse.io/zentrix"
+        fake.greenhouse["zentrix"] = {"name": "Zentrix Benefits", "jobs": [gh_item(1, "Claims Analyst", "Zentrix Benefits claims.", "zentrix")]}
+        self.assertEqual(dq.enqueue(store, bd.Candidate(employer_name="Zentrix Benefits", origin="curated", board_url=fixed), 8), "merged")
+        row = store.one("SELECT board_url, state FROM discovery_queue")
+        self.assertEqual((row["board_url"], row["state"]), (fixed, "pending"))
+        self.assertEqual(bd.absent_suggestions(store), [])
+        self.run_queue(ctx, fake)
+        self.assertTrue(store.one("SELECT 1 FROM discovery_attempts WHERE ats = 'greenhouse' AND slug = 'zentrix'"))
+        # the control: a different link for a board that was found is not taken over
+        self.assertEqual(dq.enqueue(store, bd.Candidate(employer_name="Zentrix Benefits", origin="curated",
+                                                        board_url="https://jobs.lever.co/zentrix"), 8), "merged")
+        self.assertEqual(store.one("SELECT board_url FROM discovery_queue")["board_url"], fixed)
+
+    def test_pass2_sequences_print_no_query_keep_a_correctable_link_and_drop_a_verified_board(self):
+        """Codex CR-2026-11-15-GATE-FIXES Pass 2, F5."""
+        from careeros.discovery import board_registry as reg
+        # 1. an embed link whose decoded "for" value carries a query: never printed
+        store, ctx = setup()
+        embed = "https://boards.greenhouse.io/embed/job_board?for=acmeclaims%3Fref%3Dprivate-value"
+        dq.enqueue(store, bd.Candidate(employer_name="Acme Claims", origin="curated", board_url=embed), 8)
+        self.run_queue(ctx, FakeATS())
+        self.assertFalse(any("private-value" in address for _, address, _ in bd.absent_suggestions(store)))
+        self.assertEqual(bd.absent_suggestions(store), [])
+        # 2. a careers page never replaces a missing board's link; a link to a board still does
+        store, ctx = setup()
+        dq.enqueue(store, bd.Candidate(employer_name="Acme Claims", origin="curated", board_url="https://job-boards.greenhouse.io/acmeclaims"), 8)
+        self.run_queue(ctx, FakeATS())
+        dq.enqueue(store, bd.Candidate(employer_name="Acme Claims", origin="curated", board_url="https://careers.acmeclaims.com/jobs"), 8)
+        self.assertEqual(store.one("SELECT board_url FROM discovery_queue")["board_url"], "https://job-boards.greenhouse.io/acmeclaims")
+        dq.enqueue(store, bd.Candidate(employer_name="Acme Claims", origin="curated", board_url="https://jobs.lever.co/acmeclaims"), 8)
+        self.assertEqual(store.one("SELECT board_url FROM discovery_queue")["board_url"], "https://jobs.lever.co/acmeclaims")
+        # 3. a board verified after the probe that found nothing is no longer listed as missing
+        store, ctx = setup()
+        dq.enqueue(store, bd.Candidate(employer_name="Zentrix Benefits", origin="curated", board_url=self.GH), 8)
+        self.run_queue(ctx, FakeATS())
+        self.assertEqual(len(bd.absent_suggestions(store)), 1)   # the control
+        store.clock.advance(days=2)
+        entity_id = reg.ensure_entity(store, "Zentrix Benefits", domain="zentrixbenefits.com", origin="curated")
+        mid = reg.ensure_mapping(store, entity_id, "greenhouse", "zentrixbenefits", name="Zentrix Benefits", provenance="official_site",
+                                 origin="verification", board_url=self.GH)
+        reg.update_board(store, mid, {"verification_status": "quarantined", "verified_at": store.clock.now()})
+        self.assertEqual(bd.absent_suggestions(store), [])
+
+    def test_pass3_only_a_link_discovery_would_probe_replaces_a_missing_board(self):
+        """Codex CR-2026-11-15-GATE-FIXES Pass 3, F5: a mangled board name or a blocked system never replaces a missing
+        board's link (a later correction would be ignored); a stored board link that fails those checks is replaced."""
+        good = "https://jobs.lever.co/acmeclaims"
+        mangled = "https://boards.greenhouse.io/embed/job_board?for=acmeclaims%3Fref%3Dprivate-value"
+        for bad, blocked in ((mangled, False), ("https://jobs.lever.co/acmeclaims-us", True)):
+            store, ctx = setup()
+            dq.enqueue(store, bd.Candidate(employer_name="Acme Claims", origin="curated", board_url=self.GH), 8)
+            self.run_queue(ctx, FakeATS())
+            self.assertEqual(len(bd.absent_suggestions(store)), 1)
+            with mock.patch("careeros.discovery.sources.status", lambda s, blocked=blocked: "manual" if blocked and s == "lever" else "allowed"):
+                dq.enqueue(store, bd.Candidate(employer_name="Acme Claims", origin="curated", board_url=bad), 8)
+            self.assertEqual(store.one("SELECT board_url FROM discovery_queue")["board_url"], self.GH)   # kept: still correctable
+            dq.enqueue(store, bd.Candidate(employer_name="Acme Claims", origin="curated", board_url=good), 8)
+            self.assertEqual(store.one("SELECT board_url FROM discovery_queue")["board_url"], good)   # the correction is taken
+        # a stored board link that fails the checks itself (an old row) is replaced by one that passes them
+        store, ctx = setup()
+        dq.enqueue(store, bd.Candidate(employer_name="Acme Claims", origin="curated", board_url=mangled), 8)
+        self.assertEqual(store.one("SELECT board_url FROM discovery_queue")["board_url"], mangled)
+        dq.enqueue(store, bd.Candidate(employer_name="Acme Claims", origin="curated", board_url=good), 8)
+        self.assertEqual(store.one("SELECT board_url FROM discovery_queue")["board_url"], good)
+        # the control: a good stored link that was never shown missing is not taken over
+        dq.enqueue(store, bd.Candidate(employer_name="Acme Claims", origin="curated", board_url="https://jobs.lever.co/acme"), 8)
+        self.assertEqual(store.one("SELECT board_url FROM discovery_queue")["board_url"], good)
+
+
 # --- Part 3: title rescue ------------------------------------------------------------------------------------------------
 class TitleRescueTests(unittest.TestCase):
     def ingest_titles(self, ctx, items):
@@ -445,9 +563,13 @@ class OpeningTests(unittest.TestCase):
         self.assertEqual(store.one("SELECT current_state FROM jobs")["current_state"], "normalized")
         self.board(ctx, [])  # missing twice: closed
         self.assertEqual(store.one("SELECT current_state FROM jobs")["current_state"], "closed")
-        self.board(ctx, [gh_item(9, "Claims Analyst", CLAIMS, "synth")])  # new id, same role: a likely repost
-        self.assertEqual(store.one("SELECT repost_of FROM jobs WHERE job_id = 'greenhouse:synth:9'")["repost_of"], "greenhouse:synth:1")
-        self.assertIsNotNone(application_status(store, "greenhouse:synth:9")["applied"])
+        self.board(ctx, [gh_item(9, "Claims Analyst", CLAIMS, "synth")])  # new id, same role: a possible repost (D188)
+        self.assertIsNone(store.one("SELECT repost_of FROM jobs WHERE job_id = 'greenhouse:synth:9'")["repost_of"])
+        self.assertTrue(store.one("SELECT 1 FROM opening_links WHERE job_id = 'greenhouse:synth:9' AND other_id = 'greenhouse:synth:1' "
+                                  "AND relation = 'possible_repost'"))
+        # the application to the old posting is shown on the new one, never held for it
+        self.assertIsNone(application_status(store, "greenhouse:synth:9")["applied"])
+        self.assertEqual(application_status(store, "greenhouse:synth:9")["possibly_applied"], ["greenhouse:synth:1"])
         self.board(ctx, [gh_item(1, "Claims Analyst", CLAIMS, "synth"), gh_item(9, "Claims Analyst", CLAIMS, "synth")])
         self.assertEqual(store.one("SELECT current_state FROM jobs WHERE job_id = 'greenhouse:synth:1'")["current_state"], "normalized")
         change = store.one("SELECT * FROM job_changes WHERE job_id = 'greenhouse:synth:1' ORDER BY at DESC")
@@ -502,6 +624,14 @@ class EligibilityFactTests(unittest.TestCase):
         self.assertEqual(self.facts(remote_states=["TX", "FL"])["location_state"]["status"], "compatible")
         self.assertEqual(self.facts(country=None, remote_type="unknown")["location_state"]["status"], "unknown")
 
+    def test_a_state_list_from_the_text_never_clears_an_unknown_country(self):
+        # Codex CR-2026-11-15-GATE-FIXES Pass 5, F1: "hires in Florida, Georgia" beside "only in Calgary" cleared the
+        # location question for a home state in the list, though the location field did not place the posting
+        fact = self.facts(country="unknown", location_raw="Remote", remote_states=["TX", "FL"])["location_state"]
+        self.assertEqual(fact["status"], "unknown")
+        self.assertIn("location field does not place it in the US", fact["detail"])
+        self.assertEqual(self.facts(country="US", remote_states=["TX", "FL"])["location_state"]["status"], "compatible")   # the control
+
     def test_pay_units_tiers_and_variable_pay(self):
         status = lambda **o: pay_fact(job(**o), POLICY)["status"]
         self.assertEqual(status(comp_min=7000, comp_max=8000, comp_period="month"), "compatible")   # $84k-$96k a year
@@ -535,6 +665,8 @@ class IntakeTests(unittest.TestCase):
             first = intake(ctx, self.PASTED, "https://acmerx.wd5.myworkdayjobs.com/careers/job/Remote/Claims_R-4455")
             again = intake(ctx, self.PASTED, "https://acmerx.wd5.myworkdayjobs.com/careers/job/Remote/Claims_R-4455?src=email")
             process(ctx)
+        # another stored link (a tracking parameter): another request, read as its own, and the same posting by its
+        # link (the D190 design, section 6; the coordinator's Z5)
         self.assertEqual((first["status"], again["status"]), ("added", "already_tracked"))
         self.assertEqual(again["job_id"], first["job_id"])
         jobrow = store.one("SELECT * FROM jobs")
@@ -543,6 +675,211 @@ class IntakeTests(unittest.TestCase):
         self.assertEqual(store.one("SELECT collection FROM board_mappings")["collection"], "manual_only")
         self.assertEqual({r["evidence_level"] for r in store.all("SELECT evidence_level FROM observations")}, {"human"})
         self.assertEqual(ctx.policy.get("compensation", "floor_annual"), 74000)  # pasted text is data, never instructions
+
+    def test_a_paste_takes_its_location_only_from_its_location_line_or_yours(self):
+        # Codex CR-2026-11-15-GATE-FIXES Pass 5, F1: "Previously advertised as Remote - US" in the prose became the
+        # location field, so the posting was placed in the US and prepared ahead though its work was in Calgary
+        from careeros.discovery.manual_intake import parse_pasted
+        prose = ("Claims Operations Analyst\nCompany: Acme Rx\n\n" + CLAIMS + "\nPreviously advertised as Remote - US. "
+                 "The work will be performed only in Calgary.")
+        self.assertEqual(parse_pasted(prose)["location"], "")
+        store, ctx = setup()
+        intake(ctx, prose, "https://acmerx.wd5.myworkdayjobs.com/careers/job/Remote/Claims_R-4456")
+        process(ctx)
+        self.assertEqual(store.one("SELECT location_raw, country FROM jobs")["country"], "unknown")
+        # the controls: the posting's own location line, and the location you give
+        self.assertEqual(parse_pasted(self.PASTED)["location"], "Remote - US")
+        self.assertEqual(parse_pasted(prose, location="Remote - US")["location"], "Remote - US")
+
+    def test_a_blank_location_label_never_takes_the_next_line(self):
+        # Codex CR-2026-11-15-GATE-FIXES Pass 6, H3: "Location:" alone on its line took the prose line after it
+        # ("Previously advertised as Remote - US. ..."), so the posting was placed in the US and prepared ahead
+        from careeros.discovery.manual_intake import parse_pasted
+        tail = "Previously advertised as Remote - US. The work will be performed only in Calgary."
+        for gap in ("\n", "\n\n", " \n", "\t\n  \n"):
+            prose = "Claims Operations Analyst\nCompany: Acme Rx\nLocation:" + gap + tail + "\n\n" + CLAIMS.replace(
+                "This role is remote in the US. ", "")
+            parsed = parse_pasted(prose)
+            self.assertEqual((parsed["location"], parsed["location_source"]), ("", "none"), repr(gap))
+        store, ctx = setup()
+        intake(ctx, prose, "https://acmerx.wd5.myworkdayjobs.com/careers/job/Remote/Claims_R-4457")
+        process(ctx)
+        self.assertEqual(dict(store.one("SELECT location_raw, country FROM jobs")), {"location_raw": "", "country": "unknown"})
+        # the controls: a value on the label's own line, and the location you give
+        same_line = parse_pasted("Claims Operations Analyst\nCompany: Acme Rx\nLocation:  Remote - US \n" + tail)
+        self.assertEqual((same_line["location"], same_line["location_source"]), ("Remote - US", "label"))
+        given = parse_pasted(prose, location="Remote - US")
+        self.assertEqual((given["location"], given["location_source"]), ("Remote - US", "argument"))
+        self.assertEqual(parse_pasted("Analyst\nTitle:\nCompany: Acme Rx\n" + tail)["company"], "Acme Rx")
+
+    def test_a_paste_saved_by_an_older_parser_is_placed_only_by_a_declared_location(self):
+        """Codex CR-2026-11-15-GATE-FIXES Pass 6, H2: a paste saved before the fix kept the "Remote - US" an older parser
+        took from its prose; one re-screen under the new rules made it eligible for standing preparation again, and
+        pasting it again did not correct it."""
+        from careeros.discovery.manual_intake import location_declared, set_location
+        tail = "\nPreviously advertised as Remote - US. The work will be performed only in Calgary."
+        prose = "Claims Operations Analyst\nCompany: Acme Rx\n\n" + CLAIMS.replace("This role is remote in the US. ", "") + tail
+        url = "https://acmerx.wd5.myworkdayjobs.com/careers/job/Remote/Claims_R-4458"
+
+        def legacy(text, location, pasted=True, placed=True):
+            """A paste as the parser before 2026-11-16 saved it: its location in the row and the observation, no source."""
+            from careeros.discovery.manual_intake import parse_pasted
+            store, ctx = setup()
+            parsed = parse_pasted(text, url)
+            job_id = "manual:acme-rx:R-4458"
+            ingest(ctx, {"employer_id": None, "name": "Acme Rx", "parent": "Acme Rx"},
+                   [RawPosting(ats="manual", board_token="acme-rx", external_id="R-4458", title=parsed["title"], location=location,
+                               url=url, apply_url=url, description_text=parsed["text"], requisition_id="R-4458",
+                               raw={"source": "human_text", "url": url})], source="manual_url", full_board=False)
+            store.conn.execute("UPDATE jobs SET source_json = NULL")   # a row stored before 017: no source record
+            if pasted:
+                record_observation(store, source_kind="human_text", evidence_level="human", job_id=job_id, url=url,
+                                   canonical=parsed["canonical"], requisition_id="R-4458", title=parsed["title"],
+                                   company="Acme Rx", location=location)
+            if placed:
+                self.assertEqual(store.one("SELECT country FROM jobs")["country"], "US")
+            return store, ctx, job_id
+
+        store, ctx, job_id = legacy(prose, "Remote - US")
+        job = dict(store.one("SELECT job_id, ats, location_raw, description_text FROM jobs"))
+        self.assertFalse(location_declared(store, job))
+        process(ctx)
+        row = store.one("SELECT location_raw, country FROM jobs")
+        self.assertEqual((row["location_raw"], row["country"]), ("Remote - US", "unknown"))   # kept, but places nothing
+        job = dict(store.one("SELECT * FROM jobs"))
+        fact = {f["facet"]: f for f in eligibility_facts(job, [], GateResult("eligible"), TEST_POLICY)}["location_state"]
+        self.assertEqual(fact["status"], "unknown")
+        self.assertIn("not recorded as given by you", fact["detail"])
+        # pasting it again, even with --location, changes nothing (D180); naming the job sets it, and it is re-screened
+        self.assertEqual(intake(ctx, prose, url)["location_confirmed"], False)
+        self.assertEqual(intake(ctx, prose, url, location="Remote - US (Florida)")["location_confirmed"], False)
+        process(ctx)
+        self.assertEqual(tuple(store.one("SELECT location_raw, country FROM jobs")), ("Remote - US", "unknown"))
+        self.assertEqual(set_location(ctx, job_id, "Remote - US"), {"job_id": job_id, "changed": False})   # the same value
+        process(ctx)
+        self.assertEqual(tuple(store.one("SELECT location_raw, country FROM jobs")), ("Remote - US", "US"))
+        self.assertTrue(set_location(ctx, job_id, "Remote - US (Florida)")["changed"])
+        process(ctx)
+        row = store.one("SELECT location_raw, country FROM jobs")
+        self.assertEqual((row["location_raw"], row["country"]), ("Remote - US (Florida)", "US"))
+        # the controls: a legacy paste whose location is its own Location line, and a posting added another way
+        labelled = "Claims Operations Analyst\nCompany: Acme Rx\nLocation: Remote - US\n\n" + CLAIMS
+        store, ctx, job_id = legacy(labelled, "Remote - US")
+        process(ctx)
+        self.assertEqual(store.one("SELECT country FROM jobs")["country"], "US")
+        # an older paste stored with a line-ending control already deleted between a blank "Location:" and the prose
+        # (Codex Pass 7, H3): its joined value runs past a sentence end, so it waits for you (D166); since D180 such a
+        # value is no plain US field either
+        joined = "Claims Operations Analyst\nCompany: Acme Rx\nLocation:" + tail.strip() + "\n\n" + CLAIMS
+        store, ctx, job_id = legacy(joined, tail.strip(), placed=False)
+        self.assertFalse(location_declared(store, dict(store.one("SELECT job_id, ats, location_raw, description_text FROM jobs"))))
+        process(ctx)
+        self.assertEqual(store.one("SELECT country FROM jobs")["country"], "unknown")
+        # an older row with no paste observation (a saved file, add-url, or a paste whose sighting was lost: Codex
+        # Pass 7, H2): held when its words are in the prose, and since the red team's fr1-upgrade-2 also when they are
+        # not (a saved file's header an older reader may have cut: the owner's D166 Q2, older rows held unless clean)
+        store, ctx, job_id = legacy(prose, "US Remote", pasted=False)
+        process(ctx)
+        self.assertEqual(store.one("SELECT country FROM jobs")["country"], "unknown")
+        store, ctx, job_id = legacy(prose, "Remote - US", pasted=False)
+        process(ctx)
+        self.assertEqual(store.one("SELECT country FROM jobs")["country"], "unknown")
+
+    def test_a_location_s_source_is_recorded_with_it_and_a_later_sighting_never_rewrites_it(self):
+        """Codex CR-2026-11-15-GATE-FIXES Pass 7, H2: a plain re-paste of a posting added with add-url --location turned
+        its US placement into a question; and a paste whose sighting was lost (written apart from the job) was taken for
+        one added another way."""
+        import contextlib
+        import io
+        import tempfile
+        from pathlib import Path
+        from types import SimpleNamespace
+        from unittest import mock
+
+        from careeros import cli, openings
+        from careeros.discovery.manual_intake import location_write, set_location
+        from careeros.paths import vault_paths
+        prose = "Claims Operations Analyst\nCompany: Acme Rx\n\n" + CLAIMS.replace("This role is remote in the US. ", "") + \
+            "\nPreviously advertised as Remote - US. The work will be performed only in Calgary."
+        url = "https://careers.acmerx.example/jobs/claims-4810"
+        store, ctx = setup()
+        with tempfile.TemporaryDirectory() as tmp:
+            body = Path(tmp) / "posting.txt"
+            body.write_text(prose, encoding="utf-8")
+            with contextlib.redirect_stdout(io.StringIO()):
+                cli.cmd_add_url(ctx, vault_paths(Path(tmp)), SimpleNamespace(url=url, text_file=str(body), employer="Acme Rx",
+                                                                         parent=None, title="Claims Operations Analyst",
+                                                                         location="Remote - US"))
+        process(ctx)
+        job_id = store.one("SELECT job_id FROM jobs")["job_id"]
+        self.assertEqual(location_write(store, job_id), {"location": "Remote - US", "source": "argument", "digest": None})
+        self.assertEqual(store.one("SELECT country FROM jobs")["country"], "US")
+        # a plain re-paste at the careers page (no posting named, the owner's D188) is its own job, linked for your
+        # review: it never touches the first one's placement
+        again = intake(ctx, prose, url)
+        self.assertEqual(again["status"], "added")
+        self.assertNotEqual(again["job_id"], job_id)
+        process(ctx)
+        self.assertEqual(store.one("SELECT country FROM jobs WHERE job_id = ?", (job_id,))["country"], "US")
+        self.assertEqual(location_write(store, job_id)["source"], "argument")
+        # a re-paste with --location changes nothing either: at a careers page (D184), matched by employer and title, another
+        # stated place is another opening, tracked on its own (the red team before Pass 15, RTC-01); setting the same
+        # value by naming the job is recorded (D180)
+        self.assertNotEqual(intake(ctx, prose, url, location="Remote - Canada")["job_id"], job_id)
+        self.assertEqual(store.one("SELECT location_raw FROM jobs WHERE job_id = ?", (job_id,))["location_raw"], "Remote - US")
+        self.assertEqual(set_location(ctx, job_id, "Remote - US")["changed"], False)
+        self.assertEqual(location_write(store, job_id), {"location": "Remote - US", "source": "argument", "digest": None})
+        # a saved file's own location field (a text file's Location header, a page's JSON-LD) is recorded as the file's
+        import json as _json
+
+        from careeros.discovery.saved import parse_saved_html, parse_saved_text
+        page = {"@context": "https://schema.org", "@type": "JobPosting", "title": "Claims Operations Analyst",
+                "hiringOrganization": {"@type": "Organization", "name": "Acme Rx"}, "jobLocationType": "TELECOMMUTE",
+                "jobLocation": {"@type": "Place", "address": {"@type": "PostalAddress", "addressCountry": "US"}},
+                "url": "https://careers.acmerx.example/jobs/claims-4813",
+                "description": "<p>" + prose.replace("\n", "</p><p>") + "</p>"}
+        for raw, employer in (parse_saved_text("URL: https://careers.acmerx.example/jobs/claims-4812\nTitle: Claims Operations "
+                                               "Analyst\nEmployer: Acme Rx\nLocation: Remote - US\n\n" + prose, "posting.txt"),
+                              parse_saved_html('<html><head><script type="application/ld+json">' + _json.dumps(page) +
+                                               "</script></head><body></body></html>", "posting.html")):
+            store, ctx = setup()
+            ingest(ctx, {"employer_id": None, "name": employer, "parent": employer}, [raw], source="manual_url", full_board=False)
+            process(ctx)
+            row = store.one("SELECT job_id, location_raw, country FROM jobs")
+            # a page's addressCountry "US" is written as its name (D179: "CA" is Canada, never California)
+            self.assertIn((row["location_raw"], row["country"]), {("Remote - US", "US"), ("Remote - United States", "US")},
+                          raw.raw.get("source_file"))
+            self.assertEqual(location_write(store, row["job_id"])["source"], "file")
+        # a paste and its sighting are one transaction: a lost sighting leaves no job behind
+        store, ctx = setup()
+        real = openings.record_observation
+
+        def lose_the_sighting(*args, **kw):
+            if kw.get("source_kind") == "human_text":
+                raise RuntimeError("interrupted")
+            return real(*args, **kw)
+        with mock.patch.object(openings, "record_observation", side_effect=lose_the_sighting):
+            with self.assertRaises(RuntimeError):
+                intake(ctx, prose, url)
+        self.assertEqual(store.one("SELECT COUNT(*) AS n FROM jobs")["n"], 0)
+        intake(ctx, prose, url)
+        job_id = store.one("SELECT job_id FROM jobs")["job_id"]
+        self.assertEqual(location_write(store, job_id), {"location": "", "source": "none", "digest": None})
+
+    def test_a_line_ending_control_ends_a_line_for_every_paste_label_and_a_saved_file_header(self):
+        """Codex CR-2026-11-15-GATE-FIXES Pass 7, H3: the sanitizer deleted vertical tab, form feed and next line before
+        the labels were read, so "Location:" + one of them + prose read as one line."""
+        from careeros.discovery.manual_intake import parse_pasted
+        from careeros.discovery.saved import parse_saved_text
+        tail = "Previously advertised as Remote - US. The work will be performed only in Calgary."
+        for sep in ("\x0b", "\x0c", "\x85", "\x1c", "\x1d", "\x1e", "\u2028", "\u2029", "\r\n", "\r"):
+            parsed = parse_pasted("Claims Operations Analyst\nCompany: Acme Rx\nLocation:" + sep + tail + "\n\n" + CLAIMS)
+            self.assertEqual((parsed["location"], parsed["location_source"]), ("", "none"), repr(sep))
+            self.assertEqual(parse_pasted("Analyst\nTitle:" + sep + tail + "\nCompany: Acme Rx\n" + CLAIMS)["title"], "Analyst")
+            raw, _ = parse_saved_text("Title: Claims Analyst\nEmployer: Acme Rx\nLocation:" + sep + tail + "\n\n" + CLAIMS, "f.txt")
+            self.assertEqual(raw.location, "", repr(sep))
+        self.assertEqual(parse_pasted("Analyst\nCompany: Acme Rx\nLocation: Remote - US\x0c" + tail)["location"], "Remote - US")
+
 
 
 # --- Part 7: meaningful changes --------------------------------------------------------------------------------------------------
@@ -553,15 +890,19 @@ class ChangeTests(unittest.TestCase):
         employer = {"employer_id": None, "name": "Synthetic Health", "parent": "Synthetic Health"}
         base = gh_item(1, "Claims Analyst", CLAIMS, "synth")
         ingest(ctx, employer, [greenhouse_posting("synth", base)], full_board=False)
-        later = {**base, "updated_at": "2026-10-11T06:00:00-04:00", "first_published": "2026-10-11T06:00:00-04:00"}
-        self.assertEqual(ingest(ctx, employer, [greenhouse_posting("synth", later)], full_board=False)["unchanged"], 1)  # timestamps only
+        later = {**base, "updated_at": "2026-10-11T06:00:00-04:00"}
+        self.assertEqual(ingest(ctx, employer, [greenhouse_posting("synth", later)], full_board=False)["unchanged"], 1)  # the board's update time only
+        # the posting date is read (the scores, the card's stale note), so a new one is a change, not a meaningful one
+        # (the D190 design, section 3a: posted_at is no bookkeeping)
+        republished = {**later, "first_published": "2026-10-11T06:00:00-04:00"}
+        self.assertEqual(ingest(ctx, employer, [greenhouse_posting("synth", republished)], full_board=False)["edited_cosmetic"], 1)
         cosmetic = {**base, "content": as_greenhouse_html(CLAIMS.replace("serving members", "proudly serving members"))}
         self.assertEqual(ingest(ctx, employer, [greenhouse_posting("synth", cosmetic)], full_board=False)["edited_cosmetic"], 1)
         paid = {**cosmetic, "content": as_greenhouse_html(CLAIMS.replace("$80,000 - $95,000", "$90,000 - $105,000"))}
         self.assertEqual(ingest(ctx, employer, [greenhouse_posting("synth", paid)], full_board=False)["changed"], 1)
         rows = store.all("SELECT meaningful, summary FROM job_changes ORDER BY at, rowid")
-        self.assertEqual([r["meaningful"] for r in rows], [0, 1])
-        self.assertIn("pay", rows[1]["summary"])
+        self.assertEqual([r["meaningful"] for r in rows], [0, 0, 1])   # the new posting date, the wording, the pay
+        self.assertIn("pay", rows[2]["summary"])
         moved = {**paid, "requisition_id": "R-NEW", "absolute_url": "https://job-boards.greenhouse.io/synth/jobs/1?gh_src=x2"}
         self.assertEqual(ingest(ctx, employer, [greenhouse_posting("synth", moved)], full_board=False)["reidentified"], 1)  # same text
         job = store.one("SELECT requisition_id, canonical_url FROM jobs")
@@ -643,7 +984,13 @@ class ShortlistTests(unittest.TestCase):
         process(ctx)
         with self.assertRaises(ValueError):
             draft(store, MID, "greenhouse:synth:1", __import__("pathlib").Path("unused"))  # not pursued yet
-        record_label(store, "greenhouse:synth:1", "apply", None, "k1")
+        give_label(store, ctx.policy, ctx.profile, "greenhouse:synth:1", "apply", None, "k1")
+        # the brief's content under other profiles of yours: P1 holds a label checked under a profile the screening
+        # was not made with, so the route is taken as given here (P1 itself: tests/test_p1.py)
+        from unittest import mock
+        route = mock.patch("careeros.review.packages.route_for", return_value=("apply", "your apply label"))
+        route.start()
+        self.addCleanup(route.stop)
         items = shortlist(store)
         self.assertEqual(len(items), 1)
         self.assertTrue(items[0]["next_action"])
@@ -680,7 +1027,7 @@ class ShortlistTests(unittest.TestCase):
         ingest(ctx, employer, [greenhouse_posting("synth", gh_item(2, "Claims Analyst", CLAIMS + "\n- PMP certification required", "synth"))],
                full_board=False)
         process(ctx)
-        record_label(store, "greenhouse:synth:2", "apply", None, "k2")
+        give_label(store, ctx.policy, ctx.profile, "greenhouse:synth:2", "apply", None, "k2")
         holder = Profile(data={**factual.data, "certifications": [{"name": "PMP", "status": "held"}]}, fingerprint="i")
         with tempfile.TemporaryDirectory() as tmp:
             brief = draft(store, holder, "greenhouse:synth:2", Path(tmp), POLICY).read_text(encoding="utf-8")
@@ -709,7 +1056,7 @@ class ShortlistTests(unittest.TestCase):
         self.assertIn("greenhouse:synth:2", shortlisted_job_ids(store))
         record_label(store, "greenhouse:synth:2", "skip", "pay too low", "l1")
         self.assertNotIn("greenhouse:synth:2", shortlisted_job_ids(store))
-        record_label(store, "greenhouse:synth:2", "apply", "changed my mind", "l2")
+        give_label(store, ctx.policy, ctx.profile, "greenhouse:synth:2", "apply", "changed my mind", "l2")
         self.assertIn("greenhouse:synth:2", shortlisted_job_ids(store))
 
 
@@ -737,7 +1084,7 @@ class ReviewPageTests(unittest.TestCase):
                                                                         "text": IntakeTests.PASTED, "company": ""})
                 self.assertEqual(reply.status_code, 303)
                 job_id = store.one("SELECT job_id FROM jobs")["job_id"]
-                record_label(store, job_id, "apply", None, "k1")
+                give_label(store, ctx.policy, ctx.profile, job_id, "apply", None, "k1")
                 dismiss_target, dismiss_key = next((t, k) for a, t, k in forms(httpx.get(f"{base}/?t={token}").text) if a == "dismiss")
                 self.assertEqual(dismiss_target, job_id)
                 ask = httpx.post(f"{base}/dismiss?t={token}", data={"target": dismiss_target, "key": dismiss_key,
@@ -760,7 +1107,8 @@ class MetricsTests(unittest.TestCase):
         fake = FakeATS()
         fake.greenhouse["foohealth"] = {"name": "Foo Health", "content": "foohealth.com", "jobs": [
             gh_item(11, "Claims Analyst", CLAIMS, "foohealth", req="R-11")]}
-        lead = add_lead(store, "lead:m", "Claims Analyst", "Foo Health · Remote · req=R-11; domain=foohealth.com")
+        lead = add_lead(store, "lead:m", "Claims Analyst", "Foo Health · Remote · req=R-11; domain=foohealth.com",
+                        url="https://job-boards.greenhouse.io/foohealth/jobs/11")   # its own link: linked by it (D188)
         client = client_for(fake)
         bd.discover(ctx, bd.candidate_from_lead(lead, POLICY), client)   # found: it waits for its board (2026-11-02)
         client.close()

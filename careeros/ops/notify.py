@@ -39,7 +39,7 @@ def pursued_closures(store, since: str) -> int:
     previous = store.one("SELECT MAX(ended_at) t FROM runs WHERE status = 'completed' AND ended_at < ?", (since,))["t"]
     rows = store.all(f"""SELECT j.job_id FROM jobs j WHERE j.current_state = 'closed' AND j.closed_at > ?
                           AND (SELECT label FROM labels l WHERE l.job_id = j.job_id AND l.profile = 'primary'
-                               ORDER BY at DESC, rowid DESC LIMIT 1) IN ('apply','stretch')
+                               ORDER BY rowid DESC LIMIT 1) IN ('apply','stretch')
                           AND NOT {dismissed_sql('j.job_id')}""", (previous or since,))
     count = 0
     for r in rows:

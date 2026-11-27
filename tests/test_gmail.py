@@ -28,6 +28,19 @@ FIXTURES = Path(__file__).parent / "fixtures"
 CLIENT = {"client_id": "synthetic-client.apps.example.com", "client_secret": "synthetic-secret"}  # release-scan: fake (a test placeholder, not a credential)
 
 
+def legacy_lead(store, url, title="Claims Analyst", context="Synthetic Employer Inc · Remote"):
+    """An ordinary lead at a link that names no posting, as stored before the owner's D192 (such a card is a notice now,
+    never a lead: part 3); leads stored before then stay as they were."""
+    from urllib.parse import urlsplit
+
+    from careeros.discovery.alerts import lead_id, site_of
+    from careeros.normalize.posting import classify_family, norm
+    store.writer("discovery").insert("leads", {
+        "lead_id": lead_id(url), "url": url, "site": site_of(urlsplit(url).netloc), "title": title, "title_norm": norm(title),
+        "family": classify_family(norm(title), POLICY.get("families", default={})), "context": context,
+        "sender": "LinkedIn Job Alerts", "first_seen_at": store.clock.now(), "status": "new", "profile": "primary"})
+
+
 class FakeGoogle:
     def __init__(self, scope=gmail.SCOPE, refresh_ok=True):
         self.scope, self.refresh_ok, self.calls = scope, refresh_ok, []
@@ -191,13 +204,15 @@ class PullTests(unittest.TestCase):
         google = FakeGoogle()
         counts = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
         self.assertEqual(counts["gmail_messages"], 2)
-        self.assertEqual(counts["lead_new"], 4)  # linkedin, indeed, nhg + the unreadable greenhouse link
+        self.assertEqual(counts["lead_new"], 3)  # linkedin, indeed + the unreadable greenhouse link
+        self.assertEqual(counts["notice_new"], 2)   # nhg's careers page, in each email: a notice, never a lead (D192 part 3)
         self.assertEqual(counts["lead_fetch_failed"], 1)  # the Greenhouse link (simulated 404) is kept as a lead
         self.assertEqual([tuple(r) for r in self.store.all("SELECT message_id, source FROM alert_messages ORDER BY message_id")],
                          [("m1", "gmail"), ("m2", "gmail")])
         again = _gmail_pull(self.ctx, self.boards, "newer_than:3d", gmail=self.reader(google))
         self.assertEqual(again["gmail_messages"], 0)
-        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM leads")["c"], 5)
+        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM leads")["c"], 4)
+        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM alert_notices")["c"], 2)
         everything = " ".join(str(v) for t in ("leads", "alert_messages", "events") for r in self.store.all(f"SELECT * FROM {t}") for v in r)
         self.assertNotIn("candidate@example.com", everything)  # the recipient never lands in the database
 
@@ -306,13 +321,12 @@ class PullTests(unittest.TestCase):
         _record_alert(self.ctx, parse_eml_bytes(card), self.boards)
         with unittest.mock.patch.dict(os.environ, {private_sites.ENV: ""}):
             again = _record_alert(self.ctx, parse_eml_bytes(alert_email(plain)), self.boards)
-            self.assertEqual((again["lead_new"], again["lead_seen_before"]), (0, 1))
+            # its link names no posting while the setting is off: a notice, never an ordinary lead (D192 part 3)
+            self.assertEqual((again["lead_new"], again["notice_new"]), (0, 1))
             self.assertEqual(self.store.one("SELECT COUNT(*) FROM leads WHERE url = ?", (private_link,))[0], 1)
-        # the ordinary copy first (setting off), then the agency card: the earlier copy is kept local from then on
+        # an ordinary copy stored before D192 (setting off), then the agency card: the earlier copy is kept local
         other = private_link.replace("synthetic-private-token", "synthetic-other-token")
-        with unittest.mock.patch.dict(os.environ, {private_sites.ENV: ""}):
-            first = _record_alert(self.ctx, parse_eml_bytes(alert_email(plain.replace(private_link, other))), self.boards)
-        self.assertEqual(first["lead_new"], 1)
+        legacy_lead(self.store, other, context="Harbor Staffing · Remote")
         later = _record_alert(self.ctx, parse_eml_bytes(agency_email(agency_card("Claims Analyst", other))), self.boards)
         self.assertEqual((later["lead_new"], later["lead_seen_before"]), (0, 1))
         ordinary = self.store.one("SELECT * FROM leads WHERE url = ? AND lead_id NOT LIKE 'lead:agency:%'", (other,))
@@ -355,9 +369,8 @@ class PullTests(unittest.TestCase):
         from careeros.discovery import discovery_queue as dq
         from careeros.discovery.alerts import parse_eml_bytes
         link = "https://click.email.harborstaffing.com/job/synthetic-queued-token"   # Codex Pass 3 CR-AD-02
-        plain = f'<a href="{link}">Claims Analyst</a><br>Synthetic Employer Inc · Remote'
         with unittest.mock.patch.dict(os.environ, {private_sites.ENV: ""}):   # no setting yet: an ordinary lead, queued
-            _record_alert(self.ctx, parse_eml_bytes(alert_email(plain)), self.boards)
+            legacy_lead(self.store, link)   # as stored before D192 (such a card is a notice now: part 3)
             dq.build_backfill(self.ctx, 30)
             self.assertEqual([row["employer"] for row in dq.plan(self.ctx)], ["Synthetic Employer Inc"])
         _record_alert(self.ctx, parse_eml_bytes(agency_email(agency_card("Claims Analyst", link))), self.boards)   # its twin
@@ -738,15 +751,13 @@ class PullTests(unittest.TestCase):
     def test_a_host_an_earlier_ordinary_lead_or_job_uses_is_never_forgotten(self):
         import argparse
         import os
-        from careeros.cli import _record_alert, cmd_agency_hosts
+        from careeros.cli import cmd_agency_hosts
         from careeros.core import private_sites
         from careeros.discovery import seen_index
-        from careeros.discovery.alerts import parse_eml_bytes
         from tests.helpers import add_job
         link = "https://click.email.harborstaffing.com/job/synthetic-before-setup"
         with unittest.mock.patch.dict(os.environ, {private_sites.ENV: ""}):   # before the agency was set up: ordinary
-            _record_alert(self.ctx, parse_eml_bytes(alert_email(f'<a href="{link}">Claims Analyst</a><br>Synthetic Employer Inc · Remote')),
-                          self.boards)
+            legacy_lead(self.store, link)   # as stored before D192 (such a card is a notice now: part 3)
         self.assertTrue(self.store.one("SELECT 1 FROM leads WHERE url = ? AND lead_id NOT LIKE 'lead:agency:%'", (link,)))
         _gmail_pull(self.ctx, self.boards, "q", gmail=self.reader(FakeGoogle()))   # set up with the fixture: enrolled
         self.assertNotIn("synthetic-before-setup", json.dumps(seen_index.build(self.store)))
@@ -1670,11 +1681,12 @@ class PullTests(unittest.TestCase):
         google.messages = {"m1": alert_email(linkedin),
                            "m2": agency_email(agency_card("Claims Analyst", AG_1, description="Job ID: 04530-0012345678"))}
         counts = _gmail_pull(self.ctx, self.boards, "synthetic query", gmail=self.reader(google))
-        self.assertEqual((counts["lead_new"], counts["lead_seen_before"]), (1, 1))
-        visible = self.store.all("SELECT site FROM leads WHERE status != 'closed'")
-        self.assertEqual([r["site"] for r in visible], ["linkedin"])   # the public link is the lead you see
-        twin = self.store.one("SELECT lead_id, url FROM leads WHERE status = 'closed'")   # Codex CR-AD-07
-        self.assertEqual((twin["lead_id"].startswith("lead:agency:"), twin["url"]), (True, AG_1))
+        # both kept, the later one a possible repeat of the earlier: never "seen", never a closed twin (Codex's D190
+        # design review H8; D192 part 3)
+        self.assertEqual((counts["lead_new"], counts["lead_seen_before"]), (2, 0))
+        public = self.store.one("SELECT lead_id FROM leads WHERE site = 'linkedin'")[0]
+        agency = self.store.one("SELECT * FROM leads WHERE lead_id LIKE 'lead:agency:%'")
+        self.assertEqual((agency["status"], agency["url"], agency["repeat_of"]), ("new", AG_1, public))
 
     def test_a_mixed_digest_is_held_not_recorded_as_read(self):
         google = FakeGoogle()
@@ -1733,7 +1745,9 @@ class PullTests(unittest.TestCase):
         google.messages = {"m1": agency_email(agency_card("Claims Analyst", AG_1, description=job)),
                            "m2": agency_email(agency_card("Claims Analyst", AG_2, description=job), subject="More jobs")}
         counts = _gmail_pull(self.ctx, self.boards, "synthetic query", gmail=self.reader(google))
-        self.assertEqual((counts["lead_new"], counts["lead_seen_before"]), (1, 1))
+        self.assertEqual((counts["lead_new"], counts["lead_seen_before"]), (2, 0))   # a possible repeat (H8, D192 part 3)
+        first = self.store.one("SELECT lead_id FROM leads WHERE url = ?", (AG_1,))[0]
+        self.assertEqual(self.store.one("SELECT repeat_of FROM leads WHERE url = ?", (AG_2,))[0], first)
 
     def test_another_sites_lead_with_the_agency_cards_job_number_is_the_same_job(self):
         google = FakeGoogle()
@@ -1742,7 +1756,9 @@ class PullTests(unittest.TestCase):
         google.messages = {"m1": agency_email(agency_card("Claims Analyst", AG_1, description="Job ID: 04530-0012345678")),
                            "m2": alert_email(linkedin)}
         counts = _gmail_pull(self.ctx, self.boards, "synthetic query", gmail=self.reader(google))
-        self.assertEqual((counts["lead_new"], counts["lead_seen_before"]), (1, 1))
+        self.assertEqual((counts["lead_new"], counts["lead_seen_before"]), (2, 0))   # a possible repeat (H8, D192 part 3)
+        agency = self.store.one("SELECT lead_id FROM leads WHERE url = ?", (AG_1,))[0]
+        self.assertEqual(self.store.one("SELECT repeat_of FROM leads WHERE site = 'linkedin'")[0], agency)
 
     def test_expired_access_asks_you_to_reconnect(self):
         with self.assertRaises(gmail.GmailError) as ctx:

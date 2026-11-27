@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import re
 
-from careeros.normalize.posting import _RANGE, US_STATES, _amount
+from careeros.normalize.posting import _RANGE, US_STATES, _amount, detect_country, us_text_hint
 
 from .gate import GateResult, annualize, comp_trusted
 
@@ -102,10 +102,26 @@ def eligibility_facts(job: dict, requirements: list, gate: GateResult, policy) -
     elif "residence_limit_check" in flags:   # a residence sentence, never a rejection (2026-11-05)
         f = flags["residence_limit_check"]
         facts.append(_fact("location_state", "unknown", f["detail"], f.get("source_text")))
-    elif states and home in states:
+    elif states and home in states and job.get("country") == "US":
         facts.append(_fact("location_state", "compatible", f"{home} is in the posting's state list", ", ".join(states)))
+    elif states and home in states:
+        # a state list read from the text, while the location field does not place the posting in the US: the question
+        # stays open (Codex CR-2026-11-15-GATE-FIXES F1, Pass 5: a text listing the home state beside "only in Calgary")
+        facts.append(_fact("location_state", "unknown", f"the text lists {home} among the states it hires in, but the posting's "
+                           "location field does not place it in the US: check where it may be worked before applying",
+                           ", ".join(states)))
     elif job.get("country") == "US" and job.get("remote_type") == "remote" and not states and not excluded:
         facts.append(_fact("location_state", "compatible", "US-remote with no state limits stated", job.get("location_raw")))
+    elif job.get("country") == "unknown" and detect_country(job.get("location_raw") or "", "", job.get("remote_type") or "") == "US":
+        # a pasted posting's location an older parser read from its prose: not confirmed (Codex CR-2026-11-15-GATE-FIXES
+        # H2, Pass 6); only the processing refresh leaves a location that reads as US with an unknown country
+        facts.append(_fact("location_state", "unknown", "this location is not recorded as given by you (--location) or by the "
+                           "posting's own Location line, and its words are in the posting's text: set it yourself (careeros "
+                           "location JOB \"...\") before applying", job.get("location_raw")))
+    elif job.get("country") == "unknown" and (hint := us_text_hint(job.get("description_text") or "", job.get("location_raw") or "")):
+        # the text's own words, shown as a hint; the question stays open (Codex CR-2026-11-15-GATE-FIXES F1, Pass 4)
+        facts.append(_fact("location_state", "unknown", "the text says the role is in the US, but the posting's location field "
+                           "does not: check where it may be worked before applying", hint))
     else:
         facts.append(_fact("location_state", "unknown", "the posting does not say which states it hires in", job.get("location_raw")))
 

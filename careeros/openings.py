@@ -51,13 +51,14 @@ def record_observation(store: Store, *, source_kind: str, evidence_level: str, j
                        key: str | None = None, requisition_id: str | None = None, title: str | None = None,
                        company: str | None = None, location: str | None = None, pay_text: str | None = None,
                        published_at: str | None = None, updated_at: str | None = None, facts: dict | None = None) -> str:
+    from careeros.normalize.sanitize import canonical_cut   # a cut value made canonical again (section 3a)
     oid = f"obs:{uuid.uuid4().hex[:16]}"
     store.writer("discovery").insert("observations", {
         "observation_id": oid, "job_id": job_id, "lead_id": lead_id, "source_kind": source_kind,
         "evidence_level": evidence_level, "posting_key": key or posting_key(url), "requisition_id": requisition_id,
-        "url": (url or "")[:500] or None, "canonical_url": canonical, "title": (title or "")[:200] or None,
-        "company": (company or "")[:120] or None, "location": (location or "")[:120] or None,
-        "pay_text": (pay_text or "")[:80] or None, "source_published_at": published_at, "source_updated_at": updated_at,
+        "url": (url or "")[:500] or None, "canonical_url": canonical, "title": canonical_cut(title, 200) or None,
+        "company": canonical_cut(company, 120) or None, "location": canonical_cut(location, 500) or None,
+        "pay_text": canonical_cut(pay_text, 80) or None, "source_published_at": published_at, "source_updated_at": updated_at,
         "observed_at": store.clock.now(), "facts_json": json.dumps(facts or {}, sort_keys=True)})
     return oid
 

@@ -18,6 +18,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from careeros.paths import ENGINE_ROOT
+from tests.helpers import give_label
 
 NODE = os.environ.get("CAREEROS_NODE") or shutil.which("node")
 SKIP = "no Node.js runtime (set CAREEROS_NODE): the extension's behaviour isn't run here"
@@ -48,7 +49,6 @@ def end_to_end() -> dict:
     from unittest import mock
 
     from careeros.review import assist, packages
-    from careeros.review.labels import record_label
     from tests.test_assist import (GREENHOUSE_FILL, HIDDEN_WORDS_LIBRARY, HIDDEN_WORDS_QUESTIONS, LONG_ANSWER_QUESTIONS,
                                    LONG_ANSWERS_LIBRARY)
     from tests.test_packages import FACTS, JOB, LIBRARY, MID, POLICY, Vault, posting_store
@@ -56,10 +56,11 @@ def end_to_end() -> dict:
     questions = [*LONG_ANSWER_QUESTIONS, *HIDDEN_WORDS_QUESTIONS]
     try:
         store, _ = posting_store()
-        record_label(store, JOB, "apply", None, "k1")
+        give_label(store, POLICY, MID, JOB, "apply", None, "k1")
         packages.prepare(store, POLICY, MID, JOB, facts=FACTS, library=vault.library, vault_root=vault.root,
                          questions=questions)
-        with mock.patch.object(assist, "assistance_policy", return_value=GREENHOUSE_FILL):
+        with mock.patch.object(assist, "assistance_policy", return_value=GREENHOUSE_FILL), \
+                mock.patch.object(assist, "FILL_PAUSED", False):   # the inert fill code (D191 pauses it)
             out = assist.open_session(store, POLICY, MID, JOB, "assisted", facts=FACTS, library=vault.library,
                                       vault_root=vault.root, questions=questions, key="e2e")
         page = ",".join(q["name"] for q in questions if q["name"] != "first_name")

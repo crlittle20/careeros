@@ -146,16 +146,32 @@ class PullTests(unittest.TestCase):
         gh = FakeGh([issue(body=body)])
         _inbox_pull(self.ctx, self.client, REPO, runner=gh)
         reply = next(c[2] for c in gh.calls if c[:2] == ("issue", "comment"))
-        self.assertIn("graded: Pharmacy Benefits Systems Analyst", reply)
-        self.assertIn("lead: CareerOS does not open this site, so it is listed for the owner to open: Claims Business Analyst", reply)
-        self.assertEqual([r["employer_id"] for r in self.store.all("SELECT employer_id FROM employers")], ["greenhouse:synth"])
-        # the same posting recommended again later through its careers page is recognised, not fetched again
-        before = len(self.fetched)
-        body2 = "Pharmacy Benefits Systems Analyst | Synthetic Health | Remote | https://www.synth.com/careers?gh_jid=555 | again\n"
+        # an employer's careers page names no posting, its gh_jid included (the owner's D184 and D188): since part 3 of
+        # the owner's D192 build each card is a notice, never a lead, and the gh_jid guess is a suggestion on it, never
+        # fetched (the board and its posting are read only when the owner adds it)
+        self.assertIn("notice: the link names no posting (a careers page), so it is listed for the owner to add or "
+                      "dismiss: Pharmacy Benefits Systems Analyst", reply)
+        self.assertIn("notice: the link names no posting (a careers page), so it is listed for the owner to add or "
+                      "dismiss: Claims Business Analyst", reply)
+        self.assertEqual((self.fetched, self.store.one("SELECT COUNT(*) c FROM leads")["c"]), ([], 0))
+        self.assertEqual(sorted(r["suggestion_json"] for r in self.store.all("SELECT suggestion_json FROM alert_notices")),
+                         ['{"greenhouse_posting": "https://job-boards.greenhouse.io/synth/jobs/555"}',
+                          '{"greenhouse_posting": "https://job-boards.greenhouse.io/wrongguess/jobs/777"}'])
+        self.assertIsNone(self.store.one("SELECT 1 FROM employers"))
+        # the posting's own board link recommended later is read and graded
+        body2 = ("Pharmacy Benefits Systems Analyst | Synthetic Health | Remote | https://job-boards.greenhouse.io/synth/jobs/555 "
+                 "| again\n")
         gh2 = FakeGh([issue(number=8, body=body2)])
         _inbox_pull(self.ctx, self.client, REPO, runner=gh2)
+        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM jobs WHERE job_id = 'greenhouse:synth:555'")["c"], 1)
+        # and recommended again it is that line, seen before, not fetched again
+        before = len(self.fetched)
+        body2 = ("Pharmacy Benefits Systems Analyst | Synthetic Health | Remote | https://job-boards.greenhouse.io/synth/jobs/555 "
+                 "| again\n")
+        gh2 = FakeGh([issue(number=9, body=body2)])
+        _inbox_pull(self.ctx, self.client, REPO, runner=gh2)
         self.assertEqual(len(self.fetched), before)
-        self.assertIn("already tracked by CareerOS", next(c[2] for c in gh2.calls if c[:2] == ("issue", "comment")))
+        self.assertIn("seen before: Pharmacy Benefits Systems Analyst", next(c[2] for c in gh2.calls if c[:2] == ("issue", "comment")))
 
     def test_gh_errors_surface_as_inbox_errors(self):
         broken = lambda argv, **kw: subprocess.CompletedProcess(argv, 1, "", "auth required")

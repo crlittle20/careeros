@@ -56,6 +56,15 @@ class Link:
     text: str = ""
     context: str = ""
     job_like: bool = False
+    # the card's occurrence key: its email's key and its position there (part 3 of the owner's D192 build; Codex's D190
+    # design review H7): what a notice is stored under, so the same email read again adds nothing
+    occurrence: str = ""
+
+    def __post_init__(self):
+        # the card's text and context in the canonical form (the D190 design, section 3a, point 5); the link as given
+        from careeros.normalize.sanitize import canonical
+        self.text = canonical(self.text or "")
+        self.context = canonical(self.context or "")
 
 
 @dataclass
@@ -72,6 +81,13 @@ class AlertEmail:
     digest_status: str | None = None
     digest_reason: str | None = None   # why a digest is "partial": "cards", "layout", "no layout recorded" or "plain text"
                                        # ("correspondence": a recognised digest that reads like application mail)
+    message_key: str = ""   # the email's key: "gmail:<id>" for one pulled from Gmail, else "eml:<its bytes' digest>"
+
+    def __post_init__(self):
+        # the sender and subject in the canonical form (the D190 design, section 3a, point 5)
+        from careeros.normalize.sanitize import canonical
+        self.sender = canonical(self.sender) if isinstance(self.sender, str) else self.sender
+        self.subject = canonical(self.subject) if isinstance(self.subject, str) else self.subject
 
 
 # --- links ---------------------------------------------------------------------------------------------
@@ -463,48 +479,127 @@ def _reading(url: str) -> tuple[str, str, bool] | None:
     if parse_job_url(url):
         return f"https://{host}{path}".rstrip("/"), site, True
     job_path = bool(re.search(r"/(job|jobs|job-detail|careers?/job|requisition)s?/[^/]+", path, re.I))
-    return f"https://{host}{path}" + (f"?{parts.query}" if parts.query and not job_path else ""), site, job_path
+    # an app route after "#" names the opening ("/portal#/opening/R-401"): kept, so two openings of one portal stay two
+    # leads; a page anchor or a text link is dropped (Codex CR-2026-11-15-GATE-FIXES H18, Pass 11; D179/D180)
+    route = parts.fragment.rstrip("/") if parts.fragment.startswith(("/", "!/")) else ""
+    query = parts.query
+    if job_path and query:
+        # a job path's query stays whole, tracking aside, as the posting's own link keeps it (normalize.posting_link):
+        # the parameter naming the opening is never dropped, whatever its name ("ashby_jid", "id", "pid", "jobReqId"), so
+        # two openings of one page stay two leads (the red team after Codex Pass 11, RT3-5; before Pass 15, RT-23)
+        from careeros.normalize.posting import _TRACKING
+        query = "&".join(sorted(p for p in query.split("&") if p and not _TRACKING.match(p.split("=", 1)[0])))
+    return (f"https://{host}{path}" + (f"?{query}" if query else "") + (f"#{route}" if route else ""),
+            site, job_path or bool(route))
 
 
 # --- parsing -------------------------------------------------------------------------------------------
+_CARD_BLOCKS = ("p", "div", "tr", "td", "th", "li", "ul", "ol", "table", "tbody", "thead", "section", "article")
+
+
 class _Anchors(HTMLParser):
+    """Each link with its text and its card's other words (its context): the words after it, up to the next link. A
+    card's own parts stay its own (the red team's gr1-alerts-1): a link that follows another with no block started
+    between them (the employer's name linked, a Save link) is in the same card, so the words after it are the earlier
+    link's context too; and the words of a block that began after the previous link and is still open when the next
+    link starts (the employer and the place written above the title, in the title's own cell) are the next link's,
+    never the previous card's. Words in a block that began and ended between two links stay the earlier link's."""
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.found: list[list] = []  # [href, text, context]
         self._open: list | None = None
-        self._tail: list | None = None
+        self._lead = ""   # the open link's lead-in: its card's words before it, in a block begun after the last link
+        self._tails: list[list] = []   # the links of the card being read: the words that follow are their context
+        self._blocks: list[list] = []   # open blocks: [tag, began after the last link, its words since then]
+        self._block_since_link = False
+        self._joined = False
         self._skip = 0
+
+    def _emit(self, text: str) -> None:
+        for tail in self._tails:
+            if len(tail[2]) < CONTEXT_CHARS * 10:   # read whole before any cut (RT-11)
+                tail[2] += text
+        for block in self._blocks:
+            if block[1]:
+                block[2] += text
 
     def handle_starttag(self, tag, attrs):
         if tag in ("style", "script"):   # a <head> never hides a link: browsers ignore it in the body (CR-AD-V2-01)
             self._skip += 1
         elif tag == "a":
             href = dict(attrs).get("href") or ""
-            self._open = [href, "", ""]
-            self._tail = None
-        elif tag in ("br", "p", "div", "tr", "td", "li") and self._tail is not None:
-            self._tail[2] += " · "
+            # the innermost block that began after the previous link, is still open and has words: the new card's
+            lead_in = next((b[2] for b in reversed(self._blocks) if b[1] and b[2].strip(" ·\n\t\r")), "")
+            if lead_in:
+                for tail in self._tails:
+                    if tail[2].endswith(lead_in):
+                        tail[2] = tail[2][:-len(lead_in)]
+            self._joined = not self._block_since_link and bool(self._tails)
+            if not self._joined:
+                self._tails = []
+            self._open = [href, "", lead_in + " · " if lead_in else ""]
+            self._lead = lead_in
+        elif tag == "br" or tag in _CARD_BLOCKS:
+            self._emit(" · ")
+            if tag in _CARD_BLOCKS and self._open is None:
+                self._blocks.append([tag, True, ""])
+                self._block_since_link = True
 
     def handle_endtag(self, tag):
         if tag in ("style", "script"):
             self._skip = max(0, self._skip - 1)
         elif tag == "a" and self._open is not None:
+            words = re.sub(r"\s+", " ", self._open[1]).strip()
+            parts = [p.strip() for p in re.split(r"\s*·\s*", self._lead) if p.strip()]
+            if words and GENERIC_TEXT.match(words) and parts and not GENERIC_TEXT.match(parts[0]):
+                # a card whose only link is a button ("View Job", "Apply now"): its title is the card's own text read
+                # before the button, in its own block (its lead-in), and the rest of that text stays its context; a
+                # button after a linked title has no lead-in of its own and stays untitled (BATCH_5 F3)
+                self._open[1], self._open[2] = parts[0], self._open[2].replace(parts[0], "", 1)
+            if self._joined:
+                self._emit(" · " + self._open[1])
             self.found.append(self._open)
-            self._tail, self._open = self._open, None
+            self._tails = [*self._tails, self._open]
+            self._open = None
+            for block in self._blocks:   # every block open now began before this link ended
+                block[1], block[2] = False, ""
+            self._block_since_link = False
+        elif tag in _CARD_BLOCKS:
+            for i in range(len(self._blocks) - 1, -1, -1):
+                if self._blocks[i][0] == tag:
+                    del self._blocks[i:]
+                    break
 
     def handle_data(self, data):
         if self._skip:
             return
         if self._open is not None:
             self._open[1] += data
-        elif self._tail is not None and len(self._tail[2]) < CONTEXT_CHARS * 2:
-            self._tail[2] += data
+        else:
+            self._emit(data)
 
 
 def _tidy(text: str, limit: int) -> str:
     text = re.sub(r"\s+", " ", clean_text(text or "")).strip()
     text = re.sub(r"(\s*·\s*)+", " · ", text).strip(" ·")
     return text[:limit]
+
+
+def _line_context(text: str) -> str:
+    """A card's text after its link, tidied and cut to CONTEXT_CHARS. What the cut drops is never lost to the card's
+    identity: a requisition it states is written at the end ("... · Job ID: R-8102", RT-11), and when anything else is
+    cut (a place, the pay), a digest of the whole card is too ("... · card 3f9a1c2e"), so two cards that differ only
+    after the cut never become one lead (the red team's fr1-alerts-0)."""
+    import hashlib
+    from careeros.discovery.manual_intake import requisition_in, requisitions_in
+    whole = _tidy(text, 10 * CONTEXT_CHARS)
+    if len(whole) <= CONTEXT_CHARS:
+        return whole
+    stated = requisitions_in(whole)
+    tail = (" · Job ID: " + (requisition_in(whole) or "unclear (" + ", ".join(stated) + ")")
+            if stated and requisitions_in(whole[:CONTEXT_CHARS]) != stated else "")
+    tail += " · card " + hashlib.sha256(whole.encode("utf-8")).hexdigest()[:8]
+    return (whole[:max(0, CONTEXT_CHARS - len(tail))].rstrip(" ·") + tail)[:CONTEXT_CHARS * 2]
 
 
 # An "&" in an href that starts a query parameter ("&currentJobId=9123456") is the parameter, never an HTML entity: the
@@ -739,6 +834,10 @@ class _AgencyCards(_Anchors):
         self.digest = digest
         self.details: list[str] = []
         self.layout_items: list[str] = []   # every link that is not an Apply Now button, described (layout_fingerprint)
+        # the same links' visible text, label and alt, kept apart for `careeros agency-layout`: never parsed back out of
+        # the described form, where an alt or attribute holding "|c=" or "|alt=" was misread (Codex
+        # CR-2026-11-15-GATE-FIXES F7). The fingerprint's inputs are unchanged.
+        self.link_labels: list[tuple[str, str, str]] = []
         self.abandoned = 0   # links opened and never closed: their text and destination cannot be judged (CR-AD-V2-01)
         self.unread_elements = 0   # elements in _UNREAD_ELEMENTS (Pass 2)
         self.clickables = 0        # attributes in _CLICK_ATTRS on every tag the parser saw (Pass 2)
@@ -877,6 +976,7 @@ class _AgencyCards(_Anchors):
                     meta = self._link_meta
                     self.layout_items.append(f"t={text.casefold()}|a={meta.get('aria', '')}|i={int(meta.get('img', False))}"
                                              f"|src={meta.get('src', '').strip()}|alt={meta.get('alt', '')}|c={self._chain}")
+                    self.link_labels.append((text.casefold(), meta.get("aria", ""), meta.get("alt", "")))
                     if self.cell_links:
                         self.cell_links[-1] += 1
                 if text.casefold() == "apply now":
@@ -1014,16 +1114,14 @@ def agency_layout_report(data: bytes) -> dict | None:
                 "status": "partial", "reason": "plain text"}
     cards = _read_cards(digest, html_part.get_content())
 
-    def job_like(item):   # a link outside the cards whose text, label or alt reads like a job, other than "see all jobs"
-        # alt stops at the element chain (|c=, Pass 5): the chain's attributes (a table's role="presentation") are not
-        # the link's label, and read as one they made every link "job-like" (2026-11-15)
-        label, aria = item.split("|")[0][2:], item.split("|a=")[1].split("|")[0]
-        alt = item.split("|alt=")[-1].split("|c=")[0]
+    def job_like(labels):   # a link outside the cards whose text, label or alt reads like a job, other than "see all jobs"
+        # the link's own text, aria label and alt only: never the element chain's attributes (a table's
+        # role="presentation" made every link "job-like", 2026-11-15), and never parsed out of the fingerprint's form (F7)
         return any(t and not _LIST_LINK.fullmatch(t) and re.search(r"\b(apply|job|jobs|position|role|opening)\b", t)
-                   for t in (label, aria, alt))
+                   for t in labels)
     return {"agency": digest.name, "cards": len(cards.cards), "headings": cards.heading_count, "buttons": cards.button_count,
             "layout": cards.layout(), "recorded": digest.layout or None, "status": cards.status(), "reason": cards.reason(),
-            "job_like_links": sum(1 for item in cards.layout_items if item.startswith("t=") and job_like(item))}
+            "job_like_links": sum(1 for labels in cards.link_labels if job_like(labels))}
 
 
 def _named_like_an_agency(message) -> bool:
@@ -1123,7 +1221,7 @@ def _links_from_html(markup: str) -> list[tuple[str, str, str]]:
     parser = _Anchors()
     parser.feed(_escape_href_ampersands(markup))
     parser.close()
-    return [(href, _tidy(text, 200), _tidy(context, CONTEXT_CHARS)) for href, text, context in parser.found]
+    return [(href, _tidy(text, 200), _line_context(context)) for href, text, context in parser.found]
 
 
 def _links_from_text(body: str) -> list[tuple[str, str, str]]:
@@ -1136,7 +1234,7 @@ def _links_from_text(body: str) -> list[tuple[str, str, str]]:
             block = block + [label] if label else []
             continue
         title = label or (block[0] if block else "")
-        context = _tidy(" · ".join(block[1:] if not label else block), CONTEXT_CHARS)
+        context = _line_context(" · ".join(block[1:] if not label else block))
         found.extend((url, title, context) for url in urls)
         block = []
     return found
@@ -1163,9 +1261,13 @@ def parse_eml(path: Path) -> AlertEmail:
     return parse_eml_bytes(path.read_bytes())
 
 
-def parse_eml_bytes(data: bytes) -> AlertEmail:
+def parse_eml_bytes(data: bytes, message_key: str | None = None) -> AlertEmail:
+    """The email's job lines, every card occurrence kept, each keyed by `message_key` (the Gmail message id, given by the
+    Gmail pull; else the bytes' digest) and its position, never merged with another by its link, title or stated
+    identity (part 3 of the owner's D192 build; Codex's D190 design review H7)."""
     if len(data) > MAX_EML_BYTES:
         raise AlertEmailError("email is larger than 5 MB")
+    key = message_key or "eml:" + hashlib.sha256(data).hexdigest()[:24]
     message = email.message_from_bytes(data, policy=email.policy.default)
     try:
         received = format_utc(parsedate_to_datetime(message["Date"])) if message["Date"] else None
@@ -1201,12 +1303,15 @@ def parse_eml_bytes(data: bytes) -> AlertEmail:
             # the digest's own words outside its cards are about an application, an interview, an assessment, an offer
             # or a submittal: no card is read, and it is held for you, never read for jobs (Codex Pass 3, CR-AD-V2-11)
             return AlertEmail(sender, subject, received, [], digest_status="partial", digest_reason="correspondence")
-        return AlertEmail(sender, subject, received, cards.cards, digest_status=cards.status(), digest_reason=cards.reason())
+        for position, card in enumerate(cards.cards):
+            card.occurrence = f"{key}#card{position}"
+        return AlertEmail(sender, subject, received, cards.cards, digest_status=cards.status(), digest_reason=cards.reason(),
+                          message_key=key)
 
     raw_links = _links_from_html(markup) if markup is not None else _links_from_text(text_part.get_content())
-    by_url: dict[str, Link] = {}
+    links: list[Link] = []
     skipped: dict[str, int] = {}
-    for href, text, context in raw_links:
+    for position, (href, text, context) in enumerate(raw_links):
         try:
             canonical = canonical_job_url(href)
         except MalformedLink:  # one unreadable link never discards the rest of the digest; it is counted
@@ -1233,10 +1338,34 @@ def parse_eml_bytes(data: bytes) -> AlertEmail:
         url = stored_url(href, url)   # a review href stays a review lead, whatever its kept URL reads as (D149 R-I1)
         site = site_of(_split(url).netloc)   # the site of the stored link, not of its unwrapped destination (D151 rule 4)
         meaningful = text if text and not GENERIC_TEXT.match(text) else ""
-        link = by_url.setdefault(url, Link(url=url, site=site, job_like=job_like))
-        if meaningful and not link.text:
-            link.text, link.context = meaningful, context
-    return AlertEmail(sender, subject, received, list(by_url.values()), skipped=skipped)
+        # every occurrence is its own line, under its position: none is merged with another by its link, title or stated
+        # identity (Codex's D190 design review H7; part 3 of the owner's D192 build). One posting linked twice is "seen"
+        # at its second line by its exact link; a careers page's lines are notices, one per occurrence
+        links.append(Link(url=url, site=site, job_like=job_like, text=meaningful, context=context if meaningful else "",
+                          occurrence=f"{key}#{position}"))
+    return AlertEmail(sender, subject, received, links, skipped=skipped, message_key=key)
+
+
+# the parts of an alert line that change from one email to the next for the same opening: its age, "New", "Easy Apply"
+# and the like (the red team after Codex Pass 12, RT4-4)
+_VOLATILE = re.compile(r"(?:(?:re)?posted\b.*|new|just posted|today|yesterday|easy apply|actively (?:hiring|recruiting)|"
+                       r"promoted|be an early applicant|(?:over )?\d+\+? applicants?|"
+                       # an age says "ago": "6 months" or "40 hours" alone is a contract's length or the weekly hours,
+                       # part of which opening it is (the red team's gr1-alerts-1)
+                       r"\d+\+? (?:minutes?|hours?|days?|weeks?|months?) ago)", re.I)
+
+
+def stated_identity(context: str | None) -> str:
+    """What an alert line says about which opening it is, beside its title: every part of it (the employer, the place,
+    the pay, a requisition however it is written) but the ones that change from email to email (its age, "New"),
+    tidied and in the order of their text, and any requisition it states read as one. At a page several openings
+    share, two lines that state anything different are two leads, never one, and the same line again is one (Codex
+    CR-2026-11-15-GATE-FIXES H26, Pass 12; the owner's D182; the red team after Pass 12, RT4-3 and RT4-4)."""
+    from careeros.discovery.board_discovery import lead_requisition
+    from careeros.discovery.seen_index import norm_req
+    parts = {" ".join(s.split()).lower() for s in (context or "").split(" \u00b7 ")}
+    kept = sorted(p for p in parts if p and not _VOLATILE.fullmatch(p))
+    return "|".join([*kept, norm_req(lead_requisition(context)) or ""])
 
 
 _HOST_PREFIXES = {"www", "careers", "jobs", "job", "boards", "apply", "work", "join"}

@@ -196,11 +196,16 @@ def status(store: Store, policy, job_id: str) -> SubmissionStatus:
 
 @dataclass
 class Authorization:
+    """An evaluation, never a token (the D190 design, section 3, Codex H16): whether, at the moment it was read, P1 and
+    every prospective veto passed. A consumer that acts calls authorize again inside its own transaction and acts only
+    on that result. The label id and preview digest are for diagnostics only."""
     job_id: str
     channel: str
     agency: str | None
     reasons: list[dict]
     status: SubmissionStatus
+    label_id: str | None = None
+    preview_digest: str | None = None
 
     @property
     def allowed(self) -> bool:
@@ -208,18 +213,32 @@ class Authorization:
 
 
 def authorize(store: Store, policy, job_id: str, channel: str, agency: str | None = None, profile=None) -> Authorization:
-    """May a submission be made now? Every check must pass: the gate found the job eligible, the posting is open, the
-    employer is identified, each hold covering the channel has a valid release, and the duplicate / competing-submission
-    check (`applications.preflight`) raises nothing that would block or need your reason."""
-    from .applications import preflight
+    """May a submission be made now? Every check must pass: P1 (your Apply or Stretch label, from a preview whose
+    content the job still is: packages.route_for), the gate found the job eligible and its decision is current, the
+    posting is open, the employer is identified, each hold covering the channel has a valid release, and the duplicate /
+    competing-submission check (`applications.preflight`) raises nothing that would block or need your reason. Read in
+    one transaction: the caller's, else its own (the D190 design, Codex H16)."""
     _check_channel(channel, agency)
+    with store.read():
+        return _authorize(store, policy, job_id, channel, agency, profile)
+
+
+def _authorize(store: Store, policy, job_id: str, channel: str, agency: str | None, profile) -> Authorization:
+    from .applications import preflight
+    from .packages import route_for
+    from .shortlist import _latest_label
     current = status(store, policy, job_id)
-    job = store.one("SELECT current_state, closed_at FROM jobs WHERE job_id = ?", (job_id,))
+    job = store.one("SELECT current_state, closed_at, source_json, extraction_fingerprint FROM jobs WHERE job_id = ?",
+                    (job_id,))
     if job is None:
         raise ValueError("unknown_job")
-    gate = store.one("SELECT decision, policy_fingerprint, profile_fingerprint FROM gate_results WHERE job_id = ? "
+    gate = store.one("SELECT decision, policy_fingerprint, profile_fingerprint, extraction_fingerprint, source_digest "
+                     "FROM gate_results WHERE job_id = ? "
                      "ORDER BY at DESC, rowid DESC LIMIT 1", (job_id,))
     reasons = []
+    route, basis = route_for(store, policy, job_id, profile)
+    if route is None:   # P1, the only safety decision (the D190 design, section 2)
+        reasons.append({"code": "not_approved", "detail": basis})
     if gate is None or gate["decision"] != "eligible":
         reasons.append({"code": "not_eligible", "detail": f"the gate's latest decision is {gate['decision'] if gate else 'missing'}"})
     elif not _current(job, gate, policy, profile):
@@ -234,7 +253,12 @@ def authorize(store: Store, policy, job_id: str, channel: str, agency: str | Non
         reasons.append({"code": "submission_held", "detail": f"{hold.hold_id}: {hold.reason}"})
     check = preflight(store, job_id, channel, agency)
     reasons += [{"code": r["code"], "detail": r["detail"]} for r in check.reasons if r["level"] in ("block", "hold")]
-    return Authorization(job_id, channel, agency, reasons, current)
+    label = _latest_label(store, job_id)
+    given = None
+    if label is not None and label["preview_id"]:
+        given = store.one("SELECT digest FROM label_previews WHERE preview_id = ?", (label["preview_id"],))
+    return Authorization(job_id, channel, agency, reasons, current, label["label_id"] if label is not None else None,
+                         given["digest"] if given is not None else None)
 
 
 def _current(job, gate, policy, profile) -> bool:
@@ -244,6 +268,14 @@ def _current(job, gate, policy, profile) -> bool:
 
     from careeros.pipeline import decision_fingerprint
     if job["current_state"] not in ("eligible", "scored"):
+        return False
+    # the binding is in the data (the D190 design, part c): the decision judged this source record, and the requirements
+    # read from this posting. The stored extraction fingerprint is compared, never recomputed (its extractor id depends
+    # on whether the AI is open in this command). A row written before 017 judged no recorded source: not current
+    from careeros.pipeline import source_digest
+    if gate["source_digest"] != source_digest(job["source_json"]):
+        return False
+    if gate["extraction_fingerprint"] != (job["extraction_fingerprint"] or "unread"):
         return False
     if gate["policy_fingerprint"] != decision_fingerprint(SimpleNamespace(policy=policy)):   # type: ignore[arg-type]
         return False

@@ -5,4 +5,5 @@ US_nationwide|US||,US_nationwide,Remote: anywhere in the US,Remote,1,1,US,,,1
 US_unspecified|US||,US_unspecified,"Remote: US, states not stated",Remote,1,1,US,,,4
 hybrid|US||,hybrid,Hybrid,Hybrid,0,1,US,,,5
 onsite|US||,onsite,On-site,On-site,0,1,US,,,6
+unknown|unknown||,unknown,Unknown,Unknown,0,0,unknown,,,8
 (none),,(none),Unknown,0,0,,,,99

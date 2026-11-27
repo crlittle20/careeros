@@ -22,10 +22,13 @@ from careeros.core.transitions import Matrix
 SCHEMA_DIR = Path(__file__).resolve().parent / "schema"
 GENESIS = "0" * 64
 # Schema guards (OPP-50, D83). For a schema an older engine may still run on, the oldest such engine's schema. The
-# migration that reaches it records the value in the database, because the older engine cannot know it. 015 rebuilt
-# two tables with their rows and added columns older code never reads, and the schema-14 engine ran on it for real
-# (2026-11-03 07:00), so a rollback across it needs no restore. A schema not listed here opens only with code that
-# knows it.
+# migration that reaches it records the value in the database, in its own transaction (Codex's D190 design review,
+# H9), because the older engine cannot know it. 015 rebuilt two tables with their rows and added columns older code
+# never reads, and the schema-14 engine ran on it for real (2026-11-03 07:00), so a rollback across it needs no
+# restore. A schema not listed here opens only with code that knows it: 016 is not listed (the owner's D191), so an
+# engine older than it refuses the database, and a rollback across it is a restore of the backup made before it. 017
+# (the P1 build of the D190 design, the owner's D198) is not listed either: an engine without P1 never writes a
+# database that holds P1's approvals.
 RUNS_ON_OLDER = {15: 14}
 
 
@@ -41,6 +44,20 @@ class SchemaTooNew(RuntimeError):
 class MigrationPending(RuntimeError):
     """The database needs a migration, and this command may not apply one."""
 
+
+class TransactionLost(RuntimeError):
+    """SQLite ended the whole transaction this work was nested in (it answers a full disk that way), so nothing of it is
+    kept and nothing after it may be written as part of it. Raised inside the transaction only: once its outermost
+    `Store.tx` frame is left, the caller sees the original error (`original`), as for any failed transaction. Work that
+    catches a failure and carries on (one bad posting, one bad card) re-raises this instead (the D190 design, revision 4,
+    section 7; found by the gate session's run of the red team's rtv_hr1faults_1 on 74807d3)."""
+
+    def __init__(self, original: BaseException | None):
+        self.original = original
+        cause = f"{type(original).__name__}: {original}" if original is not None else \
+            "a failure inside it was caught and the work carried on"
+        super().__init__(f"transaction_lost: SQLite ended the transaction ({cause}); nothing of it was kept")
+
 STATE_COLUMNS = {"current_state", "state_sequence", "entered_state_at"}
 JOB_COLUMNS_BY_COMPONENT = {
     "discovery": {"employer_id", "employer_name", "parent", "requisition_id", "title", "title_norm", "family",
@@ -48,7 +65,8 @@ JOB_COLUMNS_BY_COMPONENT = {
                   "comp_max", "comp_period", "comp_currency", "posted_at", "last_seen_at", "closed_at", "url",
                   "apply_url", "canonical_url", "description_text", "content_fingerprint", "dedupe_key",
                   "duplicate_of", "repost_of", "variant_of", "exclude_from_kpi", "department", "source_updated_at",
-                  "absent_scans", "deadline_at", "remote_scope", "timezone_requirement"},
+                  "absent_scans", "deadline_at", "remote_scope", "timezone_requirement", "workplace_hint", "board_pay_json",
+                  "typed_countries_json", "source_json"},
     "extract": {"extraction_fingerprint", "requirements_fingerprint"},
 }
 # Board lifecycle columns (2026-10-13 verification). Automatic verification may change them; only an admin action may
@@ -65,6 +83,8 @@ COLUMN_LIMITS = {
     ("applications", "tracker"): {"notes"},
     ("inbox_issues", "discovery"): {"closed"},
     ("lead_matches", "review"): {"audit", "audited_at"},
+    ("alert_notices", "review"): {"state", "state_at", "job_id"},   # your dismissal or addition (part 3 of D192)
+    ("label_previews", "review"): {"used_at", "label_id"},   # a preview is used once, by one label (D190, 017)
     ("lead_matches", "discovery"): set(),
     ("title_audit", "review"): {"verdict", "verdict_at"},
     ("board_mappings", "discovery"): {"official_domain", "identity_status", "identity_evidence", "verified_by",
@@ -78,10 +98,11 @@ TABLES_BY_COMPONENT = {
     "discovery": {"employers", "jobs", "job_snapshots", "runs", "leads", "alert_messages", "inbox_issues", "board_mappings",
                   "discovery_queue", "discovery_attempts", "lead_matches", "title_reviews", "title_audit", "observations",
                   "opening_links", "job_changes", "source_scans", "employer_entities", "career_sites", "verification_runs",
-                  "verification_evidence", "board_reviews", "provider_status", "career_fit_history"},
+                  "verification_evidence", "board_reviews", "provider_status", "career_fit_history", "alert_notices",
+                  "hold_clearances"},
     "extract": {"requirements", "jobs"},
     "qualify": {"gate_results", "scores", "night_assessments", "night_results"},
-    "review": {"labels", "leads", "dismissals", "lead_matches", "title_audit"},
+    "review": {"labels", "leads", "dismissals", "lead_matches", "title_audit", "alert_notices", "label_previews"},
     "tracker": {"applications"},
     "submission": {"submission_releases"},   # your releases of a submission hold (R2)
     "assist": {"packages", "package_approvals", "assist_sessions", "assist_outcomes"},   # assisted applications (ADR 0009)
@@ -91,7 +112,40 @@ TABLES_BY_COMPONENT = {
 }
 MUTABLE_TABLES = {"employers", "jobs", "runs", "meta", "exceptions", "leads", "applications", "inbox_issues", "board_mappings",
                   "discovery_queue", "lead_matches", "title_audit", "employer_entities", "career_sites", "board_reviews",
-                  "provider_status"}
+                  "provider_status", "alert_notices", "label_previews"}
+# The content columns whose text must be in the one canonical form (the D190 design, section 3a: sanitize.canonical),
+# beside the column registry above. A write of any other form is refused, so an entry point that misses canonical()
+# fails in the tests and the fuzzer instead of storing a second form. URL, id, digest and timestamp columns are not
+# listed and never changed; exceptions, job_changes and reasons record, not read, and stay unmarked.
+CANONICAL_TEXT = {
+    "jobs": {"title", "location_raw", "description_text", "requisition_id", "department", "employer_name", "parent",
+             "workplace_hint", "employment_type", "remote_type", "country", "remote_scope", "timezone_requirement",
+             "title_norm", "family"},
+    "employers": {"name", "parent"},
+    "leads": {"title", "title_norm", "context", "sender", "subject"},
+    "alert_notices": {"title", "title_norm", "context", "sender", "subject", "suggested_employer"},
+    "observations": {"title", "company", "location", "requisition_id", "pay_text"},
+}
+# JSON columns whose text values are checked the same way (links excluded): the source record, and a sighting's facts
+CANONICAL_JSON = (("jobs", "source_json"), ("observations", "facts_json"))
+
+
+def non_canonical(table: str, row: dict) -> list[str]:
+    """The columns of a write whose text is not in the canonical form (empty: the write may go)."""
+    from careeros.normalize.sanitize import canonical, canonical_values
+    bad = [k for k in sorted(CANONICAL_TEXT.get(table, ())) if isinstance(row.get(k), str) and row[k] != canonical(row[k])]
+    for column in (c for t, c in CANONICAL_JSON if t == table and isinstance(row.get(c), str)):
+        try:
+            value = json.loads(row[column])
+        except ValueError:
+            continue
+        if column == "facts_json" and not (isinstance(value, dict) and value.get("sighting")):
+            continue   # only a sighting's facts carry posting content
+        if value != canonical_values(value):
+            bad.append(column)
+    return bad
+
+
 WORKFLOW_ENTITIES = {  # entity -> (table, id column, event type)
     "job": ("jobs", "job_id", "job_status_changed"),
     "application": ("applications", "application_id", "application_status_changed"),
@@ -106,8 +160,25 @@ class DataQualityError(RuntimeError):
     pass
 
 
+class NonCanonicalText(DataQualityError):
+    """A write of posting content in another form than sanitize.canonical's: a path that missed it fails loudly
+    instead of storing a second form (the D190 design, section 3a)."""
+
+
 class IdempotencyCollision(RuntimeError):
     pass
+
+
+def _pending_holds(store: "Store"):
+    from careeros.review.packages import _read_pending
+    return _read_pending(store)
+
+
+# what a read transaction reads beside the database before its snapshot starts, by name (Codex H44): the holds kept
+# beside the database (the review's pending-holds file). A decision made in the read pairs that reading with a snapshot
+# that starts after it, and every path that removes a line does so only after the row or clearance that replaces it has
+# committed, so a hold moving from the file into a row is in one view or the other, never in neither
+BESIDE = {"pending_holds": _pending_holds}
 
 
 class Store:
@@ -128,6 +199,8 @@ class Store:
         self.clock = clock
         self.policy_fingerprint = policy_fingerprint
         self._depth = 0
+        self._reading = False
+        self._beside: dict = {}   # what the read in progress read beside the database before its snapshot (BESIDE)
         self.committed = 0   # rows changed by committed transactions: what a caller may tell you was saved
 
     def close(self) -> None:
@@ -164,9 +237,18 @@ class Store:
             number = int(script.name.split("_", 1)[0])
             if number <= current:
                 continue
-            self.conn.executescript("BEGIN;\n" + script.read_text(encoding="utf-8") + "\nCOMMIT;")
-            self.conn.execute("INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', ?)", (str(number),))
-            self.conn.execute("INSERT OR REPLACE INTO meta(key, value) VALUES ('contract_version', ?)", (CONTRACT_VERSION,))
+            # the schema it reaches, and the oldest engine that may open it, are written in the migration's own
+            # transaction: a stop after its COMMIT never leaves the new tables under the old markers (Codex's D190
+            # design review, H9). 016 writes both itself as well.
+            markers = "".join(f"\nINSERT OR REPLACE INTO meta(key, value) VALUES ('{key}', '{value}');" for key, value in (
+                ("schema_version", number), ("contract_version", CONTRACT_VERSION),
+                ("oldest_engine_schema", RUNS_ON_OLDER.get(number, number))))
+            try:
+                self.conn.executescript("BEGIN;\n" + script.read_text(encoding="utf-8") + markers + "\nCOMMIT;")
+            except BaseException:
+                if self.conn.in_transaction:   # a statement or the COMMIT failed: nothing of the migration stays
+                    self.conn.execute("ROLLBACK")
+                raise
             current = number
         oldest = str(RUNS_ON_OLDER.get(current, current))   # also for a database migrated before this record existed
         if current and self._meta("oldest_engine_schema") != oldest:
@@ -174,21 +256,62 @@ class Store:
         return current
 
     @contextmanager
+    def read(self):
+        """One read transaction (the D190 design, section 3, "Reads and writes"): every read inside it sees one
+        snapshot of the database (BEGIN DEFERRED; in WAL mode one snapshot from its first read to its end), and nothing
+        is written (PRAGMA query_only; a tx() inside it is refused). Inside an open transaction, a tx() or another
+        read(), it is that transaction: every capture and P1 check runs in one. Before its snapshot starts (its first
+        query) it reads what is kept beside the database (BESIDE: the pending-holds file), and every decision in it uses
+        that reading (beside), so the file it sees is never newer than the database it is paired with (Codex H44)."""
+        if self._depth or self._reading:
+            yield
+            return
+        beside = {name: reader(self) for name, reader in BESIDE.items()}   # before any statement of the transaction
+        self.conn.execute("PRAGMA query_only = 1")
+        try:
+            self.conn.execute("BEGIN DEFERRED")
+            self._reading, self._beside = True, beside
+            try:
+                yield
+            finally:
+                self._reading, self._beside = False, {}
+                if self.conn.in_transaction:
+                    self.conn.execute("COMMIT")
+        finally:
+            self.conn.execute("PRAGMA query_only = 0")
+
+    def beside(self, name: str):
+        """What the read transaction in progress read beside the database before its snapshot started (BESIDE), or None
+        outside one. A write transaction reads the file when it needs it: its snapshot starts with the write lock, so no
+        other connection commits a hold's row while it runs, and the line stays in the file until after that commit."""
+        return self._beside.get(name) if self._reading else None
+
+    @contextmanager
     def tx(self):
         """One transaction. Nested, a savepoint: its own work is undone when it fails, so code that catches the failure
         and goes on (one bad row of many) never keeps half of it inside an outer transaction (red team before Codex
         Pass 3: a whole email is now one outer transaction)."""
+        if self._reading:
+            raise PermissionDenied("write_in_read: a write inside a read transaction (Store.read)")
         if self._depth:
             self._depth += 1
             name = f"careeros_{self._depth}"
             self.conn.execute(f"SAVEPOINT {name}")
             try:
                 yield
-            except BaseException:
+            except BaseException as exc:
+                if not self.conn.in_transaction:
+                    # SQLite ended the whole transaction (a full disk): no savepoint is left to roll back to, and the
+                    # work this is nested in must not carry on (the D190 design, revision 4, section 7)
+                    if isinstance(exc, TransactionLost):
+                        raise
+                    raise TransactionLost(exc) from exc
                 self.conn.execute(f"ROLLBACK TO {name}")
                 self.conn.execute(f"RELEASE {name}")
                 raise
             else:
+                if not self.conn.in_transaction:   # lost below, and the failure caught by code in between
+                    raise TransactionLost(None)
                 self.conn.execute(f"RELEASE {name}")
             finally:
                 self._depth -= 1
@@ -198,12 +321,20 @@ class Store:
         start = self.conn.total_changes
         try:
             yield
-        except BaseException:
-            self.conn.execute("ROLLBACK")
+            changed = self.conn.total_changes - start
+            if not self.conn.in_transaction:   # lost inside, and the failure caught by code in between: never a success
+                raise TransactionLost(None)
+            self.conn.execute("COMMIT")   # under the rollback below: a COMMIT that fails (disk full) leaves no
+            # transaction open on this connection (Codex's D190 design review; the red team's hr1-faults-0)
+        except BaseException as exc:
+            if self.conn.in_transaction:
+                self.conn.execute("ROLLBACK")
+            if isinstance(exc, TransactionLost) and exc.original is not None:
+                # outside the lost transaction it is an ordinary failed transaction, with its own cause
+                raise exc.original from None
             raise
         else:
-            self.conn.execute("COMMIT")
-            self.committed += self.conn.total_changes - start
+            self.committed += changed
         finally:
             self._depth = 0
 
@@ -263,6 +394,8 @@ class Writer:
 
     def insert(self, table: str, row: dict) -> None:
         self._need(table)
+        if bad := non_canonical(table, row):
+            raise NonCanonicalText(f"non_canonical_text: {table}.{', '.join(bad)}")
         if table == "jobs" and self.component != "discovery":
             raise PermissionDenied(f"{self.component}_cannot_create_jobs")
         if table in ("jobs", "applications") and (row.get("state_sequence", 0) != 0):
@@ -274,6 +407,8 @@ class Writer:
 
     def update(self, table: str, values: dict, where: str, params=()) -> int:
         self._need(table)
+        if bad := non_canonical(table, values):
+            raise NonCanonicalText(f"non_canonical_text: {table}.{', '.join(bad)}")
         if table not in MUTABLE_TABLES:
             raise PermissionDenied(f"immutable_table:{table}")
         if table in ("jobs", "applications") and set(values) & STATE_COLUMNS:
@@ -350,6 +485,23 @@ class Writer:
                                  "subject_type": entity_type, "subject_id": entity_id, "new_status": "open"})
         return record["exception_id"]
 
+    def annotate_exception(self, exception_id: str, metadata: dict) -> bool:
+        """Add to the metadata of an open problem this component recorded (the P1 upgrade pass stamps an older engine's
+        hold with its posting identity and hold_id: the D190 design, section 7). False when it is not open or another
+        component recorded it."""
+        with self.store.tx():
+            row = self.store.one("SELECT metadata_json FROM exceptions WHERE exception_id = ? AND status != 'resolved' "
+                                 "AND source = ?", (exception_id, f"careeros.{self.component}"))
+            if row is None:
+                return False
+            try:
+                merged = {**(json.loads(row["metadata_json"] or "{}") or {}), **metadata}
+            except ValueError:
+                merged = dict(metadata)
+            self.store.conn.execute("UPDATE exceptions SET metadata_json = ? WHERE exception_id = ?",
+                                    (json.dumps(merged, sort_keys=True), exception_id))
+        return True
+
     def resolve_exception(self, exception_id: str, resolution: str) -> bool:
         """Close an open problem that this component recorded, with the reason and an event (2026-11-09: a held-back
         agency digest read in full later). False when it is not open or another component recorded it."""
@@ -369,8 +521,10 @@ class Writer:
                        message=resolution[:500], occurred_at=now, metadata={"new_status": "resolved"})
         return True
 
-    def receipt(self, command: str, key: str, payload: dict, actor_id: str = "system") -> str:
-        """'new' the first time; 'replay' for an identical repeat; IdempotencyCollision for a different payload."""
+    def receipt(self, command: str, key: str, payload: dict, actor_id: str = "system",
+                result_ref: str | None = None) -> str:
+        """'new' the first time; 'replay' for an identical repeat; IdempotencyCollision for a different payload.
+        `result_ref` (an intake's job) is written at insert: receipts are never updated (the D190 design, section 6)."""
         if not key or not key.strip():
             raise ValueError("idempotency_key_required")
         digest = fingerprint({"command": command, "payload": payload})
@@ -381,8 +535,8 @@ class Writer:
                     raise IdempotencyCollision(key)
                 return "replay"
             self.store.conn.execute(
-                "INSERT INTO receipts(receipt_key, command, actor_id, payload_fingerprint, recorded_at) VALUES (?,?,?,?,?)",
-                (key, command, actor_id, digest, self.store.clock.now()))
+                "INSERT INTO receipts(receipt_key, command, actor_id, payload_fingerprint, recorded_at, result_ref) "
+                "VALUES (?,?,?,?,?,?)", (key, command, actor_id, digest, self.store.clock.now(), result_ref))
         return "new"
 
     def transition(self, matrix: Matrix, job_id: str, to_state: str, *, reason_code: str | None = None,

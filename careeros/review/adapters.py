@@ -50,15 +50,20 @@ GREENHOUSE_PATH = r"^/[A-Za-z0-9_-]{1,100}/jobs/[0-9]{1,20}$"
 GREENHOUSE_FIELD = r"^(?:first_name|last_name|preferred_name|email|phone|question_[0-9]{1,20})$"
 
 
-def fetch_greenhouse_questions(client, job_id: str) -> list[dict]:
-    """A Greenhouse posting's questions, from the public job-board API (source policy: greenhouse must be allowed)."""
+def fetch_greenhouse_questions(client, job_id: str, *, endpoint: tuple[str, str] | None = None) -> list[dict]:
+    """A Greenhouse posting's questions, from the public job-board API (source policy: greenhouse must be allowed).
+    `endpoint` (board token, posting id) is the posting's current one (cli._posting_endpoint: a renamed board's, or a
+    job you pasted first: the red team's hr1-identity-1); without it, the job id's."""
     from careeros.discovery.boards import _token
     from careeros.discovery.sources import require_allowed
     require_allowed("greenhouse")
-    parts = job_id.split(":")
-    if len(parts) != 3 or parts[0] != "greenhouse":
-        raise ValueError("not_a_greenhouse_job")
-    data = client.get_json(f"https://boards-api.greenhouse.io/v1/boards/{_token(parts[1])}/jobs/{_token(parts[2])}?questions=true")
+    if endpoint is None:
+        parts = job_id.split(":")
+        if len(parts) != 3 or parts[0] != "greenhouse":
+            raise ValueError("not_a_greenhouse_job")
+        endpoint = (parts[1], parts[2])
+    token, posting = endpoint
+    data = client.get_json(f"https://boards-api.greenhouse.io/v1/boards/{_token(token)}/jobs/{_token(posting)}?questions=true")
     return greenhouse_questions(data)
 
 

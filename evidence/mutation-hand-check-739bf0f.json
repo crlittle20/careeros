@@ -1,0 +1,3398 @@
+{
+  "what": "The corrections for Codex CR-2026-11-15-GATE-FIXES Pass 5 (F1 routes, H1, F8), planted by hand in stages (D152) as in mutation-hand-check-6c62676.json: the tests of the earlier receipts that caught the defect first, then the related modules, then the whole suite.",
+  "scope": "every defect new or re-anchored since aec37d1 and every defect in the five source files the corrections changed (qualify/facts.py, discovery/manual_intake.py, review/packages.py, pipeline.py, qualify/gate.py)",
+  "base": "aec37d16a5a0576d9056fad6a80f54e0f1ebacbd",
+  "rev": "739bf0f44975f8a070a2b4c53c37dd0e54d21e13",
+  "python": "3.14.10",
+  "node_version": "v24.22.1",
+  "defined": 1877,
+  "checked": 190,
+  "caught": 190,
+  "by_scope": {
+    "stage 0: the tests that caught it before": 158,
+    "modules": 6,
+    "whole suite (after the modules missed it)": 26
+  },
+  "note": "round 6 planted plain copies of the worktree at the commit; defects in the other files keep their results in the earlier receipts (mutation-hand-check-6c62676.json, 953b604, e14b63b, f59f6c7)",
+  "previous": "evidence/mutation-hand-check-6c62676.json",
+  "results": [
+    {
+      "kind": "shared",
+      "mutation": "clearance rule disabled",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 0,
+      "errors": 3,
+      "failing": [
+        "tests.test_qualify.GateTests.test_hard_failures_each_explained",
+        "tests.test_scoring_eval.EvaluationTests.test_free_text_label_reasons_are_collected_in_the_report",
+        "tests.test_v25_audit.FollowUpTests.test_coverage_is_not_judged_on_generic_items_alone"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "pay floor ignored",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 2,
+      "errors": 1,
+      "failing": [
+        "tests.test_qualify.PayTests.test_the_gate_quotes_your_tier_and_a_straddle_is_conditional",
+        "tests.test_analytics.DemoExportTest.test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured",
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export"
+      ],
+      "flaky_failed": false,
+      "seconds": 12.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "hard failures ignored",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 2,
+      "errors": 1,
+      "failing": [
+        "tests.test_scoring_eval.EvaluationTests.test_free_text_label_reasons_are_collected_in_the_report",
+        "tests.test_analytics.DemoExportTest.test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured",
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export"
+      ],
+      "flaky_failed": false,
+      "seconds": 13.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "scam block disabled",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured",
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_demo_mode.DemoTourTest.test_jobs_cover_every_outcome"
+      ],
+      "flaky_failed": false,
+      "seconds": 22.8,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "requisition dedupe disabled",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured",
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_demo_mode.DemoTourTest.test_jobs_cover_every_outcome"
+      ],
+      "flaky_failed": false,
+      "seconds": 22.8,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "delisted jobs never closed",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured",
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_demo_mode.DemoTourTest.test_jobs_cover_every_outcome"
+      ],
+      "flaky_failed": false,
+      "seconds": 22.4,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "remote-only rule disabled",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 1,
+      "errors": 1,
+      "failing": [
+        "tests.test_qualify.GateTests.test_remote_only_policy",
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export"
+      ],
+      "flaky_failed": false,
+      "seconds": 12.2,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "stale job family used after policy change",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.TitleRescueTests.test_a_rule_change_can_take_a_rescue_back"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "seniority gate disabled",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_qualify.GateTests.test_manager_roles_rejected_for_mid_level_profile"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.4,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay period the posting leaves open decided the pay floor",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_pay_period_the_posting_leaves_open_never_decides_the_floor"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "AI daily cap ignored",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_ai.PipelineAITests.test_daily_cap_limits_calls"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "the card shows no state limit where a residence sentence names one",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_gate_fails_a_role_limited_to_one_other_state"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay tier nobody named decided the pay floor",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_the_gate_quotes_your_tier_and_a_straddle_is_conditional",
+        "tests.test_qualify.PayTests.test_the_gate_reads_your_tier_and_never_decides_on_an_unknown_one"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "the board's own pay fields judged by the text's tiers",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_the_gate_quotes_your_tier_and_a_straddle_is_conditional"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "the pay fact judged on the first tier when nobody named yours",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_the_gate_quotes_your_tier_and_a_straddle_is_conditional"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "an unknown pay tier's other tiers left out of the floor's readings",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_codex_pass1_pay_tiers_and_headings_never_decide_on_a_guess",
+        "tests.test_qualify.PayTests.test_d120_an_excluded_city_or_region_state_never_chooses_its_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.2,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a change in the board's own pay fields taken for pay read better",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_pay_reread_needs_the_same_words_and_pay_read_from_them"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "pay read better recorded as a change the employer made",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_pay_read_better_is_not_a_change_the_employer_made"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a new requisition or address in the same scan as pay read better left unrecorded",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_pay_reread_needs_the_same_words_and_pay_read_from_them"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a board that dropped its own pay fields taken for pay read better",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_pay_reread_needs_the_same_words_and_pay_read_from_them"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "the pay card judged a guessed pay period against the floor",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_pay_period_the_posting_leaves_open_never_decides_the_floor"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "state limits read better in the same scan recorded as an employer change",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_pay_reread_needs_the_same_words_and_pay_read_from_them"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "your state never given to the pay reader",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_the_pay_stored_is_your_states_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "rule-code changes not re-evaluated",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.ReevaluationTests.test_rules_version_change_reevaluates_existing_decisions"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "operational settings re-evaluate every job",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 1,
+      "errors": 2,
+      "failing": [
+        "tests.test_assist.SecondReviewTests.test_greenhouse_filling_stays_off_until_you_turn_it_on_after_the_installed_check",
+        "tests.test_assist.ThirdReviewTests.test_the_documented_switch_loads_from_the_overrides_file",
+        "tests.test_ops.DecisionFingerprintTests.test_night_settings_re_check_night_only"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT settings re-evaluate every PRIMARY job",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_ops.DecisionFingerprintTests.test_night_settings_re_check_night_only",
+        "tests.test_worktime.ConfirmationTests.test_night_settings_never_change_primary_decisions"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "stale stored fields never refreshed",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.ReevaluationTests.test_stale_stored_states_are_refreshed_and_job_reevaluated",
+        "tests.test_pipeline.PipelineTests.test_employment_type_stated_in_the_title_wins_and_is_refreshed",
+        "tests.test_v22_night.PipelineTests.test_a_country_in_the_title_rejects_new_and_stored_postings"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT settings changes never re-check NIGHT jobs",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_ops.DecisionFingerprintTests.test_night_settings_re_check_night_only"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D13 hold not reflected in the state",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_submission.D13MovedTests.test_qualification_no_longer_holds_the_employer_but_submission_still_does",
+        "tests.test_v22_primary.StateTests.test_state_from_failures_and_flags",
+        "tests.test_v25_audit.AcceptanceTests.test_employers"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "aggregator pay estimates reject jobs",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_v22_primary.PayTrustTests.test_aggregator_pay_is_an_estimate_not_a_rejection",
+        "tests.test_v25_audit.AcceptanceTests.test_pay"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "generic titles qualify on the title alone",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v22_primary.GenericTitleTests.test_generic_titles_need_context"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "rejections lose their profile evidence",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_v22_primary.EvidenceTests.test_a_rejection_records_posting_and_profile_evidence_with_confidence_and_strength"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "stub postings rejected as generic titles",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_full_flow",
+        "tests.test_v21_policy.YearsRuleTests.test_preferred_years_only_lower_the_score",
+        "tests.test_v21_policy.YearsRuleTests.test_two_to_four_years_short_is_a_major_penalty_not_a_rejection"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "stored jobs keep a wrong country",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v22_night.PipelineTests.test_a_country_in_the_title_rejects_new_and_stored_postings"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "an OR-list of years judged as separate demands",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 0,
+      "errors": 2,
+      "failing": [
+        "tests.test_scoring_loop.ExperienceTests.test_a_years_rejection_keeps_what_the_gate_judged",
+        "tests.test_scoring_loop.GateTests.test_an_analyst_role_uses_the_analyst_wording_you_confirmed"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "excluded employers pass the gate",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 1,
+      "errors": 1,
+      "failing": [
+        "tests.test_v21_policy.ExclusionTests.test_excluded_employers_are_rejected_with_a_neutral_reason",
+        "tests.test_v25_audit.AcceptanceTests.test_employers"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "required years far beyond yours never reject",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 0,
+      "errors": 2,
+      "failing": [
+        "tests.test_experience.ShadowModeTests.test_more_than_four_years_short_is_still_rejected_and_explained",
+        "tests.test_scoring_loop.ExperienceTests.test_a_years_rejection_keeps_what_the_gate_judged"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "preferred years gap ignored",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 2,
+      "errors": 1,
+      "failing": [
+        "tests.test_scoring_loop.GateTests.test_preferred_lines_only_lower_the_score",
+        "tests.test_v21_policy.YearsRuleTests.test_preferred_years_only_lower_the_score",
+        "tests.test_v25_audit.AcceptanceTests.test_experience"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT runs while switched off",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v22_night.PipelineTests.test_results_are_separate_idempotent_and_off_by_default"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "stored employment types never corrected",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_employment_type_stated_in_the_title_wins_and_is_refreshed"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "Principal strategic/leadership scope never rejected",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_v25_audit.PrincipalTests.test_people_leadership_alone_rejects_a_principal_title_and_one_strategy_term_only_flags_it",
+        "tests.test_v25_audit.PrincipalTests.test_principal_with_ten_years_and_strategic_architecture_ownership_is_ineligible"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "every Principal title rejected",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_v25_audit.PrincipalTests.test_people_leadership_alone_rejects_a_principal_title_and_one_strategy_term_only_flags_it",
+        "tests.test_v25_audit.PrincipalTests.test_principal_with_modest_individual_contributor_requirements_is_evaluated_normally"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT re-assesses every job every run",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_job_lifecycle.IdempotencyTests.test_seeing_and_processing_the_same_postings_again_changes_nothing",
+        "tests.test_job_lifecycle.StuckJobTests.test_a_job_the_title_screen_now_rejects_is_not_sent_back_on_every_run",
+        "tests.test_job_lifecycle.StuckJobTests.test_a_review_parked_before_review_decisions_were_recorded_is_rechecked_once"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "material unknowns never make a job CONDITIONAL",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_experience.ShadowModeTests.test_unknown_years_keep_the_job_conditional_and_unscored",
+        "tests.test_label_findings.StateRuleTests.test_gate_fails_a_role_limited_to_one_other_state"
+      ],
+      "flaky_failed": false,
+      "seconds": 11.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "title rescues not capped per run",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.TitleRescueTests.test_relevant_ambiguous_titles_are_rescued_within_budget_and_recorded"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "rescues spent on jobs the remote rule rejects anyway",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.TitleRescueTests.test_rescues_are_not_spent_on_jobs_the_rest_of_the_screen_rejects_and_nothing_churns"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a stale rescued family survives a rule change",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.TitleRescueTests.test_a_rule_change_can_take_a_rescue_back"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a rescue rule change re-checks nothing",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.TitleRescueTests.test_a_rule_change_can_take_a_rescue_back"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "skipped rescues bounce between rejected and normalized every run",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.TitleRescueTests.test_rescues_are_not_spent_on_jobs_the_rest_of_the_screen_rejects_and_nothing_churns"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a range that straddles the minimum treated as compatible",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.EligibilityFactTests.test_pay_units_tiers_and_variable_pay"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "geographic pay tiers ignored",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.EligibilityFactTests.test_pay_units_tiers_and_variable_pay"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "bonus / commission counted as base pay",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.EligibilityFactTests.test_pay_units_tiers_and_variable_pay"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a reappearing closed posting stays closed",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.OpeningTests.test_reposts_and_reopenings_keep_application_history"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "cosmetic edits counted as meaningful changes",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_full_flow",
+        "tests.test_v26_discovery.ChangeTests.test_meaningful_versus_cosmetic_and_timestamps"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "identical titles with different requisitions merged as variants",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.ManualIntakeAmbiguityTests.test_adding_one_of_two_same_title_postings_does_not_link_a_lead_either_could_be",
+        "tests.test_v26_discovery.IdentityTests.test_supplied_domain_verifies_and_the_lead_becomes_a_graded_posting_without_joining_the_daily_scan",
+        "tests.test_v26_discovery.OpeningTests.test_identical_titles_with_different_requisitions_stay_separate_and_both_can_be_applied_to"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pasted posting is not deduplicated",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_pasted_postings_are_graded_without_any_fetch"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "reviews parked before decisions were recorded stay parked",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_job_lifecycle.StuckJobTests.test_a_review_parked_before_review_decisions_were_recorded_is_rechecked_once"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "jobs parked for review are never re-checked",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_job_lifecycle.StuckJobTests.test_a_job_parked_for_review_is_rechecked_when_the_rules_change"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a review outcome is not recorded as a decision",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_job_lifecycle.StuckJobTests.test_too_few_readable_requirements_is_a_recorded_review_decision"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a job that cannot close with its board is skipped silently",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_job_lifecycle.BoardClosureTests.test_a_job_that_cannot_close_is_recorded_never_silent"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "PBM product roles rejected for the degree again",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v25_audit.DecisionTests.test_pbm_product_roles_are_a_stretch_instead_of_a_degree_rejection"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "one missed scan closes a posting",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_pipeline.PipelineTests.test_full_flow",
+        "tests.test_v26_discovery.OpeningTests.test_reposts_and_reopenings_keep_application_history"
+      ],
+      "flaky_failed": false,
+      "seconds": 11.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay rejection carries no quote",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_job_lifecycle.WorkflowTests.test_every_job_flows_from_source_to_analytics_and_explains_itself",
+        "tests.test_qualify.PayTests.test_the_gate_quotes_your_tier_and_a_straddle_is_conditional"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT's right-to-represent check treats an unfinished search as clearance",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_applications.ApplicationLogicTests.test_an_unfinished_duplicate_search_is_never_clearance"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "degree stretch applied to product roles outside PBM",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v25_audit.DecisionTests.test_pbm_product_roles_are_a_stretch_instead_of_a_degree_rejection"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT: a hold change not re-judging NIGHT",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_submission.FingerprintTests.test_submission_settings_and_releases_never_re_judge_a_job"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "ingest: a new requisition or address on unchanged text ignored",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.ChangeTests.test_meaningful_versus_cosmetic_and_timestamps"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "title-screen rejections re-sent on every run after a vocabulary change",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_job_lifecycle.StuckJobTests.test_a_job_the_title_screen_now_rejects_is_not_sent_back_on_every_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "submission settings re-judging every job",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_submission.AuthorizationTests.test_a_release_is_for_the_employer_it_was_granted_under",
+        "tests.test_submission.AuthorizationTests.test_an_identity_correction_suspends_and_an_unresolved_identity_never_authorizes",
+        "tests.test_submission.CodexReviewTests.test_authorization_needs_the_current_profile"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT: identity settings changed without re-judging NIGHT jobs",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_submission.FingerprintTests.test_identity_settings_re_judge_night_only"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: a package prepared for a job you labelled Skip",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.PackageTests.test_nothing_is_prepared_for_a_job_nobody_chose_and_skip_or_dismissal_always_win",
+        "tests.test_packages.PackageTests.test_standing_preparation_is_off_by_default_and_never_writes_a_label"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: an approval covering a later version",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.PackageTests.test_a_stretch_package_needs_approval_of_its_exact_version"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: a package prepared for a job you dismissed",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.PackageTests.test_nothing_is_prepared_for_a_job_nobody_chose_and_skip_or_dismissal_always_win",
+        "tests.test_review_page.DismissalUndoTests.test_a_reinstatement_is_a_later_event_and_the_latest_event_decides"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: a Stretch package ready without approval",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.PackageTests.test_a_revoked_approval_no_longer_counts",
+        "tests.test_packages.PackageTests.test_a_stretch_package_needs_approval_of_its_exact_version"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: a stale package treated as current",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_assist.SessionTests.test_a_session_needs_a_ready_package_and_authorization",
+        "tests.test_packages.CodexBatchReviewTests.test_the_fallback_panel_holds_only_current_answers_and_they_are_part_of_the_version",
+        "tests.test_packages.PackageTests.test_a_stretch_package_needs_approval_of_its_exact_version"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: standing preparation running while off",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.PackageTests.test_standing_preparation_is_off_by_default_and_never_writes_a_label"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: standing preparation ignoring decisive unknowns",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.PackageTests.test_the_standing_rule_is_absolute_and_holds_back_decisive_unknowns"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: an answer resting on an unknown fact accepted",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.PackageTests.test_an_answer_resting_on_an_unknown_fact_is_refused"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: an answer that isn't one of the form's choices not flagged",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_assist.AssistedModeTests.test_an_answer_the_form_cant_take_stays_with_you",
+        "tests.test_packages.PackageTests.test_an_answer_that_isnt_one_of_the_forms_choices_is_an_open_item"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: an answer other than the prepared one shown or handed over",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_assist.CodexBatchReviewTests.test_the_handoff_refuses_an_answer_other_than_the_one_prepared"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: the fallback answers outside the version",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.CodexBatchReviewTests.test_the_fallback_panel_holds_only_current_answers_and_they_are_part_of_the_version",
+        "tests.test_packages.PackageTests.test_a_full_name_answer_is_on_the_panel_of_a_form_not_yet_read",
+        "tests.test_packages.PackageTests.test_questions_not_yet_read_leave_every_answer_in_the_panel"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: a package prepared for a role with an application in play",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.CodexBatchReviewTests.test_an_application_already_made_stops_standing_preparation_and_an_unchosen_route",
+        "tests.test_packages.VerificationTests.test_an_application_elsewhere_in_the_role_or_a_check_that_cant_finish_stops_preparation"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: a role applied to before prepared again",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.CodexBatchReviewTests.test_an_application_already_made_stops_standing_preparation_and_an_unchosen_route",
+        "tests.test_packages.SecondReviewTests.test_a_role_you_applied_to_is_never_reported_ready",
+        "tests.test_packages.VerificationTests.test_an_application_elsewhere_in_the_role_or_a_check_that_cant_finish_stops_preparation"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: the question an answer was written for not checked when shown",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.ThirdReviewTests.test_an_answer_held_back_after_preparation_says_so"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: the question an answer was written for left out of the version",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.SecondReviewTests.test_editing_only_the_question_an_answer_was_written_for_makes_a_new_version"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: an answer held back after preparation still shown",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.ThirdReviewTests.test_an_answer_held_back_after_preparation_says_so"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: the answers held back not listed in the panel",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.SecondReviewTests.test_the_fallback_panel_says_which_answers_it_holds_back_and_why"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a reading that would reject and one that would pass counted as agreeing",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.GateTests.test_figures_offered_as_alternatives"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "remote-state rule disabled",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 207,
+      "failures": 101,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.GateTests.test_targeted_supervisor_is_conditional_but_manager_remains_rejected",
+        "tests.test_label_findings.StateRuleTests.test_a_location_field_with_a_negation_flags",
+        "tests.test_label_findings.StateRuleTests.test_d149_a_location_conflict_with_your_state_named_anywhere_is_conditional"
+      ],
+      "flaky_failed": false,
+      "seconds": 210.2,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "where every reading passes, the laxer reading's figure is shown and a gap goes unflagged",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_scoring_loop.SpellingTests.test_the_fail_safe_whatever_follows_and_on_soft_lines"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"read another way\" does not name what the years it quotes were for",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.SpellingTests.test_the_fail_safe_whatever_follows_and_on_soft_lines"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a soft years line with two readings made CONDITIONAL, though it can never be a rejection",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_a_soft_line_never_rejects_so_never_splits"
+      ],
+      "flaky_failed": false,
+      "seconds": 576.4,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a line every reading rejects is only CONDITIONAL",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_a_line_every_reading_rejects_is_no_split"
+      ],
+      "flaky_failed": false,
+      "seconds": 577.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a line read by a judgement call rejects though another reading of it would not",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.CodexPass1Tests.test_the_cheap_lows_of_the_fix_check",
+        "tests.test_scoring_loop.HandCheckA0a83b2Tests.test_an_unconfirmed_alternative_is_named_in_the_flag",
+        "tests.test_scoring_loop.SpellingTests.test_the_fail_safe_whatever_follows_and_on_soft_lines"
+      ],
+      "flaky_failed": false,
+      "seconds": 577.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a figure #4 adds beside a skill rejects on its own",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_a_figure_added_beside_a_skill_never_rejects_alone"
+      ],
+      "flaky_failed": false,
+      "seconds": 580.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "one figure named twice as alternatives (\"5+ years as a BSA or 5+ years with SQL\") rejects on its first phrase",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_one_figure_named_twice_as_alternatives_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 583.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "figures joined by \"or\" judged as separate demands (\"5+ years as a BSA or 3+ years of SQL\")",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 9,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D123RolesTests.test_d123_r2_a_figure_or_domain_of_another_kind_never_passes_a_role",
+        "tests.test_scoring_loop.D123RolesTests.test_d123_r2_a_figure_or_domain_of_another_kind_never_passes_a_role",
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_a_figure_added_beside_a_skill_never_rejects_alone"
+      ],
+      "flaky_failed": false,
+      "seconds": 583.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "figures joined by \"or\" judged on the one you are furthest from",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.HandCheckA0a83b2Tests.test_skill_figures_joined_by_or_are_judged_on_the_best"
+      ],
+      "flaky_failed": false,
+      "seconds": 583.8,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"or min. 3 years with SQL\" not read as an alternative figure",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.HandCheckA0a83b2Tests.test_joiners_that_only_qualify_the_next_skill_figure"
+      ],
+      "flaky_failed": false,
+      "seconds": 600.2,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "an alternative nothing in your record names ranks below one that rejects: the line rejects, its flag is lost",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.HandCheckA0a83b2Tests.test_skill_figures_joined_by_or_are_judged_on_the_best"
+      ],
+      "flaky_failed": false,
+      "seconds": 612.4,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"or more than 3 years\" and \"or, alternatively, 3+ years\" not read as alternative figures",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.HandCheckA0a83b2Tests.test_joiners_that_only_qualify_the_next_skill_figure",
+        "tests.test_scoring_loop.HandCheckA0a83b2Tests.test_joiners_that_only_qualify_the_next_skill_figure"
+      ],
+      "flaky_failed": false,
+      "seconds": 613.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"5+ years as a BA / 3+ years with SQL\" not read as alternative figures",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_one_figure_named_twice_as_alternatives_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 612.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a shortfall on the known alternative rejects though another alternative is unconfirmed",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 4,
+      "errors": 1,
+      "failing": [
+        "tests.test_scoring_loop.SpellingTests.test_words_that_only_lead_into_the_place_read_as_or_in",
+        "tests.test_scoring_loop.CodexPass1Tests.test_f2_an_unconfirmed_alternative_is_never_dropped",
+        "tests.test_scoring_loop.CodexPass1Tests.test_f2_each_part_of_a_slash_alternative_is_confirmed_on_its_own"
+      ],
+      "flaky_failed": false,
+      "seconds": 5.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a partial match confirms a pass: \"5+ years as a Customer Service Lead\" passes on customer service's 5.7",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 7,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.CodexPass1Tests.test_f4_a_role_only_partly_named_is_not_confirmed",
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_a_function_confirms_a_role_only_in_the_same_words",
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_a_function_confirms_a_role_only_in_the_same_words"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "preferred years with an unconfirmed alternative give no flag at all",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_scoring_loop.CodexPass1Tests.test_the_cheap_lows_of_the_fix_check"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"read another way\" says \"nothing in your record names it\" for a line with a known credit",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.CodexPass1Tests.test_the_cheap_lows_of_the_fix_check"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "the flag for an unconfirmed alternative does not say which alternative to verify",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 5,
+      "errors": 1,
+      "failing": [
+        "tests.test_scoring_loop.SpellingTests.test_words_that_only_lead_into_the_place_read_as_or_in",
+        "tests.test_scoring_loop.CodexPass1Tests.test_f2_an_unconfirmed_alternative_is_never_dropped",
+        "tests.test_scoring_loop.CodexPass1Tests.test_f2_each_part_of_a_slash_alternative_is_confirmed_on_its_own"
+      ],
+      "flaky_failed": false,
+      "seconds": 4.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "another reading's unconfirmed alternative ignored: \"BSA or similar in claims auditing\" rejects",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.HandCheckA0a83b2Tests.test_an_unconfirmed_alternative_is_named_in_the_flag"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "years lines never read as a role, function or activity (domain and total years stand in again)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 2,
+      "errors": 1,
+      "failing": [
+        "tests.test_scoring_loop.GateTests.test_an_analyst_role_uses_the_analyst_wording_you_confirmed",
+        "tests.test_scoring_loop.ExperienceTests.test_a_years_rejection_keeps_what_the_gate_judged",
+        "tests.test_scoring_loop.GateTests.test_the_role_title_counts_over_a_smaller_function_of_the_same_name"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "the old domain or total years still count beside the role reading",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 0,
+      "errors": 3,
+      "failing": [
+        "tests.test_scoring_loop.ExperienceTests.test_a_years_rejection_keeps_what_the_gate_judged",
+        "tests.test_scoring_loop.GateTests.test_preferred_lines_only_lower_the_score",
+        "tests.test_scoring_loop.GateTests.test_the_role_title_counts_over_a_smaller_function_of_the_same_name"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "an unconfirmed role is reported as an ordinary unknown",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.GateTests.test_a_role_line_never_takes_a_skill",
+        "tests.test_scoring_loop.GateTests.test_a_tool_named_elsewhere_on_the_line_does_not",
+        "tests.test_scoring_loop.GateTests.test_activities"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a role your record does not mention rejects the posting",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.GateTests.test_a_role_line_never_takes_a_skill",
+        "tests.test_scoring_loop.GateTests.test_a_tool_named_elsewhere_on_the_line_does_not",
+        "tests.test_scoring_loop.GateTests.test_activities"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "the card does not say which role or function to verify",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.GateTests.test_the_card_says_which_line_to_verify"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a new skill-word exclusion never re-reads postings",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.SkillWordTests.test_a_new_exclusion_re_reads_postings"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "QA titles judged on the broad context list, so software QA passes",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.CodexPass1QaContextTests.test_weak_words_alone_flag_a_qa_title_for_review_never_pass_it_silently",
+        "tests.test_intake_hotfix.CodexPass1QaContextTests.test_weak_words_alone_flag_a_qa_title_for_review_never_pass_it_silently",
+        "tests.test_intake_hotfix.CodexPass1QaContextTests.test_weak_words_alone_flag_a_qa_title_for_review_never_pass_it_silently"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "the supervisor scope review is CONDITIONAL only when a policy list names it",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.SupervisorAndReportTests.test_the_supervisor_scope_review_is_conditional_whatever_a_policy_list_says",
+        "tests.test_qualify.GateTests.test_targeted_supervisor_is_conditional_but_manager_remains_rejected"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a targeted supervisor rejected for the seniority gap",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.GateTests.test_targeted_supervisor_is_conditional_but_manager_remains_rejected"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a cached title-screen rejection regraded on requirements from an older text",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_title_screen_regrade_reads_current_text_even_with_cached_requirements"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a QA title with no context word at all passes",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.CodexPass2QaContextTests.test_without_a_tool_strong_passes_weak_flags_nothing_rejects",
+        "tests.test_intake_hotfix.QaTitleTests.test_qa_titles_are_still_judged_on_their_own_list",
+        "tests.test_qualify.GateTests.test_generic_qa_analyst_requires_relevant_context"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a QA title with weak context is neither flagged nor rejected",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.CodexPass1QaContextTests.test_weak_words_alone_flag_a_qa_title_for_review_never_pass_it_silently",
+        "tests.test_intake_hotfix.CodexPass1QaContextTests.test_weak_words_alone_flag_a_qa_title_for_review_never_pass_it_silently",
+        "tests.test_intake_hotfix.CodexPass1QaContextTests.test_weak_words_alone_flag_a_qa_title_for_review_never_pass_it_silently"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D120: one figure stated for two demands judges only the first",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 1,
+      "failing": [
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both",
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both",
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D120: the same figure named twice as alternatives (\"or\") becomes two demands, and the stricter rejects (D115)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D120: each demand of a figure stated twice is judged on every record of the line",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D120: of two demands of one figure, the more lenient decides",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both",
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both",
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "an \"or\" a few words before a figure that names no known joiner: the shortfall rejects on its own",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_a_figure_added_beside_a_skill_never_rejects_alone",
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_a_second_figure_under_one_name_never_rejects_alone",
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_one_figure_named_twice_as_alternatives_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 621.4,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a second figure under one name, newly judged, rejects on its own (\"Staff designers bring 8+ years\")",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_a_second_figure_under_one_name_never_rejects_alone"
+      ],
+      "flaky_failed": false,
+      "seconds": 583.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"claims or billing experience and 9+ years as a BA\": an \"or\" before an \"and\" stops the rejection",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_an_or_before_an_and_ends_at_the_and"
+      ],
+      "flaky_failed": false,
+      "seconds": 585.8,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 R1: a cue of an alternative on a role line is ignored, so the role's far shortfall rejects",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D123CheckTests.test_d123_the_cue_is_no_part_of_the_role_quoted"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 R3: a years line ending in a joiner (\"- 8+ years of SQL, or\") rejects on its own shortfall",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D123RolesTests.test_d123_r3_posting_lines_are_never_merged"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 R1: the flag for a role line with a cue is never applied, so its far shortfall rejects",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D123CheckTests.test_d123_the_cue_is_no_part_of_the_role_quoted"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 R1: a soft role line with a cue (\"or equivalent\") far short passes with a years gap flag",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D123CheckTests.test_d123_the_cue_is_no_part_of_the_role_quoted"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 R2: a function figure met (\"or 3+ years in PBM operations\") passes a role figure",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D123RolesTests.test_d123_r2_a_figure_or_domain_of_another_kind_never_passes_a_role",
+        "tests.test_scoring_loop.GateTests.test_a_role_figure_beside_a_skill_figure_is_judged"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 R2: a figure of another kind met (\"or 3+ years of SQL\") passes a role figure",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D123RolesTests.test_d123_r2_a_figure_or_domain_of_another_kind_never_passes_a_role",
+        "tests.test_scoring_loop.D123RolesTests.test_d123_r2_a_figure_or_domain_of_another_kind_never_passes_a_role",
+        "tests.test_scoring_loop.D123RolesTests.test_d123_r2_a_figure_or_domain_of_another_kind_never_passes_a_role"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D120: a rejection's Experience Match shows the first demand, not the one rejected on",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D155SurvivorTests.test_d155_a_rejection_shows_the_demand_rejected_on"
+      ],
+      "flaky_failed": false,
+      "seconds": 588.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D120 check: the flag for demands that may be alternatives is never applied",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D155SurvivorTests.test_d155_a_cue_between_two_demands_of_one_figure_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 560.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 check: roles joined by \"and\", one met and one far short, reject",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D123CheckTests.test_d123_roles_joined_by_and_are_each_a_demand"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 check: the flag for roles joined by \"and\" names no role's years",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D123CheckTests.test_d123_roles_joined_by_and_are_each_a_demand"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 R3: a joiner ending the line before is ignored, so the next bullet's shortfall rejects",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D123RolesTests.test_d123_r3_posting_lines_are_never_merged",
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_the_block_and_lead_in_cues_are_named_in_the_flag",
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_the_block_and_lead_in_cues_are_named_in_the_flag"
+      ],
+      "flaky_failed": false,
+      "seconds": 552.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 R4: two demands of one figure with an \"or\" between them reject on the stricter one",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D155SurvivorTests.test_d155_a_cue_between_two_demands_of_one_figure_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 556.2,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 check: an unknown demand beside a preferred shortfall hides years_preferred_short",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 3,
+      "errors": 1,
+      "failing": [
+        "tests.test_scoring_loop.D123CheckTests.test_d123_a_preference_is_flagged_beside_an_unknown_demand",
+        "tests.test_scoring_loop.D123CheckTests.test_d123_a_preference_is_flagged_beside_an_unknown_demand",
+        "tests.test_scoring_loop.D123CheckTests.test_d123_a_preference_is_flagged_beside_an_unknown_demand"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 R4: only a cue after the last demand of a figure counts, so an \"or\" between the demands is missed",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D155SurvivorTests.test_d155_a_cue_between_two_demands_of_one_figure_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 564.8,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 check: a heading does not end a block, so a lead-in reaches the lines of the next section",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_the_block_and_lead_in_cues_are_named_in_the_flag"
+      ],
+      "flaky_failed": false,
+      "seconds": 573.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 check: a block holding a joiner line or a lead-in still rejects its role lines",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_the_block_and_lead_in_cues_are_named_in_the_flag"
+      ],
+      "flaky_failed": false,
+      "seconds": 716.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: a location naming another state beside a description list naming yours is not reported as the two disagreeing (re-anchored by D151: the location no longer rejects)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 22,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_the_location_field_holds_unless_the_description_names_your_state",
+        "tests.test_label_findings.StateRuleTests.test_the_location_field_holds_unless_the_description_names_your_state",
+        "tests.test_label_findings.StateRuleTests.test_the_location_field_holds_unless_the_description_names_your_state"
+      ],
+      "flaky_failed": false,
+      "seconds": 5.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: a list leaving you out passes silently when another list in the posting names your state",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 0,
+      "errors": 2,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_a_recommended_variant_counts_once_and_never_stops_the_export",
+        "tests.test_assist.ApplicationExportTests.test_an_application_recorded_by_closing_a_session_exports_its_mode_minutes_evidence_and_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 11.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 check 2: a blank line after a lead-in (\"<p>One of the following:</p><ul>\") ends it, so the list rejects",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_the_block_and_lead_in_cues_are_named_in_the_flag"
+      ],
+      "flaky_failed": false,
+      "seconds": 723.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: the flag for a description list quotes no sentence",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 0,
+      "errors": 21,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_long_sentence_is_quoted_around_its_cue",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags"
+      ],
+      "flaky_failed": false,
+      "seconds": 5.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: a location field with an exclusion word is read as its states (excluding yours passes, excluding another rejects)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 16,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_location_field_with_a_negation_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_location_field_with_a_negation_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_location_field_with_a_negation_flags"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: a negation about your state in another sentence or line leaves a list naming it silent",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags"
+      ],
+      "flaky_failed": false,
+      "seconds": 5.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "pay tiers with no place for your state (\"<state>: ... Remote: ...\") decided by the first range",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_another_tiers_label_is_its_own",
+        "tests.test_qualify.PayTests.test_d120_d123_unnamed_tiers_on_both_sides_of_the_floor_flag"
+      ],
+      "flaky_failed": false,
+      "seconds": 4.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "an unclear certification reading is a non-material gap, so the posting passes",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.Round11CertificationVerifyTests.test_a_plain_demand_is_verify_and_a_held_one_is_met"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "one strong word admits software QA that names a testing tool",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.CodexPass2QaContextTests.test_testing_tools_need_two_strong_health_plan_words",
+        "tests.test_intake_hotfix.CodexPass2QaContextTests.test_testing_tools_need_two_strong_health_plan_words",
+        "tests.test_intake_hotfix.CodexPass2QaContextTests.test_testing_tools_need_two_strong_health_plan_words"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a QA posting with testing tools and few health-plan words is rejected",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.CodexPass1QaContextTests.test_weak_words_alone_flag_a_qa_title_for_review_never_pass_it_silently",
+        "tests.test_intake_hotfix.CodexPass1QaContextTests.test_weak_words_alone_flag_a_qa_title_for_review_never_pass_it_silently",
+        "tests.test_intake_hotfix.CodexPass1QaContextTests.test_weak_words_alone_flag_a_qa_title_for_review_never_pass_it_silently"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "one phrase ('provider data') counts as two health-plan words",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.CodexPass2QaContextTests.test_testing_tools_need_two_strong_health_plan_words"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a QA posting with testing tools and no health-plan word at all is only flagged, never rejected",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.CodexPass1QaContextTests.test_weak_words_beside_software_testing_tools_are_never_passed",
+        "tests.test_intake_hotfix.CodexPass2QaContextTests.test_testing_tools_need_two_strong_health_plan_words",
+        "tests.test_intake_hotfix.CodexPass2QaContextTests.test_testing_tools_need_two_strong_health_plan_words"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a QA posting with testing tools and only a weak health-plan word is rejected",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.CodexPass1QaContextTests.test_weak_words_alone_flag_a_qa_title_for_review_never_pass_it_silently",
+        "tests.test_intake_hotfix.CodexPass1QaContextTests.test_weak_words_alone_flag_a_qa_title_for_review_never_pass_it_silently",
+        "tests.test_intake_hotfix.CodexPass1QaContextTests.test_weak_words_alone_flag_a_qa_title_for_review_never_pass_it_silently"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a stub QA posting naming a testing tool is judged by the tool rule, not flagged unverified",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.PrePass3QaStubTests.test_a_stub_qa_posting_naming_a_tool_is_unverified",
+        "tests.test_intake_hotfix.PrePass3QaStubTests.test_a_stub_qa_posting_naming_a_tool_is_unverified"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a testing tool named only in the title is not counted (CR-HF-04)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.CodexPass3QaTitleToolTests.test_a_tool_in_the_title_counts",
+        "tests.test_intake_hotfix.CodexPass3QaTitleToolTests.test_a_tool_in_the_title_counts",
+        "tests.test_intake_hotfix.CodexPass3QaTitleToolTests.test_a_tool_in_the_title_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a certification read as required that you do not hold rejects the job again (D140 F1)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_certifications.MatchingTests.test_alternatives_are_satisfied_by_any_one",
+        "tests.test_certifications.ReviewFixTests.test_a_course_or_an_unknown_kind_never_counts_as_held",
+        "tests.test_certifications.ReviewFixTests.test_an_or_elsewhere_on_the_line_never_makes_separate_credentials_alternatives"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a certification read as required that you do not hold passes silently",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 0,
+      "errors": 3,
+      "failing": [
+        "tests.test_certifications.MatchingTests.test_a_missing_status_is_unknown_never_held",
+        "tests.test_certifications.MatchingTests.test_a_planned_credential_is_never_held",
+        "tests.test_certifications.MatchingTests.test_a_related_credential_never_satisfies_a_named_one"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: a list naming your state passes silently beside an exclusion or negation word",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 28.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a named credential required with an equivalency is a material \"verify\" again, not a note",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.Round11CertificationVerifyTests.test_a_plain_demand_is_verify_and_a_held_one_is_met",
+        "tests.test_intake_hotfix.Round11CertificationVerifyTests.test_an_equivalency_stays_a_note"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.2,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a hard certification demand you do not hold becomes a silent note (ELIGIBLE)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 0,
+      "errors": 3,
+      "failing": [
+        "tests.test_certifications.MatchingTests.test_a_missing_status_is_unknown_never_held",
+        "tests.test_certifications.MatchingTests.test_a_planned_credential_is_never_held",
+        "tests.test_certifications.MatchingTests.test_a_related_credential_never_satisfies_a_named_one"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a cue elsewhere in the requirements (\"OR:\" on the next bullet) no longer stops a role rejection (D149 R-Y1)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D149YearsTests.test_d149_r_y1_b_an_alternative_anywhere_in_the_requirements_is_never_a_rejection"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.8,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a years figure no record carries passes silently (D149 R-Y2)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_scoring_loop.CodexPass1Tests.test_f3_a_role_figure_beside_a_tool_is_kept"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a line that says \"years\" (\"5 or more years\", \"a decade\") with no years record passes silently (D149 R-Y2)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D149YearsTests.test_d149_r_y2_a_years_word_no_record_came_from_is_to_verify",
+        "tests.test_scoring_loop.D149YearsTests.test_d149_r_y2_a_years_word_no_record_came_from_is_to_verify",
+        "tests.test_scoring_loop.D149YearsTests.test_d149_r_y2_a_years_word_no_record_came_from_is_to_verify"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.8,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 check 2: the list below a lead-in is never cued",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_the_block_and_lead_in_cues_are_named_in_the_flag"
+      ],
+      "flaky_failed": false,
+      "seconds": 732.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a role-shaped demand the reader did not read (\"Product Owner: 10+ years\") is judged on total years (D151 (a))",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 16,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D149YearsTests.test_d151_a_y1_a_role_shaped_name_is_never_judged_on_other_years",
+        "tests.test_scoring_loop.D149YearsTests.test_d151_a_y1_a_role_shaped_name_is_never_judged_on_other_years",
+        "tests.test_scoring_loop.D149YearsTests.test_d151_a_y1_a_role_shaped_name_is_never_judged_on_other_years"
+      ],
+      "flaky_failed": false,
+      "seconds": 7.5,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a years demand only the AI read rejects (D151 (b))",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D149YearsTests.test_d151_b_y2_an_ai_reading_alone_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a cue elsewhere in the requirements no longer stops a domain, tool or total-years rejection (D151 (c))",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D149YearsTests.test_d149_r_y1_b_an_alternative_anywhere_in_the_requirements_is_never_a_rejection"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a far-short role demand with no cue rejects (D149 R-Y0)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_a_line_every_reading_rejects_is_no_split"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a role demand's shortfall hides a domain demand's rejection of the same figure (D149 R-Y0)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both",
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both",
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a location field naming another state rejects again (D151 R1, R2)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.GateTests.test_targeted_supervisor_is_conditional_but_manager_remains_rejected"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123 check 2: a lead-in followed by prose cues the paragraph and the lines after it",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D152SurvivorTests.test_d152_a_lead_in_followed_by_prose_leads_in_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 731.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a restriction of states naming none (\"approved states\") passes silently (D151 R3)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_d149_a_second_state_statement_is_conditional",
+        "tests.test_label_findings.StateRuleTests.test_d149_a_second_state_statement_is_conditional",
+        "tests.test_label_findings.StateRuleTests.test_d149_a_second_state_statement_is_conditional"
+      ],
+      "flaky_failed": false,
+      "seconds": 4.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a cue line over lines naming no state (\"Eligible states:\\n- Northeast region\") passes silently (D155 F7)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 8,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_d155_a_quoted_code_and_a_cue_line_naming_no_state_are_conditional",
+        "tests.test_label_findings.StateRuleTests.test_d155_a_quoted_code_and_a_cue_line_naming_no_state_are_conditional",
+        "tests.test_label_findings.StateRuleTests.test_d155_a_quoted_code_and_a_cue_line_naming_no_state_are_conditional"
+      ],
+      "flaky_failed": false,
+      "seconds": 5.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a domain or a tool far short rejects again (\"10+ years of SQL\" beside \"Excel can replace SQL\") (D155 (1))",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both",
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both",
+        "tests.test_scoring_loop.CorrectionBatchRolesTests.test_d120_one_figure_stated_for_two_demands_judges_both"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a record is known by its line and figure alone, so an AI record on the line passes for the rules' (D155 (2))",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 1,
+      "failing": [
+        "tests.test_scoring_loop.D155YearsTests.test_d155_2_an_ai_record_never_replaces_or_hides_a_rules_record",
+        "tests.test_scoring_loop.D155YearsTests.test_d155_2_an_ai_record_never_replaces_or_hides_a_rules_record",
+        "tests.test_scoring_loop.D155YearsTests.test_d155_2_an_ai_record_never_replaces_or_hides_a_rules_record"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.8,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "an AI contextual or preferred copy of a line claims it first, so the rules' hard record is never judged (D155 (2))",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D155YearsTests.test_d155_2_an_ai_record_never_replaces_or_hides_a_rules_record",
+        "tests.test_scoring_loop.D155YearsTests.test_d155_2_an_ai_record_never_replaces_or_hides_a_rules_record"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.0,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a skill's record carries a figure whose phrase opens with a function (\"2+ years in underwriting with SQL\") (D155 (3))",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D155YearsTests.test_d155_3_each_figure_carried_by_its_own_record",
+        "tests.test_scoring_loop.D155YearsTests.test_d155_3_each_figure_carried_by_its_own_record",
+        "tests.test_scoring_loop.D155YearsTests.test_d155_3_each_figure_carried_by_its_own_record"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "F2: an unchanged rescan leaves an older country beside the new remote scope",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_country_read_better_on_unchanged_text_is_stored_with_the_scope_and_re_screens"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "F2: a country read better on an unchanged rescan is never re-screened",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_country_read_better_on_unchanged_text_is_stored_with_the_scope_and_re_screens"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 4 F1: the location question never shows the text's US hint",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_foreign_opening_keeps_its_location_question_through_the_pipeline",
+        "tests.test_pipeline.PipelineTests.test_a_foreign_opening_keeps_its_location_question_through_the_pipeline",
+        "tests.test_pipeline.PipelineTests.test_a_foreign_opening_keeps_its_location_question_through_the_pipeline"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "a second clause naming a state after a list naming yours passes silently (D151 R3)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 207,
+      "failures": 20,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_d151_the_description_is_silent_only_with_one_mention_of_states",
+        "tests.test_label_findings.StateRuleTests.test_d151_the_description_is_silent_only_with_one_mention_of_states",
+        "tests.test_label_findings.StateRuleTests.test_d151_the_description_is_silent_only_with_one_mention_of_states"
+      ],
+      "flaky_failed": false,
+      "seconds": 268.2,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 5 F1: a state list from the text clears the location question of a job its location field does not place",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 207,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.EligibilityFactTests.test_a_state_list_from_the_text_never_clears_an_unknown_country"
+      ],
+      "flaky_failed": false,
+      "seconds": 289.9,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 5 F1: a paste takes its location field from a phrase in its prose ('Previously advertised as Remote - US')",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 207,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_paste_takes_its_location_only_from_its_location_line_or_yours"
+      ],
+      "flaky_failed": false,
+      "seconds": 277.8,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 5 F1: standing preparation picks a job its location field does not place in the US",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 207,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.QueueTests.test_standing_preparation_needs_a_us_location_field_and_a_score_under_the_current_rules"
+      ],
+      "flaky_failed": false,
+      "seconds": 277.1,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 5 H1: a score made under earlier rules routes a standing package before the job is re-screened",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 207,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.QueueTests.test_standing_preparation_needs_a_us_location_field_and_a_score_under_the_current_rules"
+      ],
+      "flaky_failed": false,
+      "seconds": 275.6,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "one AI quote that is not a whole line discards the posting's lines and their OR (D149, the AI-quote High)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D155SurvivorTests.test_d155_an_ai_partial_quote_is_read_on_its_posting_line",
+        "tests.test_scoring_loop.D155SurvivorTests.test_d155_an_ai_partial_quote_never_discards_the_posting_lines"
+      ],
+      "flaky_failed": false,
+      "seconds": 721.7,
+      "python": "3.14.10",
+      "round": 6
+    },
+    {
+      "kind": "shared",
+      "mutation": "an AI quote that is part of a line is read alone, so the role around it is lost (D151, Y2)",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1653,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_scoring_loop.D155SurvivorTests.test_d155_an_ai_partial_quote_is_read_on_its_posting_line"
+      ],
+      "flaky_failed": false,
+      "seconds": 715.6,
+      "python": "3.14.10",
+      "round": 6
+    }
+  ]
+}

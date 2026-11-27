@@ -68,13 +68,13 @@ every check passes, so a refresh never sees a half-written export.
 | Measure | KPI key | Demo value |
 |---|---|---|
 | Jobs Discovered | `jobs_discovered` | 46 |
-| Distinct Openings | `distinct_openings` | 45 |
-| Jobs Evaluated | `jobs_evaluated` | 41 |
-| Jobs Qualified | `jobs_qualified` | 20 |
+| Distinct Openings | `distinct_openings` | 46 |
+| Jobs Evaluated | `jobs_evaluated` | 42 |
+| Jobs Qualified | `jobs_qualified` | 21 |
 | Jobs Recommended | `jobs_recommended` | 5 |
 | Jobs Rejected | `jobs_rejected` | 13 |
-| Jobs Manual Review | `jobs_manual_review` | 15 |
-| Manual Review Rate | `manual_review_rate` | 36.6% |
+| Jobs Manual Review | `jobs_manual_review` | 16 |
+| Manual Review Rate | `manual_review_rate` | 38.1% |
 | Duplicates Prevented | `duplicates_prevented` | 3 |
 | Cross-Source Sightings | `cross_source_sightings` | 2 |
 | Verified Employers | `verified_employers` | 8 |
@@ -82,7 +82,7 @@ every check passes, so a refresh never sees a half-written export.
 | Board Verification Rate | `board_verification_rate` | 72.7% |
 | New-Board Verification Rate | `new_board_verification_rate` | 50.0% |
 | Scan Reliability | `scan_reliability` | 96.3% |
-| NIGHT Routed | `night_routed` | 15 |
+| NIGHT Routed | `night_routed` | 16 |
 | Applications | `applications` | 4 |
 | Open Applications | `applications_open` | 3 |
 | Interview Rate | `interview_rate` | 0.0% |
@@ -360,7 +360,8 @@ page showed the value in section 3, and no visual showed an error.
 
 **Screenshots and the saved `.pbix` (2026-11-15).** They were taken on the demo export before the demo world gained
 two scenarios on 2026-11-15 (a board its employer's own site contradicts, and a part-time overnight role NIGHT accepts):
-they show 45 jobs and 14 routed to NIGHT where section 3 now says 46 and 15. Refreshing the project shows the
+they show 45 jobs and 14 routed to NIGHT where section 3 now says 46 and 16 (since 2026-11-19 a shared requisition
+no longer makes Meridian 102 a duplicate). Refreshing the project shows the
 current values; re-capture the screenshots and re-save the `.pbix` in Power BI Desktop at the next report change.
 
 **On another computer.** The project remembers the folder it was built with. Open `CareerOS.pbip`, set **Transform data → Manage parameters → ExportFolder** to the clone's

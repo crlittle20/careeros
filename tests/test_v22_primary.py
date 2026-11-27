@@ -127,7 +127,9 @@ class SourceStatusTests(unittest.TestCase):
 
 class LedgerTests(unittest.TestCase):
     def test_same_job_through_another_site_is_recognised(self):
-        """Since 2026-11-02 (Codex CR-2026-11-02-LEAD-RESOLUTION F2) the tracked job must be on a board the daily scan admits."""
+        """Since 2026-11-02 (Codex CR-2026-11-02-LEAD-RESOLUTION F2) the tracked job must be on a board the daily scan admits.
+        Since the owner's D188 (2026-11-19) the same job is recognised only by its link: another site's line with the same
+        title and employer is its own lead, and the same LinkedIn job in another link form is seen before."""
         from careeros.discovery import board_registry as reg
         store = open_store(":memory:", FixedClock(), POLICY.fingerprint)
         ctx = Context(store, POLICY, PROFILE, JOB_MATRIX, None)
@@ -141,9 +143,11 @@ class LedgerTests(unittest.TestCase):
             Link("https://www.linkedin.com/jobs/view/4000000011", "linkedin", "Claims Analyst", "Synthetic Health · Remote", True),
             Link("https://www.linkedin.com/jobs/view/4000000012", "linkedin", "Payer Operations Analyst", "Other Co · Remote", True),
             Link("https://www.indeed.com/viewjob?jk=0a1b2c3d4e5f6a70", "indeed", "Payer Operations Analyst", "Other Co · Remote", True),
-            Link("https://www.indeed.com/viewjob?jk=0a1b2c3d4e5f6a71", "indeed", "Claims Analyst", "Different Co · Remote", True)])
+            Link("https://www.indeed.com/viewjob?jk=0a1b2c3d4e5f6a71", "indeed", "Claims Analyst", "Different Co · Remote", True),
+            Link("https://www.linkedin.com/jobs/search/?currentJobId=4000000012", "linkedin", "Payer Operations Analyst",
+                 "Other Co · Remote", True)])
         _record_alert(ctx, alert, None, outcomes)
-        self.assertEqual([o for _, o in outcomes], ["already_tracked", "lead", "seen_before", "lead"])
+        self.assertEqual([o for _, o in outcomes], ["lead", "lead", "lead", "lead", "seen_before"])
 
 
 class OutcomeTests(unittest.TestCase):

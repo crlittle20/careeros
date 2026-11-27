@@ -3,6 +3,18 @@
 CareerOS prepares each application from what you approved and can fill the form you opened. **You always submit.**
 The design and its limits are in [ADR 0009](adr/0009-assisted-applications.md). This page is the how-to.
 
+> **Browser Fill is paused in this release** (the owner's D191, 2026-11-20, after Codex's design review of D190, H1:
+> the extension cannot learn that CareerOS withdrew a handoff it already loaded). `careeros assist open JOB --mode
+> assisted` is refused (`assisted_paused`), whatever your site policy or vault overrides say; manual and native modes
+> work as below. No handoff file is written, and every command, the review page around each action and every session
+> open remove any handoff file left in `vault\handoff` (one an earlier version wrote included), with no database read,
+> even when the command is refused at the writer lock. A file that cannot be removed at that moment (another program
+> has it open, so Windows will not delete it) is left in place, and the next command, page action or session open
+> tries again; it is gone once nothing holds it open. The same request key of an assisted session opened before the
+> upgrade returns the session without its handoff and says Fill is paused; close that session with what really
+> happened (`careeros assist close`). Sections 4 and 5 describe the extension for a later release; its code stays in
+> the repository, inert.
+
 ## 1. Write your answers once
 
 Create `profile/answers.yaml` in your vault. CareerOS reads it and never writes it.
@@ -95,10 +107,10 @@ of that form's question or choices is shown by `careeros package prepare` and in
 | `careeros package approve PACKAGE_ID --reason "..."` | Approves a Stretch package (that exact version) |
 | `careeros package list` | The queue: every package and its state now |
 | `careeros package gaps` | The questions your packages leave unanswered, expired or not one of the form's choices, most often first, each with the kind it reads as (or none: yours on each form), or for a standard field or document the `field:` or `documents.` entry that covers it, and the answers your file holds back and why |
-| `careeros package prepare --standing` | Prepares every job the standing preparation policy picks (off unless you turn it on) |
+| `careeros package prepare --standing` | Prepares nothing: standing preparation is off (D183); label a job Apply or Stretch to prepare it |
 
 Which packages are prepared, and when they need you:
-- **Routes.** A package is prepared for a job you labelled Apply or Stretch, or one the standing policy picks. Skip, a
+- **Routes.** A package is prepared only for a job you labelled Apply or Stretch. Skip, a
   dismissal or an application already made always win. A dismissal you undid (`careeros dismiss JOB --undo`) no longer
   counts: the latest event decides (2026-11-01).
 - **Closed or no longer eligible postings.** A posting that closed, or that the gate's latest decision no longer finds
@@ -112,9 +124,15 @@ Which packages are prepared, and when they need you:
   `preparation.approval_required: all` in your vault overrides.
 - **Changes.** If an answer (or the question it was written for), fact, document, question or the posting changes, the
   package becomes stale. Prepare it again; an earlier approval doesn't cover the new version.
-- **Standing preparation.** This is `preparation` in your vault overrides. It picks only by an absolute rule: ELIGIBLE,
-  eligibility at least 80, skill coverage at least 0.70, no degree stretch, no medium, large or severe experience gap,
-  and nothing to check first. It never writes a label.
+- **Standing preparation is off** (the owner's D183, 2026-11-18, after Codex's twelfth and thirteenth passes each found
+  new inputs that reached it). No package is prepared, and no assistance opens, without your Apply or Stretch label,
+  whatever `preparation.enabled` says in your vault overrides. A package prepared under it before then is withdrawn,
+  and an assisted session opened for it is refused by its key (D184, after Codex's fourteenth pass). The session stays
+  open: close it with what really happened (`careeros assist close`).
+- **Handoffs.** With browser Fill paused (D191, above) every sweep removes every handoff file, and the request key
+  of a closed session never returns one. A label stands for the opening you gave it for: if the posting's requisition or
+  address moves to another value, or its title changes, after your label, no package is prepared and no session opens
+  for it until you label it again.
 
 ## 3. Apply
 
@@ -125,8 +143,8 @@ Which packages are prepared, and when they need you:
 2. **Fill the form in one of three modes:**
    - `--mode manual` (the default): copy each value from the package's `answers.md`.
    - `--mode native`: use the employer's own autofill (for example MyGreenhouse), with `answers.md` as your reference.
-   - `--mode assisted`: on a destination you turned filling on for (section 5), CareerOS writes a handoff file in
-     `vault\handoff` for the browser extension.
+   - `--mode assisted`: paused in this release (D191, above): refused. In a later release, on a destination you turned
+     filling on for (section 5), CareerOS writes a handoff file in `vault\handoff` for the browser extension.
 3. **Review the whole form, attach your files, and submit it yourself.**
 4. **Close the session** with what happened:
    - `careeros assist close SESSION --outcome submitted`, adding `--evidence confirmation_observed` if you saw the
@@ -146,6 +164,8 @@ Which packages are prepared, and when they need you:
      `careeros assist report` compares the modes, by destination.
 
 ## 4. The browser extension (CareerOS Assist)
+
+Paused in this release (D191, at the top of this page): assisted mode is refused and no handoff file is written.
 
 **Installing it** (Chrome or Edge):
 1. Open `chrome://extensions` and turn on Developer mode.
@@ -272,6 +292,7 @@ Another destination's adapter is worth building only when the report shows time 
   claims-analyst application questions, 52 fit a kind; of 48 routine claims-operations questions, 32 fit no kind (16
   only because a word such as member, disability or maternity is about the person elsewhere) and 3 read as
   sensitive. Those are yours to answer on the form.
-- A handoff file stays usable until it expires (two hours at most), even after you close its session. Delete it from
-  `vault\handoff` if you want it gone sooner.
+- Browser Fill is paused in this release (D191): the extension cannot learn that CareerOS withdrew a handoff it
+  already loaded, so none is written, and every sweep removes any left in `vault\handoff`. A design review comes before
+  it returns.
 - Nothing here submits an application, creates an account, signs in, solves a CAPTCHA or uploads a file.

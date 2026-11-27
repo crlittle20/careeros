@@ -324,17 +324,73 @@ def resolve_cases(store, *, resolution: str, mapping_id: str | None = None, case
                                                             "resolution": resolution[:300]}, " AND ".join(where), tuple(params))
 
 
+MIGRATION_REASONS = ("board_not_found", "migration_detected", "possible_migration")
+
+
+def pending_migrations(store, mapping_id: str) -> list:
+    """The boards whose move to this board is not yet completed, as (board, completion already recorded): retired as
+    history by that move (a board that was re-admitted since, with a stale link, is not one), of the same employer,
+    and either with no completion recorded since they were retired or with a case about the move still open. An event
+    is not proof on its own: the release deployed on 2026-11-15 could record one and leave a case open (Codex
+    CR-2026-11-15-GATE-FIXES F3, F4; Pass 2)."""
+    new = mapping(store, mapping_id)
+    if new is None:
+        return []
+    done = set()
+    for e in store.all("SELECT occurred_at, metadata_json FROM events WHERE event_type = 'ats_migration_verified' AND entity_id = ?",
+                       (mapping_id,)):
+        for old in (json.loads(e["metadata_json"] or "{}").get("migrated_from") or "").split(","):
+            done.add((old, e["occurred_at"]))
+    pending = []
+    for m in store.all("SELECT * FROM board_mappings WHERE migrated_to = ? AND verification_status = 'historical' "
+                       "ORDER BY mapping_id", (mapping_id,)):
+        if m["entity_id"] and new["entity_id"] and m["entity_id"] != new["entity_id"]:
+            continue   # a link to another employer's board is never trusted to close anything
+        recorded = any(old == m["mapping_id"] and at >= (m["retired_at"] or "") for old, at in done)
+        marks = ",".join("?" for _ in MIGRATION_REASONS)
+        still_open = store.one(f"SELECT 1 FROM board_reviews WHERE mapping_id = ? AND status = 'open' AND reason_code IN ({marks})",
+                               (m["mapping_id"], *MIGRATION_REASONS))
+        if recorded and not still_open:
+            continue
+        pending.append((m, recorded))
+    return pending
+
+
 def complete_migration(store, mapping_id: str, *, component: str = "discovery") -> int:
-    """A board another board migrated to is now in the daily scan: the migration is verified, and the old board's open
+    """A board another board migrated to is in the daily scan: the migration is verified, and the old board's open
     review cases about the move (its board gone, the move detected) are answered (2026-11-15; the Functional MVP gate
-    found them left open). Returns the number of cases closed."""
-    old = [r["mapping_id"] for r in store.all("SELECT mapping_id FROM board_mappings WHERE migrated_to = ?", (mapping_id,))]
-    if not old:
-        return 0
-    _event(store, component, "ats_migration_verified", "success", mapping_id, migrated_from=",".join(old))
-    return sum(resolve_cases(store, mapping_id=m, reasons=("board_not_found", "migration_detected", "possible_migration"),
-                             resolution=f"migration completed: {mapping_id} is verified and in the daily scan", component=component)
-               for m in old)
+    found them left open). Called by admit, so every way into the daily scan completes it, and by a migration to a board
+    already in it. Only the current move of a board of the same employer counts; the closures and one completion event
+    are written together or not at all, and a repeat writes nothing (Codex CR-2026-11-15-GATE-FIXES F3, F4). Returns
+    the number of cases closed."""
+    with store.tx():
+        old = pending_migrations(store, mapping_id)
+        if not old:
+            return 0
+        closed = sum(resolve_cases(store, mapping_id=m["mapping_id"], reasons=MIGRATION_REASONS,
+                                   resolution=f"migration completed: {mapping_id} is verified and in the daily scan",
+                                   component=component) for m, _ in old)
+        first = [m["mapping_id"] for m, recorded in old if not recorded]
+        if first:   # one completion event per move; a move recorded before, with a case left open, is only closed
+            _event(store, component, "ats_migration_verified", "success", mapping_id, migrated_from=",".join(first), cases_closed=closed)
+        return closed
+
+
+def reconcile_migrations(store) -> int:
+    """Each board in the daily scan whose move is not completed (a write that failed, or the release of 2026-11-15)
+    completes it now: run at the start of every verification run (Codex CR-2026-11-15-GATE-FIXES Pass 2, F4). Returns
+    the number of cases closed."""
+    closed = 0
+    for row in store.all("SELECT DISTINCT migrated_to FROM board_mappings WHERE migrated_to IS NOT NULL AND verification_status = 'historical'"):
+        if in_daily_scan(store, row["migrated_to"]):
+            closed += complete_migration(store, row["migrated_to"])
+    return closed
+
+
+def in_daily_scan(store, mapping_id: str) -> bool:
+    m = mapping(store, mapping_id)
+    return bool(m and m["verification_status"] == "active" and not m["paused_reason"] and m["activated_at"]
+                and store.one("SELECT 1 FROM employers WHERE mapping_id = ? AND status NOT IN ('invalid', 'disabled')", (mapping_id,)))
 
 
 # --- identity signals and fingerprints ----------------------------------------------------------------------------------
@@ -422,13 +478,14 @@ def approve(store, mapping_id: str, *, reason: str, days: float = 90, actor: str
         values.update(quarantined_at=now, validation_status="pending")
     if domain and clean_domain(domain):
         values["official_domain"] = clean_domain(domain)
-    update_board(store, mapping_id, values, component="admin")
-    store.writer("admin").event("manual_override_created", outcome="success", entity_type="employer_board", entity_id=mapping_id,
-                                actor_type="human", actor_id=actor,
-                                metadata={"reason": reason.strip()[:200], "previous": m["verification_status"], "new": status,
-                                          "expires_at": values["override_expires_at"]})
-    if status == "active":
-        admit(store, mapping_id, via="override", actor=actor)
+    with store.tx():   # approved and admitted together, or neither (Codex CR-2026-11-15-GATE-FIXES F4)
+        update_board(store, mapping_id, values, component="admin")
+        store.writer("admin").event("manual_override_created", outcome="success", entity_type="employer_board", entity_id=mapping_id,
+                                    actor_type="human", actor_id=actor,
+                                    metadata={"reason": reason.strip()[:200], "previous": m["verification_status"], "new": status,
+                                              "expires_at": values["override_expires_at"]})
+        if status == "active":
+            admit(store, mapping_id, via="override", actor=actor)
     return status
 
 
@@ -458,13 +515,15 @@ def admit(store, mapping_id: str, *, via: str, actor: str) -> str:
         raise ValueError("unknown_mapping")
     if m["verification_status"] != "active" or m["paused_reason"] or m["collection"] != "allowed":
         raise ValueError(f"not active: {m['verification_status']}")
+    from careeros.normalize.sanitize import canonical   # the registry write (the D190 design, section 3a, point 6)
     employer_id = f"{m['ats']}:{m['board_token']}"
     now = store.clock.now()
     existing = store.one("SELECT * FROM employers WHERE ats = ? AND lower(board_token) = lower(?)", (m["ats"], m["board_token"]))
     with store.tx():
         if existing is None:
             store.writer("admin").insert("employers", {
-                "employer_id": employer_id, "name": m["employer_name"], "parent": m["employer_name"], "ats": m["ats"],
+                "employer_id": employer_id, "name": canonical(m["employer_name"]), "parent": canonical(m["employer_name"]),
+                "ats": m["ats"],
                 "board_token": m["board_token"], "industry": None, "status": "candidate", "mapping_id": mapping_id,
                 "entity_id": m["entity_id"], "admitted_via": via, "last_evidence_at": now})
             store.writer("admin").event("employer_added", outcome="success", entity_type="employer", entity_id=employer_id,
@@ -477,7 +536,9 @@ def admit(store, mapping_id: str, *, via: str, actor: str) -> str:
             if existing["status"] in ("invalid", "disabled"):
                 values["status"] = "candidate"
             store.writer("admin").update("employers", values, "employer_id = ?", (employer_id,))
-        update_board(store, mapping_id, {"activated_at": now}, component="admin")
+        # a board back in the daily scan has moved nowhere: its old link is cleared (Codex F3), and a move to it completes
+        update_board(store, mapping_id, {"activated_at": now, "migrated_to": None}, component="admin")
+        complete_migration(store, mapping_id, component="discovery" if actor.startswith("careeros") else "admin")
     return employer_id
 
 

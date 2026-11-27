@@ -95,6 +95,7 @@ class SchemaGuardTests(unittest.TestCase):
 
     def test_each_migration_records_which_older_engines_may_run_on_it(self):
         self.assertEqual(store_mod.RUNS_ON_OLDER.get(15), 14)   # rehearsed: the schema-14 engine ran on schema 15
+        self.assertNotIn(16, store_mod.RUNS_ON_OLDER)   # the owner's D191: no engine older than 016 opens it
         expected = str(store_mod.RUNS_ON_OLDER.get(NEWEST, NEWEST))
         self.open()
         self.assertEqual(meta(self.db, "oldest_engine_schema"), expected)

@@ -31,12 +31,11 @@ from careeros.qualify.rubric import EVIDENCED, UNKNOWN, Assessment, Axis, Item, 
 from careeros.review import role_identity as ri
 from careeros.review import sampling, scoring_eval
 from careeros.review import shadow_policy as sp
-from careeros.review.labels import record_label
 from careeros.review.preferences import CONFIRMED, NEGATED, UNCERTAIN, detect, load_preferences, mentions
 from careeros.review.scoring_eval import Group, JobEval, baseline_status, group_label
 
 from tests import postings
-from tests.helpers import JOB_MATRIX
+from tests.helpers import JOB_MATRIX, give_label
 from tests.test_pipeline import Board, gh_job
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -72,7 +71,7 @@ class SyntheticVault:
         self.clock.advance(minutes=1)
         process(ctx)
         if label_101:
-            record_label(store, "greenhouse:synth:101", "apply", None, "k-101")
+            give_label(store, self.policy, self.profile, "greenhouse:synth:101", "apply", None, "k-101")
         store.close()
         if criteria:
             self.paths["adoption_criteria"].parent.mkdir(parents=True, exist_ok=True)
@@ -82,7 +81,7 @@ class SyntheticVault:
         self.clock.advance(minutes=5)
         store = open_store(self.db, self.clock, self.policy.fingerprint)
         try:
-            record_label(store, job_id, label, reason, key)
+            give_label(store, self.policy, self.profile, job_id, label, reason, key)
         finally:
             store.close()
 

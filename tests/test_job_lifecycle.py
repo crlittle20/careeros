@@ -22,10 +22,10 @@ from careeros.review.applications import application_matrix, record_application,
 from careeros.review.discovery_metrics import metrics
 from careeros.review.explain import FIELDS, explain_job, render
 from careeros.review.funnel import funnel
-from careeros.review.labels import record_label
 
 from tests.test_saved import POLICY as TEST_POLICY
-from tests.helpers import JOB_MATRIX
+from tests.helpers import JOB_MATRIX, give_label
+from tests.test_intake_identity import twin
 from tests.test_v21_policy import OVERNIGHT, policy_with
 from tests.test_v25_audit import APPROVED, MID, store_ctx
 from tests.test_v26_discovery import CLAIMS, gh_item
@@ -37,8 +37,8 @@ BOARD = {"employer_id": "greenhouse:synth", "name": "Synthetic Health", "parent"
 
 def board_postings():
     items = [gh_item(1, "Claims Analyst", CLAIMS, "synth", req="R-1"),                                      # eligible, scored
-             gh_item(2, "Claims Analyst", CLAIMS, "synth", req="R-1"),                                      # duplicate of 1
-             gh_item(3, "Claims Analyst", CLAIMS, "synth", req="R-1", location="Remote - Florida"),           # variant of 1
+             gh_item(2, "Claims Analyst", CLAIMS, "synth", req="R-1"),                                      # linked to 1 (D188)
+             gh_item(3, "Claims Analyst", CLAIMS, "synth", req="R-1", location="Remote - Florida"),           # linked to 1 (D188)
              gh_item(4, "Senior Software Engineer", CLAIMS, "synth", req="R-4"),                            # title screen
              gh_item(5, "Claims Operations Specialist", "Claims work. This role is remote.", "synth", req="R-5"),  # too short
              gh_item(6, "Claims Quality Auditor", OVERNIGHT, "synth", req="R-6"),                           # overnight work
@@ -68,14 +68,25 @@ def counts(store):
 class WorkflowTests(unittest.TestCase):
     def test_every_job_flows_from_source_to_analytics_and_explains_itself(self):
         store, ctx = world()
+        copy = "manual:synthetic-health:copy-1"   # posting 1 added again by its own board link: the same posting (D188)
+        ingest(ctx, {"employer_id": None, "name": "Synthetic Health", "parent": "Synthetic Health"},
+               [RawPosting(ats="manual", board_token="synthetic-health", external_id="copy-1", title="Claims Analyst",
+                           location="Remote - US", url="https://job-boards.greenhouse.io/synth/jobs/1", apply_url=None,
+                           description_text=CLAIMS, raw={"source": "human_text"})], source="manual_url", full_board=False)
+        process(ctx)
         states = {r["job_id"]: r["current_state"] for r in store.all("SELECT job_id, current_state FROM jobs")}
         self.assertEqual(states[jid(1)], "scored")
-        self.assertEqual(states[jid(2)], "duplicate")
+        self.assertNotIn(copy, states)   # a sighting of the board's job: no second row (the red team's batch 3)
+        twin(store, copy, "https://job-boards.greenhouse.io/synth/jobs/1")   # an older engine's copy, joined at the run
+        process(ctx)
+        states = {r["job_id"]: r["current_state"] for r in store.all("SELECT job_id, current_state FROM jobs")}
+        self.assertEqual(states[copy], "duplicate")
+        self.assertEqual(states[jid(2)], "scored")   # another posting id with the same requisition: its own job (D188)
         self.assertEqual(states[jid(4)], "rejected")
         self.assertEqual(states[jid(5)], "needs_review")
         self.assertEqual(states[jid(7)], "rejected")
         # ACTION -> STATUS -> OUTCOME
-        record_label(store, jid(1), "apply", "strong claims fit", "label-1")
+        give_label(store, ctx.policy, ctx.profile, jid(1), "apply", "strong claims fit", "label-1")
         app_id = record_application(store, application_matrix(), jid(1), "direct", policy=TEST_POLICY, key="apply-1")
         update_application(store, application_matrix(), app_id, "screening", key="screen-1")
         # every job, whatever happened to it, answers every question
@@ -94,10 +105,13 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(scored["actions"]["applications"][0]["outcome"], "screening")
         self.assertEqual([h["to"] for h in scored["status"]["history"]][:4], ["normalized", "extracted", "eligible", "scored"])
         self.assertTrue(scored["source"]["sightings"])
-        duplicate = explain_job(store, ctx.policy, jid(2))
+        duplicate = explain_job(store, ctx.policy, copy)
         self.assertEqual((duplicate["duplicate_decision"]["decision"], duplicate["duplicate_decision"]["of"]), ("duplicate", jid(1)))
         self.assertEqual(duplicate["rejection_reason"]["code"], "duplicate")
-        self.assertEqual(explain_job(store, ctx.policy, jid(3))["duplicate_decision"]["variant_of"], jid(1))
+        for other in (jid(2), jid(3)):   # linked to 1 for your review, never a variant or a duplicate (D188)
+            decision = explain_job(store, ctx.policy, other)["duplicate_decision"]
+            self.assertEqual((decision["decision"], decision["variant_of"]), ("distinct opening", None))
+            self.assertIn(jid(1), {r["job"] for r in decision["related"]})
         titled = explain_job(store, ctx.policy, jid(4))
         self.assertEqual(titled["eligibility"]["stage"], "title screen")
         self.assertIn(titled["rejection_reason"]["code"], ("title_excluded", "no_target_family"))
@@ -208,13 +222,16 @@ class StuckJobTests(unittest.TestCase):
 
     def test_no_state_lacks_a_way_forward_and_dead_transitions_are_gone(self):
         allowed = {(a["from"], a["to"]) for a in json.load(open(cli.CONFIG_DIR / "workflows" / "job.json"))["allowed"]}
-        for dead in (("discovered", "closed"), ("extracted", "needs_review"), ("needs_review", "extracted"), ("normalized", "duplicate")):
+        for dead in (("discovered", "closed"), ("extracted", "needs_review"), ("needs_review", "extracted")):
             self.assertNotIn(dead, allowed)
+        for state in ("normalized", "extracted", "needs_review", "eligible", "scored", "rejected", "closed"):
+            self.assertIn((state, "duplicate"), allowed, state)   # a same-posting twin is joined (the red team's batch 3)
         for state in ("normalized", "extracted", "needs_review", "eligible", "scored", "rejected"):
             self.assertIn((state, "closed"), allowed, state)        # every open state can close
             self.assertTrue({(state, "normalized"), (state, "extracted")} & allowed or state in ("normalized",), state)
         self.assertIn(("closed", "normalized"), allowed)            # a closed posting can reopen
-        self.assertFalse(any(frm == "duplicate" for frm, _ in allowed))  # duplicate is terminal
+        # a duplicate leaves only for screening, when the current identity rules no longer make it one (RT-35, D186)
+        self.assertEqual({to for frm, to in allowed if frm == "duplicate"}, {"normalized"})
 
 
 class BoardClosureTests(unittest.TestCase):

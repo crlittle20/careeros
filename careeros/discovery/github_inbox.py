@@ -33,6 +33,9 @@ OUTCOME_TEXT = {
     "outside_target_families": "outside target families",
     "seen_before": "seen before",
     "unreadable_kept_as_lead": "could not read the posting (kept as a lead)",
+    "kept_as_lead_other_posting": "the posting read is not this line's (kept as a lead)",
+    "notice": "notice: the link names no posting (a careers page), so it is listed for the owner to add or dismiss",
+    "notice_seen_before": "seen before",
     "no_title": "skipped: no job title on the line",
     "not_a_job_link": "skipped: not a job posting link",
     "suppressed": "skipped",
@@ -158,8 +161,11 @@ def issue_alert(issue: dict) -> AlertEmail:
         context = " · ".join(x for x in (row["company"], row["location"], row["note"]) if x)
         links.append(Link(url=url, site=site, text=row["title"], context=context[:NOTE_MAX + 210], job_like=True))
     author = ((issue.get("author") or {}).get("login") or "unknown")[:60]
+    key = f"github:{issue['number']}"   # each line keyed by its issue and position (part 3 of D192)
+    for position, link in enumerate(links):
+        link.occurrence = f"{key}#{position}"
     return AlertEmail(sender=f"GitHub inbox ({author})", subject=f"#{issue['number']} {issue.get('title') or ''}"[:200],
-                      received_at=from_external(issue.get("createdAt")), links=links)
+                      received_at=from_external(issue.get("createdAt")), links=links, message_key=key)
 
 
 _NIGHT_TITLE = re.compile(r"^\s*(?:test\s+)?night\b", re.I)

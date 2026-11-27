@@ -26,15 +26,16 @@ class DismissalChanged(ValueError):
 
 
 def dismissed_sql(job: str) -> str:
-    """SQL that is true when the job in column `job` is dismissed now: its latest dismissals row (by time, then
-    recording order) is a dismissal, not a reinstatement. Its own alias is `dl`: name the outer table otherwise."""
-    return (f"COALESCE((SELECT dl.reason_code FROM dismissals dl WHERE dl.job_id = {job} ORDER BY dl.at DESC, dl.rowid DESC "
+    """SQL that is true when the job in column `job` is dismissed now: its latest dismissals row (by recording order,
+    whatever the clock said: one an older engine wrote later after a rollback wins, as for labels; the red team's batch
+    3, B.6) is a dismissal, not a reinstatement. Its own alias is `dl`: name the outer table otherwise."""
+    return (f"COALESCE((SELECT dl.reason_code FROM dismissals dl WHERE dl.job_id = {job} ORDER BY dl.rowid DESC "
             f"LIMIT 1), '{REINSTATED}') != '{REINSTATED}'")
 
 
 def latest(store: Store, job_id: str):
-    """The job's latest dismissals row, a dismissal or a reinstatement, or None."""
-    return store.one("SELECT * FROM dismissals WHERE job_id = ? ORDER BY at DESC, rowid DESC LIMIT 1", (job_id,))
+    """The job's latest dismissals row, a dismissal or a reinstatement, or None: the one written last (dismissed_sql)."""
+    return store.one("SELECT * FROM dismissals WHERE job_id = ? ORDER BY rowid DESC LIMIT 1", (job_id,))
 
 
 def current(store: Store, job_id: str):
@@ -49,6 +50,11 @@ def is_dismissed(store: Store, job_id: str) -> bool:
 
 def _record(store: Store, job_id: str, reason: str, text: str | None, actor: str, key: str | None, command: str,
             event: str, undoes: str | None = None) -> str:
+    return _record_tx(store, job_id, reason, text, actor, key, command, event, undoes)
+
+
+def _record_tx(store: Store, job_id: str, reason: str, text: str | None, actor: str, key: str | None, command: str,
+               event: str, undoes: str | None) -> str:
     writer = store.writer("review")
     with store.tx():
         if key and writer.receipt(command, key, {"job_id": job_id, "reason": reason, "text": text or ""}, actor_id=actor) == "replay":

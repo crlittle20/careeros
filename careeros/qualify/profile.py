@@ -225,5 +225,6 @@ def _identity(text: str) -> tuple[str, ...]:
 
 
 def load_profile(path: Path) -> Profile:
-    data = load_yaml(path)
+    from careeros.normalize.sanitize import canonical_values
+    data = canonical_values(load_yaml(path))   # the D190 design, section 3a, point 7
     return Profile(data=data, fingerprint=fingerprint(data))

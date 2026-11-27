@@ -5,10 +5,9 @@ import unittest
 from pathlib import Path
 
 from careeros.review import approved_facts as af
-from careeros.review.labels import record_label
 from careeros.review.shortlist import draft
 
-from tests.helpers import add_job, new_store
+from tests.helpers import add_job, new_store, stored_label
 from tests.test_qualify import PROFILE
 
 FACT = {"id": "ticket-volume", "text": "Up to approximately 5,000 tickets within a two-week cycle.",
@@ -105,10 +104,12 @@ class DraftTests(unittest.TestCase):
                                                         "category": "experience", "name": "ticket triage",
                                                         "requirement_type": "hard_required", "source_text": "Ticket triage experience required",
                                                         "confidence": 0.9, "years": None})
-        record_label(store, "gh:t:1", "apply", None, "l1")
+        stored_label(store, "gh:t:1", "apply", None, "l1")
         from careeros.qualify.profile import Profile
         profile = Profile({**PROFILE.data, "functions": [{"name": "ticket triage", "years": 2, "evidence": "direct", "source": source}]}, "p")
-        with tempfile.TemporaryDirectory() as tmp:
+        # the brief's wording check on a fixture row: the route is taken as given (P1 itself: tests/test_p1.py)
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as tmp, mock.patch("careeros.review.packages.route_for", return_value=("apply", "your apply label")):
             return draft(store, profile, "gh:t:1", Path(tmp), facts=[FACT]).read_text(encoding="utf-8")
 
     def test_the_fact_is_quoted_word_for_word_and_the_wording_checked(self):

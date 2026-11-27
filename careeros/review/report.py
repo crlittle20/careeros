@@ -5,6 +5,7 @@ status, dismiss an email lead. Each form carries a one-time key bound to (action
 """
 from __future__ import annotations
 
+import contextvars
 import functools
 import html
 import json
@@ -46,6 +47,7 @@ form{display:inline-block;margin:4px 8px 0 0}button{font:inherit;font-size:13px;
 input[type=text],select{font:inherit;font-size:13px;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);max-width:100%}
 input[type=text]{width:200px}.labelled{font-size:12px;color:var(--a)}a{color:var(--b)}
 code.jid{user-select:all;font-size:12px}.verdict{font-weight:600;margin:2px 0 4px}
+.approves pre{white-space:pre-wrap;font:inherit;font-size:13px;margin:4px 0}
 """
 
 
@@ -71,11 +73,19 @@ def _age(posted: str | None, now: str) -> str:
 
 
 def _comp(job) -> str:
+    """The pay columns as stated: both ends, their period and currency, never a range made from one end (BATCH_5 C1),
+    each amount exactly as stored (Codex H37)."""
+    from careeros.review.labels import _amount, stored_pay
     if job["comp_min"] is None and job["comp_max"] is None:
-        return "pay not posted"
-    unit = "/hr" if job["comp_period"] == "hour" else "/yr"
-    lo, hi = job["comp_min"] or job["comp_max"], job["comp_max"] or job["comp_min"]
-    return f"${lo:,.0f}–${hi:,.0f}{unit}"
+        # what the board's own pay fields store, beside the reading (the owner's D200, Codex H42)
+        stored = job["board_pay_json"] if "board_pay_json" in job.keys() else None
+        note = stored_pay(json.loads(stored)) if stored else ""
+        return "pay not posted" + (f" ({note})" if note else "")
+    lo, hi = job["comp_min"], job["comp_max"]
+    amount = (f"{_amount(lo)}–{_amount(hi)}" if lo is not None and hi is not None else
+              f"up to {_amount(hi)}" if hi is not None else f"from {_amount(lo)}")
+    return (f"{job['comp_currency'] or 'currency not stated'} {amount} "
+            f"{'per ' + job['comp_period'] if job['comp_period'] else 'period not stated'}")
 
 
 def _latest(store: Store, table: str, job_id: str):
@@ -106,12 +116,58 @@ def _origin(origin: str) -> str:
 NO_ENTER = '<button type="submit" disabled hidden aria-hidden="true" tabindex="-1"></button>'
 
 
-def _label_form(job_id: str, token: str | None, form_keys: dict, origin: str = "card") -> str:
+# the page being built: (your policy, your profile, the previews its label forms keep under their form keys), set by
+# build_report, so each card's label form captures what it shows (the D190 design, section 3, "The preview")
+_PREVIEWS: contextvars.ContextVar = contextvars.ContextVar("careeros_previews", default=None)
+# the page being built: the jobs the shortlist names, and the jobs whose own card it shows, so every shortlisted job's
+# card is on the page (its shortlist card links there and offers no label: BATCH_5 C3)
+_SHORTLISTED: contextvars.ContextVar = contextvars.ContextVar("careeros_shortlisted", default=None)
+_CARDS_SHOWN: contextvars.ContextVar = contextvars.ContextVar("careeros_cards_shown", default=None)
+
+
+def _preview_buttons(store: Store, job_id: str, who: str, key: str, choices: tuple) -> str:
+    """The label buttons of a card, with its preview: Apply and Stretch only where the job offers one (its capture is
+    kept in the server's memory under the form key, its digest in the form); Skip always."""
+    from careeros.review.labels import capture
+    context = _PREVIEWS.get()
+    captured = None
+    if context is not None:
+        policy, profile, previews = context
+        captured = capture(store, policy, profile, job_id, who)
+        if not captured["waiting"]:
+            previews[key] = captured
+    offered = [(v, t) for v, t in choices if v not in ("apply", "stretch") or (captured and not captured["waiting"])]
+    buttons = "".join(f'<button name="label" value="{v}">{t}</button> ' for v, t in offered)
+    if captured is not None and not captured["waiting"]:
+        # the card's label offers what this capture binds, every value of it, rendered by the CLI preview's renderer
+        # (BATCH_5 C; Codex H37): an Apply or Stretch here approves exactly these items; a text shown whole sits in a
+        # fold you open, in the page whole and escaped
+        from careeros.review.labels import card_items
+        items = card_items(captured, store, store.clock.now())
+        shown = ('<div class="approves"><div class="meta">An Apply or Stretch label here approves:</div><ul>'
+                 + "".join(f'<li>{esc(item["text"])}'
+                           + (f'<details><summary>show it</summary><pre>{esc(item["fold"])}</pre></details>'
+                              if "fold" in item else "") + '</li>' for item in items) + '</ul></div>')
+        return f'{shown}<input type="hidden" name="digest" value="{esc(captured["digest"])}">{buttons}'
+    why = captured["waiting"] if captured is not None else "no preview on this page"
+    return f'<span class="meta">Apply and Stretch: {esc(why)}.</span> {buttons}'
+
+
+def _label_form(store: Store, job_id: str, token: str | None, form_keys: dict, origin: str = "card") -> str:
+    """The label buttons. An Apply or Stretch label is given from the preview the card shows (the D190 design,
+    section 3): the form carries its digest, and a label clicked after the job changed is refused, never given to
+    content the card did not show (the red team's gr1-routes-0, B.2)."""
     if not token:
         return f'<span class="meta">label: <code>careeros label {esc(job_id)} apply|stretch|skip</code></span>'
-    buttons = "".join(f'<button name="label" value="{v}">{t}</button> ' for v, t in (("apply", "Apply"), ("stretch", "Stretch"), ("skip", "Skip")))
-    return _form("label", job_id, token, form_keys,
-                 f'{_origin(origin)}{NO_ENTER}<input type="text" name="reason" placeholder="label reason (optional)"> {buttons}')
+    key = secrets.token_hex(12)
+    buttons = _preview_buttons(store, job_id, "primary", key, (("apply", "Apply"), ("stretch", "Stretch"), ("skip", "Skip")))
+    form = _form("label", job_id, token, form_keys,
+                 f'{_origin(origin)}{NO_ENTER}'
+                 f'<input type="text" name="reason" placeholder="label reason (optional)"> {buttons}', key=key)
+    if origin == "card" and "waiting for a board read" in buttons:
+        # W2: a job waiting for its board's read may be dismissed meanwhile; a dismissal needs no preview
+        form += _dismiss_form(job_id, token, form_keys, origin)
+    return form
 
 
 def _apply_form(job_id: str, token: str | None, form_keys: dict, origin: str = "card") -> str:
@@ -173,6 +229,8 @@ def _stale_note(posted: str | None, now: str, stale_days: int) -> str:
 
 def _plain_card(store: Store, job, now: str, token: str | None, form_keys: dict, variants: int = 0, note: str = "",
                 new: bool = False, stale_days: int = STALE_DAYS, policy=None) -> str:
+    if _CARDS_SHOWN.get() is not None:
+        _CARDS_SHOWN.get().add(job["job_id"])
     score = _latest(store, "scores", job["job_id"])
     gate = _latest(store, "gate_results", job["job_id"])
     label = _latest(store, "labels", job["job_id"])
@@ -224,11 +282,16 @@ def _plain_card(store: Store, job, now: str, token: str | None, form_keys: dict,
         items = [f'<li class="fail">{esc(f["detail"])}'
                  + (f' <span class="meta">(your profile: {esc(f["profile_evidence"])}; confidence {f["confidence"]:.2f})</span>'
                     if f.get("profile_evidence") else "") + '</li>' for f in failures] \
-            + [f'<li class="flag">{esc(f["detail"])}</li>' for f in flags[:8]]
+            + [f'<li class="flag">{esc(f["detail"])}</li>' for f in flags]   # every flag (BATCH_5 C4)
         if items:
             parts.append("<ul>" + "".join(items) + "</ul>")
     if label:
         parts.append(f'<div class="labelled">your label: {esc(label["label"])}{" — " + esc(label["reason"]) if label["reason"] else ""}</div>')
+        from careeros.review.labels import label_confirmed
+        if label["label"] in ("apply", "stretch") and label["profile"] == "primary" and not label_confirmed(store, label):
+            # the owner's D188: a label given before the upgrade is confirmed once, here, before anything is prepared
+            parts.append('<div class="flag">This label was given before the upgrade of 2026-11-19: label the job again below '
+                         'to confirm it. Until then nothing is prepared and no session opens for it.</div>')
     if app:
         parts.append(f'<div class="ok">Applied {esc(app["applied_at"][:10])} via {esc(app["channel"])}'
                      f'{" (" + esc(app["agency"]) + ")" if app["agency"] else ""} — status: {esc(app["current_state"].replace("_", " "))}'
@@ -241,7 +304,7 @@ def _plain_card(store: Store, job, now: str, token: str | None, form_keys: dict,
         line = display(store, policy, job["job_id"])
         if line:
             parts.append(f'<div class="flag"><b>{esc(line)}</b></div>')
-    parts.append(_label_form(job["job_id"], token, form_keys))
+    parts.append(_label_form(store, job["job_id"], token, form_keys))
     if not app or app["current_state"] not in OPEN_STATES:   # a finished application can be followed by a reasoned re-application
         parts.append(_apply_form(job["job_id"], token, form_keys))
     parts.append("</div>")
@@ -330,6 +393,9 @@ def _lead_card(lead, token, form_keys) -> str:
              f'<div class="row"><span>{esc(lead["status_reason"])}</span></div>' if lead["status_reason"] else "")
     failed = (f'<div class="row"><span class="flag">could not be read: {esc(lead["fetch_failure"])}</span></div>'
               if lead["fetch_failure"] else "")
+    if "repeat_of" in lead.keys() and lead["repeat_of"]:   # the same agency and job number (H8, part 3 of D192): advice
+        failed += (f'<div class="row"><span>possibly the same as lead {esc(lead["repeat_of"])} (the same job number)'
+                   '</span></div>')
     family = ('<span>family: not matched</span><span class="flag">Not graded</span>' if ungraded else
               f'<span>family: {esc(lead["family"])}</span>')
     return (f'<div class="card"><h3>{safe_link(lead["url"], lead["title"])}</h3><div class="row">'
@@ -337,6 +403,42 @@ def _lead_card(lead, token, form_keys) -> str:
             + f'<span>{esc(lead["site"])}</span>{family}'
             f'<span>from: {esc(lead["sender"])}</span><span>{esc((lead["received_at"] or lead["first_seen_at"])[:10])}</span></div>'
             + (f'<div class="row">{esc(lead["context"])}</div>' if lead["context"] else "") + state + failed + dismiss + "</div>")
+
+
+def _notice_card(store: Store, notice, token, form_keys, policy, cache: dict) -> str:
+    from .notices import likely_postings
+    suggestion = json.loads(notice["suggestion_json"] or "{}").get("greenhouse_posting")
+    tracked = likely_postings(store, policy, notice, cache) if policy is not None else []
+    dismiss = (_form("notice", notice["notice_id"], token, form_keys, '<button name="action" value="dismiss">Dismiss</button>')
+               if token else "")
+    return (f'<div class="card"><h3>{safe_link(notice["url"], notice["title"])}</h3><div class="row">'
+            + ('<span class="flag">NIGHT</span>' if notice["profile"] == "night" else '')
+            + f'<span>{esc(notice["site"])}</span><span>from: {esc(notice["sender"])}</span>'
+            f'<span>{esc((notice["received_at"] or notice["first_seen_at"])[:10])}</span></div>'
+            + (f'<div class="row">{esc(notice["context"])}</div>' if notice["context"] else "")
+            + (f'<div class="row"><span>may be {safe_link(suggestion, suggestion)} (a guess: add it by that link if it is)</span>'
+               '</div>' if suggestion else "")
+            + "".join(f'<div class="row"><span>a tracked posting with this title: {esc(j["job_id"])} '
+                      f'({esc(j["location_raw"] or "location unknown")})</span></div>' for j in tracked[:3])
+            + f'<div class="row"><code>careeros notices add {esc(notice["notice_id"])} --url LINK</code> or '
+            f'<code>--text-file FILE</code></div>' + dismiss + "</div>")
+
+
+def _notices_section(store: Store, token, form_keys, policy=None) -> list[str]:
+    """Alert cards whose link names no posting (part 3 of the owner's D192 build): never leads, grouped by the employer
+    each names, else by sender."""
+    from .notices import groups
+    grouped = groups(store)
+    if not grouped:
+        return []
+    total, cache = sum(len(rows) for _, rows in grouped), dict[str, object]()
+    out = [f'<h2 id="notices">Notices from alerts ({total})</h2><div class="meta">Alert cards whose link names no posting '
+           '(a careers page). They are never leads and never matched to a posting: open the page, find the posting, and '
+           'add it by its own link, or with its text; or dismiss the notice.</div>']
+    for label, rows in grouped:
+        out.append(f'<h3>{esc(label)} ({len(rows)})</h3>')
+        out.extend(_notice_card(store, n, token, form_keys, policy, cache) for n in rows[:30])
+    return out
 
 
 def _leads_section(store: Store, token, form_keys) -> list[str]:
@@ -361,13 +463,14 @@ def _leads_section(store: Store, token, form_keys) -> list[str]:
     return out
 
 
-def _night_label_form(job_id: str, token: str | None, form_keys: dict) -> str:
+def _night_label_form(store: Store, job_id: str, token: str | None, form_keys: dict) -> str:
     if not token:
         return f'<span class="meta">label: <code>careeros label {esc(job_id)} apply|stretch|skip --night</code></span>'
-    buttons = "".join(f'<button name="label" value="{v}">{t}</button> ' for v, t in
-                      (("apply", "Apply"), ("stretch", "Stretch"), ("skip", "Skip"), ("skip_schedule", "Skip: schedule doesn't fit")))
+    key = secrets.token_hex(12)
+    buttons = _preview_buttons(store, job_id, "night", key, (("apply", "Apply"), ("stretch", "Stretch"), ("skip", "Skip"),
+                                                           ("skip_schedule", "Skip: schedule doesn't fit")))
     return _form("label_night", job_id, token, form_keys,
-                 f'{NO_ENTER}<input type="text" name="reason" placeholder="label reason (optional)"> {buttons}')
+                 f'{NO_ENTER}<input type="text" name="reason" placeholder="label reason (optional)"> {buttons}', key=key)
 
 
 def _night_card(store: Store, r, now: str, token, form_keys, stale_days: int = STALE_DAYS) -> str:
@@ -390,7 +493,7 @@ def _night_card(store: Store, r, now: str, token, form_keys, stale_days: int = S
             + ("<ul>" + "".join(f'<li class="flag">{esc(f["detail"])}</li>' for f in flags[:6]) + "</ul>" if flags else "")
             + (f'<div class="labelled">your NIGHT label: {esc(label["label"])}{" — " + esc(label["reason"]) if label["reason"] else ""}</div>'
                if label else "")
-            + _night_label_form(r["job_id"], token, form_keys)
+            + _night_label_form(store, r["job_id"], token, form_keys)
             + (f'<div class="ok">Applied {esc(app["applied_at"][:10])} via {esc(app["channel"])} — status: '
                f'{esc(app["current_state"].replace("_", " "))}</div>' if app else _apply_form(r["job_id"], token, form_keys, "night"))
             + "</div>")
@@ -510,8 +613,24 @@ def held_digests(store: Store) -> str | None:
 
 def build_report(store: Store, profile, policy, *, token: str | None = None, form_keys: dict | None = None,
                  seed: int | None = None, since: str | None = None, app_matrix=None,
-                 completing: tuple[str, str] | None = None) -> str:
-    """The review page. `completing`: the daily run writing it, counted as completed in its header (run_health, F5)."""
+                 completing: tuple[str, str] | None = None, previews: dict | None = None) -> str:
+    """The review page. `completing`: the daily run writing it, counted as completed in its header (run_health, F5).
+    Read in one transaction (Store.read), so every card and its preview come from one snapshot; `previews` receives
+    each label form's capture under its form key (the D190 design, section 3), and nothing is written."""
+    context = _PREVIEWS.set((policy, profile, {} if previews is None else previews))
+    listed, shown = _SHORTLISTED.set(set()), _CARDS_SHOWN.set(set())
+    try:
+        with store.read():
+            return _build_report(store, profile, policy, token=token, form_keys=form_keys, seed=seed, since=since,
+                                 app_matrix=app_matrix, completing=completing)
+    finally:
+        _PREVIEWS.reset(context)
+        _SHORTLISTED.reset(listed)
+        _CARDS_SHOWN.reset(shown)
+
+
+def _build_report(store: Store, profile, policy, *, token: str | None, form_keys: dict | None, seed: int | None,
+                  since: str | None, app_matrix, completing: tuple[str, str] | None) -> str:
     now = store.clock.now()
     _card = functools.partial(_plain_card, stale_days=_stale_days(policy), policy=policy)
     form_keys = {} if form_keys is None else form_keys
@@ -520,12 +639,20 @@ def build_report(store: Store, profile, policy, *, token: str | None = None, for
                           (SELECT score_id FROM scores WHERE job_id = j.job_id ORDER BY at DESC, rowid DESC LIMIT 1)
                           WHERE j.current_state = 'scored' ORDER BY s.apply_priority DESC""")
     tiers = Counter(r["tier"] for r in scored)
-    open_exc = store.one("SELECT COUNT(*) c FROM exceptions WHERE status != 'resolved'")["c"]
+    # standing holds apart from the exceptions that wait to be dealt with (the D190 design, section 7; build item Y1)
+    open_exc = store.all("SELECT COUNT(*) c FROM exceptions WHERE status != 'resolved' "
+                         "AND COALESCE(error_code, '') NOT IN ('ingest_failed', 'read_pending')")[0]["c"]
+    holds_open = store.all("SELECT COUNT(*) c FROM exceptions WHERE status != 'resolved' "
+                           "AND error_code IN ('ingest_failed', 'read_pending')")[0]["c"]
     out = [f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
            f'<meta http-equiv="Content-Security-Policy" content="{CSP}">'
            f'<title>CareerOS review</title><style>{CSS}</style></head><body><main>',
            f'<h1>CareerOS daily review</h1><div class="meta">{esc(now[:16].replace("T", " "))} UTC · policy {esc(policy.fingerprint[:10])} · '
-           f'profile {esc(profile.fingerprint[:10])} · {open_exc} open exception(s)</div>']
+           f'profile {esc(profile.fingerprint[:10])} · {open_exc} open exception(s) · {holds_open} standing hold(s)</div>']
+    from careeros.review.packages import pending_file_problem
+    held_file = pending_file_problem(store)
+    if held_file:   # every Apply and Stretch label waits on it (BATCH_5 A)
+        out.append(f'<div class="banner"><b>Every Apply and Stretch label waits:</b> {esc(held_file)}</div>')
     last_run, run_warning = run_health(store, completing)
     out.append(f'<div class="meta">{esc(last_run)}</div>')
     if run_warning:
@@ -585,6 +712,7 @@ def build_report(store: Store, profile, policy, *, token: str | None = None, for
     out.extend(_check_section(store, scored, set(shortlisted_job_ids(store)), near_min))
     out.extend(_likely_section(store, token, form_keys, policy))
     out.extend(_leads_section(store, token, form_keys))
+    out.extend(_notices_section(store, token, form_keys, policy))
     out.extend(_paste_form(token, form_keys))
     if (policy.get("night", default={}) or {}).get("enabled"):
         out.extend(_night_section(store, now, token, form_keys, policy))
@@ -617,6 +745,11 @@ def build_report(store: Store, profile, policy, *, token: str | None = None, for
     out.append(f'<h2>Archive ({len(archived)})</h2><div class="meta">Eligible but below the near-miss threshold. '
                f'Top {min(20, len(archived))} shown; label any you would apply to (it counts as a false rejection).</div>')
     out.extend(_card(store, r, now, token, form_keys, n) for r, n in archived[:20])
+    missing = sorted((_SHORTLISTED.get() or set()) - (_CARDS_SHOWN.get() or set()))
+    if missing:   # a shortlisted job whose card a section's cap left out: its card, with what a label approves
+        out.append(f'<h2 id="shortlisted-cards">Shortlisted jobs not shown above ({len(missing)})</h2>')
+        out.extend(_card(store, row, now, token, form_keys) for job_id in missing
+                   if (row := store.one("SELECT * FROM jobs WHERE job_id = ?", (job_id,))) is not None)
     out.extend(_sources_section(store, policy, now))
     out.append("</main></body></html>")
     return "".join(out)
@@ -666,7 +799,12 @@ def _shortlist_section(store: Store, token, form_keys, policy=None) -> list[str]
                         f'{esc(i["applied"]["current_state"].replace("_", " "))}</div>')
         elif i["possibly_applied"]:
             bits.append(f'<div class="flag">You applied to a similar opening: {esc(", ".join(i["possibly_applied"][:2]))}</div>')
-        bits.append(_label_form(i["job_id"], token, form_keys, "sl"))   # the same forms and endpoints as the plain card (OPP-75)
+        # no label buttons here: this card does not show everything a label approves, so it links to the card that does
+        # (a shortlisted job's card is always on the page; BATCH_5 C3)
+        bits.append(f'<div class="meta">To label it, use <a href="#{esc(i["job_id"])}">its card</a>, which shows everything '
+                    f'a label approves, or <code>careeros label {esc(i["job_id"])} apply</code>.</div>')
+        if _SHORTLISTED.get() is not None:
+            _SHORTLISTED.get().add(i["job_id"])
         if not i["applied"] or i["applied"]["current_state"] not in OPEN_STATES:
             bits.append(_apply_form(i["job_id"], token, form_keys, "sl"))
         bits.append(_dismiss_form(i["job_id"], token, form_keys, "sl") + "</div>")

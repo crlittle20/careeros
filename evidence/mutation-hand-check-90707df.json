@@ -1,0 +1,4515 @@
+{
+  "what": "The owner's D188 (2026-11-19, exact links only; labels re-confirmed after the upgrade) and the red team's batch 2 and its addendum, built before Codex CR-2026-11-15-GATE-FIXES Pass 15, planted by hand in stages (D152) as in mutation-hand-check-f3882b4.json: the tests of the earlier receipts that caught the defect first, then the related modules, then the whole suite.",
+  "scope": "every defect new or re-anchored since 69ab30b, every defect whose anchor lies in a function or statement the build changed in careeros/cli.py, careeros/demo/world.py, careeros/discovery/alerts.py, careeros/discovery/board_discovery.py, careeros/discovery/lead_resolution.py, careeros/discovery/manual_intake.py, careeros/discovery/saved.py, careeros/normalize/posting.py, careeros/normalize/sanitize.py, careeros/pipeline.py, careeros/qualify/gate.py, careeros/review/applications.py, careeros/review/assist.py, careeros/review/dismiss.py, careeros/review/labels.py, careeros/review/packages.py, careeros/review/report.py (scope13.py), and every defect whose catching tests in the earlier receipts D188 changed or removed (scope17_tests.py)",
+  "base": "69ab30b330a1ce69a0ee7aabdf21a2ceb8b6264c",
+  "rev": "90707dfc71b631ddd541126e90a17d775f16fe00",
+  "python": "3.14.10",
+  "node_version": "v24.22.1",
+  "defined": 2123,
+  "checked": 246,
+  "caught": 246,
+  "by_scope": {
+    "stage 0: the tests that caught it before": 135,
+    "modules": 111
+  },
+  "note": "round 17 planted plain copies of the worktree at the code commit, with the whole-suite baseline taken in them (not carried over); defects outside the scope keep their results in the earlier receipts (mutation-hand-check-f3882b4.json and those before it)",
+  "retired": [
+    {
+      "mutation": "same job through another site not recognised",
+      "first_result": "SURVIVED",
+      "file": "careeros/cli.py",
+      "reason": "retired before the code commit: the rule it planted into was removed (D188)"
+    },
+    {
+      "mutation": "F2: an alert line linked on arrival to the employer's first job, without the lead matcher",
+      "first_result": "CAUGHT",
+      "file": "careeros/cli.py",
+      "reason": "retired before the code commit: the rule it planted into was removed (D188)"
+    },
+    {
+      "mutation": "F2: an alert line linked on arrival to a job of any board or employer (no admission or identity check)",
+      "first_result": "SURVIVED",
+      "file": "careeros/cli.py",
+      "reason": "retired before the code commit: the rule it planted into was removed (D188)"
+    },
+    {
+      "mutation": "agency cards matched to other leads on their title, so another client's job is hidden",
+      "first_result": "SURVIVED",
+      "file": "careeros/cli.py",
+      "reason": "retired before the code commit: the rule it planted into was removed (D188)"
+    },
+    {
+      "mutation": "a review link carrying a tracked Greenhouse job id (gh_jid) is absorbed into that job (CR-HF-01)",
+      "first_result": "SURVIVED",
+      "file": "careeros/cli.py",
+      "reason": "retired before the code commit: the rule it planted into was removed (D188)"
+    },
+    {
+      "mutation": "a posting you paste, add or import links a review lead whose link only normalizes to its own (CR-HF-01)",
+      "first_result": "SURVIVED",
+      "file": "careeros/discovery/lead_resolution.py",
+      "reason": "retired before the code commit: the rule it planted into was removed (D188)"
+    },
+    {
+      "mutation": "an alert link is matched to a job tracked at a review link (D142 R-b)",
+      "first_result": "SURVIVED",
+      "file": "careeros/cli.py",
+      "reason": "retired before the code commit: the rule it planted into was removed (D188)"
+    },
+    {
+      "mutation": "merge: a review link from alert mail matched to a job CareerOS tracks (D140 F2)",
+      "first_result": "SURVIVED",
+      "file": "careeros/cli.py",
+      "reason": "retired before the code commit: the rule it planted into was removed (D188)"
+    },
+    {
+      "mutation": "RT-19: a lead's own posting link loses to the title rule",
+      "first_result": "SURVIVED",
+      "file": "careeros/discovery/board_discovery.py",
+      "reason": "retired before the code commit: the rule it planted into was removed (D188)"
+    },
+    {
+      "mutation": "RT-35: a duplicate of a closed original is judged against the other open postings",
+      "first_result": "SURVIVED",
+      "file": "careeros/pipeline.py",
+      "reason": "retired before the code commit: the rule it planted into was removed (D188)"
+    }
+  ],
+  "previous": "evidence/mutation-hand-check-f3882b4.json",
+  "results": [
+    {
+      "kind": "shared",
+      "mutation": "pay read better recorded as a change the employer made",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_pay_read_better_is_not_a_change_the_employer_made"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "second-channel (right to represent) check disabled",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_submission.AuthorizationTests.test_a_release_never_skips_eligibility_or_competing_submissions"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "stale stored fields never refreshed",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.ReevaluationTests.test_stale_stored_states_are_refreshed_and_job_reevaluated",
+        "tests.test_pipeline.PipelineTests.test_employment_type_stated_in_the_title_wins_and_is_refreshed",
+        "tests.test_v22_night.PipelineTests.test_a_country_in_the_title_rejects_new_and_stored_postings"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "duplicate application not detected",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_applications.ApplicationLogicTests.test_a_possible_duplicate_or_the_same_title_elsewhere_holds_until_confirmed",
+        "tests.test_applications.ApplicationLogicTests.test_a_responded_application_is_still_in_play_everywhere",
+        "tests.test_applications.ApplicationLogicTests.test_one_application_per_role_across_variants_and_duplicates"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "alert links on non-board sites fetched",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 0,
+      "errors": 3,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_a_year_in_a_link_names_no_posting",
+        "tests.test_intake_identity.CodexPass14Tests.test_a_guessed_greenhouse_fetch_never_links_a_line_that_states_another_opening",
+        "tests.test_intake_identity.CodexPass14Tests.test_a_second_opening_at_an_archive_link_never_takes_the_first_ones_place"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "delisted jobs never closed",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured",
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_demo_mode.DemoTourTest.test_jobs_cover_every_outcome"
+      ],
+      "flaky_failed": false,
+      "seconds": 24.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "links on non-allowed sources fetched",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v22_primary.SourceStatusTests.test_a_source_that_is_not_allowed_is_never_fetched"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.1,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a duplicate of a role you applied to (the same posting) is left out of its role group",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 14,
+      "errors": 0,
+      "failing": [
+        "tests.test_assist.SessionGuardTests.test_applied_refuses_while_a_session_is_open_or_uncertain_and_names_the_close_command",
+        "tests.test_applications.ApplicationLogicTests.test_a_responded_application_is_still_in_play_everywhere",
+        "tests.test_applications.ApplicationLogicTests.test_an_unfinished_duplicate_search_is_never_clearance"
+      ],
+      "flaky_failed": false,
+      "seconds": 215.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "recommended jobs CareerOS already tracks fetched again as new",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 12,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.CodexPass4ReviewLinkTrackedJobTests.test_a_definite_link_to_the_same_title_is_still_matched",
+        "tests.test_intake_hotfix.CodexPass5ReviewLinkTests.test_a_definite_link_to_the_same_title_is_still_matched",
+        "tests.test_intake_hotfix.D149D151FailClosedTests.test_controls"
+      ],
+      "flaky_failed": false,
+      "seconds": 328.2,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "stored jobs keep a wrong country",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v22_night.PipelineTests.test_a_country_in_the_title_rejects_new_and_stored_postings"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "leads from excluded employers kept",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_v21_policy.ExclusionTests.test_alert_and_inbox_leads_from_excluded_employers_are_suppressed",
+        "tests.test_v25_audit.AcceptanceTests.test_employers"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.1,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a malformed inbox line stored as a lead",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_gmail.PullTests.test_an_inbox_link_carrying_a_host_python_cannot_read_stays_local"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a different requisition under the same title treated as already tracked",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_the_matcher_reads_filler_seniority_location_and_requisitions"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "new",
+      "mutation": "duplicate leads across sites kept",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_v25_audit.SeenIndexTests.test_inbox_dedupe_is_requisition_aware",
+        "tests.test_gmail.PullTests.test_another_sites_lead_with_the_agency_cards_job_number_is_the_same_job"
+      ],
+      "flaky_failed": false,
+      "seconds": 329.5,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "D188: a requisition links a lead by itself",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 8,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LeadMatchingTests.test_a_requisition_alone_never_joins_another_place_or_title",
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_pasting_or_adding_the_same_posting_links_its_lead",
+        "tests.test_lead_resolution.ManualIntakeAmbiguityTests.test_adding_one_of_two_same_title_postings_does_not_link_a_lead_either_could_be"
+      ],
+      "flaky_failed": false,
+      "seconds": 330.4,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a suspicious scan closes postings",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.SourceHealthTests.test_failed_and_suspicious_scans_never_close_or_prune"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "a reappearing closed posting stays closed",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.OpeningTests.test_reposts_and_reopenings_keep_application_history"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "one missed scan closes a posting",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_pipeline.PipelineTests.test_full_flow",
+        "tests.test_v26_discovery.OpeningTests.test_reposts_and_reopenings_keep_application_history"
+      ],
+      "flaky_failed": false,
+      "seconds": 12.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "cosmetic edits counted as meaningful changes",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_full_flow",
+        "tests.test_v26_discovery.ChangeTests.test_meaningful_versus_cosmetic_and_timestamps"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "board scans follow redirects anywhere",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.GateTests.test_the_daily_scan_never_follows_a_board_redirect_off_the_listing_apis"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "unverified boards scanned",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 35,
+      "failures": 35,
+      "errors": 3,
+      "failing": [
+        "tests.test_analytics.DemoExportTest",
+        "tests.test_demo_mode.DemoTourTest",
+        "tests.test_analytics.DemoExportTest"
+      ],
+      "flaky_failed": true,
+      "seconds": 42.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Demo Mode reads the clipboard",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 1,
+      "failing": [
+        "tests.test_demo_mode.DemoBoundaryTest.test_commands_that_read_private_sources_refuse",
+        "tests.test_demo_mode.DemoBoundaryTest.test_commands_that_read_private_sources_refuse"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "an earlier, finished application to the role ignored",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_applications.ApplicationLogicTests.test_every_finished_application_holds_a_new_one_until_you_give_a_reason",
+        "tests.test_applications.ApplicationLogicTests.test_every_finished_application_holds_a_new_one_until_you_give_a_reason",
+        "tests.test_applications.ApplicationLogicTests.test_every_finished_application_holds_a_new_one_until_you_give_a_reason"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "new boards named after their URL slug",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v25_audit.HandoffFindingsTests.test_a_new_board_found_through_the_inbox_takes_the_company_name_and_parent"
+      ],
+      "flaky_failed": false,
+      "seconds": 336.5,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "the same title at the same employer (another city) not checked",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_applications.ApplicationLogicTests.test_a_possible_duplicate_or_the_same_title_elsewhere_holds_until_confirmed",
+        "tests.test_applications.ApplicationLogicTests.test_same_title_with_a_different_requisition_is_shown_not_held",
+        "tests.test_review_page.AgeingTests.test_apply_or_dismiss_never_outranks_a_possible_application_an_incompatibility_or_a_hold"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "an unfinished duplicate search treated as clearance",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_applications.ApplicationLogicTests.test_an_unfinished_duplicate_search_is_never_clearance",
+        "tests.test_packages.VerificationTests.test_an_application_elsewhere_in_the_role_or_a_check_that_cant_finish_stops_preparation"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "a truncated role search reported as complete",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_applications.ApplicationLogicTests.test_an_unfinished_duplicate_search_is_never_clearance"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "a re-application recorded without a reason",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_applications.ApplicationLogicTests.test_every_finished_application_holds_a_new_one_until_you_give_a_reason",
+        "tests.test_applications.ApplicationLogicTests.test_every_finished_application_holds_a_new_one_until_you_give_a_reason",
+        "tests.test_applications.ApplicationLogicTests.test_every_finished_application_holds_a_new_one_until_you_give_a_reason"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "postings linked as the same opening not treated as one role",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_applications.ApplicationLogicTests.test_a_possible_duplicate_or_the_same_title_elsewhere_holds_until_confirmed",
+        "tests.test_packages.VerificationTests.test_an_application_elsewhere_in_the_role_or_a_check_that_cant_finish_stops_preparation"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a posting that may be the same role holds the application",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.AddendumTests.test_an_application_to_one_board_posting_never_holds_another_with_its_title",
+        "tests.test_packages.VerificationTests.test_an_application_elsewhere_in_the_role_or_a_check_that_cant_finish_stops_preparation",
+        "tests.test_applications.ApplicationLogicTests.test_a_possible_duplicate_or_the_same_title_elsewhere_holds_until_confirmed"
+      ],
+      "flaky_failed": false,
+      "seconds": 208.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "NIGHT's right-to-represent check treats an unfinished search as clearance",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_applications.ApplicationLogicTests.test_an_unfinished_duplicate_search_is_never_clearance"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "a finished application hides the re-application form",
+      "file": "careeros/review/report.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_applications.ReviewPageTests.test_the_review_page_asks_for_a_reason_before_recording_a_re_application"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "ingest: a new requisition or address on unchanged text ignored",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.ChangeTests.test_meaningful_versus_cosmetic_and_timestamps"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "review card: the submission hold not shown",
+      "file": "careeros/review/report.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_submission.DisplayTests.test_the_card_and_the_shortlist_show_the_hold_apart_from_the_qualification"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: a package prepared for a job you labelled Skip",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.PackageTests.test_nothing_is_prepared_for_a_job_nobody_chose_and_skip_or_dismissal_always_win"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: a package prepared for a job you dismissed",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.PackageTests.test_nothing_is_prepared_for_a_job_nobody_chose_and_skip_or_dismissal_always_win"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "packages: an answer resting on an unknown fact accepted",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.PackageTests.test_an_answer_resting_on_an_unknown_fact_is_refused"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "assist: a repeated open with the same key not answered with the first result",
+      "file": "careeros/review/assist.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass14Tests.test_a_handoff_issued_under_standing_preparation_is_withdrawn"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "assist: a replay answered without the first result",
+      "file": "careeros/review/assist.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_intake_identity.CodexPass14Tests.test_a_handoff_issued_under_standing_preparation_is_withdrawn"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "assist: a handoff left behind when its session was not recorded",
+      "file": "careeros/review/assist.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_assist.ThirdReviewTests.test_a_handoff_written_in_part_is_removed_when_its_session_is_not_recorded"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "assist: the handoff of a recorded session removed after an interrupt",
+      "file": "careeros/review/assist.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_assist.ThirdReviewTests.test_an_interrupt_after_commit_keeps_the_handoff_of_the_recorded_session"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "assist: a replay that hides what became of its session",
+      "file": "careeros/review/assist.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_assist.SecondReviewTests.test_a_repeated_open_or_close_returns_the_first_result_whole"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "a void application still treated as an application (preflight: a reason to apply again, no \"I applied\")",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_applications.ApplicationLogicTests.test_a_void_application_needs_a_reason_stays_in_the_history_and_counts_nowhere",
+        "tests.test_review_page.VoidApplicationTests.test_void_from_the_applications_card_through_the_confirmation"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.8,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "void allowed after an employer-answer stage (only the state now is checked, e.g. responded -> ghosted -> void)",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_applications.ApplicationLogicTests.test_void_is_refused_once_an_employer_answered_whatever_the_state_now",
+        "tests.test_applications.ApplicationLogicTests.test_void_is_refused_once_an_employer_answered_whatever_the_state_now",
+        "tests.test_applications.ApplicationLogicTests.test_void_is_refused_once_an_employer_answered_whatever_the_state_now"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Undo ignores the dismissal its confirmation showed (a stale Undo page reverses a newer dismissal)",
+      "file": "careeros/review/dismiss.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_review_page.DismissalUndoTests.test_a_stale_undo_confirmation_never_undoes_a_newer_dismissal"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "discovery matches every lead with its queue row's facts, not its own (gap 2)",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.OwnFactsTests.test_two_differently_titled_leads_at_one_employer_each_match_their_own_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: an application to a posting that may be the same role is not shown",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.OpeningTests.test_identical_titles_with_different_requisitions_stay_separate_and_both_can_be_applied_to",
+        "tests.test_v26_discovery.OpeningTests.test_reposts_and_reopenings_keep_application_history",
+        "tests.test_applications.ApplicationLogicTests.test_a_possible_duplicate_or_the_same_title_elsewhere_holds_until_confirmed"
+      ],
+      "flaky_failed": false,
+      "seconds": 191.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: the same title never links a lead (title branch)",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.GuessedBoardTests.test_a_guessed_lever_board_without_a_company_name_waits_for_the_employers_site_then_the_lead_links",
+        "tests.test_lead_resolution.OwnFactsTests.test_two_differently_titled_leads_at_one_employer_each_match_their_own_posting",
+        "tests.test_lead_resolution.RematchTests.test_a_lead_whose_job_is_scanned_later_is_linked_after_that_scan"
+      ],
+      "flaky_failed": false,
+      "seconds": 337.1,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: of two same-title postings the first is proposed",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.ManualIntakeAmbiguityTests.test_adding_one_of_two_same_title_postings_does_not_link_a_lead_either_could_be",
+        "tests.test_v26_discovery.IdentityTests.test_identical_titles_without_a_requisition_stay_ambiguous"
+      ],
+      "flaky_failed": false,
+      "seconds": 333.0,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: a same-title posting with another known requisition taken for the lead's",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_the_matcher_reads_filler_seniority_location_and_requisitions"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: another seniority level accepted",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_two_near_identical_postings_stay_ambiguous_and_other_differences_are_no_match"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: an incompatible location accepted",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.AlertArrivalTests.test_an_alert_line_is_linked_on_arrival_only_by_the_lead_resolution_rules",
+        "tests.test_lead_resolution.LikelyMatchTests.test_two_near_identical_postings_stay_ambiguous_and_other_differences_are_no_match"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "likely match: of two near-identical postings the first is proposed",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_two_near_identical_postings_stay_ambiguous_and_other_differences_are_no_match"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a likely match linked without your confirmation",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 0,
+      "errors": 3,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_a_rejected_likely_match_is_never_proposed_or_linked_for_that_lead_again",
+        "tests.test_lead_resolution.StaleProposalTests.test_a_printed_command_acts_only_on_the_job_it_names",
+        "tests.test_lead_resolution.StaleProposalTests.test_a_proposal_whose_board_left_the_daily_scan_is_hidden_and_cannot_be_confirmed"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "leads matched against another employer's postings (no employer identity)",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.RematchTests.test_each_open_lead_is_matched_with_its_own_facts_and_only_at_its_own_employer"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "an agency's lead matched to its client's own posting",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.RematchTests.test_each_open_lead_is_matched_with_its_own_facts_and_only_at_its_own_employer"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "an incomplete scan sets a lead no_match or closed",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.GuessedBoardTests.test_a_guessed_lever_board_without_a_company_name_waits_for_the_employers_site_then_the_lead_links",
+        "tests.test_lead_resolution.RematchTests.test_an_incomplete_scan_never_sets_no_match_or_closed"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.8,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "a lead with no match past the closing window never closed",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.CoverageTests.test_a_board_not_read_in_this_scan_keeps_the_lead_open_and_full_coverage_closes_it",
+        "tests.test_lead_resolution.RematchTests.test_an_incomplete_scan_never_sets_no_match_or_closed"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "a job you rejected or unlinked for a lead proposed or linked again",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 1,
+      "errors": 2,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_the_review_page_confirms_only_the_likely_match_its_card_showed",
+        "tests.test_lead_resolution.StaleProposalTests.test_a_printed_command_acts_only_on_the_job_it_names",
+        "tests.test_lead_resolution.CorrectionTests.test_unlink_corrects_a_lead_linked_to_another_leads_job_with_an_audit_event_and_the_rematch_finds_its_own"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "a job you unlinked from a lead linked to it again",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.CorrectionTests.test_unlink_corrects_a_lead_linked_to_another_leads_job_with_an_audit_event_and_the_rematch_finds_its_own"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "leads never matched again after a scan",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 0,
+      "errors": 3,
+      "failing": [
+        "tests.test_lead_resolution.CorrectionTests.test_an_unlink_is_recorded_once_for_one_key",
+        "tests.test_lead_resolution.LikelyMatchTests.test_a_rejected_likely_match_is_never_proposed_or_linked_for_that_lead_again",
+        "tests.test_lead_resolution.LikelyMatchTests.test_two_near_identical_postings_stay_ambiguous_and_other_differences_are_no_match"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matching reads a suspicious scan as complete",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.RematchTests.test_an_incomplete_scan_never_sets_no_match_or_closed"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "leads not matched when you activate a board",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.RematchTests.test_when_you_activate_or_approve_a_board_its_employers_open_leads_are_matched"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "leads not matched when your approval admits a board",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.RematchTests.test_when_you_activate_or_approve_a_board_its_employers_open_leads_are_matched"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "a lead's failed fetch keeps no reason",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_a_lead_whose_link_cannot_be_read_keeps_the_reason"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pasted posting never links its lead (careeros paste)",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_pasting_or_adding_the_same_posting_links_its_lead"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "an added posting never links its lead (careeros add-url)",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_pasting_or_adding_the_same_posting_links_its_lead"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "a dismissed lead linked by a paste of the same posting",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_pasting_or_adding_the_same_posting_links_its_lead"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "D188: a lead's own posting link never links it",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 12,
+      "errors": 1,
+      "failing": [
+        "tests.test_lead_resolution.CorrectionTests.test_an_unlink_is_recorded_once_for_one_key",
+        "tests.test_d188.ExactLinkIdentityTests.test_a_lead_naming_one_board_posting_is_never_proposed_another",
+        "tests.test_red_team_d186.LeadMatchingTests.test_a_leads_own_posting_link_wins_over_the_title"
+      ],
+      "flaky_failed": false,
+      "seconds": 329.7,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "an employer with a board known checked by the domain route again",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.DomainRouteTests.test_a_lead_with_a_domain_and_no_board_known_finds_the_board_at_the_employers_own_site"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: a link with tracking parameters taken for another link",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.PasteProposalTests.test_a_lead_at_the_pages_own_link_is_never_proposed_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 330.8,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "F4: a posting you add matched alone, so it takes a lead another posting could be",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.ManualIntakeAmbiguityTests.test_adding_one_of_two_same_title_postings_does_not_link_a_lead_either_could_be"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "alert links skipped as search pages or unreadable are not counted",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.CodexPass1AlertIdTests.test_a_digest_of_mixed_links_keeps_every_job_and_counts_the_rest",
+        "tests.test_intake_hotfix.JobLinksWithoutAKnownIdTests.test_search_pages_are_skipped_and_counted_never_leads",
+        "tests.test_intake_hotfix.MalformedLinkTests.test_an_unreadable_link_is_counted_and_the_rest_of_the_digest_kept"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a job-number merge stores no mark for the card's personal link",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_gmail.PullTests.test_the_same_job_number_is_one_lead_whichever_site_arrived_first"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "an agency card stored without its lasting agency mark",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.AgencyMergeLocalLinkTests.test_a_review_link_under_a_local_link_is_kept_as_a_local_review_lead",
+        "tests.test_intake_hotfix.AgencyMergeLocalLinkTests.test_a_review_link_under_a_local_link_is_kept_as_a_local_review_lead",
+        "tests.test_intake_hotfix.AgencyMergeLocalLinkTests.test_a_review_link_under_a_local_link_is_kept_as_a_local_review_lead"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "an agency digest's cards stored though its site is blocked",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_gmail.PullTests.test_a_blocked_agency_site_stores_none_of_its_cards"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "an agency job listed again under each new tracking link",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_gmail.PullTests.test_agency_cards_with_the_same_job_number_are_one_lead",
+        "tests.test_gmail.PullTests.test_the_same_job_number_is_one_lead_whichever_site_arrived_first"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a paste links another employer's lead by its title",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.PasteProposalTests.test_only_its_own_employers_lead_is_proposed"
+      ],
+      "flaky_failed": false,
+      "seconds": 328.7,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a stored agency card's link stored again as an ordinary lead when the setting is off",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_gmail.PullTests.test_the_same_private_link_never_becomes_an_ordinary_lead_in_either_order"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "an earlier ordinary copy of an agency card's link left exportable",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_gmail.PullTests.test_the_same_private_link_never_becomes_an_ordinary_lead_in_either_order"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "CR-AD-V2-12: a resolver kept across a scan matches after an agency setting goes missing",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.RematchTests.test_a_resolver_kept_across_a_scan_stops_matching_when_an_agency_setting_goes_missing"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D141: an import accepts settings changed part-way through it",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_alerts.ImportTests.test_an_import_reads_the_settings_once_and_stops_once_they_change"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 3 CR-AD-V2-12: matching goes on over a batch after a stop is found",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.RematchTests.test_a_stop_found_part_way_through_a_batch_leaves_the_rest_of_it_unmatched",
+        "tests.test_lead_resolution.RematchTests.test_a_stop_found_part_way_through_a_batch_leaves_the_rest_of_it_unmatched"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team before Pass 4: a pasted posting links leads after the settings change part-way",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.RematchTests.test_a_pasted_posting_links_no_more_leads_once_the_settings_change_part_way"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Codex Pass 4: the board scan fetches the next board after its settings changed",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_no_board_is_fetched_or_kept_once_the_run_saw_its_settings_change"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Codex Pass 4: a board read while the settings changed is kept",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_no_board_is_fetched_or_kept_once_the_run_saw_its_settings_change"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: two lines with one requisition are one job (an earlier line not an agency card)",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.ExactLinkIdentityTests.test_another_sites_line_is_never_seen_before_by_its_title_but_an_agency_number_is",
+        "tests.test_v25_audit.SeenIndexTests.test_inbox_dedupe_is_requisition_aware"
+      ],
+      "flaky_failed": false,
+      "seconds": 201.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "a review link is absorbed into a tracked job by title, employer and location (CR-HF-01)",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.CodexPass5ReviewLinkTests.test_match_lead_guard_comes_first",
+        "tests.test_intake_hotfix.CodexPass5ReviewLinkTests.test_match_lead_guard_comes_first"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a review link after a definite one is discarded as seen before (CR-HF-01)",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.RoundSeventeenTests.test_a_review_link_never_counts_as_an_agency_cards_job_seen_before"
+      ],
+      "flaky_failed": false,
+      "seconds": 327.7,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a posting tracked at a review link is matched by requisition or title (D142 R-b)",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.Round12AnyReadingTests.test_the_board_matcher_by_requisition_and_by_title",
+        "tests.test_intake_hotfix.Round12AnyReadingTests.test_the_board_matcher_by_requisition_and_by_title"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a posting you add at a review link links a definite lead (D142 R-b)",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.AgencyMergeHandCheckTests.test_a_posting_whose_canonical_link_is_a_review_link_never_links_the_lead_at_its_own_link"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "a review link's board hint is fetched as a board posting",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.RoundSeventeenTests.test_no_greenhouse_posting_is_guessed_from_a_review_link_an_agency_link_or_past_a_route"
+      ],
+      "flaky_failed": false,
+      "seconds": 328.3,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a scheme-relative wrapped link (\"//host/...\") is not read as a link (D155 rule a)",
+      "file": "careeros/discovery/alerts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.D149D155Pass3Tests.test_controls"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "D153 R2: a scan goes on to record and match a board whose jobs were stored while its settings changed",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_a_change_while_the_last_board_is_stored_ends_the_scan_there"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "D153 R2: a scan goes on to settle and refresh after matching its last board saw a change",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.RematchTests.test_a_stop_found_part_way_through_a_batch_leaves_the_rest_of_it_unmatched"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "D156: a review link kept under a local link (on a site CareerOS does not name) stored as an ordinary lead",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.AgencyMergeLocalLinkTests.test_a_review_link_under_a_local_link_is_kept_as_a_local_review_lead",
+        "tests.test_intake_hotfix.AgencyMergeLocalLinkTests.test_a_review_link_under_a_local_link_is_kept_as_a_local_review_lead",
+        "tests.test_intake_hotfix.AgencyMergeLocalLinkTests.test_a_review_link_under_a_local_link_is_kept_as_a_local_review_lead"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.8,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "G2: a suggested board that does not exist is not shown by sources list",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_demo_mode.DemoTourTest.test_the_reviewer_walkthrough_shows_what_the_commands_print"
+      ],
+      "flaky_failed": false,
+      "seconds": 10.8,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "F2: an unchanged rescan leaves an older country beside the new remote scope",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_country_read_better_on_unchanged_text_is_stored_with_the_scope_and_re_screens"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "F2: a country read better on an unchanged rescan is never re-screened",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.PipelineTests.test_a_country_read_better_on_unchanged_text_is_stored_with_the_scope_and_re_screens"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 6 H2: a paste whose location is its own Location line loses it as if unconfirmed",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_paste_saved_by_an_older_parser_is_placed_only_by_a_declared_location"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 6-7 H2: the location you confirm places nothing",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 15,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.LocationKeptTests.test_a_copy_at_the_exact_link_never_writes_over_the_location_you_set",
+        "tests.test_red_team_d186.AddendumTests.test_an_earlier_builds_repaste_confirmation_never_places_the_job",
+        "tests.test_intake_identity.IdentityConflictTests.test_another_employer_at_a_shared_link_is_another_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 204.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 7 H3: a saved text file's Location header runs on past a line-ending control",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_line_ending_control_ends_a_line_for_every_paste_label_and_a_saved_file_header"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 7 H2: a manual job's location is written without the record of where it came from",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_location_s_source_is_recorded_with_it_and_a_later_sighting_never_rewrites_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 7 H2: a paste whose sighting is lost keeps its job, which then reads as added another way",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_location_s_source_is_recorded_with_it_and_a_later_sighting_never_rewrites_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 7 H2: add-url's --location is not recorded as yours",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_location_s_source_is_recorded_with_it_and_a_later_sighting_never_rewrites_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 7 H2: a saved text file's Location header is not recorded as the file's own",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_location_s_source_is_recorded_with_it_and_a_later_sighting_never_rewrites_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 7 H2: a saved page's own location field is not recorded as the file's",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_location_s_source_is_recorded_with_it_and_a_later_sighting_never_rewrites_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: two postings with no posting link (none on either side) are one posting",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 20,
+      "errors": 3,
+      "failing": [
+        "tests.test_red_team_d186.DuplicateTests.test_an_application_to_one_opening_at_a_shared_page_never_holds_another_title",
+        "tests.test_intake_identity.IdentityConflictTests.test_a_lead_at_a_shared_link_joins_only_the_opening_it_names",
+        "tests.test_packages.QueueTests.test_a_new_paste_never_takes_over_another_posting_at_the_same_generated_id"
+      ],
+      "flaky_failed": false,
+      "seconds": 196.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "merge: an agency card matched to a tracked job or fetched as a board link",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 30,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.RoundSeventeenTests.test_no_greenhouse_posting_is_guessed_from_a_review_link_an_agency_link_or_past_a_route"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.6,
+      "python": "3.14.10",
+      "round": "17c",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again (hc17c.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 7 H3 (D166): an older paste's label value that runs past a sentence end places the job",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_paste_saved_by_an_older_parser_is_placed_only_by_a_declared_location"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 7 H6: scores made before the provenance rule stay current",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_score_made_under_the_earlier_country_rule_is_made_again_by_the_next_processing_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a submission with another text is the same submission (its job overwritten)",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 11,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.SameSubmissionTests.test_every_field_must_be_the_same",
+        "tests.test_red_team_d186.LinkAndRequisitionTests.test_a_footer_naming_the_job_id_never_makes_two_openings_one",
+        "tests.test_red_team_d186.LinkAndRequisitionTests.test_a_link_that_is_not_a_full_address_is_a_shared_page"
+      ],
+      "flaky_failed": false,
+      "seconds": 168.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 8 H7: a link that differs only after '#' (a portal's opening id) counts as the same posting",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 2,
+      "failing": [
+        "tests.test_intake_identity.LeadAndImportTests.test_an_alert_link_matches_a_tracked_job_only_as_that_opening",
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_a_second_portal_opening_gets_its_own_lead_and_a_refused_import_is_kept_in_failed",
+        "tests.test_intake_identity.LinkTests.test_a_page_anchor_never_names_another_opening"
+      ],
+      "flaky_failed": false,
+      "seconds": 165.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 8 H8: a posting given its own id is not linked to the job it collided with",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.QueueTests.test_a_new_paste_never_takes_over_another_posting_at_the_same_generated_id"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 8 H8: a saved file or add-url posting at another employer's generated id overwrites that job",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.QueueTests.test_a_new_paste_never_takes_over_another_posting_at_the_same_generated_id"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 9 H10: add-url --text-file drops the part after '#' from the opening's link and generated id",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.QueueTests.test_a_file_based_opening_never_overwrites_another_at_the_same_generated_id"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 9 H10: a saved text file drops the part after '#' from the opening's link",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.QueueTests.test_a_file_based_opening_never_overwrites_another_at_the_same_generated_id"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 9 H10: a saved page drops the part after '#' from the opening's link",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.QueueTests.test_a_file_based_opening_never_overwrites_another_at_the_same_generated_id"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 8 H8: a new paste at another posting's generated id overwrites that job",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 17,
+      "errors": 3,
+      "failing": [
+        "tests.test_red_team_d186.DuplicateTests.test_an_application_to_one_opening_at_a_shared_page_never_holds_another_title",
+        "tests.test_intake_identity.IdentityConflictTests.test_a_lead_at_a_shared_link_joins_only_the_opening_it_names",
+        "tests.test_packages.QueueTests.test_a_new_paste_never_takes_over_another_posting_at_the_same_generated_id"
+      ],
+      "flaky_failed": false,
+      "seconds": 165.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 9 H11: the search for a free id beside a held one is unbounded",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_a_colliding_saved_import_retried_reuses_its_own_job_and_links_its_lead"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 9 H8: a saved-file posting given its own id is not linked to the job it collided with",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_a_colliding_saved_import_retried_reuses_its_own_job_and_links_its_lead"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 9 H11: a colliding posting that comes again gets yet another row, not the one it was given",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.SameSubmissionTests.test_a_colliding_posting_that_comes_again_reuses_the_id_it_was_given",
+        "tests.test_intake_identity.IdentityConflictTests.test_a_requisition_never_hides_another_opening_at_a_shared_link",
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_a_colliding_saved_import_retried_reuses_its_own_job_and_links_its_lead"
+      ],
+      "flaky_failed": false,
+      "seconds": 167.6,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a submission under another employer is the same submission",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 1,
+      "failing": [
+        "tests.test_packages.QueueTests.test_a_new_paste_never_takes_over_another_posting_at_the_same_generated_id",
+        "tests.test_d188.SameSubmissionTests.test_every_field_must_be_the_same",
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_two_links_that_are_not_full_addresses_are_one_posting_only_when_typed_the_same"
+      ],
+      "flaky_failed": false,
+      "seconds": 165.8,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a submission under another title is the same submission",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.SameSubmissionTests.test_every_field_must_be_the_same",
+        "tests.test_packages.QueueTests.test_linkless_saved_pages_are_one_posting_only_with_the_same_employer_and_title"
+      ],
+      "flaky_failed": false,
+      "seconds": 168.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "D188: the same posting (its exact link) is only suggested, never a duplicate",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 9,
+      "errors": 1,
+      "failing": [
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_a_paste_offers_careeros_location_only_for_the_same_posting_by_its_link",
+        "tests.test_d188.RoundSeventeenTests.test_a_duplicate_pasted_again_lends_a_later_lead_to_its_original",
+        "tests.test_red_team_d186.DuplicateTests.test_a_board_link_with_another_app_route_is_linked_for_review_never_a_duplicate"
+      ],
+      "flaky_failed": false,
+      "seconds": 327.7,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a lead with any posting link is linked to the posting you paste",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 13,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_a_colliding_saved_import_retried_reuses_its_own_job_and_links_its_lead",
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_pasting_or_adding_the_same_posting_links_its_lead",
+        "tests.test_lead_resolution.ManualIntakeAmbiguityTests.test_adding_one_of_two_same_title_postings_does_not_link_a_lead_either_could_be"
+      ],
+      "flaky_failed": false,
+      "seconds": 165.8,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 10 H14: a posting whose write failed is reported as written",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_a_second_portal_opening_gets_its_own_lead_and_a_refused_import_is_kept_in_failed"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 10 H14: add-url carries on after a refused or failed write",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_a_second_portal_opening_gets_its_own_lead_and_a_refused_import_is_kept_in_failed"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D179): a saved page's relative link is not read against the page's own address",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.LinkTests.test_a_saved_link_that_is_not_a_full_address_is_kept_never_dropped"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D179): a saved text file drops a link that is not a full address",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.LinkTests.test_a_saved_link_that_is_not_a_full_address_is_kept_never_dropped"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 8 H7: a tracking parameter after '#' makes the same posting's link another posting",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.RoundSeventeenTests.test_a_retry_whose_link_adds_tracking_after_the_route_is_the_same_submission"
+      ],
+      "flaky_failed": false,
+      "seconds": 325.8,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a submission at another location is the same submission",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.SameSubmissionTests.test_every_field_must_be_the_same",
+        "tests.test_intake_identity.LinkTests.test_linkless_postings_at_another_location_are_two",
+        "tests.test_v26_discovery.IntakeTests.test_a_location_s_source_is_recorded_with_it_and_a_later_sighting_never_rewrites_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a submission at another link (as typed) is the same submission",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.SameSubmissionTests.test_every_field_must_be_the_same",
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_two_links_that_are_not_full_addresses_are_one_posting_only_when_typed_the_same",
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_a_colliding_saved_import_retried_reuses_its_own_job_and_links_its_lead"
+      ],
+      "flaky_failed": false,
+      "seconds": 163.6,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "D188: the same title, employer and place make a duplicate",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 10,
+      "errors": 2,
+      "failing": [
+        "tests.test_v26_discovery.IdentityTests.test_supplied_domain_verifies_and_the_lead_becomes_a_graded_posting_without_joining_the_daily_scan",
+        "tests.test_v26_discovery.OpeningTests.test_identical_titles_with_different_requisitions_stay_separate_and_both_can_be_applied_to",
+        "tests.test_d188.ExactLinkIdentityTests.test_a_board_posting_is_its_board_id_whatever_link_its_api_stores"
+      ],
+      "flaky_failed": false,
+      "seconds": 341.0,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D179): an alert's board link not stored marks its lead ingested with no job",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.AlertRecoveryTests.test_an_alert_line_not_stored_is_read_again_on_the_next_import",
+        "tests.test_intake_identity.CodexPass12Tests.test_a_failed_retry_keeps_the_alert_pending",
+        "tests.test_intake_identity.LeadAndImportTests.test_an_alert_board_link_not_stored_keeps_its_lead_open_and_its_email"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D179): add-url with a board link carries on after the posting was not stored",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.LeadAndImportTests.test_an_alert_board_link_not_stored_keeps_its_lead_open_and_its_email"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D179): a saved text file's requisition is not read",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.SavedFileAndPlacementTests.test_a_saved_text_headers_other_lines_are_part_of_the_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 162.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D179): add-url --text-file does not read the requisition",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.LinkTests.test_two_openings_at_one_shared_link_stay_apart"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "red team (D179): scores made under the earlier country rule stay current",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_score_made_under_the_earlier_country_rule_is_made_again_by_the_next_processing_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D180: scores made under the D179 country rule stay current",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_score_made_under_the_earlier_country_rule_is_made_again_by_the_next_processing_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.5,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "D188: one requisition at the employer makes a duplicate",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.RoundSeventeenTests.test_a_placeholder_requisition_suggests_nothing",
+        "tests.test_red_team_d186.AddendumTests.test_a_duplicate_an_older_engine_made_returns_to_screening_once",
+        "tests.test_red_team_d186.DuplicateTests.test_another_level_or_a_placeholder_requisition_is_another_opening"
+      ],
+      "flaky_failed": false,
+      "seconds": 341.1,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 11 H19: an alert line not stored is counted as seen before when the email is read again",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.AlertRecoveryTests.test_an_alert_line_not_stored_is_read_again_on_the_next_import",
+        "tests.test_intake_identity.CodexPass12Tests.test_a_failed_retry_keeps_the_alert_pending",
+        "tests.test_intake_identity.RedTeamAfterPass12Tests.test_an_alert_with_a_line_not_stored_is_read_again_after_its_search_window"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 11 H19: an alert line read again is inserted as a second lead (and fails)",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 2,
+      "errors": 1,
+      "failing": [
+        "tests.test_intake_identity.RedTeamAfterPass12Tests.test_an_inbox_issue_with_a_line_not_stored_stays_open",
+        "tests.test_intake_identity.AlertRecoveryTests.test_an_alert_line_not_stored_is_read_again_on_the_next_import",
+        "tests.test_intake_identity.CodexPass12Tests.test_a_failed_retry_keeps_the_alert_pending"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.9,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 10 H12: a lead whose link names another opening of the same portal is matched to this job by title",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.PasteProposalTests.test_a_lead_at_the_pages_own_link_is_never_proposed_it",
+        "tests.test_d188.PasteProposalTests.test_a_lead_at_the_pages_own_link_is_never_proposed_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 341.7,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D181): another opening on a careers page seen before is counted as seen before",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_cards_at_a_shared_page_stay_apart_by_what_they_state",
+        "tests.test_intake_identity.CodexPass12Tests.test_two_openings_at_one_page_with_different_requisitions_are_two_leads",
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_openings_on_one_careers_page_in_alerts_are_one_lead_per_title"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "new",
+      "mutation": "an alert is recorded on a duplicate rather than its original",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_an_alert_on_a_duplicate_is_recorded_on_its_original"
+      ],
+      "flaky_failed": false,
+      "seconds": 160.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D181): careeros location on a duplicate says it was screened again",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_a_paste_offers_careeros_location_only_for_the_same_posting_by_its_link"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D181): a paste of a board posting with --location suggests careeros location, which refuses it",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_a_paste_offers_careeros_location_only_for_the_same_posting_by_its_link"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: another posting's earlier lead makes a line seen before",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 13,
+      "errors": 1,
+      "failing": [
+        "tests.test_github_inbox.PullTests.test_issue_is_graded_answered_closed_and_never_reread",
+        "tests.test_d188.ExactLinkIdentityTests.test_another_sites_line_is_never_seen_before_by_its_title_but_an_agency_number_is",
+        "tests.test_red_team_d186.LeadMatchingTests.test_two_lines_at_places_that_differ_are_two_leads"
+      ],
+      "flaky_failed": false,
+      "seconds": 160.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D181): add-url with a board link drops --location silently",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_a_paste_offers_careeros_location_only_for_the_same_posting_by_its_link"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 12 H22/H23: scores made under the earlier location rule stay current",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_score_made_under_the_earlier_country_rule_is_made_again_by_the_next_processing_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team (D181): a paste matched by employer and title only invites setting the other job's location",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.HandCheck16Tests.test_a_paste_found_by_employer_and_title_never_offers_careeros_location"
+      ],
+      "flaky_failed": false,
+      "seconds": 160.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 12 H21: a single-link fetch records its location as the board scan's",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_a_single_link_fetch_is_recorded_as_one_never_as_the_scans"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "a duplicate found by its link keeps the lead instead of its original",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.RoundSeventeenTests.test_a_duplicate_pasted_again_lends_a_later_lead_to_its_original"
+      ],
+      "flaky_failed": false,
+      "seconds": 337.8,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 12 H21: the board's next scan never restores standing to a location it lists",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_a_scan_that_cannot_store_the_posting_withdraws_its_scans_record",
+        "tests.test_intake_identity.CodexPass12Tests.test_a_single_link_fetch_is_recorded_as_one_never_as_the_scans"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 12 H25: a failed retry finalizes the alert and drops the retry mark",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_a_failed_retry_keeps_the_alert_pending",
+        "tests.test_intake_identity.RedTeamAfterPass12Tests.test_an_alert_with_a_line_not_stored_is_read_again_after_its_search_window"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 12 H26: another opening's card at a shared page counts as seen before",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_cards_at_a_shared_page_stay_apart_by_what_they_state",
+        "tests.test_intake_identity.CodexPass12Tests.test_two_openings_at_one_page_with_different_requisitions_are_two_leads",
+        "tests.test_intake_identity.RedTeamAfterPass12Tests.test_alert_cards_keep_everything_they_state"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 12 H26: an older lead at a shared page hides another opening's card",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_two_openings_at_one_page_with_different_requisitions_are_two_leads"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "D188: one careers-page link makes a duplicate",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 7,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_nothing_is_a_terminal_duplicate_at_a_shared_page",
+        "tests.test_intake_identity.IdentityConflictTests.test_a_requisition_never_hides_another_opening_at_a_shared_link",
+        "tests.test_intake_identity.LinkTests.test_the_duplicate_check_reads_every_job_at_the_link"
+      ],
+      "flaky_failed": false,
+      "seconds": 326.6,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team after Pass 12 (RT3-1): a job site's search page names one posting",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_intake_hotfix.D149D155Pass3Tests.test_codexs_ambiguous_href_with_a_malformed_destination"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team after Pass 12 (RT3-5): openings' cards at a job-like shared page are one lead",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_cards_at_a_shared_page_stay_apart_by_what_they_state"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 13 (D183): standing preparation routes a job without your label",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 1,
+      "errors": 2,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_a_single_link_fetch_is_recorded_as_one_never_as_the_scans",
+        "tests.test_intake_identity.CountryTests.test_a_location_field_naming_another_country_or_excluding_the_us_places_nothing",
+        "tests.test_intake_identity.CodexPass13Tests.test_a_second_opening_at_a_shared_page_never_takes_the_first_ones_place"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a posting you paste is never proposed to a lead its requisition or title agrees with",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_pasting_or_adding_the_same_posting_links_its_lead",
+        "tests.test_lead_resolution.ManualIntakeAmbiguityTests.test_adding_one_of_two_same_title_postings_does_not_link_a_lead_either_could_be"
+      ],
+      "flaky_failed": false,
+      "seconds": 162.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 13 H29/H30: scores made under the earlier time-zone rule stay current",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_score_made_under_the_earlier_country_rule_is_made_again_by_the_next_processing_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 14 H34: an open or a replay leaves a withdrawn handoff usable",
+      "file": "careeros/review/assist.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass14Tests.test_a_handoff_issued_under_standing_preparation_is_withdrawn"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 14 H34: a replay returns a standing session by its key",
+      "file": "careeros/review/assist.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass14Tests.test_a_handoff_issued_under_standing_preparation_is_withdrawn"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 14 H34: the processing run after an upgrade leaves a standing handoff usable",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass14Tests.test_a_handoff_issued_under_standing_preparation_is_withdrawn"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team after Pass 12 (RT1-1): a listing scan that could not store the posting keeps the earlier scan's authority",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_a_scan_that_cannot_store_the_posting_withdraws_its_scans_record"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 14 H35: a guessed fetch links a lead the conflict check refused",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass14Tests.test_a_guessed_greenhouse_fetch_never_links_a_line_that_states_another_opening"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "new",
+      "mutation": "Pass 14 H35 and D188: a guessed board link's posting is never checked against the line's own link",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass14Tests.test_a_guessed_greenhouse_fetch_never_links_a_line_that_states_another_opening",
+        "tests.test_github_inbox.PullTests.test_careers_page_links_resolve_to_greenhouse_or_known_jobs_and_bad_guesses_add_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 163.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D184: a Workday posting link names no posting",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.LinkTests.test_the_duplicate_check_reads_every_job_at_the_link",
+        "tests.test_intake_identity.CodexPass12Tests.test_a_year_in_a_link_names_no_posting",
+        "tests.test_intake_identity.CodexPass12Tests.test_nothing_is_a_terminal_duplicate_at_a_shared_page"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D184: a job site's id names no posting",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass12Tests.test_a_year_in_a_link_names_no_posting",
+        "tests.test_intake_identity.CodexPass13Tests.test_a_year_or_date_in_a_query_or_app_route_names_no_posting",
+        "tests.test_intake_identity.CodexPass14Tests.test_only_a_boards_posting_link_or_a_job_sites_id_names_one_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team before Pass 15 (RTC-03): an interrupted prepare's folder refuses every retry",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_intake_identity.RedTeamBeforePass15Tests.test_an_interrupted_prepare_can_be_prepared_again"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.6,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-01: a replay of a closed session returns its handoff",
+      "file": "careeros/review/assist.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_a_closed_sessions_handoff_is_withdrawn_and_never_replayed"
+      ],
+      "flaky_failed": false,
+      "seconds": 160.5,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 14 H35: a Greenhouse id is guessed past a '#' route",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.RoundSeventeenTests.test_no_greenhouse_posting_is_guessed_from_a_review_link_an_agency_link_or_past_a_route"
+      ],
+      "flaky_failed": false,
+      "seconds": 314.6,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 14 H35: a Greenhouse link is guessed for a link whose route names another opening",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.RoundSeventeenTests.test_no_greenhouse_posting_is_guessed_from_a_review_link_an_agency_link_or_past_a_route"
+      ],
+      "flaky_failed": false,
+      "seconds": 313.5,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-03: a label stamped before the latest one (a clock set back) is recorded and loses",
+      "file": "careeros/review/labels.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_a_label_given_behind_a_clock_set_back_is_refused"
+      ],
+      "flaky_failed": false,
+      "seconds": 162.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-04/05: a label given for one opening routes the posting after its identity changed",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_a_board_posting_reidentified_after_the_label_waits_for_a_new_one",
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_an_older_engines_overwrite_suspends_the_label_given_before_it",
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_new_text_under_another_requisition_suspends_the_label_even_behind_a_clock_set_back"
+      ],
+      "flaky_failed": false,
+      "seconds": 162.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "RT-04: a title change after the label leaves it in force",
+      "file": "careeros/review/labels.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_an_older_engines_overwrite_suspends_the_label_given_before_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 160.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "RT-05: another requisition after the label leaves it in force",
+      "file": "careeros/review/labels.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_a_board_posting_reidentified_after_the_label_waits_for_a_new_one",
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_new_text_under_another_requisition_suspends_the_label_even_behind_a_clock_set_back"
+      ],
+      "flaky_failed": false,
+      "seconds": 160.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-05: a change recorded behind a clock set back after the label is read as older",
+      "file": "careeros/review/labels.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_a_board_posting_reidentified_after_the_label_waits_for_a_new_one",
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_new_text_under_another_requisition_suspends_the_label_even_behind_a_clock_set_back"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.5,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "RT-04/05: new text under another requisition is recorded without the requisition",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_a_board_posting_reidentified_after_the_label_waits_for_a_new_one",
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_new_text_under_another_requisition_suspends_the_label_even_behind_a_clock_set_back",
+        "tests.test_v26_discovery.ChangeTests.test_meaningful_versus_cosmetic_and_timestamps"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-08: a byte-order mark hides a saved file's URL line",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.SavedFileAndPlacementTests.test_a_byte_order_mark_never_hides_the_saved_link"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-09: a requisition label is read inside a longer word ('Job Identification', 'job notifications')",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LinkAndRequisitionTests.test_a_requisition_is_read_whole_by_its_label_or_not_at_all"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-09: a word of prose after a requisition label is read as the requisition",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LinkAndRequisitionTests.test_a_requisition_is_read_whole_by_its_label_or_not_at_all"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-09: a blank requisition label takes the next line",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LinkAndRequisitionTests.test_a_requisition_is_read_whole_by_its_label_or_not_at_all"
+      ],
+      "flaky_failed": false,
+      "seconds": 160.5,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-12: a requisition ending a sentence keeps its period",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LinkAndRequisitionTests.test_a_requisition_is_read_whole_by_its_label_or_not_at_all"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.5,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-09: a word and a number after a requisition label read as a code ('when 2')",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LinkAndRequisitionTests.test_a_requisition_is_read_whole_by_its_label_or_not_at_all"
+      ],
+      "flaky_failed": false,
+      "seconds": 162.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "RT-11: a card cut at 160 characters loses its requisition",
+      "file": "careeros/discovery/alerts.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_red_team_d186.LinkAndRequisitionTests.test_a_card_cut_before_its_requisition_keeps_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 162.5,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "RT-12: a job's package folder is another job's, one letter's case apart",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_two_job_ids_one_letters_case_apart_get_two_package_folders"
+      ],
+      "flaky_failed": false,
+      "seconds": 162.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "RT-24: a lead naming one company joins a sister company's posting",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LeadMatchingTests.test_a_sister_company_is_never_the_leads_employer"
+      ],
+      "flaky_failed": false,
+      "seconds": 316.7,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-22: the requisition step joins a lead from another place",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LeadMatchingTests.test_a_requisition_alone_never_joins_another_place_or_title"
+      ],
+      "flaky_failed": false,
+      "seconds": 317.0,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-22: the requisition step joins a lead with another title",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LeadMatchingTests.test_a_requisition_alone_never_joins_another_place_or_title"
+      ],
+      "flaky_failed": false,
+      "seconds": 312.5,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-16: a placeholder requisition ('TBD') makes another posting a duplicate",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.RoundSeventeenTests.test_a_placeholder_requisition_suggests_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 319.0,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "new",
+      "mutation": "RT-25 and D188: a lead link not made by its own link is never checked again",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.RederivationTests.test_variants_reposts_and_lead_links_an_older_engine_made_are_undone_every_run",
+        "tests.test_red_team_d186.LeadMatchingTests.test_a_link_an_older_engine_made_is_checked_again"
+      ],
+      "flaky_failed": false,
+      "seconds": 162.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "RT-25: the re-check reopens a lead you confirmed",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LeadMatchingTests.test_a_link_an_older_engine_made_is_checked_again"
+      ],
+      "flaky_failed": false,
+      "seconds": 163.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "RT-25: a lead at its job's own posting link, naming no company, is reopened",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LeadMatchingTests.test_a_link_an_older_engine_made_is_checked_again"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.8,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "RT-29: a saved text file keeps only its last Location line",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.SavedFileAndPlacementTests.test_every_location_line_is_the_location_field"
+      ],
+      "flaky_failed": false,
+      "seconds": 163.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "RT-31: a title naming a place abroad rejects a posting the field places in the US",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.IndividualFixTests.test_the_title_never_places_a_posting_abroad",
+        "tests.test_red_team_d186.SavedFileAndPlacementTests.test_the_title_never_places_a_posting_abroad_by_a_us_region_and_only_takes_the_us_away"
+      ],
+      "flaky_failed": false,
+      "seconds": 163.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D186: scores made under the earlier placement rule stay current",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_score_made_under_the_earlier_country_rule_is_made_again_by_the_next_processing_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: scores made under the earlier placement rule (a title placing a posting abroad) stay current",
+      "file": "careeros/qualify/gate.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CountryTests.test_a_score_made_under_the_earlier_country_rule_is_made_again_by_the_next_processing_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 161.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-32: an employer named by reference is not read",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_red_team_d186.SavedFileAndPlacementTests.test_the_employer_is_read_by_reference_or_the_page_is_refused"
+      ],
+      "flaky_failed": false,
+      "seconds": 160.6,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-32: a page naming no employer is imported as 'Unknown employer'",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.SavedFileAndPlacementTests.test_the_employer_is_read_by_reference_or_the_page_is_refused"
+      ],
+      "flaky_failed": false,
+      "seconds": 160.5,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-34: JSON-LD entities are decoded before the JSON is read",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_red_team_d186.SavedFileAndPlacementTests.test_json_ld_is_parsed_before_its_entities_are_read"
+      ],
+      "flaky_failed": false,
+      "seconds": 164.6,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-10: a saved text file's other header lines (its requisition) are dropped",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.SavedFileAndPlacementTests.test_a_saved_text_headers_other_lines_are_part_of_the_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 164.8,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-36: an earlier build's re-paste confirmation places the job as your --location",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.AddendumTests.test_an_earlier_builds_repaste_confirmation_never_places_the_job"
+      ],
+      "flaky_failed": false,
+      "seconds": 192.6,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-40: questions.json is rewritten in place, so an interrupted write empties it",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_red_team_d186.AddendumTests.test_an_interrupted_questions_write_leaves_the_earlier_file_and_one_unreadable_file_names_its_job"
+      ],
+      "flaky_failed": false,
+      "seconds": 201.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-40: an unreadable questions.json is a bare JSON error naming no job",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.LabelRuleTests.test_another_jobs_questions_in_this_folder_are_never_read",
+        "tests.test_red_team_d186.AddendumTests.test_an_interrupted_questions_write_leaves_the_earlier_file_and_one_unreadable_file_names_its_job"
+      ],
+      "flaky_failed": false,
+      "seconds": 212.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "RT-35: a duplicate an older engine made stays one after the upgrade",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.AddendumTests.test_a_duplicate_an_older_engine_made_returns_to_screening_once"
+      ],
+      "flaky_failed": false,
+      "seconds": 204.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "RT-35: duplicates are re-derived at no processing run",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.AddendumTests.test_a_duplicate_an_older_engine_made_returns_to_screening_once"
+      ],
+      "flaky_failed": false,
+      "seconds": 213.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "D187: the re-derivation moves a duplicate back with no reason recorded",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_red_team_d186.AddendumTests.test_a_duplicate_an_older_engine_made_returns_to_screening_once"
+      ],
+      "flaky_failed": false,
+      "seconds": 197.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D187: the re-derivation re-opens a real duplicate",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.LinkTests.test_a_page_anchor_never_names_another_opening",
+        "tests.test_job_lifecycle.WorkflowTests.test_every_job_flows_from_source_to_analytics_and_explains_itself"
+      ],
+      "flaky_failed": false,
+      "seconds": 182.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188 (fr1-boards-0): a board-scanned job is identified by the link its board's API stores",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.ExactLinkIdentityTests.test_a_board_posting_is_its_board_id_whatever_link_its_api_stores"
+      ],
+      "flaky_failed": false,
+      "seconds": 180.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "D188: one board posting under another board name in its link is another posting",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 35,
+      "errors": 3,
+      "failing": [
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_a_paste_offers_careeros_location_only_for_the_same_posting_by_its_link",
+        "tests.test_lead_resolution.CorrectionTests.test_an_unlink_is_recorded_once_for_one_key",
+        "tests.test_packages.QueueTests.test_a_location_confirmation_changes_only_the_same_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 279.6,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a job whose link only contains another posting's id is taken for it",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.ExactLinkIdentityTests.test_a_link_that_only_contains_a_postings_id_is_not_that_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 163.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a likely match is recorded under another method than the one that proposed it",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.RematchTests.test_a_lead_whose_job_is_scanned_later_is_linked_after_that_scan",
+        "tests.test_lead_resolution.RematchTests.test_each_open_lead_is_matched_with_its_own_facts_and_only_at_its_own_employer",
+        "tests.test_v26_discovery.IdentityTests.test_supplied_domain_verifies_and_the_lead_becomes_a_graded_posting_without_joining_the_daily_scan"
+      ],
+      "flaky_failed": false,
+      "seconds": 164.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: an agency's lead linked by its link is never re-checked",
+      "file": "careeros/discovery/lead_resolution.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.RederivationTests.test_variants_reposts_and_lead_links_an_older_engine_made_are_undone_every_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 165.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188 (re-confirm after upgrade): a label given before the upgrade still routes",
+      "file": "careeros/review/labels.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.LabelRuleTests.test_a_label_given_before_the_upgrade_waits_for_you",
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_an_older_engines_overwrite_suspends_the_label_given_before_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 165.6,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188 (fr1-routes-2): a Skip or another label leaves the job's open handoff loadable",
+      "file": "careeros/review/labels.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.LabelRuleTests.test_a_skip_from_the_review_page_withdraws_the_open_handoff",
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_a_closed_sessions_handoff_is_withdrawn_and_never_replayed"
+      ],
+      "flaky_failed": false,
+      "seconds": 164.8,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188 (fr1-routes-2): a dismissal leaves the job's open handoff loadable",
+      "file": "careeros/review/dismiss.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.LabelRuleTests.test_a_dismissal_withdraws_the_open_handoff"
+      ],
+      "flaky_failed": false,
+      "seconds": 166.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188 (fr1-faults-0): a re-identified posting leaves its open handoff loadable",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.LabelRuleTests.test_a_reidentified_posting_withdraws_the_open_handoff"
+      ],
+      "flaky_failed": false,
+      "seconds": 165.1,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "RT-19 and D188: a lead naming one board posting is proposed another posting of that board",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.ExactLinkIdentityTests.test_a_lead_naming_one_board_posting_is_never_proposed_another",
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_the_board_matcher_links_a_lead_only_to_the_opening_its_link_and_title_name"
+      ],
+      "flaky_failed": false,
+      "seconds": 279.3,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "SURVIVED",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "new",
+      "mutation": "fr1-paste-1: another job's questions file in a shared folder is read as this job's",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.LabelRuleTests.test_another_jobs_questions_in_this_folder_are_never_read"
+      ],
+      "flaky_failed": false,
+      "seconds": 164.4,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: an unconfirmed label from before the upgrade routes",
+      "file": "careeros/review/packages.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.LabelRuleTests.test_a_label_given_before_the_upgrade_waits_for_you",
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_an_older_engines_overwrite_suspends_the_label_given_before_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 165.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "fr1-alerts-0: two cards that differ only after the cut are one lead",
+      "file": "careeros/discovery/alerts.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.IndividualFixTests.test_two_cards_that_differ_only_after_the_cut_are_two_leads"
+      ],
+      "flaky_failed": false,
+      "seconds": 164.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "fr1-saved-2: a literal '<' in the text deletes everything up to the next '>'",
+      "file": "careeros/normalize/sanitize.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.IndividualFixTests.test_a_literal_less_than_sign_never_deletes_the_text"
+      ],
+      "flaky_failed": false,
+      "seconds": 164.6,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "fr1-saved-4: a saved file's 'Work Location:' header line is dropped",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.IndividualFixTests.test_a_saved_files_work_location_line_is_its_location"
+      ],
+      "flaky_failed": false,
+      "seconds": 165.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "fr1-saved-6: a saved page holding two job postings is imported as one of them",
+      "file": "careeros/discovery/saved.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.IndividualFixTests.test_a_saved_page_with_two_postings_is_refused"
+      ],
+      "flaky_failed": false,
+      "seconds": 167.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "fr1-paste-0: a slogan's 'job #1' is read as a requisition",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.IndividualFixTests.test_a_slogan_or_a_short_code_is_no_requisition"
+      ],
+      "flaky_failed": false,
+      "seconds": 174.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "fr1-boards-3: a title naming a city abroad places a posting abroad beside a field that does not read US",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.IndividualFixTests.test_the_title_never_places_a_posting_abroad",
+        "tests.test_red_team_d186.SavedFileAndPlacementTests.test_the_title_never_places_a_posting_abroad_by_a_us_region_and_only_takes_the_us_away",
+        "tests.test_v22_night.PipelineTests.test_a_country_in_the_title_rejects_new_and_stored_postings"
+      ],
+      "flaky_failed": false,
+      "seconds": 203.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "fr1-faults-3: careeros location writes without the single-writer lock",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.IndividualFixTests.test_careeros_location_takes_the_writer_lock"
+      ],
+      "flaky_failed": false,
+      "seconds": 225.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a copy of a posting at its exact link writes over the location you set",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.LocationKeptTests.test_a_copy_at_the_exact_link_never_writes_over_the_location_you_set",
+        "tests.test_intake_identity.RedTeamAfterPass11Tests.test_a_location_you_set_stays_until_you_set_another"
+      ],
+      "flaky_failed": false,
+      "seconds": 228.3,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a variant or repost an older engine stored stays one after the upgrade",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.RederivationTests.test_variants_reposts_and_lead_links_an_older_engine_made_are_undone_every_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 239.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188: a new posting of a closed role is not linked for your review as a possible repost",
+      "file": "careeros/pipeline.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.OpeningTests.test_reposts_and_reopenings_keep_application_history"
+      ],
+      "flaky_failed": false,
+      "seconds": 236.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "a same-opening link you made leaves the other posting out of the role group",
+      "file": "careeros/review/applications.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_packages.VerificationTests.test_an_application_elsewhere_in_the_role_or_a_check_that_cant_finish_stops_preparation",
+        "tests.test_applications.ApplicationLogicTests.test_a_possible_duplicate_or_the_same_title_elsewhere_holds_until_confirmed"
+      ],
+      "flaky_failed": false,
+      "seconds": 233.7,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "fr1-upgrade-2: a saved file's location an older reader wrote places the job",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.LocationKeptTests.test_a_saved_file_location_an_older_reader_wrote_waits_for_you"
+      ],
+      "flaky_failed": false,
+      "seconds": 220.0,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "fr1-upgrade-2: an older row's location that its text does not contain places the job",
+      "file": "careeros/discovery/manual_intake.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.LocationKeptTests.test_a_saved_file_location_an_older_reader_wrote_waits_for_you",
+        "tests.test_v26_discovery.IntakeTests.test_a_paste_saved_by_an_older_parser_is_placed_only_by_a_declared_location"
+      ],
+      "flaky_failed": false,
+      "seconds": 217.2,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "new",
+      "mutation": "D188 (fr1-routes-2): a store held in memory never finds the vault its handoffs were written to",
+      "file": "careeros/review/assist.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 881,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_red_team_d186.LabelAndHandoffTests.test_a_closed_sessions_handoff_is_withdrawn_and_never_replayed"
+      ],
+      "flaky_failed": false,
+      "seconds": 213.9,
+      "python": "3.14.10",
+      "round": 17
+    },
+    {
+      "kind": "shared",
+      "mutation": "D188: a guessed Greenhouse posting already tracked is fetched again for a careers page's line",
+      "file": "careeros/cli.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_identity.CodexPass14Tests.test_a_guessed_greenhouse_fetch_never_links_a_line_that_states_another_opening"
+      ],
+      "flaky_failed": false,
+      "seconds": 275.7,
+      "python": "3.14.10",
+      "round": "17b",
+      "first_result": "CAUGHT",
+      "planted_again": "planted again (hc17b.jsonl)"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a question that does not apply is left blank instead of saying why",
+      "file": "careeros/review/explain.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_job_lifecycle.WorkflowTests.test_every_job_flows_from_source_to_analytics_and_explains_itself"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.0,
+      "python": "3.14.10",
+      "round": "17b"
+    },
+    {
+      "kind": "shared",
+      "mutation": "the discovery queue keeps its first lead's job facts again",
+      "file": "careeros/discovery/discovery_queue.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.OwnFactsTests.test_two_differently_titled_leads_at_one_employer_each_match_their_own_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": "17b"
+    },
+    {
+      "kind": "shared",
+      "mutation": "leads not matched when the validation scan admits a board",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.RematchTests.test_when_a_board_is_admitted_its_employers_open_leads_are_matched_against_the_jobs_held"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": "17b"
+    },
+    {
+      "kind": "shared",
+      "mutation": "a lead unlinked without a reason",
+      "file": "careeros/review/leads.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.CorrectionTests.test_unlink_corrects_a_lead_linked_to_another_leads_job_with_an_audit_event_and_the_rematch_finds_its_own"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": "17b"
+    },
+    {
+      "kind": "shared",
+      "mutation": "an unlink leaves no event in the audit chain",
+      "file": "careeros/review/leads.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 1,
+      "errors": 1,
+      "failing": [
+        "tests.test_lead_resolution.CorrectionTests.test_unlink_corrects_a_lead_linked_to_another_leads_job_with_an_audit_event_and_the_rematch_finds_its_own",
+        "tests.test_lead_resolution.CorrectionTests.test_an_unlink_is_recorded_once_for_one_key"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": "17b"
+    },
+    {
+      "kind": "shared",
+      "mutation": "Pass 6 H2: the location question does not say a pasted location was read by an earlier rule and needs confirming",
+      "file": "careeros/qualify/facts.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IntakeTests.test_a_paste_saved_by_an_older_parser_is_placed_only_by_a_declared_location"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": "17b"
+    },
+    {
+      "kind": "new",
+      "mutation": "rtw_fr1upgrade_7: one Workday requisition under two location segments is one posting",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 924,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_d188.RoundSeventeenTests.test_one_workday_requisition_under_two_locations_is_two_postings"
+      ],
+      "flaky_failed": false,
+      "seconds": 248.0,
+      "python": "3.14.10",
+      "round": "17b"
+    }
+  ]
+}

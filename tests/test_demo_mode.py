@@ -51,9 +51,11 @@ RECORDED = {
     # overnight auditor (NIGHT accepts it; PRIMARY rejects part-time work), the pasted posting placed in the US, and
     # Harborline's review cases closed once its migration is verified
     "boards": {"active": 8, "historical": 1, "manual_only": 3, "rejected": 2, "review_required": 1},
-    "jobs": {"closed": 4, "duplicate": 1, "rejected": 13, "scored": 28},
-    "tiers": {"near_miss": 15, "B": 5, "archive": 8},
-    "remote_scopes": {"US_nationwide": 6, "US_unspecified": 36, "hybrid": 1, "onsite": 1, "US_restricted_states": 2},
+    # 2026-11-19 (the owner's D188, "Exact links only"): Meridian 102 shares 101's requisition but is another posting
+    # id, so it is scored on its own and linked to 101 for your review, no longer a duplicate
+    "jobs": {"closed": 4, "rejected": 13, "scored": 29},
+    "tiers": {"near_miss": 16, "B": 5, "archive": 8},
+    "remote_scopes": {"US_nationwide": 6, "US_unspecified": 35, "unknown": 1, "hybrid": 1, "onsite": 1, "US_restricted_states": 2},
     "review_cases": {"site_unreadable": 1, "identity_mismatch": 1},
     # D151: the NY/NJ-only role is no longer rejected state_not_eligible (no state in a location field rejects)
     "rejections": {"scam_signals": 1, "not_remote": 2, "title_excluded": 4, "below_pay_floor": 3, "employment_type": 1,
@@ -62,7 +64,7 @@ RECORDED = {
     "discovery_outcomes": {"verified": 4, "manual_only": 2, "no_qualified_roles": 1, "slug_absent": 1, "skipped_policy": 1},
     "lifecycle_events": {"board_active": 9, "board_quarantined": 3, "employer_manual_only": 1, "employer_rejected": 2,
                          "identity_mismatch": 1, "ats_migration_detected": 1, "validation_scan_passed": 3, "ats_migration_verified": 1},
-    "leads": 3, "changes": {"meaningful": 1, "cosmetic": 1}, "night_routed": 15,
+    "leads": 3, "changes": {"meaningful": 1, "cosmetic": 1}, "night_routed": 16,
 }
 SECRET = "PRIVATE-SENTINEL-4f9a2c"   # planted in the decoy private vault: must never appear in anything the demo writes; release-scan: fake
 
@@ -258,10 +260,11 @@ class DemoTourTest(unittest.TestCase):
                 ("Rebate Operations Analyst", "Meridian Rx", ("rejected", "below_pay_floor")),
                 ("Remote Claims Analyst", "Brightwater Benefits", ("rejected", "scam_signals")),
                 ("Claims Operations Specialist", "Meridian Rx", ("closed", "no_longer_listed")),
-                ("PBM Operations Analyst", "Meridian Rx", ("duplicate", "same_requisition"))):
+                ("PBM Operations Analyst", "Meridian Rx", ("scored", None))):   # both postings (D188)
             self.assertIn(outcome, outcomes.get((title, employer), set()), title)
-        self.assertEqual(ctx.store.one("SELECT COUNT(*) c FROM jobs WHERE current_state = 'duplicate' "
-                                       "AND duplicate_of = 'greenhouse:meridianrx:101'")["c"], 1)
+        self.assertEqual(ctx.store.one("SELECT COUNT(*) c FROM jobs WHERE current_state = 'duplicate'")["c"], 0)
+        self.assertTrue(ctx.store.one("SELECT 1 FROM opening_links WHERE job_id = 'greenhouse:meridianrx:102' "
+                                      "AND other_id = 'greenhouse:meridianrx:101' AND relation = 'possible_duplicate'"))
         scored = {r["title"] for r in ctx.store.all("SELECT title FROM jobs WHERE current_state = 'scored'")}
         for kind, title in {"claims": "Claims Analyst II", "benefits": "Benefits Operations Analyst", "BSA": "Pharmacy Benefit Analyst",
                             "reporting": "Senior Reporting Analyst", "operations": "Process Improvement Analyst",
@@ -283,7 +286,9 @@ class DemoTourTest(unittest.TestCase):
         part_time = night["workable:sterlingclaims:SC4005"]
         self.assertEqual((part_time["decision"], part_time["mode"], part_time["schedule"]), ("eligible", "supplemental", "overnight"))
         self.assertEqual(night["workable:sterlingclaims:SC4001"]["decision"], "rejected")
-        self.assertEqual(ctx.store.one("SELECT country FROM jobs WHERE employer_name = 'Brightwater Benefits'")["country"], "US")
+        # the pasted posting's location field says only "Remote": its text ("remote in the US") is a hint, never the
+        # country, so its location stays a question (Codex CR-2026-11-15-GATE-FIXES F1, Pass 4; the owner's choice)
+        self.assertEqual(ctx.store.one("SELECT country FROM jobs WHERE employer_name = 'Brightwater Benefits'")["country"], "unknown")
         late = ctx.store.one("SELECT first_seen_at FROM jobs WHERE job_id = 'greenhouse:meridianrx:108'")
         self.assertEqual(late["first_seen_at"], world.day_start(3))                              # a role that appears mid-demo
         self.assertEqual(ctx.store.one("SELECT status FROM leads WHERE site = 'linkedin'")["status"], "new")  # recorded, never fetched
@@ -358,15 +363,16 @@ class DemoTourTest(unittest.TestCase):
 
     def test_the_reviewer_walkthrough_shows_what_the_commands_print(self):
         """docs/demo_walkthrough.md quotes these lines (Portfolio Prompt 12); each must be real output and in the document."""
-        quoted = {("status",): ["jobs: scored=28, rejected=13, closed=4, duplicate=1",
-                                "NIGHT profile: on; supplemental/archive=3, supplemental/near_miss=12"],
+        quoted = {("status",): ["jobs: scored=29, rejected=13, closed=4",
+                                "NIGHT profile: on; supplemental/archive=3, supplemental/near_miss=13"],
                   ("sources", "list"): ["greenhouse:harborline historical Harborline Health", "greenhouse:quillon rejected Quillon Health",
                                         "greenhouse:granitebenefits rejected Granite Benefit Partners",
                                         "ashby:pinecrest review_required Pinecrest Care Navigation",
                                         "Suggested boards that do not exist", "Atlas Claims Group https://jobs.lever.co/atlasclaims"],
                   ("sources", "explain", "greenhouse:quillon"): ["status=rejected", "identity=mismatch",
                                                                  "board names another company: Quillon Logistics"],
-                  ("explain", "greenhouse:meridianrx:102"): ["decision: duplicate", "of: greenhouse:meridianrx:101", "reason: same_requisition"],
+                  ("explain", "greenhouse:meridianrx:102"): ["decision: distinct opening", "requisition: PBM-101",
+                                                             '"job": "greenhouse:meridianrx:101", "relation": "possible_duplicate"'],
                   ("explain", "greenhouse:meridianrx:101"): ["tier: near_miss", "apply_priority: 80.7",
                                                          "Verdict: Near-miss: priority 80.7 vs 85 for Tier B (4.3 short)."],
                   ("shortlist",): ["greenhouse:meridianrx:108 | Pharmacy Claims Analyst | Meridian Rx | open | tier B ELIGIBLE"],

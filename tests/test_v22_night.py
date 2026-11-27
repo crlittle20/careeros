@@ -268,11 +268,15 @@ class PipelineTests(unittest.TestCase):
         process(self.ctx)
         query = "SELECT j.country, t.reason_code FROM jobs j JOIN transitions t ON t.workflow_id = j.workflow_id " \
                 "AND t.sequence = j.state_sequence WHERE j.job_id = 'greenhouse:synth:504'"
-        self.assertEqual(tuple(self.store.one(query)), ("non_US", "outside_us"))
+        # the location field alone places a posting (the red team's fr1-boards-3, invariant 3): a title naming a country
+        # abroad never places it there; beside a field that does not read US it leaves the location question open
+        country, reason = tuple(self.store.one(query))
+        self.assertEqual(country, "unknown")
+        self.assertNotEqual(reason, "outside_us")
         self.store.writer("discovery").update("jobs", {"country": "US"}, "job_id = ?", ("greenhouse:synth:504",))  # older code
         self.clock.advance(minutes=5)
         self.assertGreaterEqual(process(self.ctx)["refreshed"], 1)
-        self.assertEqual(tuple(self.store.one(query)), ("non_US", "outside_us"))
+        self.assertEqual(self.store.one(query)["country"], "unknown")   # never placed in the US by the field alone
 
 
 if __name__ == "__main__":

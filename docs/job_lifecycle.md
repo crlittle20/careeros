@@ -22,7 +22,7 @@ Prompt 4.
 | 3 | Normalize | Title, location, remote scope and state limits, country, employment type, pay (annualised), deadline, family. | `normalize/posting.py`, `pipeline.normalized_fields` | `jobs` columns, content fingerprint |
 | 4 | Identify employer | The job belongs to the employers row (board) it came from; the board belongs to a stable employer record. | `discovery/board_registry.py` | `employers.entity_id`, `employer_entities` |
 | 5 | Verify | Is the board the employer's own (official-site handshake, identity, trust)? Unverified boards are not scanned, except legacy boards during their grace. | `discovery/board_verifier.py` | `board_mappings`, `verification_runs`, `verification_evidence` |
-| 6 | Deduplicate | Same requisition, link or text = duplicate; same requisition elsewhere or same title with other text = variant; same title, different requisition = linked, never merged. | `pipeline._duplicate_of`, `openings.py` | `duplicate_of`, `variant_of`, `repost_of`, `opening_links` |
+| 6 | Deduplicate | One exact posting link (a board's posting id, a Workday requisition link, a job site's id) = duplicate; anything that only looks alike (a requisition, a careers-page link, the same title and place, a closed posting's title) = linked for review (`possible_duplicate`, `possible_repost`), never merged (the owner's D188, 2026-11-19). | `pipeline._duplicate_of`, `board_discovery.job_identity`, `openings.py` | `duplicate_of`, `opening_links` |
 | 7 | Eligibility | Title screen (family, excluded titles, remote / country), then requirement reading and the eligibility rules. | `pipeline._title_screen`, `_extract_one`, `_gate_one`, `qualify/gate.py` | `gate_results` (every decision, with reasons, quotes and the fingerprints it was made under), `requirements` |
 | 8 | Fit | Weighted skill coverage, experience, seniority, education. | `qualify/scores.py` | `scores.candidate_fit`, `components_json` |
 | 9 | Career value | Pay against your target, progression, domain, stability. | `qualify/scores.py` | `scores.career_value` |
@@ -38,7 +38,7 @@ Prompt 4.
 stateDiagram-v2
     [*] --> discovered
     discovered --> normalized
-    discovered --> duplicate: same requisition / link / text
+    discovered --> duplicate: the same exact posting link
     normalized --> rejected: title screen
     normalized --> needs_review: text too short or unreadable
     normalized --> extracted: requirements read
@@ -60,7 +60,7 @@ stateDiagram-v2
     scored --> closed
     rejected --> closed
     closed --> normalized: listed again (reopened)
-    duplicate --> [*]
+    duplicate --> normalized: no longer a duplicate under the current identity rules (once after an upgrade)
 ```
 
 | State | Meaning | Entered by | Left by |
@@ -72,7 +72,7 @@ stateDiagram-v2
 | eligible | passed every hard rule | the rules | scoring |
 | scored | scored and routed (the normal end state of an open job) | scoring | re-evaluation, a posting change, or closure |
 | rejected | failed the title screen or a hard rule, with a recorded reason | screen / rules | re-evaluation, re-screen, or closure |
-| duplicate | the same opening as another job (terminal) | ingest | never (the original carries the history) |
+| duplicate | the same opening as another job | ingest | once after an upgrade, when the current identity rules no longer make it a duplicate of its original (RT-35, D186): back to normalized, linked to it for review |
 | closed | no longer listed (2 complete scans without it), its board retired or rejected, or confirmed removed | ingest, `close_open_jobs`, shortlist refresh | reappearing on a complete scan (reopened) |
 
 **Every transition** is checked against the workflow matrix. It writes a transition record and a hash-chained audit

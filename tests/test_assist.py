@@ -7,8 +7,8 @@ from unittest import mock
 from careeros.core.clock import parse_utc
 from careeros.review import adapters, answers, assist
 from careeros.review.applications import application_matrix, record_application
-from careeros.review.labels import record_label
 
+from tests.helpers import give_label
 from tests.test_packages import FACTS, JOB, MID, POLICY, QUESTIONS, Vault, posting_store
 
 APP = application_matrix()
@@ -73,9 +73,13 @@ LONG_ANSWER_QUESTIONS = [QUESTIONS[0],
 
 class Base(unittest.TestCase):
     def setUp(self):
+        # the inert browser-Fill code is tested with the pause off (D191 pauses it in this release)
+        self.unpause = mock.patch.object(assist, "FILL_PAUSED", False)
+        self.unpause.start()
+        self.addCleanup(self.unpause.stop)
         self.vault = Vault()
         self.store, self.ctx = posting_store()
-        record_label(self.store, JOB, "apply", None, "k1")
+        give_label(self.store, POLICY, MID, JOB, "apply", None, "k1")
         self.prepare()
 
     def tearDown(self):
@@ -265,7 +269,8 @@ class SecondReviewTests(Base):
             first = self.open(mode="assisted", key="whole")
             again = self.open(mode="assisted", key="whole")
         self.assertEqual(again, {**first, "replay": True, "state": "open"})
-        self.assertTrue((self.vault.root / again["handoff"]).is_file())
+        # every sweep removes every handoff file, a live session's too (D191), the one at the start of an open included
+        self.assertFalse((self.vault.root / again["handoff"]).is_file())
         uncertain = self.close(first["session_id"], "uncertain", key="u1")
         closed = self.close(first["session_id"], "submitted", key="s1")
         repeat = self.close(first["session_id"], "submitted", key="s1")
@@ -609,7 +614,8 @@ class SessionGuardTests(Base):
         message = self.applied()
         self.assertTrue(message.startswith(f"Not recorded: session_open: session {sid} (manual, opened "), message)
         self.assertTrue(message.endswith(f"If you applied, record it by closing the session: {command}"), message)
-        add_job(self.store, "greenhouse:synth:1-variant", variant_of=JOB)   # the same role in another city
+        # the same posting stored again (its duplicate, by its exact link: the owner's D188)
+        add_job(self.store, "greenhouse:synth:1-variant", duplicate_of=JOB, current_state="duplicate")
         self.assertTrue(self.applied("greenhouse:synth:1-variant").endswith(command))
         self.close(sid, "uncertain", notes="the page froze after Submit")
         with self.assertRaisesRegex(SessionOpen, f"submission_uncertain: session {sid} .* ended uncertain") as caught:

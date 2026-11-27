@@ -1,0 +1,4774 @@
+{
+  "what": "The corrections for Codex CR-2026-11-15-GATE-FIXES Pass 2 (F1, F4, F5, F6, F8), planted by hand in stages (D152) as in mutation-hand-check-f59f6c7.json: the tests of the earlier receipts that caught the defect first, then the related modules, then the whole suite.",
+  "scope": "every defect new or re-anchored since f8b976b and every defect in the five source files the corrections changed (normalize/posting.py, discovery/board_registry.py, board_verifier.py, board_discovery.py, discovery_queue.py)",
+  "base": "f8b976b794c787db03f9ebe377ce4b2d3a06220a",
+  "rev": "e14b63b02c42e8dfa40fd5aae40525be9155e178",
+  "python": "3.14.10",
+  "node_version": "v24.22.1",
+  "defined": 1856,
+  "checked": 266,
+  "caught": 266,
+  "by_scope": {
+    "stage 0: the tests that caught it before": 236,
+    "whole suite (after the modules missed it)": 6,
+    "modules": 24
+  },
+  "note": "round 3 planted plain copies of the worktree whose source code is the commit's; after it, two planted defects were corrected in tools/mutate.py and one assertion was added to test_qualify, so those two were planted again against the commit (round 3c). Defects in pipeline.py, cli.py and alerts.py, unchanged since f59f6c7, keep their results in the previous receipt.",
+  "previous": "evidence/mutation-hand-check-f59f6c7.json",
+  "results": [
+    {
+      "kind": "shared",
+      "mutation": "a preference or an alternative read as a residence limit",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a preference after the states (\"... are preferred\") read as a limit",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "state exclusion list read as the allowed list",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.ReevaluationTests.test_stale_stored_states_are_refreshed_and_job_reevaluated",
+        "tests.test_label_findings.StateRuleTests.test_exclusion_list_is_not_an_allowed_list"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "job-identifying URL parameters dropped",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.HardeningTests.test_board_links_normalise_to_one_board_and_distinct_boards_never_merge",
+        "tests.test_qualify.NormalizeTests.test_remote_states_country_comp_type"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a preference in an earlier clause dropped a residence requirement",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a negation before \", but\" turned a residence requirement into an exclusion",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a preference or a negation before \", and\" taken as the requirement's",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a sentence opening \"While ... is preferred,\" dropped a residence requirement",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a preference after a dash or \"but\" dropped a residence requirement",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an alternative cue in the next clause dropped a residence requirement",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a negation before \"applicants must\" (no comma) reversed a residence requirement",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"or be willing to relocate\" read as a way around a residence limit",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_cue_reads_its_whole_list_and_only_its_own_negation"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a state a role can't hire in read as the state it is limited to",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_cue_reads_its_whole_list_and_only_its_own_negation",
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it",
+        "tests.test_label_findings.StateRuleTests.test_one_state_after_a_residence_cue_limits_the_role"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a negation after the states turned a residence limit into an exclusion",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_cue_reads_its_whole_list_and_only_its_own_negation"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a state in the next sentence read as the residence limit",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it",
+        "tests.test_label_findings.StateRuleTests.test_one_state_after_a_residence_cue_limits_the_role"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a state far from the residence cue read as its limit",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"U.S.\" before a new sentence read as the same sentence",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay notice or a team's home states read as a residence limit",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a requirement after the states (\"residents of <state> only\") not read",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"must not reside in\" not read as excluded states",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"unable to consider applicants who reside in\" read as the states a role is limited to",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"but not <state>\" after a residence cue read as the state the role is limited to",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a negation in an earlier clause turned a residence requirement into an exclusion",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"may apply for paid leave\" after the states read as a residence limit",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"K\" of the next line's first word read as thousands",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount",
+        "tests.test_qualify.PayTests.test_a_range_ends_on_its_own_line"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"this notice is for applicants residing in\" read as a residence limit",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_sentence_limits_only_when_it_requires_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay unit read from the start of another word (\"more\" as month)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_cents_and_the_ranges_own_period"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "pay written with cents not read",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 2,
+      "errors": 1,
+      "failing": [
+        "tests.test_qualify.PayTests.test_the_gate_quotes_your_tier_and_a_straddle_is_conditional",
+        "tests.test_pipeline.PipelineTests.test_pay_read_better_is_not_a_change_the_employer_made",
+        "tests.test_qualify.PayTests.test_cents_and_the_ranges_own_period"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay period read from the next sentence (monthly vacation accrual)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay period read from another clause of the sentence",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a yearly salary read as weekly from nearby words",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount",
+        "tests.test_qualify.PayTests.test_the_period_comes_from_the_ranges_own_words"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"$6,500 - $7,500 paid monthly\" read as yearly",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a sibling pay tier's period read on a range it doesn't fit",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"$60,000 - $70,000 paid weekly\" read as weekly",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a bare unit word that doesn't fit the amount (\"$42 - $48 Weekly Pay!\") trusted",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_pay_period_the_posting_leaves_open_never_decides_the_floor",
+        "tests.test_qualify.PayTests.test_night_pay_never_decides_on_an_unknown_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an hourly \"$38 - $42\" read as a yearly $42 from a sibling tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_pay_period_the_posting_leaves_open_never_decides_the_floor",
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay unit read from the next line (\"A day in the life\")",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_pay_period_the_posting_leaves_open_never_decides_the_floor",
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount",
+        "tests.test_qualify.PayTests.test_a_range_ends_on_its_own_line"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay line after a blank line or in the next list item left out of a range's readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_readings_and_labels_the_d151_rules_do_not_mask",
+        "tests.test_qualify.PayTests.test_d152_the_pay_block_reach_holds_for_ranges_of_20000_or_more"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a bracketed \"(hourly\" read as the range's explicit unit over \"Weekly earnings\"",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_pay_period_the_posting_leaves_open_never_decides_the_floor"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a bare unit trusted over another period its sentence names",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_pay_period_the_posting_leaves_open_never_decides_the_floor"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a period named in the range's own sentence (\"Daily rate\") left out of its readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_pay_period_the_posting_leaves_open_never_decides_the_floor"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a \"Weekly pay\" heading over a range left out of its readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_pay_period_the_posting_leaves_open_never_decides_the_floor"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an excluded state's code (\"All states except FL\") read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 8,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay heading two lines above a range (\"Monthly compensation\" over \"Salary range:\") left out",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_the_lines_beside_a_range_give_its_period_but_never_another_items",
+        "tests.test_qualify.PayTests.test_d120_the_pay_block_gives_its_period_and_only_the_pays",
+        "tests.test_qualify.PayTests.test_d120_the_pay_block_reads_its_own_line_and_beyond_the_lines_beside_a_range"
+      ],
+      "flaky_failed": false,
+      "seconds": 4.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay line after the range (\"Paid monthly\", \"Pay is monthly\") left out of its period readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_an_item_rule_never_removes_a_plausible_pay_period",
+        "tests.test_qualify.PayTests.test_d120_the_lines_beside_a_range_give_its_period_but_never_another_items",
+        "tests.test_qualify.PayTests.test_d120_the_pay_block_gives_its_period_and_only_the_pays"
+      ],
+      "flaky_failed": false,
+      "seconds": 7.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "the period an amount's size suggests left out of its readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_pay_period_the_posting_leaves_open_never_decides_the_floor",
+        "tests.test_qualify.PayTests.test_night_pay_never_decides_on_an_unknown_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "the range's own unit or the stored guess left out of its readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_pay_period_the_posting_leaves_open_never_decides_the_floor"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a state second in a part-of-state list (\"Non-metro <state> and <state>\") read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_only_a_plain_label_names_your_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 5.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"<state> excluded\" read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 4.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"paid semi-monthly\" left out of a range's period readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d151_a_range_under_20000_is_yearly_only_by_its_own_yearly_unit"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"every two weeks\" and \"fortnightly\" left out of a range's period readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_readings_and_labels_the_d151_rules_do_not_mask"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"paid biweekly\" left out of a range's period readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_the_pay_block_gives_its_period_and_only_the_pays",
+        "tests.test_qualify.PayTests.test_d152_readings_and_labels_the_d151_rules_do_not_mask"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an hourly rate \"paid daily\" read as a daily rate",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a bare weekly- or monthly-sized amount read only as a yearly salary",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 4.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an hourly rate \"paid weekly\" read as a weekly wage",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_pay_period_the_posting_leaves_open_never_decides_the_floor",
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount",
+        "tests.test_qualify.PayTests.test_night_pay_never_decides_on_an_unknown_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"per pay period\" left out of a range's period readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d151_a_range_under_20000_is_yearly_only_by_its_own_yearly_unit",
+        "tests.test_qualify.PayTests.test_d155_an_explicit_cycle_word_is_a_reading_whatever_the_amount"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an hourly rate \"paid monthly\" read as a monthly salary",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a shift name after a range (\", Day Shift\") read as its pay period",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a city of your state read as not your state when choosing a pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_the_pay_tier_for_your_state"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "the \"all other locations\" pay tier never chosen",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 2,
+      "errors": 1,
+      "failing": [
+        "tests.test_qualify.PayTests.test_the_gate_quotes_your_tier_and_a_straddle_is_conditional",
+        "tests.test_pipeline.PipelineTests.test_the_pay_stored_is_your_states_tier",
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "the first pay range used when the posting says which tier is yours",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 2,
+      "errors": 1,
+      "failing": [
+        "tests.test_qualify.PayTests.test_the_gate_quotes_your_tier_and_a_straddle_is_conditional",
+        "tests.test_pipeline.PipelineTests.test_the_pay_stored_is_your_states_tier",
+        "tests.test_qualify.PayTests.test_a_period_not_the_ranges_own_unit_must_fit_its_amount"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay rejection quoting a range other than the one that decided",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_the_gate_quotes_your_tier_and_a_straddle_is_conditional"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "title employment marker ignored",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_pipeline.EmploymentTypeTests.test_title_markers_override_board_defaults_but_jobs_about_contracts_do_not"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "product/project managers treated as people managers",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.SeniorityAndYearsTests.test_individual_contributor_manager_titles",
+        "tests.test_v25_audit.FollowUpTests.test_inverted_titles_and_adjacent_families"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a different requisition under the same title treated as already tracked",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_the_matcher_reads_filler_seniority_location_and_requisitions"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "country named in the title ignored",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_v21_policy.YearsRuleTests.test_country_named_in_the_title",
+        "tests.test_v22_night.PipelineTests.test_a_country_in_the_title_rejects_new_and_stored_postings"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a guessed board is trusted without identity evidence",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.GuessedBoardTests.test_a_guessed_lever_board_without_a_company_name_waits_for_the_employers_site_then_the_lead_links",
+        "tests.test_v26_discovery.IdentityTests.test_a_matching_title_never_verifies_the_employer"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "verified boards join the daily scan without approval",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.LifecycleTests.test_without_auto_activation_a_validated_board_waits_for_you",
+        "tests.test_lead_resolution.RematchTests.test_when_you_activate_or_approve_a_board_its_employers_open_leads_are_matched",
+        "tests.test_lead_resolution.RematchTests.test_when_you_activate_or_approve_a_board_its_employers_open_leads_are_matched"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "requisition ids ignored when matching leads",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.IntakeAndFetchTests.test_pasting_or_adding_the_same_posting_links_its_lead",
+        "tests.test_lead_resolution.ManualIntakeAmbiguityTests.test_adding_one_of_two_same_title_postings_does_not_link_a_lead_either_could_be",
+        "tests.test_lead_resolution.RematchTests.test_each_open_lead_is_matched_with_its_own_facts_and_only_at_its_own_employer"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "curated suggestions can overspend their share",
+      "file": "careeros/discovery/discovery_queue.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.BackfillTests.test_curated_employers_get_at_most_their_share"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a board admitted without the official-site handshake",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.LifecycleTests.test_t10_a_high_score_without_the_official_handshake_is_never_admitted"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an unconfirmed official domain accepted",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.LifecycleTests.test_t10_a_high_score_without_the_official_handshake_is_never_admitted",
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_curated_domain_named_only_in_a_homepages_text_does_not_verify",
+        "tests.test_lead_resolution.DomainRouteTests.test_a_lead_domain_named_only_in_a_homepages_text_does_not_verify"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "Board Trust threshold lowered",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.IndependenceTests.test_t11_discovery_greenhouse_vs_verifier_lever_needs_review_and_verifies_lever",
+        "tests.test_board_verification.LifecycleTests.test_t10_a_high_score_without_the_official_handshake_is_never_admitted"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a board naming another company is not a mismatch",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.IndependenceTests.test_t05_a_similar_name_pointing_to_an_unrelated_board_fails_identity",
+        "tests.test_board_verification.OperationsTests.test_t21_a_board_now_answering_for_an_unrelated_employer_is_an_identity_mismatch"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a failed validation scan still promotes the board",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.LifecycleTests.test_a_validation_scan_that_finds_incomplete_or_duplicate_postings_does_not_promote"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a board the employer's site contradicts is not rejected",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.IndependenceTests.test_t03_search_found_greenhouse_but_the_official_site_uses_workday"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a staffing agency's client is guessed",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_demo_mode.DemoTourTest.test_boards_cover_every_verification_outcome",
+        "tests.test_demo_mode.DemoTourTest.test_the_tour_produces_exactly_the_recorded_result",
+        "tests.test_v26_discovery.IdentityTests.test_staffing_agencies_and_undisclosed_clients_are_never_guessed"
+      ],
+      "flaky_failed": false,
+      "seconds": 13.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an ATS migration leaves the old board active",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 34,
+      "failures": 34,
+      "errors": 2,
+      "failing": [
+        "tests.test_analytics.DemoExportTest",
+        "tests.test_demo_mode.DemoTourTest",
+        "tests.test_analytics.DemoExportTest.test_a_demo_export_stays_in_the_demo_vault"
+      ],
+      "flaky_failed": true,
+      "seconds": 7.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a paused board is still scanned",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_a_paused_legacy_board_loses_its_grace",
+        "tests.test_lead_resolution.StaleProposalTests.test_a_proposal_whose_board_left_the_daily_scan_is_hidden_and_cannot_be_confirmed"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "any unverified board gets the legacy grace",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.GateTests.test_new_boards_from_any_path_wait_for_verification",
+        "tests.test_board_verification.IndependenceTests.test_t04_a_guessed_token_never_linked_by_the_employer_stays_a_candidate",
+        "tests.test_lead_resolution.AlertArrivalTests.test_an_alert_line_is_linked_on_arrival_only_by_the_lead_resolution_rules"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "boards added after the migration treated as legacy",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.GateTests.test_new_boards_from_any_path_wait_for_verification",
+        "tests.test_lead_resolution.AlertArrivalTests.test_an_alert_line_is_linked_on_arrival_only_by_the_lead_resolution_rules",
+        "tests.test_lead_resolution.RematchTests.test_a_board_the_scan_does_not_admit_never_resolves_a_lead"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a manual approval bypasses a security failure",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.GateTests.test_manual_only_and_hard_failures_cannot_be_approved"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "new boards skip quarantine",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 21,
+      "failures": 19,
+      "errors": 3,
+      "failing": [
+        "tests.test_analytics.DemoExportTest",
+        "tests.test_board_verification.DataTests.test_t30_repeated_relevant_hiring_raises_career_fit_and_scan_priority_not_trust",
+        "tests.test_board_verification.LifecycleTests.test_t07_a_verified_board_that_disappears_pauses_ingestion"
+      ],
+      "flaky_failed": true,
+      "seconds": 13.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "companies with the same name but different websites merged",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.DataTests.test_t28_an_acquired_name_is_kept_as_history_and_similar_names_never_merge"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a board taken over by another company keeps being ingested",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_t18_a_changed_board_fingerprint_pauses_before_anything_is_ingested"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "the identity baseline never learns from fuller scans",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_t18_a_changed_board_fingerprint_pauses_before_anything_is_ingested"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an unproven legacy board retired on a guess",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_an_unproven_legacy_board_is_never_retired_on_a_guess"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "every inconclusive legacy check becomes a review case",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.HardeningTests.test_a_careers_link_to_another_website_is_labelled_as_such_and_quiet_for_legacy_boards",
+        "tests.test_board_verification.OperationsTests.test_an_inconclusive_legacy_check_asks_nothing_of_you_until_a_domain_is_given"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "manual approvals never expire",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 21,
+      "failures": 19,
+      "errors": 3,
+      "failing": [
+        "tests.test_analytics.DemoExportTest",
+        "tests.test_board_verification.DataTests.test_t25_an_expired_manual_override_returns_the_board_to_verification",
+        "tests.test_board_verification.GateTests.test_a_legacy_board_verified_at_its_own_site_becomes_active_without_quarantine"
+      ],
+      "flaky_failed": true,
+      "seconds": 13.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a spent page budget counted against the employer's website",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.HardeningTests.test_a_spent_page_budget_is_not_a_website_failure"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an off-site careers link mislabelled and raised for a scanned legacy board",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_board_verification.HardeningTests.test_a_careers_link_to_another_website_is_labelled_as_such_and_quiet_for_legacy_boards"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a legacy board without a known website is sent to your review",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_an_inconclusive_legacy_check_asks_nothing_of_you_until_a_domain_is_given"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an unproven legacy board is sent to your review",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.HardeningTests.test_a_legacy_board_without_proof_is_verification_required_and_keeps_its_history"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "your unexpired approval is undone by a re-verification",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.HardeningTests.test_your_unexpired_approval_survives_a_reverification_that_finds_no_link"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "manager roles counted as relevant",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_job_lifecycle.RelevanceTests.test_discovery_and_career_fit_share_one_definition_of_a_relevant_role"
+      ],
+      "flaky_failed": false,
+      "seconds": 13.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a company blurb ('we serve members nationwide') read as nationwide hiring",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.DataTests.test_t23_remote_roles_limited_to_states_are_restricted_not_nationwide"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"Analyst, X\" titles not tried as \"X Analyst\"",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v25_audit.FollowUpTests.test_inverted_titles_and_adjacent_families"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a private staffing agency probed for a board",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_private_sites.ConsumersTest.test_a_private_staffing_agency_is_never_probed"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "board discovery: the skip list ignored",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.IdentityTests.test_excluded_held_and_skipped_employers_are_skipped"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "discovery matches every lead with its queue row's facts, not its own (gap 2)",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.OwnFactsTests.test_two_differently_titled_leads_at_one_employer_each_match_their_own_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "the discovery queue keeps its first lead's job facts again",
+      "file": "careeros/discovery/discovery_queue.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.OwnFactsTests.test_two_differently_titled_leads_at_one_employer_each_match_their_own_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: the same title never links a lead (title branch)",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 2,
+      "errors": 1,
+      "failing": [
+        "tests.test_lead_resolution.CorrectionTests.test_an_unlink_is_recorded_once_for_one_key",
+        "tests.test_intake_hotfix.CodexPass4ReviewLinkTrackedJobTests.test_a_definite_link_to_the_same_title_is_still_matched",
+        "tests.test_intake_hotfix.CodexPass5ReviewLinkTests.test_a_definite_link_to_the_same_title_is_still_matched"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: of two same-title postings the first is linked",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.ManualIntakeAmbiguityTests.test_adding_one_of_two_same_title_postings_does_not_link_a_lead_either_could_be",
+        "tests.test_v26_discovery.IdentityTests.test_identical_titles_without_a_requisition_stay_ambiguous"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "excluded systems treated as boards to probe",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_demo_mode.DemoTourTest.test_boards_cover_every_verification_outcome",
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_demo_mode.DemoTourTest.test_the_tour_produces_exactly_the_recorded_result"
+      ],
+      "flaky_failed": false,
+      "seconds": 39.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: the same link never links a lead (link branch)",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.Round11ReviewLeadNeverClosedTests.test_the_board_matcher_with_a_review_link_on_either_side",
+        "tests.test_lead_resolution.RematchTests.test_each_open_lead_is_matched_with_its_own_facts_and_only_at_its_own_employer"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: a link with tracking parameters taken for another link",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.RematchTests.test_each_open_lead_is_matched_with_its_own_facts_and_only_at_its_own_employer"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: a same-title posting with another known requisition taken for the lead's",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_the_matcher_reads_filler_seniority_location_and_requisitions"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: another seniority level accepted",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_two_near_identical_postings_stay_ambiguous_and_other_differences_are_no_match"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: an incompatible location accepted",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.AlertArrivalTests.test_an_alert_line_is_linked_on_arrival_only_by_the_lead_resolution_rules",
+        "tests.test_lead_resolution.LikelyMatchTests.test_two_near_identical_postings_stay_ambiguous_and_other_differences_are_no_match"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: a remote lead matched to an on-site or hybrid posting",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.AlertArrivalTests.test_an_alert_line_is_linked_on_arrival_only_by_the_lead_resolution_rules",
+        "tests.test_lead_resolution.LikelyMatchTests.test_the_matcher_reads_filler_seniority_location_and_requisitions"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: a US lead matched to a non-US posting",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_the_matcher_reads_filler_seniority_location_and_requisitions"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "lead matcher: two different states taken for one place",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_the_matcher_reads_filler_seniority_location_and_requisitions",
+        "tests.test_lead_resolution.LikelyMatchTests.test_two_near_identical_postings_stay_ambiguous_and_other_differences_are_no_match"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "likely match: a level (I/II, 1-4) not read as filler",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_the_matcher_reads_filler_seniority_location_and_requisitions"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "likely match: where the work is done (remote, work from home) not read as filler",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 0,
+      "errors": 3,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_a_rejected_likely_match_is_never_proposed_or_linked_for_that_lead_again",
+        "tests.test_lead_resolution.StaleProposalTests.test_a_printed_command_acts_only_on_the_job_it_names",
+        "tests.test_lead_resolution.StaleProposalTests.test_a_proposal_whose_board_left_the_daily_scan_is_hidden_and_cannot_be_confirmed"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "likely match: of two near-identical postings the first is proposed",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.LikelyMatchTests.test_two_near_identical_postings_stay_ambiguous_and_other_differences_are_no_match"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a match on a board not admitted recorded as matched or likely, not as waiting for the board",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.GuessedBoardTests.test_a_guessed_lever_board_without_a_company_name_waits_for_the_employers_site_then_the_lead_links",
+        "tests.test_lead_resolution.OwnFactsTests.test_two_differently_titled_leads_at_one_employer_each_match_their_own_posting",
+        "tests.test_v26_discovery.IdentityTests.test_a_matching_title_never_verifies_the_employer"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "leads not matched when the validation scan admits a board",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.RematchTests.test_when_a_board_is_admitted_its_employers_open_leads_are_matched_against_the_jobs_held"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a lead's domain set on an employer although another employer uses it",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_curated_or_suggested_domain_never_merges_employer_records_or_creates_an_alias",
+        "tests.test_lead_resolution.DomainRouteTests.test_a_leads_domain_never_merges_employer_records_or_creates_an_alias"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "'Remote' read as nationwide",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_board_verification.DataTests.test_t23_remote_roles_limited_to_states_are_restricted_not_nationwide",
+        "tests.test_demo_mode.DemoTourTest.test_the_tour_produces_exactly_the_recorded_result"
+      ],
+      "flaky_failed": false,
+      "seconds": 26.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a lead's domain merges employer records (a same-domain alias)",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_curated_domain_named_only_in_a_homepages_text_does_not_verify",
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_curated_or_suggested_domain_never_merges_employer_records_or_creates_an_alias",
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_wrong_curated_domain_can_only_fail_to_verify"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a lead's domain replaces an employer's own website",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.DomainRouteTests.test_a_leads_domain_never_merges_employer_records_or_creates_an_alias"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a lead's domain verified by a homepage naming the employer only in its text",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_curated_domain_named_only_in_a_homepages_text_does_not_verify",
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_wrong_curated_domain_can_only_fail_to_verify",
+        "tests.test_lead_resolution.DomainRouteTests.test_a_lead_domain_named_only_in_a_homepages_text_does_not_verify"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a domain only a lead supplied checked like one you set",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_curated_domain_named_only_in_a_homepages_text_does_not_verify",
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_wrong_curated_domain_can_only_fail_to_verify",
+        "tests.test_lead_resolution.DomainRouteTests.test_a_lead_domain_named_only_in_a_homepages_text_does_not_verify"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a lead's domain on another company's board taken as that board's identity",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.DomainRouteTests.test_a_wrong_domain_can_only_fail_to_verify_never_verify_another_companys_board",
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_board_named_for_another_company_is_rejected_whatever_its_postings_mention",
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_board_named_for_another_company_is_rejected_whatever_its_postings_mention"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a board a lead supplied the domain for waits behind the other first checks",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.DomainRouteTests.test_a_board_a_lead_supplied_the_domain_for_goes_first_among_the_first_checks"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an employer with no board known never checked at its own site (the domain route off)",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 1,
+      "errors": 2,
+      "failing": [
+        "tests.test_lead_resolution.DomainRouteTests.test_a_lead_domain_named_only_in_a_homepages_text_does_not_verify",
+        "tests.test_lead_resolution.DomainRouteTests.test_a_wrong_domain_can_only_fail_to_verify_never_verify_another_companys_board",
+        "tests.test_lead_resolution.DomainRouteTests.test_a_lead_with_a_domain_and_no_board_known_finds_the_board_at_the_employers_own_site"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "the curated list's and suggested domains merge employer records again (a same-domain alias)",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_curated_domain_named_only_in_a_homepages_text_does_not_verify",
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_curated_or_suggested_domain_never_merges_employer_records_or_creates_an_alias",
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_wrong_curated_domain_can_only_fail_to_verify"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a curated or suggested domain checked like one you set",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_curated_domain_named_only_in_a_homepages_text_does_not_verify",
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_wrong_curated_domain_can_only_fail_to_verify",
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_board_named_for_another_company_is_rejected_whatever_its_postings_mention"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a curated domain recorded as a lead's",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_curated_or_suggested_domain_never_merges_employer_records_or_creates_an_alias",
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_wrong_curated_domain_can_only_fail_to_verify"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a curated website that is already another employer's dropped without a review case",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_curated_or_suggested_domain_never_merges_employer_records_or_creates_an_alias"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F1: a hinted site that only mentions the employer taken as the employer's own",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_curated_domain_named_only_in_a_homepages_text_does_not_verify",
+        "tests.test_lead_resolution.CuratedDomainTests.test_a_wrong_curated_domain_can_only_fail_to_verify",
+        "tests.test_lead_resolution.DomainRouteTests.test_a_lead_domain_named_only_in_a_homepages_text_does_not_verify"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F1: one declared site name of the employer's outweighs another company's",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 9,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_page_the_reader_did_not_read_whole_never_brands_a_hinted_site",
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_repeated_site_name_tag_never_erases_another_companys_declaration",
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_repeated_site_name_tag_never_erases_another_companys_declaration"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F1: the site-name check reads only the last tag of each key",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_page_sized_title_or_site_name_is_compared_in_linear_time",
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_repeated_site_name_tag_never_erases_another_companys_declaration",
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_repeated_site_name_tag_never_erases_another_companys_declaration"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F1: a page the reader could not parse can brand a hinted site",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_page_the_reader_did_not_read_whole_never_brands_a_hinted_site",
+        "tests.test_lead_resolution.HintedIdentityTests.test_four_parser_differences_the_browser_comparison_found",
+        "tests.test_lead_resolution.HintedIdentityTests.test_four_parser_differences_the_browser_comparison_found"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F1: under strict identity a board whose name only contains the employer's is confirmed",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_board_whose_name_only_contains_the_employers_waits_for_your_review",
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_board_whose_name_only_contains_the_employers_waits_for_your_review",
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_board_whose_name_only_contains_the_employers_waits_for_your_review"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F1: the reader's site names need not match those in the page's source",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_page_the_reader_did_not_read_whole_never_brands_a_hinted_site",
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_page_the_reader_did_not_read_whole_never_brands_a_hinted_site",
+        "tests.test_lead_resolution.HintedIdentityTests.test_only_the_documents_own_site_name_tags_declare_and_they_must_match_its_source"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a supervisor-and-manager title escapes the manager rule",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.SupervisorAndReportTests.test_a_supervisor_title_that_also_says_manager_is_a_manager"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F1: the site name a hinted site declares is ignored",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_analytics.DemoExportTest.test_every_kpi_value_quoted_in_the_dashboard_spec_is_measured",
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_board_verification.HardeningTests.test_an_aggregator_lead_can_discover_a_board_but_never_verify_it"
+      ],
+      "flaky_failed": false,
+      "seconds": 11.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F1: a hinted domain's board named for another company only sent to review, not rejected",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_demo_mode.DemoTourTest.test_boards_cover_every_verification_outcome",
+        "tests.test_analytics.DemoExportTest.test_the_committed_sample_is_exactly_this_export",
+        "tests.test_demo_mode.DemoTourTest.test_the_reviewer_walkthrough_shows_what_the_commands_print"
+      ],
+      "flaky_failed": false,
+      "seconds": 37.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F1: the title brands a hinted site that declares no site name",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.HintedIdentityTests.test_a_page_sized_title_or_site_name_is_compared_in_linear_time",
+        "tests.test_lead_resolution.HintedIdentityTests.test_the_employers_own_site_declaring_no_site_name_sends_its_nameless_board_to_your_review",
+        "tests.test_lead_resolution.HintedIdentityTests.test_the_employers_own_site_declaring_no_site_name_sends_its_nameless_board_to_your_review"
+      ],
+      "flaky_failed": false,
+      "seconds": 38.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "leads are queued for discovery while an agency entry is missing",
+      "file": "careeros/discovery/discovery_queue.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_gmail.PullTests.test_queued_discovery_skips_leads_that_turned_out_to_be_agency_links_and_stops_without_the_setting"
+      ],
+      "flaky_failed": false,
+      "seconds": 588.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "discovery is planned while an agency entry is missing",
+      "file": "careeros/discovery/discovery_queue.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_gmail.PullTests.test_a_stop_holds_the_whole_discovery_queue_curated_employers_included"
+      ],
+      "flaky_failed": false,
+      "seconds": 589.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an agency card offered for board discovery",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_gmail.PullTests.test_agency_retry_retains_leads_without_fetching_or_exporting_trackers",
+        "tests.test_gmail.PullTests.test_stored_agency_leads_stay_local_whatever_the_private_setting_says_later",
+        "tests.test_gmail.PullTests.test_stored_agency_leads_stay_local_whatever_the_private_setting_says_later"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "one lead's discovery facts ignore a marked agency card with its link",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_gmail.PullTests.test_the_same_private_link_never_becomes_an_ordinary_lead_in_either_order"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "discovery probes boards while an agency entry is missing",
+      "file": "careeros/discovery/discovery_queue.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_gmail.PullTests.test_a_stop_holds_the_whole_discovery_queue_curated_employers_included"
+      ],
+      "flaky_failed": false,
+      "seconds": 590.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "red team before Pass 4: a lead's site checked after the settings change part-way",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_lead_resolution.DomainRouteTests.test_no_site_is_checked_for_a_leads_hint_once_the_settings_change_part_way"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "planned discovery keeps a row whose lead turned out to be an agency link",
+      "file": "careeros/discovery/discovery_queue.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_gmail.PullTests.test_queued_discovery_skips_leads_that_turned_out_to_be_agency_links_and_stops_without_the_setting"
+      ],
+      "flaky_failed": false,
+      "seconds": 591.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: a long sentence's quote starts at the sentence's start, not around the cue",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_long_sentence_is_quoted_around_its_cue"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a state after the residence list ended read as part of it",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_residence_cue_reads_its_whole_list_and_only_its_own_negation"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: a negation after the list's states is not read (a list naming your state passes silently)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 8,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: a cue running into a word loses that word's state (two states read as one: no list, silent)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects",
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects",
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 17.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: paused, on hold, restricted, prohibited and barred are not read as exclusion words",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 10,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects",
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects",
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 17.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: the lines of states under a cue line ending in a colon are not read (bullets after a blank line pass silently)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 6,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: any state later in the cue's sentence counts as named by the list (... and have <your state> experience)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 10,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 20.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: a line with other words under a colon cue line counts as a list line (a later state is named)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects",
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects",
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 17.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: a blank line ends the lines of states under a colon cue line (Greenhouse bullets are not read)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 6,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects",
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects",
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 16.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: the residence reader's lists are not judged (one state after a residence cue passes silently)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 10,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects",
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects",
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 16.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: a negation before the cue in its sentence is not read (an exclusion clause before the list passes silently)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: a negation in the lead-in lines above a bulleted list is not read",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: suspended, declined, rejected and refused are not read as exclusion words",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 8,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: \"all <states> but <yours>\" is not read as an exclusion",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_location_field_with_a_negation_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_location_field_with_a_negation_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags"
+      ],
+      "flaky_failed": false,
+      "seconds": 5.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: \"non-<state>\" is not read as an exclusion",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_location_field_with_a_negation_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_location_field_with_a_negation_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags"
+      ],
+      "flaky_failed": false,
+      "seconds": 5.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: no sentence naming your state is read as negated (negated_mentions finds none)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags",
+        "tests.test_label_findings.StateRuleTests.test_a_negation_about_your_state_anywhere_flags"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "D123: a contracted negation (won't, can't) near a list naming your state is not read",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects",
+        "tests.test_label_findings.StateRuleTests.test_a_state_list_from_the_description_never_rejects",
+        "tests.test_label_findings.TextStateListEndToEndTests.test_text_lists_are_stored_as_read_and_never_reject"
+      ],
+      "flaky_failed": false,
+      "seconds": 36.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"All states excl. <state>\" cut into two labels at \"excl.\" and read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a region of a state (\"South <state>\") read as the whole state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_an_excluded_city_or_region_state_never_chooses_its_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 5.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"All states with the exception of <state>\" read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"All states excl. <state>\" read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"Non-<state> locations\" read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_an_excluded_city_or_region_state_never_chooses_its_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a region heading over whole states (\"Southeast (<state>, <state>)\") read as part of each state",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_an_excluded_city_or_region_state_never_chooses_its_tier",
+        "tests.test_qualify.PayTests.test_d120_every_exclusion_city_and_region_spelling_leaves_the_tier_open"
+      ],
+      "flaky_failed": false,
+      "seconds": 14.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a city of a state with the state written out (\"<city>, <state name>\") read as the whole state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"All states (not <state>)\" read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d149_an_exclusion_anywhere_in_the_pay_block_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d149_an_exclusion_anywhere_in_the_pay_block_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d149_an_exclusion_anywhere_in_the_pay_block_chooses_no_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 7.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay heading three lines above a range (over \"Salary Range:\" and \"USD\") left out of its readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_the_lines_beside_a_range_give_its_period_but_never_another_items",
+        "tests.test_qualify.PayTests.test_d120_the_pay_block_gives_its_period_and_only_the_pays"
+      ],
+      "flaky_failed": false,
+      "seconds": 4.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a named or catch-all pay tier read only in its sibling tiers' unit (a yearly $8,000)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a list of whole states written out (\"<state>, <state>\") read as a city of the second",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_an_excluded_city_or_region_state_never_chooses_its_tier",
+        "tests.test_qualify.PayTests.test_d120_every_exclusion_city_and_region_spelling_leaves_the_tier_open",
+        "tests.test_qualify.PayTests.test_d120_one_line_tiers_joined_by_commas_are_tiers"
+      ],
+      "flaky_failed": false,
+      "seconds": 13.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"All states (excludes <state>)\" and \"Excludes <state>\" read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"All states exc. <state>\" and \"US (ex. <state>)\" read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"All states minus <state>\", \"without <state>\" and \"w/o <state>\" read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d149_an_exclusion_anywhere_in_the_pay_block_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d149_an_exclusion_anywhere_in_the_pay_block_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d149_an_exclusion_anywhere_in_the_pay_block_chooses_no_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 6.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"US (ex. <state>)\" cut into two labels at \"ex.\" and read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"All states Excl. <state>\" (capitalised) cut into two labels and read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a city or region of a state in other spellings (\"<city> <state>\", \"<state> Panhandle\") read as the whole state's tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_only_a_plain_label_names_your_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a city or region beside a state's code (\"<city> <code>\", \"<code> Panhandle\") read as the whole state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 8,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"<state> Panhandle\" read as the whole state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 8,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a city written right before its state (\"<city> <state>\", \"<city> (<state>)\") read as the whole state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 8,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"Panhandle of <state>\" read as the whole state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a tier label over a bracketed list of states (\"Tier One (<code>, <code>)\") read as a city of the first",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a city written after its state (\"<state> - <city> only\", \"<state> (<city> office)\") read as the whole state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a city with its state in brackets (\"<city> (<state>)\") read as the whole state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a tier label word (\"Remote US, <state>\", \"<state> (Remote)\") read as a city of the state",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_every_exclusion_city_and_region_spelling_leaves_the_tier_open",
+        "tests.test_qualify.PayTests.test_d120_only_a_plain_label_names_your_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 12.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "another tier's own period (\"<state> monthly salary: ...\") read as the range's by its pay block",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_a_sibling_tiers_own_period_is_its_own",
+        "tests.test_qualify.PayTests.test_d120_another_tiers_label_is_its_own"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a state named before another (\"<state> DC, <state>\") read as a city of the second",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_an_excluded_city_or_region_state_never_chooses_its_tier",
+        "tests.test_qualify.PayTests.test_d120_every_exclusion_city_and_region_spelling_leaves_the_tier_open",
+        "tests.test_qualify.PayTests.test_d120_one_line_tiers_joined_by_commas_are_tiers"
+      ],
+      "flaky_failed": false,
+      "seconds": 13.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a period heading in front of the first tier's place (\"Monthly pay: <state> ...\") left out of the other tiers' readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "another tier's label line (\"<state> (monthly):\") read as the range's heading",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 2,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_a_sibling_tiers_own_period_is_its_own",
+        "tests.test_qualify.PayTests.test_d120_another_tiers_label_is_its_own"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an exclusion word after a state (\"All states (<code> and <code> excluded)\") left that state's tier named",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_an_excluded_city_or_region_state_never_chooses_its_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 2.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a zone's label line (\"Zone B monthly salary:\") read as the next zone's heading",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 4.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"All states aside from <code>\" read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"All states (exclusions: <code>)\" read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"All states (no <code>)\" read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d149_an_exclusion_anywhere_in_the_pay_block_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d149_an_exclusion_anywhere_in_the_pay_block_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d149_an_exclusion_anywhere_in_the_pay_block_chooses_no_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 6.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"<state> residents ineligible\" read as that state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_exclusion_label_word_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an area of a state behind a comma (\"<city> area, <code>\") read as the whole state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts",
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a non-exempt tier (\"<state> (Non-exempt)\") read as excluding the state: a decided tier left open",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_only_a_plain_label_names_your_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 7.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a state's possessive (\"<state>'s Gulf Coast\") read as the whole state's pay tier",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_only_a_plain_label_names_your_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a bay area of another state (\"<city> Bay area\") read as a metro of the San Francisco Bay",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_every_place_qualifier_of_a_label_still_counts"
+      ],
+      "flaky_failed": false,
+      "seconds": 4.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "neutral words of a whole-state label (\"<state> (Fully Remote)\", \"<state> (Exempt)\") read as cities: a decided tier left open",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_only_a_plain_label_names_your_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 6.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "one-line tiers joined by a comma (\"<state>: $..., <state>: $...\") read as one label: the first range decides",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_one_line_tiers_joined_by_commas_are_tiers"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a tier numeral (\"Tier One (<state>)\", \"Tier III (<state>)\") read as a city: a decided tier left open",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_only_a_plain_label_names_your_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 5.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "one-line tiers joined by a bar (\"<state>: $... | <state>: $...\") read as one label",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_one_line_tiers_joined_by_commas_are_tiers"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "one-line tiers joined by a comma with dashed labels (\"<state> - $..., <state> - $...\") read as one label",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_one_line_tiers_joined_by_commas_are_tiers"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a joined tier labelled with a list (\"..., <state>, <state>: $...\") read as the last place alone",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_one_line_tiers_joined_by_commas_are_tiers"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay-cycle line three lines below a range left out of its readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_the_pay_block_reach_holds_for_ranges_of_20000_or_more"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay heading seven lines above a range, over six label lines, left out of its readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_the_pay_block_reach_holds_for_ranges_of_20000_or_more"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a pay-cycle line five lines below a range left out of its readings",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d152_the_pay_block_reach_holds_for_ranges_of_20000_or_more"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a review link is absorbed into a tracked job by title, employer and location (CR-HF-01)",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.CodexPass5ReviewLinkTests.test_match_lead_guard_comes_first",
+        "tests.test_intake_hotfix.CodexPass5ReviewLinkTests.test_match_lead_guard_comes_first"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an explicit yearly unit decided beside another period word in its pay block (\"per year\" and \"Paid monthly\")",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_a_place_tier_is_read_every_way_whatever_its_status",
+        "tests.test_qualify.PayTests.test_d120_an_item_rule_never_removes_a_plausible_pay_period",
+        "tests.test_qualify.PayTests.test_d120_d123_a_range_is_yearly_only_by_its_own_unit_with_no_other_period_near"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a posting tracked at a review link is matched by requisition or title (D142 R-b)",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_intake_hotfix.Round12AnyReadingTests.test_the_board_matcher_by_requisition_and_by_title",
+        "tests.test_intake_hotfix.Round12AnyReadingTests.test_the_board_matcher_by_requisition_and_by_title"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "equal pay amounts with unequal periods collapse into one tier and reject on the yearly one (D149 R-P1)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d149_equal_amounts_with_unequal_periods_are_two_tiers"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a bare time word (\"per calendar month\") is no period reading, so the pay is guessed yearly (D149 R-P2)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d151_a_range_under_20000_is_yearly_only_by_its_own_yearly_unit"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"per\" before a word the reader does not know (\"per term\") is no period reading, so the pay is guessed yearly (D149 R-P2)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d151_a_range_under_20000_is_yearly_only_by_its_own_yearly_unit"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an exclusion word in the pay block outside the label lets the excluded state choose its tier (D149 R-P3)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 24,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d155_an_exclusion_word_beyond_the_labels_still_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d155_an_exclusion_word_beyond_the_labels_still_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d155_an_exclusion_word_beyond_the_labels_still_chooses_no_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an exclusion wrapped onto the line above a tier label is not read (D149 R-P3)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d151_a_tier_is_chosen_by_its_label_only_when_every_label_is_plain"
+      ],
+      "flaky_failed": false,
+      "seconds": 5.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a range under $20,000 with no yearly unit is read as yearly alone (D151 P1)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d151_a_range_under_20000_is_yearly_only_by_its_own_yearly_unit"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a $14,000 range with no unit is read as yearly by its size (D151 P1)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d151_a_range_under_20000_is_yearly_only_by_its_own_yearly_unit"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a label exclusion word wrapped onto the line above (\"All states, not\" over \"FL:\") is not read (D149 R-P3)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 12,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d149_an_exclusion_anywhere_in_the_pay_block_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d149_an_exclusion_anywhere_in_the_pay_block_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d149_an_exclusion_anywhere_in_the_pay_block_chooses_no_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 6.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a label cut short by an abbreviation (\"not incl. FL\") is read as plain (D151 P2)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d151_a_tier_is_chosen_by_its_label_only_when_every_label_is_plain",
+        "tests.test_qualify.PayTests.test_d151_a_tier_is_chosen_by_its_label_only_when_every_label_is_plain",
+        "tests.test_qualify.PayTests.test_d151_a_tier_is_chosen_by_its_label_only_when_every_label_is_plain"
+      ],
+      "flaky_failed": false,
+      "seconds": 6.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a tier label with a word no plain label holds (\"less\", \"sans\") chooses its tier (D151 P2)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d120_only_a_plain_label_names_your_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 10.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a location field's state before \"Remote\" (\"TX (Remote)\") is not read (D151 R4)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 8,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_d151_no_state_in_a_location_field_rejects",
+        "tests.test_label_findings.StateRuleTests.test_d151_no_state_in_a_location_field_rejects",
+        "tests.test_label_findings.StateRuleTests.test_d151_no_state_in_a_location_field_rejects"
+      ],
+      "flaky_failed": false,
+      "seconds": 6.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a later state in the same clause as a list (\"(<yours> pending approval)\") is the list's (D151 R3)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 6,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_d151_the_description_is_silent_only_with_one_mention_of_states",
+        "tests.test_label_findings.StateRuleTests.test_d151_the_description_is_silent_only_with_one_mention_of_states",
+        "tests.test_label_findings.StateRuleTests.test_d151_the_description_is_silent_only_with_one_mention_of_states"
+      ],
+      "flaky_failed": false,
+      "seconds": 6.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a lone capital word that is a state code (\"; OR\") is read as a state mention (D151 R3)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_d151_the_description_is_silent_only_with_one_mention_of_states",
+        "tests.test_label_findings.StateRuleTests.test_d151_the_description_is_silent_only_with_one_mention_of_states"
+      ],
+      "flaky_failed": false,
+      "seconds": 6.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"Must be located in OH.\" reads OH as no state, a silent pass (D152)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 18,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_as_the_place_of_a_cue_is_a_state",
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_as_the_place_of_a_cue_is_a_state",
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_as_the_place_of_a_cue_is_a_state"
+      ],
+      "flaky_failed": false,
+      "seconds": 4.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"OR residents only\" reads OR as no state, a silent pass (D152)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_as_the_place_of_a_cue_is_a_state",
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_as_the_place_of_a_cue_is_a_state"
+      ],
+      "flaky_failed": false,
+      "seconds": 3.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"Location: OH\" and \"Remote (OH)\" read OH as no state, a silent pass (D152 round 2)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 97,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_beside_a_location_label_is_a_state",
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_beside_a_location_label_is_a_state",
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_beside_a_location_label_is_a_state"
+      ],
+      "flaky_failed": false,
+      "seconds": 17.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"Location: OH\", \"Remote (OH)\", \"Office: OH\" read OH as no state, a silent pass (D152 round 2)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 83,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_beside_a_location_label_is_a_state",
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_beside_a_location_label_is_a_state",
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_beside_a_location_label_is_a_state"
+      ],
+      "flaky_failed": false,
+      "seconds": 17.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"Eligible locations:\\n- OH\" reads OH as no state, a silent pass (D152 round 2)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 5,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_beside_a_location_label_is_a_state",
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_beside_a_location_label_is_a_state",
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_beside_a_location_label_is_a_state"
+      ],
+      "flaky_failed": false,
+      "seconds": 16.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "an amount ceiling drops an explicit cycle word (\"$60,000 - $65,000 per quarter\" read yearly) (D155 F1)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d155_an_explicit_cycle_word_is_a_reading_whatever_the_amount"
+      ],
+      "flaky_failed": false,
+      "seconds": 0.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a work arrangement in a tier label (\"<state> (on-site only)\") lets that tier be chosen (D155 F6)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 61,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d155_a_work_arrangement_in_the_pay_block_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d155_a_work_arrangement_in_the_pay_block_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d155_a_work_arrangement_in_the_pay_block_chooses_no_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 1.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "\"Columbus OH\" reads OH as no state, a silent pass (D152 round 2)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_beside_a_location_label_is_a_state",
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_beside_a_location_label_is_a_state",
+        "tests.test_label_findings.StateRuleTests.test_d152_a_word_code_beside_a_location_label_is_a_state"
+      ],
+      "flaky_failed": false,
+      "seconds": 16.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a quoted code (\"located in “OH”\") is read as no state, a silent pass (D155 F7)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 12,
+      "errors": 0,
+      "failing": [
+        "tests.test_label_findings.StateRuleTests.test_d155_a_quoted_code_and_a_cue_line_naming_no_state_are_conditional",
+        "tests.test_label_findings.StateRuleTests.test_d155_a_quoted_code_and_a_cue_line_naming_no_state_are_conditional",
+        "tests.test_label_findings.StateRuleTests.test_d155_a_quoted_code_and_a_cue_line_naming_no_state_are_conditional"
+      ],
+      "flaky_failed": false,
+      "seconds": 4.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "a tier note on the line after the ranges (\"Tier 1 excludes remote positions.\") is not read (D155 F6)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 1,
+      "failures": 8,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.PayTests.test_d155_a_work_arrangement_in_the_pay_block_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d155_a_work_arrangement_in_the_pay_block_chooses_no_tier",
+        "tests.test_qualify.PayTests.test_d155_a_work_arrangement_in_the_pay_block_chooses_no_tier"
+      ],
+      "flaky_failed": false,
+      "seconds": 7.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "G3: review cases about a completed migration left open",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_a_migration_completed_by_activating_the_new_board_yourself_closes_the_old_boards_cases",
+        "tests.test_board_verification.OperationsTests.test_t17_an_ats_migration_keeps_the_old_board_as_history_and_verifies_the_new_one",
+        "tests.test_demo_mode.DemoTourTest.test_boards_cover_every_verification_outcome"
+      ],
+      "flaky_failed": false,
+      "seconds": 12.8,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "G3: a board admitted to the daily scan (by the validation scan, by you, or approved) leaves the move to it open",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 4,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_a_failed_completion_leaves_the_new_board_quarantined_and_a_retry_completes_it_once",
+        "tests.test_board_verification.OperationsTests.test_a_migration_completed_by_activating_the_new_board_yourself_closes_the_old_boards_cases",
+        "tests.test_board_verification.OperationsTests.test_approving_a_validated_new_board_yourself_completes_the_move"
+      ],
+      "flaky_failed": false,
+      "seconds": 234.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "G3: a move to a board already in the daily scan is never completed (Codex 11-15 F4)",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_a_failed_move_to_a_board_already_scanned_leaves_the_old_board_as_it_was",
+        "tests.test_board_verification.OperationsTests.test_a_move_recorded_with_a_case_left_open_is_completed_without_a_second_event",
+        "tests.test_board_verification.OperationsTests.test_a_move_to_a_board_already_in_the_daily_scan_completes_when_it_is_found"
+      ],
+      "flaky_failed": false,
+      "seconds": 236.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F3: a board back in use with a stale migration link has its cases closed",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_a_stale_or_foreign_migration_link_closes_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 245.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F3: another employer's board linked to the new board has its cases closed",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_a_stale_or_foreign_migration_link_closes_nothing"
+      ],
+      "flaky_failed": false,
+      "seconds": 242.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "discovery probes a row whose lead turned out to be an agency link",
+      "file": "careeros/discovery/discovery_queue.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1645,
+      "failures": 0,
+      "errors": 1,
+      "failing": [
+        "tests.test_gmail.PullTests.test_queued_discovery_skips_leads_that_turned_out_to_be_agency_links_and_stops_without_the_setting"
+      ],
+      "flaky_failed": false,
+      "seconds": 662.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "CR-AD-V2-12: discovery probes on after an agency setting goes missing mid-run",
+      "file": "careeros/discovery/discovery_queue.py",
+      "result": "CAUGHT",
+      "scope": "whole suite (after the modules missed it)",
+      "ran": 1645,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_gmail.PullTests.test_discovery_stops_before_the_next_probe_when_an_agency_setting_goes_missing_mid_run"
+      ],
+      "flaky_failed": false,
+      "seconds": 667.4,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F3: a board admitted again keeps its old migration link",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_a_board_admitted_again_loses_its_old_migration_link"
+      ],
+      "flaky_failed": false,
+      "seconds": 244.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F4: a failed admission leaves the board active with the move half completed",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_a_failed_completion_leaves_the_new_board_quarantined_and_a_retry_completes_it_once"
+      ],
+      "flaky_failed": false,
+      "seconds": 244.6,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "G1: a posting whose text says it is remote in the US left with no country",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "stage 0: the tests that caught it before",
+      "ran": 3,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.NormalizeTests.test_a_remote_posting_that_says_it_is_remote_in_the_us_is_placed_in_the_us",
+        "tests.test_demo_mode.DemoTourTest.test_jobs_cover_every_outcome",
+        "tests.test_demo_mode.DemoTourTest.test_the_tour_produces_exactly_the_recorded_result"
+      ],
+      "flaky_failed": false,
+      "seconds": 12.9,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F4: an approval and its admission are not one transaction",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_approving_a_validated_new_board_yourself_completes_the_move"
+      ],
+      "flaky_failed": false,
+      "seconds": 245.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F5: a suggestion nothing was asked about is recorded as a board that does not exist",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.AbsentSuggestionTests.test_a_board_never_probed_is_not_called_missing"
+      ],
+      "flaky_failed": false,
+      "seconds": 243.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "shared",
+      "mutation": "F5: a corrected link for a missing board is ignored",
+      "file": "careeros/discovery/discovery_queue.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.AbsentSuggestionTests.test_a_corrected_link_replaces_a_missing_board_and_is_checked_again",
+        "tests.test_v26_discovery.AbsentSuggestionTests.test_pass2_sequences_print_no_query_keep_a_correctable_link_and_drop_a_verified_board"
+      ],
+      "flaky_failed": false,
+      "seconds": 228.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "F1: a US statement beside another country places the posting in the US",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.NormalizeTests.test_us_wording_that_is_not_about_where_the_role_is_worked_leaves_the_country_open"
+      ],
+      "flaky_failed": false,
+      "seconds": 224.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "F1: a role said to be elsewhere (Calgary) beside a US sentence is placed in the US",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.NormalizeTests.test_only_a_sentence_about_this_role_or_its_candidates_places_a_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 214.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "F1: a sentence with a negation ('based in the US but not in one of its states') places a posting",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.NormalizeTests.test_only_a_sentence_about_this_role_or_its_candidates_places_a_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 212.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "F1: \"U.S.\" before a new sentence joins the two sentences",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 90,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.NormalizeTests.test_only_a_sentence_about_this_role_or_its_candidates_places_a_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 90.2,
+      "python": "3.14.10",
+      "round": "3c",
+      "first_result": "LOAD_ERROR",
+      "planted_again": "the planted defect was corrected in tools/mutate.py after round 3 (it was equivalent to the code, or did not load); a paired assertion was added to test_qualify after round 3b; planted again against e14b63b"
+    },
+    {
+      "kind": "new",
+      "mutation": "US: \"united states\" named anywhere places a posting in the US (the older rule)",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 10,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.NormalizeTests.test_only_a_sentence_about_this_role_or_its_candidates_places_a_posting",
+        "tests.test_qualify.NormalizeTests.test_only_a_sentence_about_this_role_or_its_candidates_places_a_posting",
+        "tests.test_qualify.NormalizeTests.test_united_states_named_anywhere_no_longer_places_a_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 207.1,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "US: \"30 locations in the US\" read as the posting's location line",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.NormalizeTests.test_united_states_named_anywhere_no_longer_places_a_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 209.7,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "F4: a recorded completion hides a case the old release left open",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_a_move_recorded_with_a_case_left_open_is_completed_without_a_second_event"
+      ],
+      "flaky_failed": false,
+      "seconds": 208.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "F4: a move recorded before, with a case left open, gets a second completion event",
+      "file": "careeros/discovery/board_registry.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_a_move_recorded_with_a_case_left_open_is_completed_without_a_second_event"
+      ],
+      "flaky_failed": false,
+      "seconds": 208.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "F4: a move to a board already scanned that fails half-way leaves the old board retired with its case open",
+      "file": "careeros/discovery/board_verifier.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_board_verification.OperationsTests.test_a_failed_move_to_a_board_already_scanned_leaves_the_old_board_as_it_was"
+      ],
+      "flaky_failed": false,
+      "seconds": 207.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "F5: a board never probed (a blocked system) is listed as one that does not exist",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 2,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.AbsentSuggestionTests.test_a_board_never_probed_is_not_called_missing",
+        "tests.test_v26_discovery.AbsentSuggestionTests.test_a_corrected_link_replaces_a_missing_board_and_is_checked_again"
+      ],
+      "flaky_failed": false,
+      "seconds": 208.2,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "F5: the missing-board list prints the link as stored, query string included",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.AbsentSuggestionTests.test_a_probed_missing_board_is_listed_by_its_own_address_and_probe_date"
+      ],
+      "flaky_failed": false,
+      "seconds": 211.3,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "F5: a decoded query in an embed link's board token is printed",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.AbsentSuggestionTests.test_pass2_sequences_print_no_query_keep_a_correctable_link_and_drop_a_verified_board"
+      ],
+      "flaky_failed": false,
+      "seconds": 212.5,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "F5: a board verified after the probe that found nothing stays listed as missing",
+      "file": "careeros/discovery/board_discovery.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.AbsentSuggestionTests.test_pass2_sequences_print_no_query_keep_a_correctable_link_and_drop_a_verified_board"
+      ],
+      "flaky_failed": false,
+      "seconds": 210.0,
+      "python": "3.14.10",
+      "round": 3
+    },
+    {
+      "kind": "new",
+      "mutation": "F1: a statement about the role or its candidates counts anywhere in a sentence, not only at its start",
+      "file": "careeros/normalize/posting.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 90,
+      "failures": 3,
+      "errors": 0,
+      "failing": [
+        "tests.test_qualify.NormalizeTests.test_only_a_sentence_about_this_role_or_its_candidates_places_a_posting",
+        "tests.test_qualify.NormalizeTests.test_only_a_sentence_about_this_role_or_its_candidates_places_a_posting",
+        "tests.test_qualify.NormalizeTests.test_only_a_sentence_about_this_role_or_its_candidates_places_a_posting"
+      ],
+      "flaky_failed": false,
+      "seconds": 89.4,
+      "python": "3.14.10",
+      "round": "3c",
+      "first_result": "SURVIVED",
+      "planted_again": "the planted defect was corrected in tools/mutate.py after round 3 (it was equivalent to the code, or did not load); a paired assertion was added to test_qualify after round 3b; planted again against e14b63b"
+    },
+    {
+      "kind": "new",
+      "mutation": "F5: a careers page replaces a missing board's link, and nothing can replace it later",
+      "file": "careeros/discovery/discovery_queue.py",
+      "result": "CAUGHT",
+      "scope": "modules",
+      "ran": 222,
+      "failures": 1,
+      "errors": 0,
+      "failing": [
+        "tests.test_v26_discovery.AbsentSuggestionTests.test_pass2_sequences_print_no_query_keep_a_correctable_link_and_drop_a_verified_board"
+      ],
+      "flaky_failed": false,
+      "seconds": 214.3,
+      "python": "3.14.10",
+      "round": 3
+    }
+  ]
+}

@@ -23,11 +23,10 @@ from careeros.qualify.profile import Profile, load_profile
 from careeros.qualify.scores import tier_for
 from careeros.review import submission
 from careeros.review.applications import ApplicationHold, application_matrix, record_application
-from careeros.review.labels import record_label
 from careeros.review.report import _plain_card
 from careeros.review.shortlist import shortlist
 
-from tests.helpers import JOB_MATRIX, add_job, new_store
+from tests.helpers import JOB_MATRIX, add_job, new_store, stored_label
 
 FIXTURES = Path(__file__).parent / "fixtures"
 BASE = load_policy(CONFIG_DIR / "policy" / "defaults.yaml", FIXTURES / "synthetic_overrides.yaml")   # gate.held_parents only
@@ -51,11 +50,15 @@ def gate(store, job_id, decision="eligible", policy=None):
     """A gate decision made under `policy`'s rules (by default the fixture's; submission settings never change it)."""
     from types import SimpleNamespace
 
-    from careeros.pipeline import decision_fingerprint
+    from careeros.pipeline import decision_fingerprint, source_digest
+    # it judged the job as it is now: its source record and its extraction (the D190 design, part c)
+    job = store.one("SELECT source_json, extraction_fingerprint FROM jobs WHERE job_id = ?", (job_id,))
     store.clock.advance(seconds=1)
     store.writer("qualify").insert("gate_results", {"result_id": f"g:{uuid.uuid4().hex}", "job_id": job_id, "at": store.clock.now(),
                                                     "policy_fingerprint": decision_fingerprint(SimpleNamespace(policy=policy or POLICY)),
-                                                    "profile_fingerprint": "p", "extraction_fingerprint": "e", "decision": decision})
+                                                    "profile_fingerprint": "p", "decision": decision,
+                                                    "extraction_fingerprint": (job["extraction_fingerprint"] if job else None) or "unread",
+                                                    "source_digest": source_digest(job["source_json"]) if job else None})
 
 
 def score(store, job_id, state, tier):
@@ -79,6 +82,12 @@ class Fixture(unittest.TestCase):
         add_job(self.store, "gh:acme:1", current_state="scored", title="Data Analyst", title_norm="data analyst")
         for job_id in ("gh:ng:1", "gh:ng:2", "gh:ng:3", "gh:acme:1"):
             gate(self.store, job_id)
+        # these tests are about every veto but P1 (holds, releases, identity, eligibility, competing submissions): your
+        # label's route is taken as given (P1 in authorize: tests/test_p1.py ConsumerTests)
+        from unittest import mock
+        route = mock.patch("careeros.review.packages.route_for", return_value=("apply", "your apply label"))
+        route.start()
+        self.addCleanup(route.stop)
 
     def release(self, job_id="gh:ng:1", channel="direct", key=None, **kw):
         kw.setdefault("hold_id", "ng-hold")
@@ -398,7 +407,7 @@ class DisplayTests(Fixture):
         self.assertNotIn("Submission held", _plain_card(self.store, job, self.clock.now(), None, {}))   # no policy, no claim
         other = self.store.one("SELECT * FROM jobs WHERE job_id = 'gh:acme:1'")
         self.assertNotIn("Submission", _plain_card(self.store, other, self.clock.now(), None, {}, policy=POLICY))
-        record_label(self.store, "gh:ng:1", "apply", None, "l1")
+        stored_label(self.store, "gh:ng:1", "apply", None, "l1")
         items = {i["job_id"]: i for i in shortlist(self.store, POLICY)}
         self.assertIn("Submission held", items["gh:ng:1"]["submission"])
         self.release()

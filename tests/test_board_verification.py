@@ -497,6 +497,182 @@ class OperationsTests(unittest.TestCase):
         bd.activate(store, new["mapping_id"])
         self.assertTrue(store.one("SELECT 1 FROM events WHERE event_type = 'ats_migration_verified' AND entity_id = ?", (new["mapping_id"],)))
         self.assertFalse(store.one("SELECT 1 FROM board_reviews WHERE mapping_id = ? AND status = 'open'", (old_id,)))
+        # activating it again writes no second completion (Codex CR-2026-11-15-GATE-FIXES F4)
+        bd.activate(store, new["mapping_id"])
+        self.assertEqual(self.completions(store, new["mapping_id"]), 1)
+
+    # --- Codex CR-2026-11-15-GATE-FIXES F3, F4: which moves complete, on every way in, once, all or nothing ---------------------
+    def migrated(self, store, ctx):
+        """The employer moved from Greenhouse to Ashby: the old board is history, the new one quarantined."""
+        entity_id, old_id, web, boards = make_active(store, ctx)
+        web.employer_site("examplehealth.com", EX, '<a href="https://jobs.ashbyhq.com/examplehealth">Open roles</a>'
+                                                   '<a href="https://jobs.ashbyhq.com/examplehealth/eeeeeeee-1111-2222-3333-444444444444">Claims Analyst</a>')
+        boards.ashby["examplehealth"] = [ashby_job("eeeeeeee-1111-2222-3333-444444444444", "Claims Analyst", EX_TEXT, "examplehealth"),
+                                         ashby_job("ffffffff-1111-2222-3333-444444444444", "Data Analyst", EX_TEXT, "examplehealth")]
+        store.clock.advance(days=8)
+        verify(ctx, web, boards, entity_id, old_id, kind="reverify")
+        new_id = store.one("SELECT mapping_id FROM board_mappings WHERE ats = 'ashby'")["mapping_id"]
+        self.assertEqual(board(store, new_id)["verification_status"], "quarantined")
+        return entity_id, old_id, new_id, web, boards
+
+    def completions(self, store, new_id):
+        return store.one("SELECT COUNT(*) c FROM events WHERE event_type = 'ats_migration_verified' AND entity_id = ?", (new_id,))["c"]
+
+    def open_reasons(self, store, mapping_id):
+        return sorted(r["reason_code"] for r in store.all("SELECT reason_code FROM board_reviews WHERE mapping_id = ? AND status = 'open'",
+                                                          (mapping_id,)))
+
+    def second_predecessor(self, store, entity_id, new_id, token="examplehealth-old"):
+        mid = reg.ensure_mapping(store, entity_id, "lever", token, name=EX, provenance="official_site", origin="verification",
+                                 board_url=bd.board_url("lever", token))
+        reg.update_board(store, mid, {"verification_status": "historical", "migrated_to": new_id, "retired_at": store.clock.now()})
+        reg.open_case(store, mapping_id=mid, entity_id=entity_id, reason_code="board_not_found", detail="gone")
+        reg.open_case(store, mapping_id=mid, entity_id=entity_id, reason_code="site_unreadable", detail="not about the move")
+        return mid
+
+    def test_approving_a_validated_new_board_yourself_completes_the_move(self):
+        store, ctx = setup()
+        _, old_id, new_id, _, boards = self.migrated(store, ctx)
+        reg.update_board(store, new_id, {"validation_status": "passed"})   # validated, waiting for you (auto-activate off)
+        self.assertEqual(self.open_reasons(store, old_id), ["migration_detected"])
+        with mock.patch.object(reg, "complete_migration", side_effect=RuntimeError("disk full")):
+            with self.assertRaises(RuntimeError):
+                reg.approve(store, new_id, reason="checked the employer's site myself")
+        self.assertEqual(board(store, new_id)["verification_status"], "quarantined")   # neither approved nor admitted
+        self.assertIsNone(employer_row(store, new_id))
+        self.assertEqual(reg.approve(store, new_id, reason="checked the employer's site myself"), "active")
+        self.assertEqual(self.open_reasons(store, old_id), [])
+        self.assertEqual(self.completions(store, new_id), 1)
+
+    def test_a_failed_completion_leaves_the_new_board_quarantined_and_a_retry_completes_it_once(self):
+        store, ctx = setup()
+        entity_id, old_id, new_id, _, boards = self.migrated(store, ctx)
+        other = self.second_predecessor(store, entity_id, new_id)
+        real, calls = reg.resolve_cases, []
+
+        def flaky(*args, **kw):
+            calls.append(kw.get("mapping_id"))
+            if len(calls) == 2:
+                raise RuntimeError("disk full")
+            return real(*args, **kw)
+        store.clock.advance(hours=1)
+        with mock.patch.object(reg, "resolve_cases", flaky):
+            with self.assertRaises(RuntimeError):
+                validate(ctx, boards, new_id)
+        self.assertEqual(board(store, new_id)["verification_status"], "quarantined")   # nothing half-written
+        self.assertIsNone(employer_row(store, new_id))
+        self.assertEqual(self.completions(store, new_id), 0)
+        self.assertEqual(self.open_reasons(store, old_id), ["migration_detected"])
+        self.assertEqual(self.open_reasons(store, other), ["board_not_found", "site_unreadable"])
+        self.assertEqual(validate(ctx, boards, new_id), "active")   # the next run's validation scan
+        self.assertEqual(self.open_reasons(store, old_id), [])
+        self.assertEqual(self.open_reasons(store, other), ["site_unreadable"])
+        event = store.one("SELECT metadata_json FROM events WHERE event_type = 'ats_migration_verified' AND entity_id = ?", (new_id,))
+        self.assertEqual(sorted(json.loads(event["metadata_json"])["migrated_from"].split(",")), sorted([old_id, other]))
+        self.assertEqual(reg.complete_migration(store, new_id), 0)   # a repeat closes and writes nothing
+        self.assertEqual(self.completions(store, new_id), 1)
+
+    def test_a_stale_or_foreign_migration_link_closes_nothing(self):
+        store, ctx = setup()
+        entity_id, old_id, new_id, _, boards = self.migrated(store, ctx)
+        # before the new board is admitted, the old one comes back into use but keeps its link (a database from before
+        # the fix), and a fresh outage is opened on it: its own problem, not part of the move, which never completed
+        resolved = reg.resolve_cases(store, mapping_id=old_id, resolution="the employer's site shows it again")
+        self.assertEqual(resolved, 1)
+        reg.update_board(store, old_id, {"verification_status": "active", "paused_reason": None})
+        self.assertEqual(board(store, old_id)["migrated_to"], new_id)
+        reg.open_case(store, mapping_id=old_id, entity_id=entity_id, reason_code="board_not_found", detail="a fresh outage")
+        # and another employer's board says it moved here
+        foreign = reg.ensure_entity(store, "Other Health", domain="otherhealth.com", origin="curated")
+        theirs = self.second_predecessor(store, foreign, new_id, token="otherhealth")
+        store.clock.advance(hours=1)
+        self.assertEqual(validate(ctx, boards, new_id), "active")
+        self.assertEqual(self.open_reasons(store, old_id), ["board_not_found"])
+        self.assertEqual(self.open_reasons(store, theirs), ["board_not_found", "site_unreadable"])
+        self.assertEqual(self.completions(store, new_id), 0)   # nothing was completed, so nothing is claimed
+
+    def test_a_board_admitted_again_loses_its_old_migration_link(self):
+        store, ctx = setup()
+        _, old_id, new_id, _, boards = self.migrated(store, ctx)
+        self.assertEqual(board(store, old_id)["migrated_to"], new_id)
+        reg.update_board(store, old_id, {"verification_status": "active", "paused_reason": None})
+        reg.admit(store, old_id, via="verified", actor="careeros:validation")
+        self.assertIsNone(board(store, old_id)["migrated_to"])
+
+    def test_a_move_to_a_board_already_in_the_daily_scan_completes_when_it_is_found(self):
+        store, ctx = setup()
+        entity_id, old_id, web, boards = make_active(store, ctx)
+        # the employer's Ashby board is already in the daily scan too
+        boards.ashby["examplehealth"] = [ashby_job("eeeeeeee-1111-2222-3333-444444444444", "Claims Analyst", EX_TEXT, "examplehealth"),
+                                         ashby_job("ffffffff-1111-2222-3333-444444444444", "Data Analyst", EX_TEXT, "examplehealth")]
+        new_id = reg.ensure_mapping(store, entity_id, "ashby", "examplehealth", name=EX, provenance="official_site", origin="verification",
+                                    board_url=bd.board_url("ashby", "examplehealth"), domain="examplehealth.com")
+        reg.update_board(store, new_id, {"verification_status": "quarantined", "validation_status": "passed"})
+        bd.activate(store, new_id)
+        self.assertTrue(reg.in_daily_scan(store, new_id))
+        # then the employer's site shows only the Ashby board: the Greenhouse board moved to a board already scanned
+        web.employer_site("examplehealth.com", EX, '<a href="https://jobs.ashbyhq.com/examplehealth">Open roles</a>'
+                                                   '<a href="https://jobs.ashbyhq.com/examplehealth/eeeeeeee-1111-2222-3333-444444444444">Claims Analyst</a>')
+        store.clock.advance(days=8)
+        verify(ctx, web, boards, entity_id, old_id, kind="reverify")
+        old = board(store, old_id)
+        self.assertEqual((old["verification_status"], old["migrated_to"]), ("historical", new_id))
+        self.assertEqual(self.open_reasons(store, old_id), [])   # no admission will come: it completed here
+        self.assertEqual(self.completions(store, new_id), 1)
+
+    def already_scanned(self, store, ctx):
+        """The employer's Ashby board is in the daily scan beside its Greenhouse board; then its site shows only Ashby."""
+        entity_id, old_id, web, boards = make_active(store, ctx)
+        boards.ashby["examplehealth"] = [ashby_job("eeeeeeee-1111-2222-3333-444444444444", "Claims Analyst", EX_TEXT, "examplehealth"),
+                                         ashby_job("ffffffff-1111-2222-3333-444444444444", "Data Analyst", EX_TEXT, "examplehealth")]
+        new_id = reg.ensure_mapping(store, entity_id, "ashby", "examplehealth", name=EX, provenance="official_site", origin="verification",
+                                    board_url=bd.board_url("ashby", "examplehealth"), domain="examplehealth.com")
+        reg.update_board(store, new_id, {"verification_status": "quarantined", "validation_status": "passed"})
+        bd.activate(store, new_id)
+        web.employer_site("examplehealth.com", EX, '<a href="https://jobs.ashbyhq.com/examplehealth">Open roles</a>'
+                                                   '<a href="https://jobs.ashbyhq.com/examplehealth/eeeeeeee-1111-2222-3333-444444444444">Claims Analyst</a>')
+        store.clock.advance(days=8)
+        return entity_id, old_id, new_id, web, boards
+
+    def test_a_failed_move_to_a_board_already_scanned_leaves_the_old_board_as_it_was(self):
+        # Codex CR-2026-11-15-GATE-FIXES Pass 2, F4: the retirement, its case and the completion were separate writes
+        store, ctx = setup()
+        entity_id, old_id, new_id, web, boards = self.already_scanned(store, ctx)
+        real = reg.resolve_cases
+
+        def failing(*args, **kw):
+            if kw.get("reasons") == reg.MIGRATION_REASONS:
+                raise RuntimeError("disk full")
+            return real(*args, **kw)
+        with mock.patch.object(reg, "resolve_cases", failing):
+            try:
+                verify(ctx, web, boards, entity_id, old_id, kind="reverify")
+            except RuntimeError:
+                pass
+        old = board(store, old_id)
+        self.assertEqual((old["verification_status"], old["migrated_to"]), ("active", None))   # nothing half-written
+        self.assertEqual(self.open_reasons(store, old_id), [])
+        self.assertEqual(self.completions(store, new_id), 0)
+        store.clock.advance(days=8)
+        verify(ctx, web, boards, entity_id, old_id, kind="reverify")   # the next re-verification moves it, completed
+        self.assertEqual(board(store, old_id)["verification_status"], "historical")
+        self.assertEqual(self.open_reasons(store, old_id), [])
+        self.assertEqual(self.completions(store, new_id), 1)
+
+    def test_a_move_recorded_with_a_case_left_open_is_completed_without_a_second_event(self):
+        # the release deployed on 2026-11-15 could record the completion and leave a case open (Codex Pass 2, F4)
+        store, ctx = setup()
+        entity_id, old_id, new_id, web, boards = self.already_scanned(store, ctx)
+        verify(ctx, web, boards, entity_id, old_id, kind="reverify")
+        self.assertEqual(self.completions(store, new_id), 1)
+        reg.open_case(store, mapping_id=old_id, entity_id=entity_id, reason_code="board_not_found", detail="left open by the old release")
+        reg.open_case(store, mapping_id=old_id, entity_id=entity_id, reason_code="site_unreadable", detail="not about the move")
+        self.assertEqual(reg.reconcile_migrations(store), 1)   # the verification run's first step
+        self.assertEqual(self.open_reasons(store, old_id), ["site_unreadable"])
+        self.assertEqual(self.completions(store, new_id), 1)
+        self.assertEqual(reg.reconcile_migrations(store), 0)   # nothing left to do
+        # the control: a move whose cases were all closed is left alone
+        self.assertEqual(reg.complete_migration(store, new_id), 0)
 
     def test_t18_a_changed_board_fingerprint_pauses_before_anything_is_ingested(self):
         store, ctx = setup()

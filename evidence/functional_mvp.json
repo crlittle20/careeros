@@ -1,9 +1,9 @@
 {
- "at": "2026-11-16T00:41:15+00:00",
+ "at": "2026-11-27T01:08:38+00:00",
  "commit": "",
  "uncommitted_changes": false,
  "private_vault": "decoy",
- "seconds": 66,
+ "seconds": 60,
  "overall": "PASS",
  "grades": {
   "fresh demo initialization": "PASS",
@@ -76,7 +76,7 @@
     "check": "`careeros demo run --all` runs the four simulated days",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, 17.4s"
+    "evidence": "exit 0, 16.4s"
    },
    {
     "check": "each day is a completed production run (`careeros run`)",
@@ -141,10 +141,28 @@
     "evidence": "[]"
    },
    {
-    "check": "every job is placed in the US",
+    "check": "every board job is placed in the US by its location field",
     "ok": true,
     "core": true,
     "evidence": "{'US'}"
+   },
+   {
+    "check": "the pasted posting (location field 'Remote', text 'remote in the US') stays unplaced, and its location question quotes the text as a hint",
+    "ok": true,
+    "core": true,
+    "evidence": "[('unknown', [{'facet': 'location_state', 'status': 'unknown', 'detail': \"the text says the role is in the US, but the posting's location field does not: check where it may be worked before applying\", 'evidence': 'This role is remote in the US', 'source': 'posting'}])]"
+   },
+   {
+    "check": "only the location field places a posting, in the parser and as ingest stores it; the text never does",
+    "ok": true,
+    "core": true,
+    "evidence": "14 wordings as expected"
+   },
+   {
+    "check": "the text's own US sentence is offered as a hint, and wording about something else is not",
+    "ok": true,
+    "core": true,
+    "evidence": "6 wordings as expected"
    },
    {
     "check": "normalised titles are lower case and trimmed",
@@ -185,22 +203,22 @@
     "evidence": "slug_absent"
    },
    {
-    "check": "you can see that a suggested board does not exist (report or `careeros sources list`)",
+    "check": "`careeros sources list` names the suggested board that does not exist, under its heading",
     "ok": true,
     "core": true,
-    "evidence": "['Atlas Claims Group                       https://jobs.lever.co/atlasclaims  (checked 2026-11-05)']"
+    "evidence": "['Atlas Claims Group https://jobs.lever.co/atlasclaims (checked 2026-11-02)']"
    },
    {
-    "check": "a migration that verification has completed leaves no open review case",
+    "check": "a migration that verification has completed closes the old board's cases about the move, and no other",
     "ok": true,
     "core": true,
-    "evidence": "none open"
+    "evidence": "{'old board': [('board_not_found', 'resolved', True), ('migration_detected', 'resolved', True)], 'still open': [('ashby:pinecrest', 'site_unreadable'), ('greenhouse:quillon', 'identity_mismatch')]}"
    },
    {
     "check": "the ATS migration keeps the old board as history and verifies the new one",
     "ok": true,
     "core": true,
-    "evidence": "ashby:harborlinehealth"
+    "evidence": "('historical', 'ashby:harborlinehealth', ['greenhouse:harborline'])"
    },
    {
     "check": "the real but empty board stays active and is recorded as empty",
@@ -229,10 +247,10 @@
   ],
   "duplicate prevention": [
    {
-    "check": "two postings of one requisition: the second is a duplicate of the first",
+    "check": "two postings of one requisition: the second is kept and linked to the first for review, never merged",
     "ok": true,
     "core": true,
-    "evidence": "('duplicate', 'greenhouse:meridianrx:101')"
+    "evidence": "('scored', [('greenhouse:meridianrx:102', 'greenhouse:meridianrx:101', 'possible_duplicate')])"
    },
    {
     "check": "the same job from an alert email and a board scan is one job (meridianrx)",
@@ -247,10 +265,10 @@
     "evidence": "['alert', 'ats_scan']"
    },
    {
-    "check": "after the ATS migration the re-posted roles are linked to the old ones, not new openings",
+    "check": "after the ATS migration the re-posted roles are linked to the old ones as possible reposts",
     "ok": true,
     "core": true,
-    "evidence": "('greenhouse:harborline:301', 'greenhouse:harborline:302')"
+    "evidence": "[('ashby:harborlinehealth:b2e1d4c3-0000-4000-8000-000000000311', 'greenhouse:harborline:301', 'possible_repost'), ('ashby:harborlinehealth:b2e1d4c3-0000-4000-8000-000000000312', 'greenhouse:harborline:302', 'possible_repost')]"
    },
    {
     "check": "the same title at two employers stays two jobs",
@@ -259,7 +277,7 @@
     "evidence": "['lever:bluepeakhealth:a1f0c3d2-0000-4000-8000-000000000202', 'workable:cobaltclaims:CC6002']"
    },
    {
-    "check": "one application per role: applying to its duplicate or applying twice is refused",
+    "check": "one application per role: applying through a second channel or applying twice is refused",
     "ok": true,
     "core": true,
     "evidence": "(' applied this way? Add --confirm \"<your explanation>\" (it is kept with the record and never releases a submission hold).', ' applied this way? Add --confirm \"<your explanation>\" (it is kept with the record and never releases a submission hold).', 'applications 4 -> 5')"
@@ -276,7 +294,7 @@
     "check": "no scored job breaks a hard rule (remote only, CO allowed, $70,000 / $34/h floor, title exclusions, a target family)",
     "ok": true,
     "core": true,
-    "evidence": "28 scored jobs"
+    "evidence": "29 scored jobs"
    },
    {
     "check": "every rejection records a reason code and a plain-language explanation",
@@ -314,7 +332,7 @@
     "check": "apply priority = 0.65 fit + 0.25 career value + 0.1 freshness (recomputed)",
     "ok": true,
     "core": true,
-    "evidence": "28 jobs"
+    "evidence": "29 jobs"
    },
    {
     "check": "each score was made under the same policy and profile as the job's eligibility decision",
@@ -340,7 +358,7 @@
     "check": "every tier matches the policy thresholds (A 92, B 85 with ELIGIBLE and 70% skills, near-miss 78)",
     "ok": true,
     "core": true,
-    "evidence": "{'A': 0, 'B': 5, 'near_miss': 15, 'archive': 8}"
+    "evidence": "{'A': 0, 'B': 5, 'near_miss': 16, 'archive': 8}"
    },
    {
     "check": "every A / B / near-miss job is on the final report",
@@ -358,10 +376,10 @@
     "check": "NIGHT routes jobs to its own section (CONDITIONAL when the hours are not stated)",
     "ok": true,
     "core": true,
-    "evidence": "15 routed: ['CONDITIONAL', 'ELIGIBLE']"
+    "evidence": "16 routed: ['CONDITIONAL', 'ELIGIBLE']"
    },
    {
-    "check": "an overnight posting that NIGHT accepts is shown",
+    "check": "an overnight posting that NIGHT accepts has its card in the NIGHT \u00b7 Supplemental section",
     "ok": true,
     "core": true,
     "evidence": "['workable:sterlingclaims:SC4005']"
@@ -440,7 +458,7 @@
     "check": "`careeros status` reports the same job counts as the database",
     "ok": true,
     "core": true,
-    "evidence": "({'scored': '28', 'rejected': '13', 'closed': '4', 'duplicate': '1'}, {'scored': 28, 'rejected': 13, 'closed': 4, 'duplicate': 1})"
+    "evidence": "({'scored': '29', 'rejected': '13', 'closed': '4'}, {'scored': 29, 'rejected': 13, 'closed': 4})"
    },
    {
     "check": "`careeros demo status` summarises the demo",
@@ -454,7 +472,7 @@
     "check": "a run with four failing boards (HTTP 503, invalid JSON, timeout, 1-hour rate limit) completes",
     "ok": true,
     "core": true,
-    "evidence": "exit 0, run completed, 4.9s"
+    "evidence": "exit 0, run completed, 4.6s"
    },
    {
     "check": "each failure is recorded against its board with its own error code",
@@ -490,7 +508,7 @@
     "check": "a 1-hour Retry-After is reported, not slept through",
     "ok": true,
     "core": false,
-    "evidence": "4.9s"
+    "evidence": "4.6s"
    },
    {
     "check": "an unreadable email and an empty pasted file are reported and skipped",
@@ -548,13 +566,13 @@
     "check": "the GitHub inbox is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "Local\\Temp\\careeros-mvp-gate-icqqlysd\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
+    "evidence": "Local\\Temp\\careeros-mvp-gate-8nn4soj3\\demo-vault]\nRefused: the GitHub recommendation inbox is not available in Demo Mode"
    },
    {
     "check": "the clipboard is refused in Demo Mode",
     "ok": true,
     "core": true,
-    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-icqqlysd\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
+    "evidence": "t\\AppData\\Local\\Temp\\careeros-mvp-gate-8nn4soj3\\demo-vault]\nRefused: reading the clipboard is not available in Demo Mode"
    },
    {
     "check": "Gmail is refused in Demo Mode",

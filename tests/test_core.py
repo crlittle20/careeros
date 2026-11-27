@@ -42,12 +42,27 @@ class MatrixTests(unittest.TestCase):
         m = JOB_MATRIX
         m.check("discovered", "normalized")
         for args, code in [(("discovered", "discovered"), "self_transition"), (("discovered", "scored"), "transition_not_allowed"),
-                           (("extracted", "rejected"), "reason_required"), (("duplicate", "normalized"), "terminal_state"),
+                           (("extracted", "rejected"), "reason_required"), (("duplicate", "normalized"), "reason_required"),
                            (("closed", "normalized"), "reason_required"),
                            (("nope", "normalized"), "unknown_state")]:
             with self.assertRaises(TransitionRejected) as ctx:
                 m.check(*args)
             self.assertEqual(ctx.exception.code, code)
+
+    def test_a_terminal_state_has_no_way_out(self):
+        """The job matrix has none since a duplicate can return to screening (RT-35, D186); the rule itself stands."""
+        matrix = {"workflow": "x", "states": {"a": "active", "b": "cancelled"}, "initial_state": "a", "terminal": ["b"],
+                  "allowed": [{"from": "a", "to": "b", "requires_reason": True}]}
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "m.json"
+            p.write_text(json.dumps(matrix), encoding="utf-8")
+            with self.assertRaises(TransitionRejected) as refused:
+                load_matrix(p).check("b", "a")
+            self.assertEqual(refused.exception.code, "terminal_state")
+            matrix["allowed"].append({"from": "b", "to": "a"})
+            p.write_text(json.dumps(matrix), encoding="utf-8")
+            with self.assertRaises(ValueError):   # a terminal state with a way out is a broken matrix
+                load_matrix(p)
 
     def test_invalid_matrix_files_rejected(self):
         bad = {"workflow": "x", "states": {"a": "active", "b": "done"}, "initial_state": "a", "terminal": [], "allowed": []}

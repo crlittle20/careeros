@@ -110,7 +110,7 @@ exception and never stops the run (section 8).
 ```mermaid
 stateDiagram-v2
     [*] --> discovered
-    discovered --> duplicate: same requisition, link or text
+    discovered --> duplicate: the same exact posting link
     discovered --> normalized
     normalized --> extracted: title screen passed, requirements read
     normalized --> rejected: title or location screen
@@ -173,7 +173,7 @@ override a mismatch, an unsafe address or a manual-only system (ADR 0007).
 
 | Element | Design |
 |---|---|
-| Store | One SQLite file (`vault\data\careeros.db`) in WAL mode. Schema migrations are `careeros/db/schema/001-015`. |
+| Store | One SQLite file (`vault\data\careeros.db`) in WAL mode. Schema migrations are `careeros/db/schema/001-017`. |
 | Write permissions | Each component gets a `Writer` limited to the tables, and for some tables the columns, it owns (`TABLES_BY_COMPONENT`, `COLUMN_LIMITS`). For example, `qualify` cannot write jobs, `discovery` cannot write scores, and only `admin` may activate a board or record an override. |
 | Workflow state | Changes only through `Writer.transition`, which checks the matrix. Projection and history must agree, or the write fails closed. |
 | History | Append-only tables (transitions, events, gate results, scores, verification evidence ...), enforced by database triggers. Re-evaluation adds rows and never rewrites them. |

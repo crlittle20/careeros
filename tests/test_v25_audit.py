@@ -28,7 +28,7 @@ from careeros.review.funnel import funnel
 from careeros.review.labels import agreement, record_label
 
 from tests.test_saved import POLICY as TEST_POLICY
-from tests.helpers import JOB_MATRIX, add_job
+from tests.helpers import JOB_MATRIX, add_job, stored_label
 from tests.test_github_inbox import FakeGh, issue
 from tests.test_label_findings import PROFILE
 from tests.test_qualify import job
@@ -328,8 +328,9 @@ class SeenIndexTests(unittest.TestCase):
     def test_tracking_parameters_never_create_a_new_fingerprint(self):
         clean = lambda u: seen_index.clean_url(u)[0]
         self.assertEqual(clean("https://www.linkedin.com/jobs/view/123456789/?trk=abc&refId=x"), "https://www.linkedin.com/jobs/view/123456789")
+        # "id" may name the opening, so it stays (the red team before Codex Pass 15, RT-23); tracking never does
         self.assertEqual(clean("https://careers.example.com/jobs/claims-analyst?utm_source=x&id=5&src=mail"),
-                         "https://careers.example.com/jobs/claims-analyst")
+                         "https://careers.example.com/jobs/claims-analyst?id=5")
         self.assertEqual(clean("https://careers.example.com/search?utm_campaign=y&gh_jid=77&gh_src=z"),
                          "https://careers.example.com/search?gh_jid=77")
         self.assertIsNone(seen_index.clean_url("https://careers.example.com/about?utm_campaign=y"))  # not a posting
@@ -404,10 +405,14 @@ class SeenIndexTests(unittest.TestCase):
         alert = AlertEmail("s", "t", None, [
             Link("https://www.linkedin.com/jobs/view/4000000201", "linkedin", "Claims Analyst", "Synthetic Health · Remote · req=R200", True),
             Link("https://www.linkedin.com/jobs/view/4000000301", "linkedin", "Claims Analyst", "Synthetic Health · Remote · req=R999", True),
-            Link("https://www.indeed.com/viewjob?jk=0a1b2c3d4e5f6a99", "indeed", "Claims Analyst", "Synthetic Health · Remote · req=R999", True)])
+            Link("https://www.indeed.com/viewjob?jk=0a1b2c3d4e5f6a99", "indeed", "Claims Analyst", "Synthetic Health · Remote · req=R999", True),
+            Link("https://www.linkedin.com/jobs/search/?currentJobId=4000000301", "linkedin", "Claims Analyst",
+                 "Synthetic Health · Remote · req=R999", True)])
         outcomes = []
         _record_alert(self.ctx, alert, None, outcomes)
-        self.assertEqual([o for _, o in outcomes], ["already_tracked", "lead", "seen_before"])
+        # since the owner's D188 a requisition, title or employer never makes a line a tracked job or seen before: only
+        # the same posting by its link (the LinkedIn job 4000000301 in another link form)
+        self.assertEqual([o for _, o in outcomes], ["lead", "lead", "lead", "seen_before"])
 
 
 # --- #8 Gmail outage recovery ----------------------------------------------------------------------------------------
@@ -464,7 +469,7 @@ class PartialFailureTests(unittest.TestCase):
     def test_an_error_on_one_line_is_flagged_and_the_rest_carry_on(self):
         store, ctx = store_ctx()
         real = cli._known_job
-        boom = lambda c, url, **kw: (_ for _ in ()).throw(KeyError("odd")) if url.endswith("401") else real(c, url, **kw)
+        boom = lambda c, url, *a, **kw: (_ for _ in ()).throw(KeyError("odd")) if url.endswith("401") else real(c, url, *a, **kw)
         alert = AlertEmail("s", "t", None, [
             Link("https://www.linkedin.com/jobs/view/4000000401", "linkedin", "Claims Analyst", "A · Remote", True),
             Link("https://www.linkedin.com/jobs/view/4000000402", "linkedin", "Claims Analyst", "B · Remote", True)])
@@ -801,7 +806,7 @@ class FunnelTests(unittest.TestCase):
                 "score_id": f"s{n}", "job_id": job_id, "at": store.clock.now(), "policy_fingerprint": "p", "profile_fingerprint": "q",
                 "eligibility": 90, "candidate_fit": 90, "career_value": 90, "freshness": 90, "apply_priority": 90, "tier": tier,
                 "interview_band": "High", "state": "ELIGIBLE", "components_json": json.dumps({"domain": {"level": "direct"}})})
-        record_label(store, "gh:synth:1", "apply", None, "l1")
+        stored_label(store, "gh:synth:1", "apply", None, "l1")
         record_label(store, "gh:synth:2", "skip", None, "l2")
         a1 = record_application(store, matrix, "gh:synth:1", "agency", agency="Synthetic Staffing", policy=TEST_POLICY, key="k1")
         a3 = record_application(store, matrix, "gh:synth:3", "direct", policy=TEST_POLICY, key="k3")

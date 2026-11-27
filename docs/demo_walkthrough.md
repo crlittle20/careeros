@@ -44,7 +44,7 @@ The output excerpts below are checked against the real commands by `tests/test_d
 | 1 | `careeros demo tour` | Four simulated days of the real daily run, in seconds |
 | 2 | `careeros sources list` | Every job board and its verification status, including an impostor that was rejected |
 | 3 | `careeros sources explain greenhouse:quillon` | Why that board was rejected: the employer's site links to it, but the board names another company |
-| 4 | `careeros explain greenhouse:meridianrx:102` | A duplicate caught by its requisition number |
+| 4 | `careeros explain greenhouse:meridianrx:102` | One requisition number on two postings: linked for review, never merged |
 | 5 | `careeros explain greenhouse:meridianrx:101` | Every decision behind one job, with its evidence |
 | 6 | `careeros review` | The page a person works from (Ctrl+C stops it) |
 
@@ -77,8 +77,8 @@ The tour runs four days of `careeros run`: board scans, an alert email, a pasted
 verification, then processing. Afterwards, `careeros status` shows the totals:
 
 ```
-jobs: scored=28, rejected=13, closed=4, duplicate=1
-NIGHT profile: on; supplemental/archive=3, supplemental/near_miss=12
+jobs: scored=29, rejected=13, closed=4
+NIGHT profile: on; supplemental/archive=3, supplemental/near_miss=13
 ```
 
 ### 6. Observe employer verification
@@ -90,7 +90,7 @@ greenhouse:harborline   historical        Harborline Health
 greenhouse:quillon          rejected          Quillon Health
 greenhouse:granitebenefits  rejected          Granite Benefit Partners
 ashby:pinecrest             review_required   Pinecrest Care Navigation
-Suggested boards that do not exist (nothing admitted; correct or remove the suggestion):
+Suggested boards that do not exist (nothing admitted; suggest the right link with careeros sources suggest):
   Atlas Claims Group      https://jobs.lever.co/atlasclaims
 ```
 
@@ -114,10 +114,14 @@ side by side.
 `careeros explain greenhouse:meridianrx:102`:
 
 ```
-decision: duplicate
-of: greenhouse:meridianrx:101
-reason: same_requisition
+decision: distinct opening
+requisition: PBM-101
+related: [{"job": "greenhouse:meridianrx:101", "relation": "possible_duplicate", "evidence": "same_requisition_other_opening"}]
 ```
+
+Postings 101 and 102 share a requisition number, but they are two postings on the board. Only one exact posting link
+makes two postings one job (the owner's decision of 2026-11-19), so 102 is kept and linked to 101 for your review: a
+requisition, a title or a place can suggest a duplicate, never merge one.
 
 ### 8. Observe scoring
 

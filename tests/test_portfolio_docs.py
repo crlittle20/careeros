@@ -170,7 +170,7 @@ class FiguresTest(unittest.TestCase):
         self.assertTrue("**Synthetic results**" in readme_demo, "the README labels its demo figures synthetic")
         for phrase in (f"{len(world.EMPLOYERS)} fictional employers",
                        f"{sum(jobs.values())} jobs, of which {jobs['scored']} scored, {jobs['rejected']} rejected",
-                       f"{jobs['duplicate']} duplicate and {jobs['closed']} closed",
+                       f"{jobs['rejected']} rejected with stated reasons and {jobs['closed']} closed",
                        f"{sum(boards.values())} boards, of which {boards['active']} active, {boards['rejected']} rejected "
                        f"(an impostor, and a board its employer's own site contradicts) and {boards['review_required']} awaiting review"):
             self.assertTrue(phrase in readme_demo, phrase)
@@ -179,7 +179,7 @@ class FiguresTest(unittest.TestCase):
                        f"{boards['active']} active, {boards['historical']} historical", f"{boards['manual_only']} manual-only",
                        f"{boards['rejected']} rejected (an impostor, and a board its employer's own site contradicts), {boards['review_required']} awaiting review",
                        f"{sum(jobs.values())} jobs: {jobs['scored']} scored, {jobs['rejected']} rejected with stated reasons, "
-                       f"{jobs['duplicate']} duplicate, {jobs['closed']} closed",
+                       f"{jobs['closed']} closed",
                        f"{tiers['B']} Tier B, {tiers['near_miss']} near-miss, {tiers['archive']} archive",
                        f"{RECORDED['night_routed']} routed to NIGHT", f"{RECORDED['leads']} alert-email leads"):
             self.assertTrue(phrase in synthetic, phrase)

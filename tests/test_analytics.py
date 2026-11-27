@@ -225,7 +225,10 @@ class DemoExportTest(unittest.TestCase):
         so a tier A/B variant was recommended without being qualified, and the export's own check refused to write
         (2026-10-30). Both flags now count openings, as the application's funnel does; the check is unchanged."""
         from tests.test_job_lifecycle import jid, world
-        store, ctx = world()   # job 3 is a scored variant of job 1
+        store, ctx = world()
+        # job 3 as a variant of job 1, stored by an older engine (since the owner's D188 none is written, and the next
+        # processing run clears it): the export reads such a row consistently until then
+        store.conn.execute("UPDATE jobs SET variant_of = ? WHERE job_id = ?", (jid(1), jid(3)))
         for job in (jid(1), jid(3)):   # both rise to tier B in a later score
             score = dict(store.one("SELECT * FROM scores WHERE job_id = ? ORDER BY at DESC, rowid DESC LIMIT 1", (job,)))
             score.update(score_id=score["score_id"] + "-b", tier="B")

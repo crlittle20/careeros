@@ -8,7 +8,7 @@ Every path that asks "did I already apply?" uses one explainable check, `preflig
 shortlist, NIGHT's right-to-represent check and recording itself. It looks at the role's whole history (an application
 that was rejected or withdrawn still counts: applying again needs a reason), at postings that may be the same role
 (linked as a possible duplicate or repost, or the same title at the same employer, e.g. one role posted in several
-cities) and at whether the duplicate search finished.
+cities: shown, never held, by the owner's D188 of 2026-11-19) and at whether the duplicate search finished.
 
 Recording is history, not permission (R2, 2026-10-16): what you already did is never refused. A conflict, a possible
 duplicate, a submission hold (careeros.review.submission) or an unidentified employer only asks for your explanation and
@@ -42,7 +42,7 @@ from careeros.paths import CONFIG_DIR
 
 CHANNELS = ("direct", "agency", "referral", "other")
 OPEN_CATEGORIES = ("active", "blocked")   # still in play; a ghosted (blocked) application can revive
-CONFIRM_CODES = ("possible_match_applied", "role_group_incomplete", "already_applied", "right_to_represent_conflict",
+CONFIRM_CODES = ("role_group_incomplete", "already_applied", "right_to_represent_conflict",
                  "submission_held", "employer_identity_unresolved", "submission_settings_invalid")   # each needs your explanation to record
 
 
@@ -88,9 +88,11 @@ COUNTED = f"current_state != '{VOID}'"   # SQL: an application that counts (ever
 
 
 def role_group_resolved(store: Store, job_id: str, limit: int = 200) -> tuple[list[str], bool]:
-    """(members, complete): the job plus everything linked to it as the same role for applying purposes (location
-    variants, duplicates and reposts, followed in both directions, and postings linked as the same opening). `complete`
-    is False when the limit stopped the search early: a partial group is never treated as clearance."""
+    """(members, complete): the job plus everything that is the same posting for applying purposes, by the owner's D188
+    (2026-11-19, "Exact links only"): its duplicates (one posting at several links), followed in both directions, and
+    postings linked as the same opening. A location variant or a repost an older engine recorded is no longer the same
+    role (each is linked for your review as a possible duplicate). `complete` is False when the limit stopped the search
+    early: a partial group is never treated as clearance."""
     if store.one("SELECT 1 FROM jobs WHERE job_id = ?", (job_id,)) is None:
         return [], True
     members, frontier = {job_id}, [job_id]
@@ -98,9 +100,9 @@ def role_group_resolved(store: Store, job_id: str, limit: int = 200) -> tuple[li
         if len(members) >= limit:
             return sorted(members), False
         marks = ",".join("?" * len(frontier))
-        rows = store.all(f"SELECT job_id, variant_of, duplicate_of, repost_of FROM jobs WHERE job_id IN ({marks}) "
-                         f"OR variant_of IN ({marks}) OR duplicate_of IN ({marks}) OR repost_of IN ({marks})", tuple(frontier) * 4)
-        found = {x for r in rows for x in (r["job_id"], r["variant_of"], r["duplicate_of"], r["repost_of"]) if x}
+        rows = store.all(f"SELECT job_id, duplicate_of FROM jobs WHERE job_id IN ({marks}) OR duplicate_of IN ({marks})",
+                         tuple(frontier) * 2)
+        found = {x for r in rows for x in (r["job_id"], r["duplicate_of"]) if x}
         links = store.all(f"SELECT job_id, other_id FROM opening_links WHERE relation = 'same_opening' "
                           f"AND (job_id IN ({marks}) OR other_id IN ({marks}))", tuple(frontier) * 2)
         found |= {x for r in links for x in (r["job_id"], r["other_id"])}
@@ -122,8 +124,9 @@ class Preflight:
     complete: bool
     applications: list                       # every application in the role group, newest first, any state but void
     open_applications: list                  # those still in play
-    possible: list[str]                      # jobs outside the group that may be the same role and carry an application
-    distinct: list[str] = field(default_factory=list)   # same-title postings with a different known requisition (shown only)
+    possible: list[str]                      # held until you confirm: always empty since the owner's D188
+    distinct: list[str] = field(default_factory=list)   # jobs outside the group that may be the same role and carry an
+                                                        # application: shown, never held (D188)
     reasons: list[dict] = field(default_factory=list)
 
     def add(self, code: str, level: str, detail: str) -> None:
@@ -142,29 +145,23 @@ def _describe(app) -> str:
 
 
 def _possible_matches(store: Store, job, group: list[str]) -> tuple[list[str], list[str]]:
-    """(possible, distinct): jobs outside the role group that carry an application and are linked as a possible duplicate
-    or repost, or have the same title at the same employer (one role posted in several cities has no link when it has no
-    requisition id). `distinct` are those whose known requisition id differs from this job's: two vacancies, shown but
-    never held."""
+    """(possible, shown): jobs outside the role group that carry an application and may be the same role: linked as a
+    possible duplicate or repost, or the same title at the same employer (one role posted in several cities). By the
+    owner's D188 (2026-11-19, "Exact links only") nothing but the same posting holds an application, so `possible` (held
+    until you confirm) is always empty and every such job is shown, never held."""
     marks = ",".join("?" * len(group))
     relations = "('possible_duplicate', 'possible_repost')"
-    linked = {r["other_id"] for r in store.all(f"SELECT other_id FROM opening_links WHERE job_id IN ({marks}) "
-                                               f"AND relation IN {relations}", tuple(group))}
-    linked |= {r["job_id"] for r in store.all(f"SELECT job_id FROM opening_links WHERE other_id IN ({marks}) "
-                                              f"AND relation IN {relations}", tuple(group))}
+    linked = {r["id"] for r in store.all(f"SELECT other_id AS id FROM opening_links WHERE job_id IN ({marks}) "
+                                         f"AND relation IN {relations}", tuple(group))}
+    linked |= {r["id"] for r in store.all(f"SELECT job_id AS id FROM opening_links WHERE other_id IN ({marks}) "
+                                          f"AND relation IN {relations}", tuple(group))}
     employer = job["parent"] or job["employer_name"]
     if job["title_norm"] and employer:
         linked |= {r["job_id"] for r in store.all("SELECT job_id FROM jobs WHERE title_norm = ? AND COALESCE(parent, employer_name) = ?",
                                                   (job["title_norm"], employer))}
-    possible: list[str] = []
-    distinct: list[str] = []
-    for other in sorted(linked - set(group)):
-        if not store.one(f"SELECT 1 FROM applications WHERE job_id = ? AND {COUNTED} LIMIT 1", (other,)):
-            continue
-        row = store.one("SELECT requisition_id FROM jobs WHERE job_id = ?", (other,))
-        req = row["requisition_id"] if row else None
-        (distinct if job["requisition_id"] and req and req != job["requisition_id"] else possible).append(other)
-    return possible, distinct
+    shown = [other for other in sorted(linked - set(group))
+             if store.one(f"SELECT 1 FROM applications WHERE job_id = ? AND {COUNTED} LIMIT 1", (other,))]
+    return [], shown
 
 
 def preflight(store: Store, job_id: str, channel: str | None = None, agency: str | None = None) -> Preflight:
@@ -198,12 +195,9 @@ def preflight(store: Store, job_id: str, channel: str | None = None, agency: str
         last = closed[0]
         check.add("applied_before", "hold", f"you applied to this role before: {last['applied_at'][:10]} via {_describe(last)}, "
                                             f"now {last['current_state'].replace('_', ' ')}")
-    if check.possible:
-        check.add("possible_match_applied", "hold", "you applied to a posting that may be the same role: "
-                                                    + ", ".join(check.possible[:3]))
     if distinct:
-        check.add("same_title_other_requisition", "warn", "you applied to a same-title posting with a different requisition: "
-                                                          + ", ".join(distinct[:3]))
+        check.add("same_title_other_requisition", "warn", "you applied to a posting that may be the same role (another "
+                                                          "posting: shown, never held, D188): " + ", ".join(distinct[:3]))
     if not complete:
         check.add("role_group_incomplete", "hold", "too many linked postings to finish the duplicate check: check by hand")
     if job["current_state"] == "closed":

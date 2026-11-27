@@ -1,0 +1,238 @@
+{
+ "what": "The Codex Pass 18 fix (the owner's D203: D1, a copy that drops the record's last mark is a change), built on codex-p1-gatefixes after Pass 17's fixes: the end-of-round hand check, planted by hand in stages (D152) as in mutation-hand-check-07cc6e4.json, each defect alone in a plain copy of the worktree.",
+ "scope": "every defect whose anchor lies in a function or module statement of careeros/ that changed between 9ff1731 and 67bbb76 (scratchpad b5_scope.py), planted at 67bbb76",
+ "base": "9ff1731",
+ "rev": "67bbb76",
+ "python": "3.14.10",
+ "node_version": "v24.22.1",
+ "defined": 2529,
+ "checked": 30,
+ "caught": 30,
+ "stages": {
+  "stage 1": {
+   "rev": "67bbb76",
+   "against": "the 17 related modules, failfast: tests.test_pass18 tests.test_pass17 tests.test_pass16 tests.test_pass15 tests.test_batch5 tests.test_p1 tests.test_review_page tests.test_packages tests.test_intake_hotfix tests.test_v26_discovery tests.test_core tests.test_d190 tests.test_applications tests.test_intake_identity tests.test_d192 tests.test_batch3 tests.test_observability",
+   "defects": 30
+  },
+  "stage 2": {
+   "rev": "67bbb76",
+   "against": "the other 48 test modules, failfast (stage 1's survivors)",
+   "defects": 2
+  }
+ },
+ "survived": [],
+ "note": "the tool records each defect's verdict (CAUGHT when the planted copy's run fails), not the failing tests' names; stage 2 settles a stage-1 survivor; the round's code commit ran its own new and re-anchored defects at its tree, every one caught",
+ "previous": "evidence/mutation-hand-check-07cc6e4.json",
+ "results": [
+  {
+   "mutation": "D190 P1 part 3a: an input the title rescue reads is left out of the source record as bookkeeping",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D190 P1 part 3b: a retained field is compared with the stored value, not its binding",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "NIGHT settings re-evaluate every PRIMARY job",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "submission settings re-judging every job",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "BATCH_5 B3: a joined twin's copy is shown as the job of record's own",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D190 P1 part 3b (Codex H19): a read whose employer has another parent is unchanged",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D190 P1 part 8 (Codex Pass 6): a rebuilt record's first read counts as the same read, though its inputs are unknown",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "Codex H37: a differing copy's field is cut at 160 characters",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "BATCH_5 C: a differing copy's long text is shown by its first characters, not where it differs",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "Codex H42: a copy's null employer id is not shown beside the job of record's",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: a company mark qualifies the employer entry's parent, not its name",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: a copy with no employer entry fails the comparison of its marks",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "Codex H37: a copy's field whose card fact is the same is not shown, though the field differs",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: a marked field the copy did not find counts as stated",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: a copy that drops the record's last mark reads as unchanged",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: a mark list's entry that is not a name is looked up as one",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: a board copy's card shows the marks it lacks as dropped",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: a copy that keeps the record's mark counts as dropping it",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: a cut mark a copy drops is never compared",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: a card shows every mark list as dropped, a board copy's too",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: a copy's card says a dropped mark list is not stated, not none",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D190 P1 part 3a: the saved-file reader version that places a location is left out of the source record",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D190 P1 part 3b (Codex H5): a board clearing a field is read as unchanged",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "BATCH_5 C: a differing copy's values are captured without the card facts it states otherwise",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "Codex H37: a differing copy's text is cut at 400 characters",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "Codex H42: an employer entry key the card does not name is left out of a copy",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: a text mark qualifies no field of the record",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: a copy's mark that is not a list is read as its names",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: every copy drops a mark, even one it keeps or never had",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  },
+  {
+   "mutation": "D203: a copy's card leaves out the mark it drops",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "67bbb76"
+  }
+ ]
+}

@@ -32,7 +32,7 @@ from careeros.review.labels import label_backlog, record_label
 from careeros.review.report import build_report, run_health
 from careeros.review.shortlist import shortlist, shortlisted_job_ids
 
-from tests.helpers import JOB_MATRIX, add_job
+from tests.helpers import JOB_MATRIX, add_job, stored_label
 from tests.test_label_findings import PROFILE
 from tests.test_saved import POLICY
 from tests.test_v21_policy import policy_with
@@ -83,17 +83,17 @@ class LabelBacklogTests(StatusMixin, unittest.TestCase):
         scored(store, "gh:a:old", "A", days=9)
         scored(store, "gh:a:b", "B", days=2)
         scored(store, "gh:a:near", "near_miss", days=1)
-        record_label(store, scored(store, "gh:a:night", "B", days=12), "apply", None, key="k-night", profile="night")  # NIGHT only
+        stored_label(store, scored(store, "gh:a:night", "B", days=12), "apply", None, key="k-night", who="night")  # NIGHT only
         scored(store, "gh:x:archive", "archive", days=20)
         scored(store, "gh:x:variant", "A", days=20, variant_of="gh:a:old")
         scored(store, "gh:x:duplicate", "A", days=20, current_state="duplicate")
         scored(store, "gh:x:closed", "A", days=20, current_state="closed")
-        record_label(store, scored(store, "gh:x:labelled", "A", days=20), "skip", None, key="k-skip")
+        stored_label(store, scored(store, "gh:x:labelled", "A", days=20), "skip", None, key="k-skip")
         dismiss(store, scored(store, "gh:x:dismissed", "B", days=20), "pay")
         add_job(store, "gh:x:unscored", current_state="eligible", first_seen_at=ago(30))
         self.assertEqual(label_backlog(store), {"count": 4, "oldest_days": 12,
                                                 "text": "4 qualified postings await your label; oldest 12 days"})
-        record_label(store, "gh:a:night", "stretch", None, key="k-primary")
+        stored_label(store, "gh:a:night", "stretch", None, key="k-primary")
         self.assertEqual(label_backlog(store)["text"], "3 qualified postings await your label; oldest 9 days")
 
     def test_one_posting_and_none(self):
@@ -429,7 +429,7 @@ class PursuedClosureTests(StatusMixin, unittest.TestCase):
     def pursued(self, job_id: str, label: str = "apply", closed_hours: float | None = None, **job) -> str:
         add_job(self.store, job_id, current_state="closed" if closed_hours is not None else "scored",
                 closed_at=ago(hours=closed_hours) if closed_hours is not None else None, **job)
-        record_label(self.store, job_id, label, None, key=f"k:{job_id}:{label}")
+        stored_label(self.store, job_id, label, None, key=f"k:{job_id}:{label}")
         return job_id
 
     def run_row(self, status: str, started: str, ended: str) -> None:
@@ -448,10 +448,10 @@ class PursuedClosureTests(StatusMixin, unittest.TestCase):
         self.pursued("gh:p:skip", "apply", closed_hours=2)
         record_label(self.store, "gh:p:skip", "skip", None, key="k:later-skip")   # your latest label wins
         add_job(self.store, "gh:p:night", current_state="closed", closed_at=ago(hours=2))
-        record_label(self.store, "gh:p:night", "apply", None, key="k:night", profile="night")   # NIGHT labels are not PRIMARY
+        stored_label(self.store, "gh:p:night", "apply", None, key="k:night", who="night")   # NIGHT labels are not PRIMARY
         self.pursued("gh:p:applied", "apply", closed_hours=2)
-        add_job(self.store, "gh:p:applied-variant", variant_of="gh:p:applied")
-        self.store.writer("tracker").insert("applications", {   # an application to the same role, on its variant
+        add_job(self.store, "gh:p:applied-variant", duplicate_of="gh:p:applied", current_state="duplicate")
+        self.store.writer("tracker").insert("applications", {   # an application to the same role, on its duplicate (D188)
             "application_id": "app:1", "workflow_id": "application:app:1", "job_id": "gh:p:applied-variant", "channel": "direct",
             "applied_at": ago(days=3), "first_seen_at": ago(days=3), "current_state": "applied", "entered_state_at": ago(days=3)})
         self.assertEqual(notify.pursued_closures(self.store, since), 2)
@@ -717,9 +717,9 @@ class ClosedShortlistTests(StatusMixin, unittest.TestCase):
     def test_a_closed_posting_leaves_the_shortlist_and_stays_in_its_own_sections(self):
         store = self.store
         scored(store, "gh:a:open-pick", "B")
-        record_label(store, scored(store, "gh:a:open-stretch", "archive"), "stretch", None, key="k1")
+        stored_label(store, scored(store, "gh:a:open-stretch", "archive"), "stretch", None, key="k1")
         scored(store, "gh:x:closed-pick", "A", current_state="closed", closed_at=ago(1))
-        record_label(store, scored(store, "gh:x:closed-apply", "near_miss", current_state="closed", closed_at=ago(1),
+        stored_label(store, scored(store, "gh:x:closed-apply", "near_miss", current_state="closed", closed_at=ago(1),
                                    title="Claims Analyst", title_norm="claims analyst"), "apply", None, key="k2")
         store.writer("tracker").insert("applications", {   # you applied before it closed
             "application_id": "app:closed", "workflow_id": "application:app:closed", "job_id": "gh:x:closed-apply",

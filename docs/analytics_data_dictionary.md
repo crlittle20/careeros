@@ -302,9 +302,9 @@ Grain: one row per job (`jobs`), plus `(none)`. Descriptive attributes only; the
 | `posted_date` | date | When the employer says it was posted. |
 | `deadline_date` | date | Application deadline, when stated. |
 | `url` | text | The posting's link. |
-| `duplicate_of_job_key` | text | The job this one duplicates (same requisition, link or text). |
-| `variant_of_job_key` | text | The job this one is a variant of (same requisition elsewhere). |
-| `repost_of_job_key` | text | The earlier, closed posting this one re-posts. |
+| `duplicate_of_job_key` | text | The job this one duplicates: the same exact posting link (since 2026-11-19, D188). |
+| `variant_of_job_key` | text | The job this one is a variant of: written by engines before 2026-11-19 only, and cleared at the next processing run (D188). |
+| `repost_of_job_key` | text | The earlier, closed posting this one re-posts: written by engines before 2026-11-19 only (D188); a possible repost is now a link for review. |
 
 ### fact_job_evaluation
 
@@ -342,7 +342,7 @@ and counts from `observations`, `job_changes`, `opening_links` and `gate_results
 | `is_rejected` | 0/1 | Rejected. |
 | `is_duplicate` | 0/1 | A duplicate of another job (not reviewed again). |
 | `is_closed` | 0/1 | Closed. |
-| `is_variant` | 0/1 | A variant of another job (same requisition elsewhere). |
+| `is_variant` | 0/1 | A variant of another job, as an engine before 2026-11-19 recorded it (D188: none since). |
 | `is_repost` | 0/1 | Re-posts an earlier, closed posting. |
 | `linked_openings` | whole number | Links recorded from this job to another posting of the same opening (for example a re-post after an ATS migration). |
 | `eligibility_score` | decimal | 0-100. |

@@ -70,7 +70,7 @@ def job(jid, title, location, text, req=None, posted="2026-10-28T09:00:00Z"):
 # and (sometimes) a board link; lead = only seen through an alert email; paste = only seen as pasted text.
 EMPLOYERS = [
     {"name": "Meridian Rx", "slug": "meridianrx", "kind": "legacy", "ats": "greenhouse", "token": "meridianrx",
-     "story": "PBM. Its website embeds its Greenhouse board: verified; a duplicate, a director role, a poor fit, and a "
+     "story": "PBM. Its website embeds its Greenhouse board: verified; a possible duplicate, a director role, a poor fit, and a "
               "posting that disappears and closes."},
     {"name": "Bluepeak Health Plan", "slug": "bluepeakhealth", "kind": "legacy", "ats": "lever", "token": "bluepeakhealth",
      "story": "Health plan on Lever: verified; a pay change, a cosmetic edit, hybrid and on-site roles, a state-restricted role."},
@@ -127,7 +127,8 @@ def _postings(token: str, day: int) -> list[dict] | None:
                          CLAIMS_REQS, NATIONWIDE, "Pay range: $78,000 - $92,000 per year"), req="PBM-101"),
                 job(102, "PBM Operations Analyst", "Remote (United States)",
                     body(about, ["Reconcile pharmacy claims adjudication outcomes in RxClaim", "Investigate pricing and eligibility discrepancies"],
-                         CLAIMS_REQS, NATIONWIDE, "Pay range: $78,000 - $92,000 per year"), req="PBM-101"),   # duplicate of 101
+                         CLAIMS_REQS, NATIONWIDE, "Pay range: $78,000 - $92,000 per year"), req="PBM-101"),   # one requisition: linked
+                # to 101 for your review, never merged (only one exact posting link makes two postings one job: D188)
                 job(104, "Benefit Configuration Analyst", "Remote - US",
                     body(about, ["Configure pharmacy benefit plans and test them before go-live", "Write requirements for plan changes"],
                          BSA_REQS, REMOTE_US, "Pay range: $38 - $44 per hour")),
@@ -161,10 +162,10 @@ def _postings(token: str, day: int) -> list[dict] | None:
                 job("a1f0c3d2-0000-4000-8000-000000000202", "Payment Integrity Analyst", "Remote - US",
                     body(about, ["Find overpayments and duplicate claims", "Recover payments with providers"], CLAIMS_REQS,
                          REMOTE_US + cosmetic, "Pay range: $75,000 - $90,000 per year")),
-                job("a1f0c3d2-0000-4000-8000-000000000203", "Healthcare Business Systems Analyst", "Hybrid - Denver, CO",
+                job("a1f0c3d2-0000-4000-8000-000000000203", "Healthcare Business Systems Analyst", "Hybrid - Denver, CO, US",
                     body(about, ["Gather requirements for the claims platform", "Lead user acceptance testing"], BSA_REQS,
                          "Hybrid: three days a week in our Denver office.", "Pay range: $85,000 - $100,000 per year")),
-                job("a1f0c3d2-0000-4000-8000-000000000204", "Reporting Analyst", "Chicago, IL",
+                job("a1f0c3d2-0000-4000-8000-000000000204", "Reporting Analyst", "Chicago, IL, US",
                     body(about, ["Build operational dashboards"], DATA_REQS, "This role is on-site in our Chicago office.",
                          "Pay range: $70,000 - $82,000 per year")),
                 job("a1f0c3d2-0000-4000-8000-000000000205", "Claims Operations Specialist", "Remote - NY, NJ",

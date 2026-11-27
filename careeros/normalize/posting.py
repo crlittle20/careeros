@@ -29,9 +29,21 @@ NON_US = ["canada", "united kingdom", "uk", "england", "ireland", "india", "germ
           "czech", "hungary", "china", "hong kong", "taiwan", "korea", "new zealand", "krakow", "warsaw", "barcelona",
           "madrid", "amsterdam", "paris", "munich", "zurich", "sydney", "melbourne", "tel aviv", "pune", "chennai",
           "noida", "gurgaon", "manila", "cebu", "bogota", "medellin", "sao paulo", "buenos aires", "emea", "apac", "latam"]
+# the large cities of the countries whose codes a US state shares (IN, CA, IL, DE, CO, AR, ...): a city's name in a
+# location field is never one of them ("Mumbai, IN, US" is no city of a state). Used by the plain-US rule only (_city),
+# never to place a posting abroad; names that are also US towns (Delhi, Hamburg, Panama City, Victoria) are left out
+# (the generated tests after Codex CR-2026-11-15-GATE-FIXES Pass 12)
+_ABROAD_CITIES = ("mumbai", "new delhi", "kolkata", "ahmedabad", "gurugram", "jaipur", "kochi", "coimbatore", "calgary",
+                  "ottawa", "edmonton", "winnipeg", "jerusalem", "haifa", "stuttgart", "dusseldorf", "jakarta", "casablanca",
+                  "rabat", "rosario", "barranquilla", "valletta", "tunis", "khartoum", "chisinau", "podgorica", "ulaanbaatar",
+                  "macau", "baku", "tirana", "libreville", "niamey", "noumea")
 _STATE_LIST_CUES = re.compile(
     r"(reside in|located in|living in|based in|hire in|hiring in|following states|eligible states|states:|"
     r"work from|remote in|available in)", re.I)
+
+
+POSTING_TEXT_FIELDS = ("title", "location", "description_text", "requisition_id", "employment_type_hint",
+                       "workplace_hint", "department")
 
 
 @dataclass
@@ -52,6 +64,19 @@ class RawPosting:
     raw: dict = field(default_factory=dict)
     department: str | None = None        # the board's department / team, when it gives one (2026-10-12)
     updated_at: str | None = None        # the board's own "updated" time, kept apart from publication (2026-10-12)
+    # the countries the board types for the posting and its places, written out (boards.typed_country): "US" as given,
+    # "Australia", "country XX" (the owner's D192 build, part 4; Codex's D190 design review H2)
+    typed_countries: list = field(default_factory=list)
+
+    def __post_init__(self):
+        # every text field in the canonical form on creation (the D190 design, section 3a, point 2), the description
+        # too for a posting built without clean_text; never URLs, raw payloads or dates
+        from careeros.normalize.sanitize import canonical
+        for name in POSTING_TEXT_FIELDS:
+            value = getattr(self, name)
+            if isinstance(value, str):
+                setattr(self, name, canonical(value))
+        self.typed_countries = [canonical(c) if isinstance(c, str) else c for c in (self.typed_countries or [])]
 
 
 def norm(text) -> str:
@@ -132,11 +157,19 @@ def detect_remote(location: str, workplace_hint: str | None, text: str) -> str:
     if "remote" in loc:
         return "remote"
     body = norm(text[:4000])
-    if re.search(r"\bhybrid\b", body):
+    hybrid = re.search(r"\bhybrid\b", body)
+    remote = re.search(r"\b(fully remote|100 remote|remote position|remote role|work remotely|remote first)\b", body)
+    onsite = re.search(r"\b(on site|onsite|in office|in the office)\b", body)
+    if remote and (hybrid or onsite):
+        # the text says remote and also names a hybrid or office arrangement ("a fully remote position ... we offer
+        # remote, hybrid and in-office roles"): which one is this posting's is not known, so the screen asks instead of
+        # rejecting it (the red team before Codex Pass 15, RT-38)
+        return "unknown"
+    if hybrid:
         return "hybrid"
-    if re.search(r"\b(fully remote|100 remote|remote position|remote role|work remotely|remote first)\b", body):
+    if remote:
         return "remote"
-    if re.search(r"\b(on site|onsite|in office|in the office)\b", body):
+    if onsite:
         return "onsite"
     return "unknown"
 
@@ -685,6 +718,15 @@ def remote_states(location: str, text: str, remote_type: str) -> list[str]:
 _US_TERMS = ("united states", "usa", "us", "u s")
 
 
+# US regions whose names hold a country's or a city's ("New Mexico", "New England", "New London"): never a place abroad
+# (the red team before Codex Pass 15, RT-31)
+_US_REGIONS = re.compile(r"(?<![a-z0-9])new (mexico|england|london)(?![a-z0-9])")
+
+
+def _without_us_regions(text_norm: str) -> str:
+    return _US_REGIONS.sub(" ", text_norm)
+
+
 def title_country(title: str | None) -> str | None:
     """'non_US' when the title itself names a non-US country, e.g. '(Canada) Implementation Consultant' or
     'Claims Analyst - UK'. A title that also names the US ('US/Canada') is left to the location rules."""
@@ -693,28 +735,465 @@ def title_country(title: str | None) -> str | None:
     pieces += re.split(r"\s[-\u2013\u2014|:,]\s", title)[:1] if re.match(r"^\s*[(\[]", title) is None and " - " in title else []
     found_non_us = found_us = False
     for piece in pieces:
-        p = norm(piece)
+        p = _without_us_regions(norm(piece))
         found_us = found_us or any(contains_term(p, t) for t in _US_TERMS)
         found_non_us = found_non_us or any(contains_term(p, c) for c in NON_US)
     return "non_US" if found_non_us and not found_us else None
 
 
+# What the text says about where the role is worked or where its candidates must be (2026-11-15; strict sentences
+# 2026-11-16, Codex CR-2026-11-15-GATE-FIXES F1 Pass 1 and 2; whole-text veto after Pass 3; a hint only after Pass 4,
+# each the owner's choice). The text never sets the country: four passes found wordings that beat every rule ("only in
+# Calgary", "remote in the US or Calgary", "Applicants must be Calgary residents"), so only the posting's location
+# field places it (detect_country). The text gives a hint shown with the location question (us_text_hint): a sentence
+# that STARTS with the role or its candidates and says the US, with no negation in it, or the posting's own location
+# line, when nothing in the whole text conflicts (another country named anywhere, a clause that puts the role or its
+# candidates somewhere other than the US, or a location line or location field that names somewhere else).
+_US = r"(us|usa|united states|united states of america)"
+_ROLE = r"(this|the) (role|position|job|opening|opportunity)"
+_ROLE_SENTENCE = re.compile(
+    r"^" + _ROLE + r" (is (a )?(fully |100 )?(remote|remotely|based|located)( (role|position|job))?"
+    r"|can be (performed|worked|done)( remotely)?) (from )?(anywhere )?(in|within) the " + _US + r"\b|"
+    r"^(candidates|applicants) ((must|should|need to) (be )?)?(based|located|reside|residing|live|living) (anywhere )?"
+    r"(in|within) the " + _US + r"\b")
+# a clause, anywhere in a sentence, that says where the role is or is worked, or where its candidates must be: "this
+# opening is based in Calgary", "the work will be performed in Calgary", "candidates must reside in Calgary"
+# (a lookahead, so that every clause is read: "remote in the US and candidates must reside in Calgary" has two)
+_PLACE_CLAUSE = re.compile(r"(?=\b(?:role|position|job|opening|opportunity|work|candidates?|applicants?)\b(?: \S+){0,6}? "
+                           r"(?:based|located|reside|residing|live|living|performed|worked|done|remote|remotely|onsite|"
+                           r"on site|hybrid|relocate|relocating) (?:in|within|out of|from|at|near|to) (?P<place>.+)$)")
+# the placing sentence's own negation (not the state-list reader's _NEGATION, which it must never replace)
+_SENTENCE_NEGATION = re.compile(r"\b(not|no|never|nor|except|excluding|excluded|unless|outside|cannot|can t|won t|"
+                                r"isn t|aren t|don t|doesn t|ineligible|unable)\b")
+# the posting's own location line: "Location: Remote, United States", or a line that is only "Remote (United States)"
+_LOCATION_LINE = re.compile(r"(?im)^[ \t*-]*(?:(?:job |work )?location\s*:\s*(?:remote\s*[,(\-–—]?\s*)?(?:the\s+)?"
+                            r"(?:US|USA|United States(?: of America)?)\b[ \t).]*$"
+                            r"|remote\s*[,(\-–—]\s*(?:US|USA|United States(?: of America)?)\)?\.?[ \t]*$)")
+# every location line, whatever it names: "Work Location: Calgary" beside a US line is a conflict
+# ("Other Locations:", "Additional Locations:", "Primary Location:": any line whose label names the location; the red
+# team's gr1-saved-6)
+_ANY_LOCATION_LINE = re.compile(r"(?im)^[ \t*-]*(?:[a-z][\w/&-]*[ \t]+){0,3}locations?(?:[ \t]*\(s\))?\s*:\s*(?P<value>[^\n]+)$")
+_PLACELESS = re.compile(r"\b(remote|remotely|hybrid|flexible|virtual|anywhere|home|wfh|work from home|telecommute|"
+                        r"telecommuting|fully|100|or|and|in|office)\b")
+_ABBREVIATED_US = re.compile(r"\bU\.S\.(?:A\.)?(?=\W|$)")
+_MAX_TEXT = 200_000   # a description longer than this is not read whole, so it never gives a hint
+
+
+def _unabbreviate(text: str) -> str:
+    """"U.S." / "U.S.A." become "US" / "USA"; before a capital letter they also end the sentence ("... in the U.S. Pay")."""
+    def short(match):
+        word = "USA" if match.group(0).endswith("A.") else "US"
+        return word + "." if re.match(r"\s+[A-Z]", text[match.end():match.end() + 3]) else word
+    return _ABBREVIATED_US.sub(short, text)
+
+
+def _sentences(text: str) -> list[str]:
+    """Normalised sentences and lines, "U.S." and "U.S.A." first shortened (_unabbreviate)."""
+    return [n for part in re.split(r"[.!?;\n]+", _unabbreviate(text)) if (n := norm(part))]
+
+
+def _us_place(place: str) -> bool:
+    """Whether a place a clause names is the US: the US itself, one of its states, or every state."""
+    place = re.sub(r"^(anywhere|any state|home|remotely) (in|within) ", "", place)
+    place = re.sub(r"^the ", "", place)
+    return bool(re.match(_US + r"\b|(any|every|all|all \d+|\d+) (us |u s )?states?\b", place)
+                or any(re.match(re.escape(name) + r"\b", place) for name in US_STATES))
+
+
+def _elsewhere(value: str) -> bool:
+    """A location (a line's value or the location field) that names somewhere, and not the US or one of its states."""
+    if any(contains_term(norm(value), t) for t in ("united states", "usa", "us", "u s")) or _states_in(value):
+        return False
+    return bool(_PLACELESS.sub(" ", norm(value)).strip())
+
+
+def _no_conflict(text: str, location: str = "") -> bool:
+    """Whether nothing in the whole text, or the location field, puts the role somewhere other than the US."""
+    if len(text) > _MAX_TEXT or _elsewhere(location):
+        return False   # too long to read whole, or the location field names somewhere else
+    raw = _unabbreviate(text)
+    sentences = _sentences(text)
+    if any(contains_term(n, c) for n in sentences for c in NON_US):
+        return False   # another country named anywhere: the question stays open
+    if any(_elsewhere(line.group("value")) for line in _ANY_LOCATION_LINE.finditer(raw)):
+        return False   # a location line that names somewhere else
+    if any(not _us_place(clause.group("place")) for n in sentences for clause in _PLACE_CLAUSE.finditer(n)):
+        return False   # the role, its work or its candidates said to be somewhere else, whatever else the sentence says
+    return True
+
+
+def us_text_hint(text: str, location: str = "") -> str | None:
+    """The posting's own words saying it is in the US (the first such sentence, or its location line), when nothing in
+    the text conflicts; None otherwise. Advisory only: shown with the location question, never stored as the country,
+    so the question stays open until you check it (Codex CR-2026-11-15-GATE-FIXES F1, Pass 4; the owner's choice)."""
+    text = text or ""
+    if not _no_conflict(text, location or ""):
+        return None
+    for part in re.split(r"[.!?;\n]+", _unabbreviate(text)):
+        n = norm(part)
+        if n and _ROLE_SENTENCE.match(n) and not _SENTENCE_NEGATION.search(n):   # the sentence opens with the role
+            return part.strip()[:200]
+    line = _LOCATION_LINE.search(_unabbreviate(text))
+    return line.group(0).strip()[:200] if line else None
+
+
+# A location FIELD places a posting in the US only when every part of it is plainly a US place or a word about how or
+# when the work is done (the owner's D180, after Codex CR-2026-11-15-GATE-FIXES H20, Pass 11: a veto list of countries
+# let "Remote - Ecuador (US hours)" through). The field is read only as plain ASCII text (the en dash, em dash and bullet
+# it splits on aside), its spaces collapsed, at most _MAX_FIELD characters: anything else leaves it unknown (the red
+# team after Pass 11: a Cyrillic or full-width "Mexico" vanished when normalized). Parts are split at commas,
+# semicolons, slashes, brackets, a colon, a bullet, a spaced dash, the words "or" and "and", and "&"; upper-case "OR" is
+# Oregon's code, never a separator.
+# a run of separators is one ("(Portland, OR) - Indianapolis": ") - "), and a dash after another's space is one too
+# (the generated tests after Codex Pass 12)
+_FIELD_PARTS = re.compile(r"((?: ?(?:[,;/|()\[\]\u2022:]| ?[-\u2013\u2014] |\b(?:or|Or|and|And)\b|&) ?)+)")
+# the characters a plain location field is written with: letters, digits, spaces and list punctuation; no question
+# mark, exclamation, quote or other sign ("Remote - US?" asks, it does not place: Codex CR-2026-11-15-GATE-FIXES H22,
+# Pass 12; the owner's D182)
+_PLAIN_TEXT = re.compile(r"[A-Za-z0-9 ,;/|()\[\]:.'&\-\u2013\u2014\u2022]*")
+# the separators between a field's places, brackets aside: none may stand at either end or next to another ("Remote -
+# US /", "US; ", ", US": an alternative left empty, H22)
+_LIST_SEPARATOR = re.compile(r" ?(?:[,;/|\u2022:]| ?[-\u2013\u2014] |\b(?:or|Or|and|And)\b|&) ?")
+_MAX_FIELD = 200
+_US_PHRASES = ("anywhere in the united states", "anywhere in the usa", "anywhere in the u s", "anywhere in the us",
+               "united states of america", "united states", "u s a", "usa", "u s", "us")
+# "US" before a time word is a time zone, never a place ("Remote (US Time Zone)", "US Eastern", "US hours"), and so is a
+# time zone's database name ("US/Pacific")
+_US_TIME = re.compile(r"(?<![a-z0-9])(?:united states|u s a|usa|u s|us) (?:time|timezone|time zone|hours|business|working|"
+                      r"eastern|central|mountain|pacific|alaska|hawaii|arizona|est|cst|mst|pst|edt|cdt|mdt|pdt)(?![a-z0-9])")
+_US_SLASH_ZONE = re.compile(r"\b(?:US|U\.S\.|USA) ?/ ?(?:Eastern|Central|Mountain|Pacific|Alaska|Hawaii|Arizona|Aleutian|"
+                            r"Samoa|Michigan|East-Indiana|Indiana-Starke)\b", re.I)
+# words that say how or when the work is done, never where: they neither place nor unplace a posting
+_WORK_PHRASES = ("work from home", "fully remote", "100 remote", "in office", "on site", "home based", "remote", "hybrid",
+                 "onsite", "telecommute", "telecommuting", "virtual", "wfh", "est", "edt", "cst", "cdt", "mst", "mdt", "pst",
+                 "pdt", "eastern", "central", "mountain", "pacific", "time zone", "timezone", "nationwide")
+# (never "ET", "PT", "MT" or "CT" alone: also the codes of Ethiopia, Portugal, Malta and a state)
+# filler words, read only beside a place or a work word: a part of fillers alone ("In": India's code too; "Any") is
+# left over (the red team after Pass 11)
+_FILLERS = ("only", "based", "in", "the", "any", "within", "across", "time", "zone")
+_NEUTRAL_PHRASES = _WORK_PHRASES + _FILLERS
+# "Georgia" is also a country: only its code places a posting in the US state
+_STATE_NAMES = {name for name in US_STATES if name != "georgia"}
+# state codes that are also countries' codes (IN India, CA Canada, DE Germany, IL Israel, GA Gabon, ...): such a code
+# places a posting in the US only in a list of state codes with one no country shares ("Remote - AZ, CO, TX"), or as
+# "City, ST, US" ("Chicago, IL, US"); alone, or before ", US" with no city ("CA, US" lists two countries), it is unknown
+# (the red teams after Codex CR-2026-11-15-GATE-FIXES Pass 11, under the owner's D180)
+_SHARED_CODES = frozenset({"AL", "AR", "AZ", "CA", "CO", "DE", "GA", "ID", "IL", "IN", "KY", "LA", "MA", "MD", "ME", "MN",
+                           "MO", "MS", "MT", "NC", "NE", "PA", "SC", "SD", "TN", "VA"})
+
+
+def _strip_phrases(words: str, phrases) -> tuple[str, bool]:
+    found = False
+    for phrase in phrases:
+        pattern = rf"(?<![a-z0-9]){re.escape(phrase)}(?![a-z0-9])"
+        if re.search(pattern, words):
+            found = True
+            words = re.sub(pattern, " ", words)
+    return re.sub(r"\s+", " ", words).strip(), found
+
+
+# words that qualify a place or say there is none: never part of a city's name ("outside US, TX" is no city in Texas)
+_QUALIFIERS = frozenset({"not", "no", "non", "outside", "except", "excluding", "excl", "without", "between", "ineligible",
+                         "hours", "applicants", "residents", "citizens", "candidates", "preferred", "required", "eligible",
+                         "open", "overseas", "abroad", "offshore", "nearshore", "worldwide", "global", "international",
+                         "anywhere", "everywhere", "multiple", "various", "locations", "location", "flexible", "tbd",
+                         "other", "others", "all", "some", "most", "hq", "headquarters", "office", "offices", "region",
+                         "regions", "area", "areas", "country", "countries", "state", "states", "province", "provinces"})
+# places abroad that the city slot of a US location field ("Austin, TX") may never name: countries, Canada's provinces
+# and territories, Mexico's states, and regions. A field that lists places ("Ontario, NY", "Ecuador, TX") is not one
+# place: a name here in the city slot leaves the field unknown, and so does a US town named after a country (your label
+# routes it). National capitals are not listed (many are US town names too); NON_US names the cities abroad most seen.
+_ABROAD_COUNTRIES = (
+    "afghanistan", "albania", "algeria", "andorra", "angola", "antigua", "barbuda", "argentina", "armenia", "australia",
+    "austria", "azerbaijan", "bahamas", "bahrain", "bangladesh", "barbados", "belarus", "belgium", "belize", "benin",
+    "bhutan", "bolivia", "bosnia", "herzegovina", "botswana", "brazil", "brunei", "bulgaria", "burkina faso", "burundi",
+    "cabo verde", "cape verde", "cambodia", "cameroon", "canada", "central african republic", "chad", "chile", "china",
+    "colombia", "comoros", "congo", "costa rica", "cote d ivoire", "ivory coast", "croatia", "cuba", "cyprus", "czechia",
+    "czech republic", "denmark", "djibouti", "dominica", "dominican republic", "ecuador", "egypt", "el salvador",
+    "equatorial guinea", "eritrea", "estonia", "eswatini", "swaziland", "ethiopia", "fiji", "finland", "france", "gabon",
+    "gambia", "georgia", "germany", "ghana", "greece", "grenada", "guatemala", "guinea", "guinea bissau", "guyana",
+    "haiti", "honduras", "hungary", "iceland", "india", "indonesia", "iran", "iraq", "ireland", "israel", "italy",
+    "jamaica", "japan", "jordan", "kazakhstan", "kenya", "kiribati", "korea", "south korea", "north korea", "kosovo",
+    "kuwait", "kyrgyzstan", "laos", "latvia", "lebanon", "lesotho", "liberia", "libya", "liechtenstein", "lithuania",
+    "luxembourg", "madagascar", "malawi", "malaysia", "maldives", "mali", "malta", "marshall islands", "mauritania",
+    "mauritius", "mexico", "micronesia", "moldova", "monaco", "mongolia", "montenegro", "morocco", "mozambique", "myanmar",
+    "burma", "namibia", "nauru", "nepal", "netherlands", "the netherlands", "new zealand", "nicaragua", "niger", "nigeria",
+    "north macedonia", "macedonia", "norway", "oman", "pakistan", "palau", "palestine", "panama", "papua new guinea",
+    "paraguay", "peru", "philippines", "poland", "portugal", "qatar", "romania", "russia", "russian federation", "rwanda",
+    "saint kitts", "nevis", "saint lucia", "saint vincent", "grenadines", "samoa", "san marino", "sao tome", "principe",
+    "saudi arabia", "senegal", "serbia", "seychelles", "sierra leone", "singapore", "slovakia", "slovenia",
+    "solomon islands", "somalia", "south africa", "south sudan", "spain", "sri lanka", "sudan", "suriname", "sweden",
+    "switzerland", "syria", "taiwan", "tajikistan", "tanzania", "thailand", "timor leste", "east timor", "togo", "tonga",
+    "trinidad", "tobago", "tunisia", "turkey", "turkiye", "turkmenistan", "tuvalu", "uganda", "ukraine",
+    "united arab emirates", "uae", "united kingdom", "uk", "great britain", "britain", "england", "scotland", "wales",
+    "northern ireland", "uruguay", "uzbekistan", "vanuatu", "vatican", "holy see", "venezuela", "vietnam", "viet nam",
+    "yemen", "zambia", "zimbabwe", "hong kong", "macau", "macao", "greenland", "bermuda", "cayman islands", "aruba",
+    "curacao", "anguilla", "montserrat", "gibraltar", "isle of man", "new caledonia", "french polynesia", "reunion",
+)
+_ABROAD_PROVINCES = (   # Canada
+    "ontario", "quebec", "alberta", "british columbia", "manitoba", "saskatchewan", "nova scotia", "new brunswick",
+    "newfoundland", "labrador", "prince edward island", "yukon", "nunavut", "northwest territories",
+)
+_ABROAD_MEXICAN_STATES = (
+    "aguascalientes", "baja california", "baja california sur", "campeche", "chiapas", "chihuahua", "coahuila", "colima",
+    "durango", "guanajuato", "guerrero", "hidalgo", "jalisco", "michoacan", "morelos", "nayarit", "nuevo leon", "oaxaca",
+    "puebla", "queretaro", "quintana roo", "san luis potosi", "sinaloa", "sonora", "tabasco", "tamaulipas", "tlaxcala",
+    "veracruz", "yucatan", "zacatecas", "cdmx", "ciudad de mexico",
+)
+_ABROAD_REGIONS = (
+    "europe", "asia", "africa", "americas", "north america", "south america", "latin america", "central america",
+    "caribbean", "middle east", "oceania", "emea", "apac", "latam", "eu", "eea", "mena", "anz", "dach", "nordics",
+    "benelux", "scandinavia", "balkans", "baltics", "iberia", "gcc", "sea",
+)
+_ABROAD: tuple[str, ...] = ()
+
+
+def _abroad() -> tuple[str, ...]:
+    global _ABROAD
+    if not _ABROAD:
+        _ABROAD = tuple(dict.fromkeys(norm(place) for place in (*NON_US, *_ABROAD_COUNTRIES, *_ABROAD_PROVINCES,
+                                                                    *_ABROAD_MEXICAN_STATES, *_ABROAD_REGIONS, *_ABROAD_CITIES)))
+    return _ABROAD
+
+
+_ABROAD_SQUASHED: frozenset[str] = frozenset()
+
+
+def _squashed(text: str) -> str:
+    return re.sub(r"[^a-z]", "", text.lower())
+
+
+def _city(name: str) -> bool:
+    """A city's name alone, as written before its state ("Austin", "St. Louis", "Winston-Salem"): one to four words,
+    each capitalized, never all capitals ("PT", "UK": codes), or a joining word ("of", "de", "la"); no word that
+    qualifies a place, no work, filler or US word ("Remote Austin", "The Woodlands" are not read as one); and no place
+    abroad (a country, a province, a region: the field lists places, as in "Ontario, NY" or "Ecuador, TX"), also when
+    written as one word or with a hyphen inside ("Hongkong", "Can-ada")."""
+    global _ABROAD_SQUASHED
+    words = name.split()
+    if not 1 <= len(words) <= 4 or \
+            not all(re.fullmatch(r"(?:(?=\S*[a-z])[A-Z][A-Za-z'\-]*\.?|of|de|la|du|del|on|upon)", w) for w in words):
+        return False
+    low = norm(name)
+    if any(w in _QUALIFIERS for w in low.split()) or _strip_phrases(low, _NEUTRAL_PHRASES)[1] or \
+            _strip_phrases(low, _US_PHRASES)[1]:
+        return False
+    if not _ABROAD_SQUASHED:
+        _ABROAD_SQUASHED = frozenset(_squashed(place) for place in _abroad())
+    if _squashed(name) in _ABROAD_SQUASHED:
+        return False
+    return not any(contains_term(low, place) for place in _abroad())
+
+
+def _us_only(part: str) -> bool:
+    """A part that is only "US", "USA", "U.S." or "United States"."""
+    words, said = _strip_phrases(norm(part).replace("/", " "), _US_PHRASES)
+    return said and not words
+
+
+def _field_parts(location: str) -> tuple[list[str], list[str]]:
+    """The parts of a location field, and after each part the separator before the next one ("" after the last). A
+    trailing "only" restricts a part and is dropped ("TX only" is "TX")."""
+    parts: list[str] = []
+    after: list[str] = []
+    for k, piece in enumerate(_FIELD_PARTS.split(location or "")):
+        if k % 2 == 0 and piece.strip():
+            words = piece.split()
+            if len(words) > 1 and words[-1].lower() == "only":
+                words = words[:-1]
+            parts.append(" ".join(words))
+            after.append("")
+        elif k % 2 == 1 and parts:
+            after[-1] += piece
+    return parts, after
+
+
+def _comma_then(parts: list[str], after: list[str], i: int) -> bool:
+    """Whether parts[i] is followed by a part, after a comma alone: "Austin, TX", "Chicago, IL, US". Any other
+    separator ("/", " - ", "or", "(") lists another place, never a city's state."""
+    return i + 1 < len(parts) and after[i].strip() == ","
+
+
+def _state_list(parts: list[str], after: list[str] | None = None) -> bool:
+    """Whether the field is a list of US states by their codes: every part a code on its own, "US" or work words (no
+    city: "Mumbai, IN | Austin, TX" is two offices; no code inside a part: "US OR CA", "CA OK"), with at least one code
+    no country shares ("Remote - AZ, CO, TX"; never "US, CA", "CA, DE" or "CA, UK")."""
+    codes: list[str] = []
+    for i, part in enumerate(parts):
+        if part in STATE_CODES:
+            if after is not None and i + 1 < len(parts) and parts[i + 1] in STATE_CODES and \
+                    after[i].strip().lower() not in (",", ";", "/", "|", "&", "and", "or", "\u2022"):
+                return False   # "IN: OK", "CA - OK": two codes joined by no list separator are no list (RT2-3)
+            codes.append(part)
+            continue
+        words, said = _strip_phrases(norm(part), _US_PHRASES)   # a code inside a part ("US OR CA") is left over
+        words, worked = _strip_phrases(words, _WORK_PHRASES)
+        words, _ = _strip_phrases(words, _FILLERS)
+        if words or not (said or worked):
+            return False   # a city or another place, or filler words alone
+    return bool(codes) and any(c not in _SHARED_CODES for c in codes)
+
+
+def _state_at(parts: list[str], after: list[str], i: int, states: bool) -> bool:
+    """Whether parts[i] is a US state: its name (never "Georgia"), or its code; a code a country shares only in a list
+    of states (_state_list) or as "City, ST, US"."""
+    part = parts[i]
+    if norm(part) in _STATE_NAMES:
+        return True
+    if part not in STATE_CODES:
+        return False
+    if part not in _SHARED_CODES or states:
+        return True
+    return i > 0 and after[i - 1].strip() == "," and _city(parts[i - 1]) and _comma_then(parts, after, i) and \
+        _us_only(parts[i + 1])
+
+
+def _whole_field(field: str) -> bool:
+    """Whether a field is written out whole, before any reading of its words: every bracket closed and never empty, and
+    no alternative left empty by a separator at either end or beside another ("Remote - US /", "US ()", "Remote (US":
+    Codex CR-2026-11-15-GATE-FIXES H22, Pass 12; the owner's D182)."""
+    rest = field
+    while True:
+        inner = re.search(r"[(\[]([^()\[\]]*)[)\]]", rest)
+        if inner is None:
+            break
+        if (inner.group(0)[0] == "(") != (inner.group(0)[-1] == ")"):
+            return False   # "(US]"; an empty bracket ("US ()") is an empty alternative, refused just below
+        if not all(piece.strip() for piece in _LIST_SEPARATOR.split(f" {inner.group(1)} ")):
+            return False   # an alternative left empty inside the bracket ("Remote (US or) Remote": the red team, RT2-2)
+        rest = rest[:inner.start()] + " " + inner.group(1) + " " + rest[inner.end():]
+    if re.search(r"[()\[\]]", rest):
+        return False
+    return all(piece.strip() for piece in _LIST_SEPARATOR.split(f" {rest} "))   # padded: "US -", "- US" too
+
+
+# a filler that cannot end a part: it introduces what is missing ("US based in"; the red team after Pass 12, RT2-4)
+_TRAILING = ("in", "the", "any", "within", "across")
+_TIME_PHRASES = ("time zone", "timezone", "eastern", "central", "mountain", "pacific", "alaska", "hawaii", "est", "edt",
+                 "cst", "cdt", "mst", "mdt", "pst", "pdt", "hours", "time", "zone", "standard", "daylight")
+
+
+def _time_only(part: str) -> bool:
+    """A part that is only a time zone's words ("Time Zone", "EST", "Pacific Time")."""
+    words, timed = _strip_phrases(norm(part), _TIME_PHRASES)
+    return timed and not words
+
+
+def _plain_us(location: str) -> bool:
+    """Whether every part of a location field is a US place ("US", "United States", a state, "City, ST") or a work word
+    ("Remote", "Hybrid", a US time zone), with at least one US place. A city is accepted only right before a state
+    after a comma alone ("Austin, TX", never "Ontario / New York"), and only a city's name alone (_city); a state
+    code that a country shares ("IN", "CA") only in a list of states or as "City, ST, US" (_state_at); "US" before a
+    time word is a time zone, not a place; a part of filler words alone, any character outside plain ASCII, or
+    anything else left over ("Ecuador", "hours", "between", "ineligible", "not") means the field does not plainly
+    place the posting."""
+    field = " ".join((location or "").split())
+    if not field or len(field) > _MAX_FIELD or not _PLAIN_TEXT.fullmatch(field) or _US_SLASH_ZONE.search(field):
+        return False
+    if not _whole_field(field) or ".." in field or re.search(r"(?:^|[^A-Za-z])'|'(?:$|[^A-Za-z])", field):
+        return False   # "Remote - US...", "'Remote - US'": an apostrophe only inside a name ("Coeur d'Alene"; RT2-4)
+    parts, after = _field_parts(field)
+    states = _state_list(parts, after)
+    for i in range(len(parts) - 1):
+        # a time zone's part beside a "US" part, in either order, reads "US" as the zone ("Time Zone: US", "US: Time
+        # Zone", "EST (US)", "US/EST", "US - Eastern time zone"): never a place (the red team after Codex Pass 12, RT2-1;
+        # Codex CR-2026-11-15-GATE-FIXES H29, Pass 13)
+        if (_time_only(parts[i]) and _us_only(parts[i + 1])) or (_us_only(parts[i]) and _time_only(parts[i + 1])):
+            return False
+    us = False
+    for i, part in enumerate(parts):
+        if _state_at(parts, after, i, states):
+            us = True
+            continue
+        if norm(part).split()[-1:] and norm(part).split()[-1] in _TRAILING:
+            return False   # "US based in", "US within the": a part that trails off (RT2-4)
+        tail = part.split()
+        if any(w in STATE_CODES for w in re.split(r"[\s.\-]+", part)):   # "US-IN", "IN.US" too (RT2-5)
+            # a state's code inside a part only as its last word, after a city's name ("Austin TX"); a code a country
+            # shares there only before ", US" ("Chicago IL, USA")
+            us_after = _comma_then(parts, after, i) and _us_only(parts[i + 1])
+            if tail[-1] not in STATE_CODES or not _city(" ".join(tail[:-1])) or (tail[-1] in _SHARED_CODES and not us_after):
+                return False
+            us = True
+            continue
+        low = norm(part)
+        if _US_TIME.search(low):
+            return False   # "US Time Zone", "US Eastern": a time zone, never a place
+        words, said_us = _strip_phrases(low, _US_PHRASES)
+        words, worked = _strip_phrases(words, _WORK_PHRASES)
+        words, _ = _strip_phrases(words, _FILLERS)
+        if not words:
+            if not (said_us or worked):
+                return False   # filler words alone ("In", "Any")
+            us = us or said_us
+            continue
+        if _comma_then(parts, after, i) and _state_at(parts, after, i + 1, states) and _city(part):   # "Austin, TX"
+            us = True
+            continue
+        return False
+    return us
+
+
+_WIDE_REGION = re.compile(r"\b(worldwide|world wide|global|globally|anywhere|international|north america|americas|"
+                          r"latin america|emea|apac|europe)\b")
+_EXCLUDING = re.compile(r"\b(excluding|excludes|exclude|excl|except|other than|not available in|not in|outside of|"
+                        r"but not)\b")
+
+
+# places a field can write as a US "City, ST" that are as likely abroad: Western Australia's cities written with WA,
+# and the cities the design names (the owner's D192 build, part 4; Codex's D190 design review H2: "Perth, WA" read as
+# US). A US reading of one is lowered to unknown, and its state code is no US evidence beside a country abroad.
+AMBIGUOUS_PLACES = (("Perth", "WA"), ("Fremantle", "WA"), ("Bunbury", "WA"), ("Mandurah", "WA"), ("Joondalup", "WA"),
+                    ("Albany", "WA"), ("Broome", "WA"), ("Geraldton", "WA"), ("Kalgoorlie", "WA"), ("Vancouver", "WA"),
+                    ("Melbourne", "FL"))
+_AMBIGUOUS = re.compile(r"(?<![A-Za-z])(?:" + "|".join(rf"{city}\s*,\s*{code}" for city, code in AMBIGUOUS_PLACES)
+                        + r")(?![A-Za-z])", re.I)
+
+
 def detect_country(location: str, text: str, remote_type: str) -> str:
-    loc = norm(location)
-    if any(contains_term(loc, c) for c in ("united states", "usa", "us", "u s")) or _states_in(location or ""):
+    """The country the location FIELD places a posting in: US, non_US or unknown. US only when the field is plainly a US
+    place (_plain_us, the owner's D180) and names no ambiguous place (AMBIGUOUS_PLACES); non_US when it names a place
+    abroad and no US place; otherwise unknown, and the location question stays open. The text never places a posting:
+    what it says is a hint (us_text_hint)."""
+    if _AMBIGUOUS.search(location or ""):
+        # an ambiguous place says neither country: only the rest of the field may ("Perth, WA, Australia" is abroad)
+        return "non_US" if _abroad_field(_AMBIGUOUS.sub(" ", location or "")) else "unknown"
+    if _plain_us(location):
         return "US"
-    if any(contains_term(loc, c) for c in NON_US):
-        return "non_US"
-    body = norm(text[:3000])
-    if re.search(r"\b(united states|u s based|us based|within the us)\b", body):
-        return "US"
-    # "This role is remote in the US" (2026-11-15: the demo's pasted posting said so and was placed nowhere); "us" only
-    # after "in the", so "contact us" or "join us" never counts
-    if re.search(r"\b(remote|remotely|based|located|reside|residing|live|living|work|working) (anywhere )?in the (us|u s|usa)\b", body):
-        return "US"
-    if remote_type == "remote" and not loc.replace("remote", "").strip():
+    loc = _without_us_regions(norm(location))
+    if _WIDE_REGION.search(loc) and _EXCLUDING.search(loc):
+        # a field that opens the role worldwide or across a region and leaves one country out ("Remote - Worldwide
+        # (excluding India)") names that country only to exclude it: not placed abroad, unknown, the location question
+        # open, so your label routes as for "Remote - Worldwide" (the red team's gr1-boards-2)
         return "unknown"
-    return "unknown"
+    return "non_US" if _abroad_field(location) else "unknown"
+
+
+def _abroad_field(location: str) -> bool:
+    """Whether a location field names a place abroad and no US place."""
+    loc = _without_us_regions(norm(location))
+    return any(contains_term(loc, c) for c in NON_US) and not (
+        any(contains_term(loc, c) for c in ("united states", "usa", "us", "u s")) or _states_in(location or ""))
+
+
+_US_TYPED_NAMES = {"us", "usa", "u.s.", "u.s.a.", "united states", "united states of america"}
+
+
+def placed_country(title: str | None, location: str, text: str, remote_type: str, typed=None) -> str:
+    """The country a posting is placed in: its location field's (detect_country), and the countries its board types
+    (`typed`, boards.typed_country's values). A typed country abroad wins over the field; typed countries that disagree
+    (the US and one abroad) leave it unknown; a typed US alone changes nothing (the owner's D192 build, part 4; Codex's
+    D190 design review H2). The title never places a posting abroad (a US city can share its name with one abroad:
+    "Melbourne, FL", the red team's fr1-boards-3); it can only take the US away: a title naming a place abroad ("Claims
+    Analyst - UK") beside a field that reads US leaves the country unknown, and the location question open (RT-31)."""
+    typed = [str(t) for t in (typed or []) if t]
+    abroad = [t for t in typed if t.strip().lower() not in _US_TYPED_NAMES]
+    if abroad:
+        return "unknown" if len(abroad) < len(typed) else "non_US"
+    country = detect_country(location, text, remote_type)
+    if country == "US" and title_country(title) == "non_US":
+        return "unknown"
+    return country
 
 
 _NATIONWIDE = re.compile(r"\b(anywhere in the (us|u\.s\.?|united states|usa|country)|all 50 (us |u\.s\. )?states|"
@@ -1443,8 +1922,54 @@ def canonical_url(url: str | None) -> str | None:
     return urlunsplit(("https", parts.netloc.lower(), parts.path.rstrip("/"), "&".join(pairs), ""))
 
 
+def posting_link(url: str | None) -> str | None:
+    """A posting's own link, for identity: the canonical URL (tracking parameters dropped) with the part after "#" kept,
+    since a portal can name the opening there ("/portal/#/opening/R-1101"); tracking parameters inside it are dropped
+    too. None for anything that is not a full http(s) address ("jobs.example.com/apply/x"): such a link identifies
+    nothing. Codex CR-2026-11-15-GATE-FIXES H7 and H9, Passes 8-9 (the owner's choice, D172)."""
+    base = canonical_url(url)
+    if not base or not url:
+        return None
+    fragment = urlsplit(url.strip()).fragment
+    if not fragment.startswith(("/", "!/")):
+        # only an app route ("#/opening/R-1101", "#!/job/7") names an opening; a page anchor ("#app", "#top") or a text
+        # link ("#:~:text=...") never does (the owner's choice, D179: the red team before Codex Pass 11)
+        fragment = ""
+    if "?" in fragment:
+        path, _, query = fragment.partition("?")
+        pairs = sorted(p for p in query.split("&") if p and not _TRACKING.match(p.split("=", 1)[0]))
+        fragment = path + ("?" + "&".join(pairs) if pairs else "")
+    fragment = fragment.rstrip("/")
+    return base + ("#" + fragment if fragment else "")
+
+
+# the country a saved page's JSON-LD names by code (addressCountry): "CA" is Canada, never California (D179)
+ISO_COUNTRIES = {
+    "US": "United States", "USA": "United States", "CA": "Canada", "CAN": "Canada", "GB": "United Kingdom",
+    "GBR": "United Kingdom", "UK": "United Kingdom", "IE": "Ireland", "IN": "India", "IND": "India", "DE": "Germany",
+    "DEU": "Germany", "FR": "France", "ES": "Spain", "PT": "Portugal", "NL": "Netherlands", "PL": "Poland", "MX": "Mexico",
+    "MEX": "Mexico", "BR": "Brazil", "AR": "Argentina", "CO": "Colombia", "PH": "Philippines", "AU": "Australia",
+    "SG": "Singapore", "JP": "Japan", "IL": "Israel", "RO": "Romania", "UA": "Ukraine", "RS": "Serbia", "CR": "Costa Rica",
+    "BD": "Bangladesh", "PK": "Pakistan", "VN": "Vietnam", "EG": "Egypt", "NG": "Nigeria", "KE": "Kenya",
+    "ZA": "South Africa", "CL": "Chile", "PE": "Peru", "UY": "Uruguay", "SE": "Sweden", "DK": "Denmark", "NO": "Norway",
+    "FI": "Finland", "CH": "Switzerland", "AT": "Austria", "BE": "Belgium", "IT": "Italy", "GR": "Greece",
+    "CZ": "Czech Republic", "HU": "Hungary", "CN": "China", "HK": "Hong Kong", "TW": "Taiwan", "KR": "Korea",
+    "NZ": "New Zealand"}
+
+
+def country_name(value) -> str:
+    """A JSON-LD addressCountry as words: a known code by name, an unknown code marked as not the US (it never reads as
+    a US state), a name as given."""
+    raw = str(value or "").strip()
+    if re.fullmatch(r"[A-Za-z]{2,3}", raw):
+        return ISO_COUNTRIES.get(raw.upper(), f"country {raw.upper()} (not the United States)")
+    return raw
+
+
 def dedupe_key(parent: str, title_norm: str, location: str) -> str:
-    core = re.sub(r"\b(req|job|id)\s?#?\s?[a-z0-9\-]+\b", " ", title_norm)
+    # "Req 4401", "Job #123", "ID 55" in a title: the word itself, then a value with a digit; never a word that only
+    # starts with them ("Requirements", "Identity", "Idaho", "Job Coach": the red team before Codex Pass 15, RT-13)
+    core = re.sub(r"\b(req|job|id)\b\s?#?\s?(?=[a-z\-]*\d)[a-z0-9\-]+\b", " ", title_norm)
     core = re.sub(r"\s+", " ", core).strip()
     return f"{norm(parent)}|{core}|{norm(location)}"
 

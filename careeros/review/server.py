@@ -22,6 +22,7 @@ import hmac
 import secrets
 import sys
 import traceback
+from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, quote, urlsplit
 
@@ -33,12 +34,13 @@ from .applications import (CHANNELS, CONFIRM_CODES, VOID, ApplicationConflict, A
 from .dismiss import DismissalChanged
 from .labels import record_label
 from .leads import confirm_likely, dismiss_lead, reject_likely
+from .notices import dismiss_notice
 from .report import CSP, _form, build_report, esc, last_review_at
 
 MAX_BODY = 4096
 MAX_PASTE_BODY = 200_000   # a pasted posting (Part 6)
 MAX_FORM_KEYS = 20000
-ACTIONS = ("label", "label_night", "apply", "status", "lead", "dismiss", "paste", "reinstate", "void",
+ACTIONS = ("label", "label_night", "apply", "status", "lead", "notice", "dismiss", "paste", "reinstate", "void",
            "confirm_apply", "confirm_dismiss", "confirm_reinstate", "confirm_void",
            "lead_confirm", "lead_reject")   # a likely match for a lead (2026-11-02): the form names the lead and the job shown
 ASKS = (   # a confirmation page first; only its Confirm (confirm_<action>) records
@@ -92,10 +94,43 @@ def posting_lines(job) -> str:
             f'<li>Job id: <code>{esc(job["job_id"])}</code></li></ul>')
 
 
+@contextmanager
+def _swept(store, policy, profile):
+    """Around every action of the review page, under its writer lock: every handoff file in the vault is removed before
+    the action and again after it, whatever it did (browser Fill is paused in this release, the owner's D191), and the
+    database must still be one this engine may write as it is: a review page left running across an upgrade or a
+    restore records nothing (Codex's D190 design review, H9)."""
+    from careeros.db.store import MigrationPending, SchemaTooNew
+
+    from .assist import vault_root_of, withdraw_handoffs
+    root = vault_root_of(store)
+    if root is not None:
+        withdraw_handoffs(store, policy, profile, root)
+    try:
+        store.check_schema()
+    except (SchemaTooNew, MigrationPending) as exc:
+        raise ValueError(f"the database changed under this review page ({exc}). Stop the review page and start it "
+                         "again") from exc
+    try:
+        yield
+    finally:
+        if root is not None:
+            withdraw_handoffs(store, policy, profile, root)
+
+
 def make_handler(store, profile, policy, token: str, lock_path, port_holder: dict, *, app_matrix=None, since: str | None = None):
     form_keys: dict = {}
     shown: dict = {}   # a confirmation's form key -> (its choices, the dismissal an Undo undoes): what its page showed (F3)
+    previews: dict = {}   # a label form's key -> the capture its card showed (the D190 design, section 3, "The preview")
     app_matrix = app_matrix or application_matrix()
+
+    def _card_preview(key: str, form: dict) -> dict | None:
+        """The capture the card behind this form showed, when the form carries its digest; else None (the label is then
+        refused for want of a preview, unless it is Skip)."""
+        captured = previews.get(key)
+        if captured is None or not form.get("digest") or form["digest"] != captured["digest"]:
+            return None
+        return captured
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *_args):  # keep request lines (with the token) out of the console
@@ -290,10 +325,12 @@ def make_handler(store, profile, policy, token: str, lock_path, port_holder: dic
         def _get(self):
             if urlsplit(self.path).path != "/" or not self._authorized():
                 return self._send(403, "forbidden")
-            page = build_report(store, profile, policy, token=token, form_keys=form_keys, since=since, app_matrix=app_matrix)
+            page = build_report(store, profile, policy, token=token, form_keys=form_keys, since=since, app_matrix=app_matrix,
+                                previews=previews)
             for stale in list(form_keys)[:max(0, len(form_keys) - MAX_FORM_KEYS)]:  # oldest first; bounded memory
                 del form_keys[stale]
                 shown.pop(stale, None)
+                previews.pop(stale, None)
             self._send(200, page)
 
         def _post(self):
@@ -321,17 +358,19 @@ def make_handler(store, profile, policy, token: str, lock_path, port_holder: dic
                 return self._problem(400, "This form is out of date. Reload the review page and try again.")
             anchor = target
             try:
-                with SingleWriterLock(lock_path):
+                with SingleWriterLock(lock_path), _swept(store, policy, profile):
                     if choices(kind, form) != bound:   # F3: Confirm records what its page showed, or nothing
                         raise ConfirmationChanged("the choices differ from the ones the confirmation showed")
-                    if action == "label":
-                        record_label(store, target, form.get("label", ""), form.get("reason", ""), key)
+                    if action == "label":   # from the preview its card showed; refused when the job changed since (B.2)
+                        record_label(store, target, form.get("label", ""), form.get("reason", ""), key,
+                                     preview=_card_preview(key, form), policy=policy, applicant=profile)
                         anchor = anchor_for(target, origin)
                     elif action == "label_night":
                         label, reason = form.get("label", ""), form.get("reason", "")
                         if label == "skip_schedule":  # counts toward the NIGHT schedule-fit false-positive rate
                             label, reason = "skip", "schedule doesn't fit" + (f": {reason}" if reason else "")
-                        record_label(store, target, label, reason, key, profile="night")
+                        record_label(store, target, label, reason, key, profile="night",
+                                     preview=_card_preview(key, form), policy=policy, applicant=profile)
                         anchor = f"night-{target}"
                     elif kind == "apply":   # confirm_apply: you confirmed the posting and the channel shown
                         record_application(store, app_matrix, target, bound["channel"], policy=policy, agency=bound["agency"],
@@ -364,8 +403,13 @@ def make_handler(store, profile, policy, token: str, lock_path, port_holder: dic
                                 "the private settings are missing an agency's tracking host, changed during this request, or "
                                 "cannot be read (careeros status names the problem). Nothing was saved; paste again once "
                                 "it is fixed.")
-                        result = intake(ctx, form.get("text", ""), (form.get("url") or "").strip() or None,
-                                        company=(form.get("company") or "").strip() or None)
+                        from careeros.discovery.manual_intake import operation_for, paste_request
+                        url = (form.get("url") or "").strip() or None
+                        company = (form.get("company") or "").strip() or None
+                        # the page's operation is its form key (the D190 design, section 6): a resubmitted form returns
+                        # its job, and another request under the key is refused
+                        op = operation_for("paste_page", key, paste_request(url, form.get("text", ""), company=company))
+                        result = intake(ctx, form.get("text", ""), url, company=company, operation=op)
                         self._posting = result["job_id"]   # taken in: an error after this has saved it (F3)
                         from careeros.discovery.lead_resolution import link_same_posting
                         link_same_posting(ctx, result["job_id"], via="pasted")   # the lead for the same posting (2026-11-02)
@@ -374,6 +418,9 @@ def make_handler(store, profile, policy, token: str, lock_path, port_holder: dic
                     elif action == "lead":
                         dismiss_lead(store, target, key=key)
                         anchor = "leads"
+                    elif action == "notice":   # an alert notice you dismiss (part 3 of D192)
+                        dismiss_notice(store, target, key=key)
+                        anchor = "notices"
                     elif action in ("lead_confirm", "lead_reject"):   # only the likely match the card showed, or nothing
                         lead_id, _, job_id = target.partition("|")
                         if not job_id:
@@ -401,6 +448,12 @@ def make_handler(store, profile, policy, token: str, lock_path, port_holder: dic
             except ApplicationConflict as exc:
                 return self._refuse(409, f"Not recorded. {exc}.", exc)
             except IdempotencyCollision:   # a second click on another button of a form already used (D88)
+                if action == "paste":   # the same form sent again with another paste (Codex H43): never "recorded"
+                    from careeros.discovery.manual_intake import MAX_TEXT
+                    why = (f"this form was already used for another paste: its link, its text, its company (as typed, "
+                           f"when it runs past its limit), or whether its text runs past the {MAX_TEXT:,}-character "
+                           "limit differ")
+                    return self._refuse(409, f"Not recorded: {why}. Reload the review page and paste it again.", why)
                 return self._refuse(409, "Not recorded: this form was already used for a different choice. Reload the "
                                          "review page and choose again.", "this form was already used for a different choice")
             except ValueError as exc:

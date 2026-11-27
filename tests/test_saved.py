@@ -17,7 +17,7 @@ from careeros.core.policy import load_policy
 from careeros.db.store import open_store
 from careeros.discovery.saved import SavedPostingError, parent_for, parse_saved_html, parse_saved_text
 from careeros.paths import CONFIG_DIR
-from careeros.pipeline import Context
+from careeros.pipeline import Context, process
 from careeros.qualify.profile import load_profile
 from careeros.review.server import make_handler
 
@@ -94,6 +94,7 @@ class ImportAndLabelTests(unittest.TestCase):
     def test_review_page_labels_through_the_browser_form(self):
         (self.paths["inbox"] / "northgate.html").write_text(saved_page(), encoding="utf-8")
         cmd_import(self.ctx, self.paths, argparse.Namespace())
+        process(self.ctx)   # screened: the card offers Apply from its preview only then (the D190 design)
         token = "label-test-token"
         server = HTTPServer(("127.0.0.1", 0), make_handler(self.store, self.ctx.profile, POLICY, token,
                                                           Path(self.tmp.name) / "writer.lock", {}))
@@ -103,7 +104,9 @@ class ImportAndLabelTests(unittest.TestCase):
             page = httpx.get(f"{base}/?t={token}").text
             job_id = re.search(r'name="target" value="([^"]+)"', page).group(1)
             key = re.search(r'name="key" value="([^"]+)"', page).group(1)
-            form = {"target": job_id, "key": key, "label": "apply", "reason": "strong PBM fit"}
+            # the card's preview (the D190 design, section 3; batch 3, B.2): its digest, kept by the server under the key
+            digest = re.search(r'name="digest" value="([^"]+)"', page).group(1)
+            form = {"target": job_id, "key": key, "label": "apply", "reason": "strong PBM fit", "digest": digest}
             first = httpx.post(f"{base}/label?t={token}", data=form)
             self.assertEqual(first.status_code, 303)
             self.assertEqual(httpx.post(f"{base}/label?t={token}", data=form).status_code, 303)  # double click: no duplicate

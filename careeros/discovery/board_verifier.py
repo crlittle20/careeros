@@ -688,11 +688,16 @@ def _migrate(ctx, log, claim, findings: dict, order: list) -> None:
     store = ctx.store
     new_key = order[0]
     new = reg.mapping_for_board(store, findings[new_key].ats, findings[new_key].token)
-    _retire(ctx, claim, f"the employer moved to {new_key}", migrated_to=new["mapping_id"] if new else None)
-    reg._event(store, "discovery", "ats_migration_detected", "informational", claim["mapping_id"], to=new_key)
-    reg.open_case(store, mapping_id=claim["mapping_id"], entity_id=claim["entity_id"], reason_code="migration_detected",
-                  detail=f"{claim['employer_name']} moved from {claim['ats']}:{claim['board_token']} to {new_key}; the new board is "
-                         "being verified, the old one is kept as history")
+    # the retirement, its record and case, and (for a board already in the daily scan) the completion are one
+    # transaction: a failure leaves the old board as it was, for the next re-verification (Codex Pass 2, F4)
+    with store.tx():
+        _retire(ctx, claim, f"the employer moved to {new_key}", migrated_to=new["mapping_id"] if new else None)
+        reg._event(store, "discovery", "ats_migration_detected", "informational", claim["mapping_id"], to=new_key)
+        reg.open_case(store, mapping_id=claim["mapping_id"], entity_id=claim["entity_id"], reason_code="migration_detected",
+                      detail=f"{claim['employer_name']} moved from {claim['ats']}:{claim['board_token']} to {new_key}; the new board "
+                             "is being verified, the old one is kept as history")
+        if new and reg.in_daily_scan(store, new["mapping_id"]):   # no admission will come (Codex CR-2026-11-15-GATE-FIXES F4)
+            reg.complete_migration(store, new["mapping_id"])
     log.add("ats_migration", "info", mapping_id=claim["mapping_id"], destination_url=findings[new_key].url,
             notes=f"from {claim['ats']} to {new_key}")
 
@@ -754,11 +759,13 @@ def validate_board(ctx, mapping_id: str, ats_client, *, provider_degraded: bool 
     from .board_discovery import cfg as discovery_cfg
     if discovery_cfg(ctx.policy)["auto_activate"] or m["override_reason"]:
         values.update(verification_status="active")
-        reg.update_board(store, mapping_id, values)
-        reg.admit(store, mapping_id, via="override" if m["override_reason"] else "verified", actor="careeros:validation")
-        reg._event(store, "discovery", "employer_auto_approved", "success", mapping_id, trust=m["board_trust_score"])
-        reg._event(store, "discovery", "board_active", "success", mapping_id)
-        reg.complete_migration(store, mapping_id)
+        # active, admitted and any migration to it completed together: a failure leaves it quarantined for the next
+        # run's validation scan, never active with half of it written (Codex CR-2026-11-15-GATE-FIXES F4)
+        with store.tx():
+            reg.update_board(store, mapping_id, values)
+            reg.admit(store, mapping_id, via="override" if m["override_reason"] else "verified", actor="careeros:validation")
+            reg._event(store, "discovery", "employer_auto_approved", "success", mapping_id, trust=m["board_trust_score"])
+            reg._event(store, "discovery", "board_active", "success", mapping_id)
         _leads_after_admission(ctx, mapping_id)
         outcome = "active"
     else:
@@ -841,6 +848,7 @@ def maintain(ctx, *, site_factory=None, ats_client=None, run_started: str | None
         return counts
     counts["boards_registered"] = reg.sync_legacy(store)
     counts["overrides_expired"] = reg.expire_overrides(store)
+    counts["migration_cases_closed"] = reg.reconcile_migrations(store)   # a move left incomplete completes (Pass 2, F4)
     now = store.clock.now()
     run_started = run_started or now
     own_client = ats_client is None

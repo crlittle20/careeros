@@ -23,7 +23,7 @@ import httpx
 
 from careeros import cli
 from careeros.core.clock import FixedClock, parse_utc
-from careeros.db.store import SCHEMA_DIR, Store
+from careeros.db.store import SCHEMA_DIR, Store, newest_schema
 from careeros.discovery import board_discovery as bd
 from careeros.discovery import board_registry as reg
 from careeros.discovery import board_verifier as bv
@@ -69,6 +69,15 @@ def decisions(store, lead_id):
     return [r["decision"] for r in store.all("SELECT decision FROM lead_matches WHERE lead_id = ? ORDER BY decided_at, rowid", (lead_id,))]
 
 
+def proposed(store, lead_id):
+    """The job proposed to you as the lead's likely match (its latest decision is `likely`), or None. Since the owner's
+    D188 (2026-11-19, "Exact links only") a title or a requisition only proposes a posting; the lead's own exact posting
+    link alone links it."""
+    row = store.one("SELECT decision, job_id FROM lead_matches WHERE lead_id = ? ORDER BY decided_at DESC, rowid DESC LIMIT 1",
+                    (lead_id,))
+    return row["job_id"] if row is not None and row["decision"] == "likely" else None
+
+
 # --- item 1: each lead is matched with its own title, link, requisition and location --------------------------------------
 class OwnFactsTests(unittest.TestCase):
     def test_two_differently_titled_leads_at_one_employer_each_match_their_own_posting(self):
@@ -103,9 +112,10 @@ class OwnFactsTests(unittest.TestCase):
         client = client_for(fake)
         self.assertEqual(bv.validate_board(ctx, "greenhouse:foohealth", client), "active")
         client.close()
-        tbv.scan(ctx, fake.greenhouse["foohealth"]["jobs"])   # admitted and scanned: each lead linked to its own posting
-        linked = {r["lead_id"]: r["job_id"] for r in store.all("SELECT lead_id, job_id FROM leads")}
-        self.assertEqual(linked, {"lead:a": "greenhouse:foohealth:41", "lead:b": "greenhouse:foohealth:42"})
+        tbv.scan(ctx, fake.greenhouse["foohealth"]["jobs"])   # admitted and scanned: each lead proposed its own posting (D188)
+        self.assertEqual({lid: proposed(store, lid) for lid in ("lead:a", "lead:b")},
+                         {"lead:a": "greenhouse:foohealth:41", "lead:b": "greenhouse:foohealth:42"})
+        self.assertEqual(store.one("SELECT COUNT(*) c FROM leads WHERE job_id IS NOT NULL")["c"], 0)
 
     def test_an_old_queue_row_holding_a_first_leads_facts_never_lends_them_to_another_lead(self):
         """A queue row written before 2026-11-02 still carries its first lead's title and link in evidence_json."""
@@ -147,12 +157,12 @@ class RematchTests(unittest.TestCase):
         counts = tbv.scan(ctx, [gh_item(61, "Claims Analyst", CLAIMS, "foohealth"),
                                 gh_item(62, "Eligibility Specialist", CLAIMS, "foohealth")])
         lead = lead_row(store, "lead:later")
-        self.assertEqual((lead["status"], lead["job_id"]), ("ingested", "greenhouse:foohealth:62"))
-        self.assertEqual(counts["leads_linked"], 1)
-        self.assertEqual(decisions(store, "lead:later"), ["no_match", "matched"])
-        match = store.one("SELECT * FROM lead_matches WHERE lead_id = 'lead:later' AND decision = 'matched'")
+        self.assertEqual((lead["status"], lead["job_id"]), ("new", None))   # proposed to you, never linked by its title (D188)
+        self.assertEqual(counts["leads_likely"], 1)
+        self.assertEqual(decisions(store, "lead:later"), ["no_match", "likely"])
+        match = store.one("SELECT * FROM lead_matches WHERE lead_id = 'lead:later' AND decision = 'likely'")
         self.assertEqual((match["method"], match["job_id"], match["actor"]), ("title_location", "greenhouse:foohealth:62", "careeros"))
-        self.assertTrue(store.one("SELECT 1 FROM events WHERE event_type = 'lead_linked' AND entity_id = 'lead:later'"))
+        self.assertFalse(store.one("SELECT 1 FROM events WHERE event_type = 'lead_linked' AND entity_id = 'lead:later'"))
         self.assertEqual(store.verify_event_chain(), [])
 
     def test_each_open_lead_is_matched_with_its_own_facts_and_only_at_its_own_employer(self):
@@ -172,13 +182,16 @@ class RematchTests(unittest.TestCase):
                                      gh_item(72, "Eligibility Specialist", CLAIMS, token, req="E-72"),
                                      gh_item(73, "Pharmacy Claims Analyst", CLAIMS, token)] if token == "foohealth" else
                  [gh_item(81, "Claims Analyst", CLAIMS, token, req="C-71")])
-        linked = {r["lead_id"]: (r["status"], r["job_id"]) for r in store.all("SELECT * FROM leads")}
-        self.assertEqual(linked, {"lead:req": ("ingested", "greenhouse:foohealth:71"), "lead:title": ("ingested", "greenhouse:foohealth:72"),
-                                  "lead:other": ("no_match", None), "lead:agency": ("new", None), "lead:secret": ("new", None),
-                                  "lead:unknown": ("new", None), "lead:via": ("new", None),
-                                  "lead:link": ("ingested", "greenhouse:foohealth:73")})
-        methods = {r["lead_id"]: r["method"] for r in store.all("SELECT lead_id, method FROM lead_matches WHERE decision = 'matched'")}
-        self.assertEqual(methods, {"lead:req": "requisition", "lead:title": "title_location", "lead:link": "canonical_link"})
+        linked = {r["lead_id"]: (r["status"], r["job_id"], proposed(store, r["lead_id"])) for r in store.all("SELECT * FROM leads")}
+        self.assertEqual(linked, {"lead:req": ("new", None, "greenhouse:foohealth:71"),   # proposed only (D188)
+                                  "lead:title": ("new", None, "greenhouse:foohealth:72"),
+                                  "lead:other": ("no_match", None, None), "lead:agency": ("new", None, None),
+                                  "lead:secret": ("new", None, None), "lead:unknown": ("new", None, None), "lead:via": ("new", None, None),
+                                  "lead:link": ("ingested", "greenhouse:foohealth:73", None)})   # its own link: linked
+        methods = {r["lead_id"]: (r["decision"], r["method"])
+                   for r in store.all("SELECT lead_id, decision, method FROM lead_matches WHERE decision IN ('matched', 'likely')")}
+        self.assertEqual(methods, {"lead:req": ("likely", "requisition"), "lead:title": ("likely", "title_location"),
+                                   "lead:link": ("matched", "canonical_link")})
 
     def test_a_resolver_kept_across_a_scan_stops_matching_when_an_agency_setting_goes_missing(self):
         import os
@@ -187,7 +200,7 @@ class RematchTests(unittest.TestCase):
         from careeros.discovery.alerts import ENROLLED
         store, ctx = setup()
         legacy_board(store)
-        add_lead(store, "lead:req", "Claims Analyst", "Foo Health · Remote · req=C-71")
+        add_lead(store, "lead:req", "Claims Analyst", "Foo Health · Remote · req=C-71", url="https://job-boards.greenhouse.io/foohealth/jobs/71")   # its own link
         kept = lr.Resolver(ctx)
         self.assertIn("lead:req", kept.open_leads())   # read before the stop
         missing = ENROLLED + "click.other-agency.example"   # a host set up by another run, not in these settings: a stop
@@ -210,8 +223,8 @@ class RematchTests(unittest.TestCase):
             with self.subTest(within):
                 store, ctx = setup()
                 legacy_board(store)
-                add_lead(store, "lead:a", "Claims Analyst", "Foo Health · Remote · req=C-71")
-                add_lead(store, "lead:b", "Eligibility Specialist", "Foo Health · Remote · req=E-72")
+                add_lead(store, "lead:a", "Claims Analyst", "Foo Health · Remote · req=C-71", url="https://job-boards.greenhouse.io/foohealth/jobs/71")   # their own links
+                add_lead(store, "lead:b", "Eligibility Specialist", "Foo Health · Remote · req=E-72", url="https://job-boards.greenhouse.io/foohealth/jobs/72")
                 enroll_agency_hosts(store)   # the suite's synthetic agency, set up
                 real_link, linked, removed = lr.link, [], mock.patch.dict(os.environ, {private_sites.ENV: ""})
 
@@ -257,7 +270,7 @@ class RematchTests(unittest.TestCase):
         try:
             with private_sites.run():
                 job = intake(ctx, "Claims Analyst\nCompany: Foo Health\nLocation: Remote - US\n\n" + CLAIMS,
-                             "https://foohealth.example/careers/901")
+                             "https://www.linkedin.com/jobs/view/4000000901")   # lead:a's own posting (D188)
                 with mock.patch.object(lr, "link", link_then_removed):
                     found = lr.link_same_posting(ctx, job["job_id"], via="pasted")
         finally:
@@ -333,7 +346,7 @@ class RematchTests(unittest.TestCase):
         self.assertEqual(bv.validate_board(ctx, mapping_id, client), "active")
         client.close()
         lead = lead_row(store, "lead:ex")
-        self.assertEqual((lead["status"], lead["job_id"]), ("ingested", "greenhouse:examplehealth:101"))
+        self.assertEqual((lead["status"], lead["job_id"], proposed(store, "lead:ex")), ("new", None, "greenhouse:examplehealth:101"))
         self.assertIn("admitted", lead["status_reason"])
 
     def test_when_you_activate_or_approve_a_board_its_employers_open_leads_are_matched(self):
@@ -360,7 +373,7 @@ class RematchTests(unittest.TestCase):
                     reg.update_board(store, mapping_id, {"verification_status": "review_required"})
                 with contextlib.redirect_stdout(io.StringIO()):
                     cli.cmd_sources(ctx, None, args)
-                self.assertEqual(lead_row(store, "lead:on")["job_id"], "greenhouse:examplehealth:101")
+                self.assertEqual(proposed(store, "lead:on"), "greenhouse:examplehealth:101")   # proposed to you (D188)
 
 
 # --- item 4: a likely match is a candidate you confirm or reject, never linked by itself -----------------------------------------
@@ -573,12 +586,122 @@ class IntakeAndFetchTests(unittest.TestCase):
                                                             employer="Foo Health", parent=None, title=None, location=None))
         rows = {r["lead_id"]: r for r in store.all("SELECT * FROM leads")}
         self.assertEqual({lid: (r["status"], r["job_id"] is not None) for lid, r in rows.items()},
-                         {"lead:link": ("ingested", True), "lead:req": ("ingested", True), "lead:bar": ("new", False),
-                          "lead:gone": ("dismissed", False), "lead:added": ("ingested", True)})
-        self.assertEqual(rows["lead:added"]["job_id"], "greenhouse:foohealth:303")
+                         {"lead:link": ("ingested", True), "lead:req": ("new", False), "lead:bar": ("new", False),
+                          "lead:gone": ("dismissed", False), "lead:added": ("new", False)})   # D188: only the same link links
+        self.assertEqual(proposed(store, "lead:added"), "greenhouse:foohealth:303")   # its title proposes the posting
+        self.assertTrue(proposed(store, "lead:req"))   # and its requisition the pasted one
         self.assertIn("the same link", rows["lead:link"]["status_reason"])
         self.assertIn("the same requisition", rows["lead:req"]["status_reason"])
         self.assertEqual({r["method"] for r in store.all("SELECT method FROM lead_matches WHERE decision = 'matched'")}, {"manual_intake"})
+
+    def test_a_colliding_saved_import_retried_reuses_its_own_job_and_links_its_lead(self):
+        """Codex CR-2026-11-15-GATE-FIXES Pass 9, H11: re-importing a saved page that collided with another employer's
+        generated id made a new suffixed row each time, then looped forever on the ninth; the new rows had no possible
+        duplicate link, and the CLI linked leads to the generated id, not the job written."""
+        import json as _json
+        from unittest import mock
+
+        from careeros.discovery import manual_intake
+        from careeros.discovery.saved import parse_saved_html
+        from careeros.paths import vault_paths
+
+        def page(employer, url, body=CLAIMS):
+            data = {"@context": "https://schema.org", "@type": "JobPosting", "title": "Claims Analyst", "identifier": "R-4001",
+                    "hiringOrganization": {"@type": "Organization", "name": employer}, "url": url,
+                    "description": "<p>" + body.replace("\n", "</p><p>") + "</p>"}
+            return '<html><head><script type="application/ld+json">' + _json.dumps(data) + "</script></head></html>"
+        store, ctx = setup()
+        # a board's posting link: an employer's careers page names no posting, so no lead links there by its link (D184)
+        second = "https://abhealth.wd5.myworkdayjobs.com/careers/job/Remote/Claims-Analyst_R-40011"
+        add_lead(store, "lead:second", "Claims Analyst", "A B Health · Remote", url=second)
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = vault_paths(Path(tmp))
+            paths["inbox"].mkdir(parents=True, exist_ok=True)
+            (paths["inbox"] / "first.html").write_text(page("A+B Health", "https://careers.ab-health.example/jobs/4001"),
+                                                       encoding="utf-8")
+            with contextlib.redirect_stdout(io.StringIO()):
+                cli.cmd_import(ctx, paths, SimpleNamespace())
+            for attempt in range(10):                                  # the same second page, again and again
+                (paths["inbox"] / f"second-{attempt}.html").write_text(page("A B Health", second), encoding="utf-8")
+                with contextlib.redirect_stdout(io.StringIO()):
+                    cli.cmd_import(ctx, paths, SimpleNamespace())
+        ids = [r["job_id"] for r in store.all("SELECT job_id FROM jobs ORDER BY first_seen_at, job_id")]
+        self.assertEqual(len(ids), 2)                                  # one row per posting, however often it comes
+        held, own = "manual:a-b-health:R-4001", next(i for i in ids if i != "manual:a-b-health:R-4001")
+        self.assertTrue(store.one("SELECT 1 FROM opening_links WHERE job_id = ? AND other_id = ? AND relation = 'possible_duplicate'",
+                                  (own, held)))
+        self.assertEqual(lead_row(store, "lead:second")["job_id"], own)   # the lead links the job actually written
+        # the search for a free id is bounded: beyond it the posting is reported, never written over another
+        with mock.patch.object(manual_intake, "MAX_PLACEMENTS", 0):
+            raw, employer = parse_saved_html(page("A B Health", "https://jobs.a-b-health.example/postings/third"), "y.html")
+            counts = ingest(ctx, {"employer_id": None, "name": employer, "parent": employer}, [raw], source="manual_url",
+                            full_board=False)
+        self.assertEqual((counts["errors"], counts["new"]), (1, 0))
+        self.assertEqual(store.one("SELECT COUNT(*) AS n FROM jobs")["n"], 2)
+        self.assertTrue(store.one("SELECT 1 FROM exceptions WHERE error_code = 'manual_id_collision'"))
+        self.assertEqual(store.one("SELECT url FROM jobs WHERE job_id = ?", (held,))["url"], "https://careers.ab-health.example/jobs/4001")
+
+    def test_a_second_portal_opening_gets_its_own_lead_and_a_refused_import_is_kept_in_failed(self):
+        """Codex CR-2026-11-15-GATE-FIXES Pass 10: H12, a second portal opening (".../#/opening/R-1102") was made a
+        duplicate of the first and its lead linked to the first; H14, a refused import (no free id) or a failed write
+        was still filed as imported and its lead linked to the job holding the id."""
+        from unittest import mock
+
+        from careeros import pipeline
+        from careeros.discovery import manual_intake
+        from careeros.paths import vault_paths
+        portal = "https://jobs.example.com/portal/#/opening/"
+        store, ctx = setup()
+        add_lead(store, "lead:1102", "Claims Analyst", "Acme Rx · Remote", url=portal + "R-1102")
+        add_lead(store, "lead:1103", "Claims Analyst", "Acme Rx · Remote", url=portal + "R-1103")
+        add_lead(store, "lead:1104", "Claims Analyst", "Acme Rx · Remote", url=portal + "R-1104")
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = vault_paths(Path(tmp))
+            text = Path(tmp) / "posting.txt"
+            for opening, body in (("R-1101", CLAIMS + "\nThe work will be performed only in Calgary."), ("R-1102", CLAIMS)):
+                text.write_text(body, encoding="utf-8")
+                with contextlib.redirect_stdout(io.StringIO()):
+                    cli.cmd_add_url(ctx, paths, SimpleNamespace(url=portal + opening, text_file=str(text), employer="Acme Rx",
+                                                                parent=None, title="Claims Analyst", location="Remote - US"))
+            first, second = (store.one("SELECT * FROM jobs WHERE url = ?", (portal.replace("/#", "#") + o,)) for o in ("R-1101", "R-1102"))
+            self.assertNotEqual(second["current_state"], "duplicate")
+            # never R-1101's job; since the owner's D184 a portal's link names no posting, so the lead stays open for you
+            # (a lead linked by a board's posting link: the test above)
+            self.assertIsNone(lead_row(store, "lead:1102")["job_id"])
+            # a refused import: no free id beside the held one; the file is kept in failed, its lead stays open
+            paths["inbox"].mkdir(parents=True, exist_ok=True)
+            (paths["inbox"] / "refused.txt").write_text(
+                f"URL: {portal}R-1103\nTitle: Claims Analyst\nEmployer: Acme Rx\nLocation: Remote - US\n\n" + CLAIMS, encoding="utf-8")
+            refused = manual_intake.PlacementRefused("manual_id_collision: no free id")   # what place_manual raises
+            with mock.patch.object(manual_intake, "place_manual", side_effect=refused):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    cli.cmd_import(ctx, paths, SimpleNamespace())
+            self.assertTrue(list((paths["inbox"] / "failed").rglob("refused.txt")))
+            self.assertFalse(list((paths["inbox"] / "imported").rglob("refused.txt")) if (paths["inbox"] / "imported").exists() else [])
+            self.assertEqual(lead_row(store, "lead:1103")["status"], "new")
+            self.assertTrue(store.one("SELECT 1 FROM exceptions WHERE error_code = 'manual_id_collision'"))
+            # a failed write (rolled back): the same
+            (paths["inbox"] / "broken.txt").write_text(
+                f"URL: {portal}R-1104\nTitle: Claims Analyst\nEmployer: Acme Rx\nLocation: Remote - US\n\n" + CLAIMS, encoding="utf-8")
+            with mock.patch.object(pipeline, "_observe_posting", side_effect=RuntimeError("interrupted")):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    cli.cmd_import(ctx, paths, SimpleNamespace())
+            self.assertTrue(list((paths["inbox"] / "failed").rglob("broken.txt")))
+            self.assertEqual(lead_row(store, "lead:1104")["status"], "new")
+            self.assertIsNone(store.one("SELECT 1 FROM jobs WHERE url LIKE ?", ("%R-1104",)))
+            # add-url refuses the same way: nothing written, no lead linked
+            text.write_text(CLAIMS, encoding="utf-8")
+            with mock.patch.object(pipeline, "_observe_posting", side_effect=RuntimeError("interrupted")), \
+                    contextlib.redirect_stdout(io.StringIO()), self.assertRaises(SystemExit):
+                cli.cmd_add_url(ctx, paths, SimpleNamespace(url=portal + "R-1104", text_file=str(text), employer="Acme Rx",
+                                                            parent=None, title="Claims Analyst", location="Remote - US"))
+            self.assertEqual(lead_row(store, "lead:1104")["status"], "new")
+            # and a paste: refused with a reason, never reported as added
+            from careeros.discovery.manual_intake import intake
+            with mock.patch.object(pipeline, "_observe_posting", side_effect=RuntimeError("interrupted")):
+                with self.assertRaisesRegex(ValueError, "could not be stored"):
+                    intake(ctx, "Claims Analyst\nCompany: Other Health\n\n" + CLAIMS, "https://careers.other.example/jobs/77")
+            self.assertIsNone(store.one("SELECT 1 FROM jobs WHERE url = 'https://careers.other.example/jobs/77'"))
 
     def test_the_review_pages_paste_box_links_the_lead_for_the_same_posting(self):
         store, ctx = setup()
@@ -636,8 +759,8 @@ class GuessedBoardTests(unittest.TestCase):
                 contextlib.redirect_stdout(io.StringIO()):
             cli.cmd_discover(ctx, None, SimpleNamespace(employer=None))
         lead = lead_row(store, "lead:lv")
-        self.assertEqual((lead["status"], lead["job_id"]), ("ingested", f"lever:examplehealth:{uid}"))
-        self.assertEqual(decisions(store, "lead:lv"), ["awaiting_board", "matched"])
+        self.assertEqual((lead["status"], lead["job_id"], proposed(store, "lead:lv")), ("new", None, f"lever:examplehealth:{uid}"))
+        self.assertEqual(decisions(store, "lead:lv"), ["awaiting_board", "likely"])   # proposed to you by its title (D188)
 
 
 # --- item 7 (Part C): a lead's domain= finds the board at the employer's own site; it is only a hint ------------------------------
@@ -697,7 +820,7 @@ class DomainRouteTests(unittest.TestCase):
         self.assertEqual((counts["lead_domain_check"], counts["validation_active"]), (0, 1))   # not even after 30 days
         with contextlib.redirect_stdout(io.StringIO()):
             tbv.scan(ctx, boards.greenhouse["examplehealth"]["jobs"])
-        self.assertEqual(lead_row(store, "lead:d")["job_id"], "greenhouse:examplehealth:101")
+        self.assertEqual(proposed(store, "lead:d"), "greenhouse:examplehealth:101")   # proposed to you (D188)
 
     def test_a_board_waiting_for_an_unknown_domain_is_checked_again_as_soon_as_a_lead_supplies_it(self):
         store, ctx = tbv.setup()
@@ -1589,14 +1712,18 @@ class AlertArrivalTests(unittest.TestCase):
         link = Link("https://www.linkedin.com/jobs/view/9999999601", "linkedin", "Claims Analyst", f"{lead_employer} · Remote (US)", True)
         outcomes = []
         cli._record_alert(ctx, AlertEmail("GitHub inbox (synthetic)", "jobs", None, [link]), NoNetwork(), outcomes)
-        return store.one("SELECT status, job_id FROM leads"), [o for _, o in outcomes]
+        row = store.one("SELECT lead_id, status, job_id FROM leads")
+        arrived = (row["status"], row["job_id"])
+        lr.after_scan(ctx, store.one("SELECT * FROM employers"), complete=False)   # the next scan's lead resolution
+        return (*arrived, proposed(store, row["lead_id"])), [o for _, o in outcomes]
 
     def test_an_alert_line_is_linked_on_arrival_only_by_the_lead_resolution_rules(self):
-        self.assertEqual(tuple(self.arrive()[0]), ("ingested", "greenhouse:foo-a:601"))   # the control: admitted, same employer
+        # the control: admitted, same employer; never linked by its title, on arrival or after, but proposed (D188)
+        self.assertEqual(self.arrive()[0], ("new", None, "greenhouse:foo-a:601"))
         for case in ({"onsite": True}, {"admitted": False}, {"job_employer": "Foo Health Services"}):
             with self.subTest(**case):
                 row, outcomes = self.arrive(**case)
-                self.assertEqual((row["status"], row["job_id"], outcomes), ("new", None, ["lead"]))   # open for lead resolution
+                self.assertEqual((row, outcomes), (("new", None, None), ["lead"]))   # open for lead resolution, nothing proposed
 
 
 # --- Codex F3: one board's complete scan never closes a lead for the whole employer --------------------------------------------
@@ -1617,7 +1744,8 @@ class CoverageTests(unittest.TestCase):
                 store, ctx, jobs, matching = self.two_boards(first_matches)
                 tbv.scan(ctx, jobs.__getitem__)
                 lead = lead_row(store, "lead:old")
-                self.assertEqual((lead["status"], lead["job_id"]), ("ingested", f"greenhouse:{matching}:502"))
+                self.assertEqual((lead["status"], lead["job_id"], proposed(store, "lead:old")),
+                                 ("new", None, f"greenhouse:{matching}:502"))   # proposed to you (D188)
 
     def test_a_board_not_read_in_this_scan_keeps_the_lead_open_and_full_coverage_closes_it(self):
         from careeros.discovery.http import FetchError
@@ -1643,9 +1771,9 @@ class ManualIntakeAmbiguityTests(unittest.TestCase):
         add_lead(store, "lead:named", "Claims Analyst", "Foo Health · Remote · req=R-701",   # arrives after that scan
                  url="https://www.indeed.com/viewjob?jk=0000000000000701")
         added = lr.link_same_posting(ctx, "greenhouse:foo-a:701", via="added")
-        self.assertEqual(added["leads_linked"], 1)   # only the lead whose requisition picks out 701
-        self.assertEqual({r["lead_id"]: (r["status"], r["job_id"]) for r in store.all("SELECT * FROM leads")},
-                         {"lead:either": ("new", None), "lead:named": ("ingested", "greenhouse:foo-a:701")})
+        self.assertEqual(added["leads_likely"], 1)   # only the lead whose requisition picks out 701, proposed (D188)
+        self.assertEqual({r["lead_id"]: (r["status"], r["job_id"], proposed(store, r["lead_id"])) for r in store.all("SELECT * FROM leads")},
+                         {"lead:either": ("new", None, None), "lead:named": ("new", None, "greenhouse:foo-a:701")})
         self.assertEqual(decisions(store, "lead:either"), ["ambiguous"])
 
 
@@ -1759,16 +1887,17 @@ class CorrectionTests(unittest.TestCase):
         retitled = gh_item(401, "Eligibility Specialist", CLAIMS, "foohealth")   # even when the job you unlinked matches its title
         tbv.scan(ctx, [retitled, items[1]])   # the next scan matches it with its own facts, never back to that job
         second = lead_row(store, "lead:second")
-        self.assertEqual((second["status"], second["job_id"]), ("ingested", "greenhouse:foohealth:402"))
+        self.assertEqual((second["status"], second["job_id"], proposed(store, "lead:second")),
+                         ("new", None, "greenhouse:foohealth:402"))   # proposed to you (D188)
         self.assertEqual(json.loads(store.one("SELECT candidates_json FROM lead_matches WHERE lead_id = 'lead:second' "
-                                              "AND decision = 'matched' AND actor = 'careeros'")["candidates_json"]),
+                                              "AND decision = 'likely' AND actor = 'careeros'")["candidates_json"]),
                          ["greenhouse:foohealth:402"])
 
     def test_an_unlink_is_recorded_once_for_one_key(self):
         store, ctx = setup()
         legacy_board(store)
         tbv.scan(ctx, [gh_item(411, "Claims Analyst", CLAIMS, "foohealth")])
-        add_lead(store, "lead:u", "Claims Analyst", "Foo Health · Remote")
+        add_lead(store, "lead:u", "Claims Analyst", "Foo Health · Remote", url="https://job-boards.greenhouse.io/foohealth/jobs/411")   # its own link
         tbv.scan(ctx, [gh_item(411, "Claims Analyst", CLAIMS, "foohealth")])
         self.assertEqual(review_leads.unlink_lead(store, "lead:u", reason="not this one", key="k-once"), "new")
         self.assertEqual(review_leads.unlink_lead(store, "lead:u", reason="not this one", key="k-once"), "replay")
@@ -1798,7 +1927,7 @@ class SchemaTests(unittest.TestCase):
                            "audit, audited_at) VALUES ('lm:1', 'lead:2', 'lever:synth:1', 'lever:synth', 'canonical_link', 'matched', "
                            "'[\"1\"]', ?, 'correct', ?)", (now, now))
         before = {t: [tuple(r) for r in store.conn.execute(f"SELECT * FROM {t} ORDER BY 1")] for t in ("leads", "lead_matches")}
-        self.assertEqual(store.migrate(), 15)
+        self.assertEqual(store.migrate(), newest_schema())   # through 015, and the migrations after it
         after_leads = [tuple(r)[:14] for r in store.conn.execute("SELECT * FROM leads ORDER BY 1")]
         after_matches = [tuple(r)[:10] for r in store.conn.execute("SELECT * FROM lead_matches ORDER BY 1")]
         self.assertEqual((after_leads, after_matches), (before["leads"], before["lead_matches"]))   # every row and value kept
@@ -1819,7 +1948,7 @@ class SchemaTests(unittest.TestCase):
         with self.assertRaises(sqlite3.IntegrityError):
             store.conn.execute("INSERT INTO employer_entities (entity_id, canonical_name, canonical_norm, created_at, updated_at, "
                                "domain_origin) VALUES ('ent:1', 'Synth Co', 'synth co', ?, ?, 'search')", (now, now))
-        self.assertEqual(store.migrate(), 15)   # once only
+        self.assertEqual(store.migrate(), newest_schema())   # once only
 
     def test_your_review_actions_change_a_leads_state_and_link_only(self):
         """Separation of duties (ADR 0008): the review component may set a lead's state, reason and link (your

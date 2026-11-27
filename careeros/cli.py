@@ -54,13 +54,13 @@ from careeros.core.locks import LockError, SingleWriterLock, force_unlock, hold
 from careeros.core.policy import load_policy, load_yaml
 from careeros.core.redact import RedactingFilter
 from careeros.core.transitions import load_matrix
-from careeros.db.store import MigrationPending, SchemaTooNew, open_store
+from careeros.db.store import MigrationPending, SchemaTooNew, TransactionLost, open_store
 from careeros.discovery.boards import fetch_board, fetch_single, parse_job_url
 from careeros.discovery.http import FetchError, HttpClient, RequestBudget
-from careeros.normalize.posting import RawPosting, canonical_url
+from careeros.normalize.posting import RawPosting, posting_link
 from careeros.normalize.sanitize import clean_text, html_to_text
 from careeros.paths import CONFIG_DIR, ENGINE_ROOT, vault_paths
-from careeros.pipeline import Context, ingest, process
+from careeros.pipeline import BatchAborted, Context, hold_aborted, ingest, process
 from careeros.qualify.profile import load_profile
 from careeros.review.applications import (CONFIRM_CODES, ApplicationConflict, ApplicationHold, SessionOpen, application_matrix,
                                           applications, record_application, record_follow_up, update_application)
@@ -107,6 +107,8 @@ def _add_employer(ctx: Context, name: str, ats: str, token: str, parent: str | N
                   status: str = "candidate", admitted_via: str | None = None) -> dict:
     """An employers row. Unless `admitted_via` says otherwise (the curated seed list is 'legacy'), the board is NOT in
     the daily scan until it is verified against the employer's own site (or you approve it)."""
+    from careeros.normalize.sanitize import canonical
+    name, parent = canonical(name), (canonical(parent) if parent else parent)   # the registry write (point 6)
     existing = _employer_row(ctx.store, ats, token)
     if existing:
         return dict(existing)
@@ -181,6 +183,62 @@ def _set_employer(ctx: Context, row, status: str) -> None:
     ctx.store.writer("admin").update("employers", values, "employer_id = ?", (row["employer_id"],))
 
 
+def _withdraw_lost_handoffs(ctx: Context, paths) -> int:
+    """After a command that writes: every handoff file in the vault is removed (assist.withdraw_handoffs). Browser Fill is
+    paused in this release (the owner's D191), so no handoff may stay loadable, one an earlier version wrote included."""
+    if not paths or not paths.get("root") or not hasattr(ctx, "policy"):
+        return 0
+    from careeros.review.assist import withdraw_handoffs
+    withdrawn = withdraw_handoffs(ctx.store, ctx.policy, getattr(ctx, "profile", None), paths["root"])
+    if withdrawn:
+        print(f"  handoffs_withdrawn={withdrawn}")
+    return withdrawn
+
+
+def _command_start(ctx: Context, paths) -> None:
+    """At the start of every command that writes (the scheduled run included): every handoff file in the vault is
+    removed (browser Fill is paused in this release, the owner's D191), and a hold the database refused, kept beside it,
+    is recorded (the red team's hr1-routes-0)."""
+    _withdraw_lost_handoffs(ctx, paths)
+    from careeros.review.packages import pending_file_problem, record_pending_holds
+    if record_pending_holds(ctx.store):
+        print("  a posting read earlier could not be stored: its label waits until a later read is stored")
+    problem = pending_file_problem(ctx.store)
+    if problem:   # every Apply and Stretch label waits on it (BATCH_5 A)
+        print(f"  ! {problem}. Every Apply and Stretch label waits until then")
+    from careeros import upgrade
+    if not upgrade.done(ctx.store):   # rows an older engine stored, handled once (the D190 design, section 7)
+        done = upgrade.run(ctx)
+        if done:
+            print("  upgrade: " + " ".join(f"{k}={v}" for k, v in sorted(done.items())))
+        if done["holds_reaching_every_job"]:   # Z8
+            print(f"  ! upgrade: {done['holds_reaching_every_job']} failed read(s) an older engine recorded name no "
+                  "posting (a posting you added whose job was never created): each is on every card and holds every "
+                  "Apply and Stretch label until a label given from such a card acknowledges it (careeros status lists them)")
+        if done[upgrade.CLOCK_BEHIND]:   # BATCH_5 G1: reported, never a refused command
+            print(f"  ! upgrade: {done[upgrade.CLOCK_BEHIND]} job(s) not rebuilt: this computer's clock "
+                  f"({ctx.store.clock.now()[:16]} UTC) is before their latest state change. Each is rebuilt by the first "
+                  "command after the clock passes it, and offers no preview until then (check the clock)")
+
+
+def _sweep_unlocked(paths, clock=None) -> int:
+    """A command that could not take the writer lock (another command holds it, a lock left behind, an empty or
+    unreadable lock) still removes every handoff file in the vault, with no database read (browser Fill is paused in this
+    release, the owner's D191: no handoff is legitimate). Returns how many files it removed."""
+    from careeros.review.assist import remove_all_handoffs
+    root = paths.get("root") if paths else None
+    return remove_all_handoffs(Path(root)) if root else 0
+
+
+def _command_end(ctx: Context, paths) -> None:
+    """In a finally at the end of every command that writes: the same handoff sweep, so a command stopped part-way (a
+    changed private-settings file, an error) never leaves a handoff the label or posting no longer stands for (B.3)."""
+    try:
+        _withdraw_lost_handoffs(ctx, paths)
+    except Exception:   # noqa: BLE001 - never masks the command's own outcome; the next command's start sweeps again
+        log.exception("handoff sweep at the end of the command failed")
+
+
 def cmd_discover(ctx: Context, paths, args) -> Counter:
     from careeros.discovery import board_registry as registry
     from careeros.discovery import source_health as health
@@ -215,6 +273,7 @@ def cmd_discover(ctx: Context, paths, args) -> Counter:
             before = client.requests
             try:
                 postings = fetch_board(client, r["ats"], r["board_token"])
+                unlisted = list(getattr(postings, "unlisted", ()))   # open at their own link, never listed
             except FetchError as exc:
                 failures.append((r, exc.code, exc.retryable, client.requests - before))
                 counts["board_errors"] += 1
@@ -240,7 +299,8 @@ def cmd_discover(ctx: Context, paths, args) -> Counter:
                 print(f"  ! {r['name']}: paused, {changed}")
                 continue
             outcome = health.classify_scan(r["last_posting_count"], len(postings), ctx.policy)
-            result = ingest(ctx, dict(r), postings, full_board=outcome == "complete")  # a suspicious scan never closes jobs
+            # a suspicious scan never closes jobs; an unlisted posting is never admitted from it, nor counted absent
+            result = ingest(ctx, dict(r), postings + unlisted, full_board=outcome == "complete")
             _halt_if_changed(ctx.store, "board scan stopped; the rest is scanned on the next run")   # D153 R2
             health.record_scan(ctx.store, r["employer_id"], outcome, postings=len(postings), requests=client.requests - before,
                                closed=result.get("closed", 0), possibly_absent=result.get("possibly_absent", 0))
@@ -261,6 +321,9 @@ def cmd_discover(ctx: Context, paths, args) -> Counter:
             counts.update(_refresh_shortlisted(ctx, client, now))
     finally:
         client.close()
+    withdrawn = _withdraw_lost_handoffs(ctx, paths)
+    if withdrawn:
+        counts["handoffs_withdrawn"] += withdrawn
     return counts
 
 
@@ -347,12 +410,20 @@ def _refresh_shortlisted(ctx: Context, client: HttpClient, now: str) -> Counter:
         _halt_if_changed(ctx.store, "shortlist refresh stopped; the next run does it")   # before every probe (D153 R2)
         job = ctx.store.one("SELECT j.*, e.last_complete_scan_at FROM jobs j LEFT JOIN employers e ON e.employer_id = j.employer_id "
                             "WHERE j.job_id = ?", (job_id,))
-        if not job or job["ats"] not in ("greenhouse", "lever") or (job["last_complete_scan_at"] or "")[:10] == now[:10]:
+        if job is None:
+            continue
+        endpoint = _posting_endpoint(ctx.store, job)
+        if endpoint is None or (job["last_complete_scan_at"] or "")[:10] == now[:10]:
             continue
         try:
-            fetch_single(client, job["ats"], job["job_id"].split(":")[1], job["external_id"])
-            ctx.store.writer("discovery").update("jobs", {"last_seen_at": now, "absent_scans": 0}, "job_id = ?", (job_id,))
+            posting = fetch_single(client, *endpoint)
+            # what it read is written through the one ingest write: a re-identification, a retitle or a new location
+            # reaches the job, its label and its handoffs (the red team's gr1-faults-1)
+            employer = _employer_row(ctx.store, endpoint[0], endpoint[1]) or ctx.store.one(
+                "SELECT * FROM employers WHERE employer_id = ?", (job["employer_id"],))
+            result = ingest(ctx, dict(employer) if employer else None, [posting], source="manual_url", full_board=False)
             counts["shortlist_still_open"] += 1
+            counts.update({f"shortlist_{k}": v for k, v in result.items() if k in ("changed", "reidentified", "errors")})
         except FetchError as exc:
             if exc.code == "not_found" and job["current_state"] not in ("closed", "duplicate"):
                 with ctx.store.tx():
@@ -362,47 +433,135 @@ def _refresh_shortlisted(ctx: Context, client: HttpClient, now: str) -> Counter:
     return counts
 
 
-def _ingest_board_link(ctx: Context, client: HttpClient, url: str, employer_name: str | None = None):
-    """Fetch one posting from a public job board link and ingest it. Returns (posting, counts, job_id)."""
+def _posting_endpoint(store, job) -> tuple[str, str, str] | None:
+    """(ats, board token, posting id) to read a shortlisted job's posting by, from its current identity
+    (board_discovery.job_identity): the board its job of record now belongs to (a renamed board: the red team's
+    hr1-identity-1), else the posting's own link (a job you pasted, saved or added first: hr1-boards-0). Never a token
+    taken from the job's id, which a renamed board leaves stale. None for a posting no single-posting endpoint reads."""
+    from careeros.discovery.board_discovery import job_identity
+    identity = job_identity(job)
+    if identity is None or identity[0] not in ("greenhouse", "lever"):
+        return None
+    kind, posting = identity
+    employer = store.one("SELECT ats, board_token FROM employers WHERE employer_id = ?", (job["employer_id"],)) \
+        if job["employer_id"] else None
+    if employer is not None and employer["ats"] == kind and employer["board_token"]:
+        return kind, employer["board_token"], posting
+    for url in (job["url"], job["apply_url"]):
+        parsed = parse_job_url(url) if url else None
+        if parsed and parsed[0] == kind and parsed[2] == posting:
+            return parsed
+    return None
+
+
+def _ingest_board_link(ctx: Context, client: HttpClient, url: str, employer_name: str | None = None, *,
+                       fetched: dict | None = None, ahead: dict | None = None, exclude: frozenset = frozenset(),
+                       created: set | None = None):
+    """Fetch one posting from a public job board link and ingest it. Returns (posting, counts, job_id). In an alert
+    email's batch the posting was fetched ahead (`fetched`: never inside its transaction, Unfetched when it was not)
+    and its write-ahead hold is carried by the line's position (`ahead`, `exclude`, `created`: the D190 design,
+    section 7, Z1)."""
     ats, token, external_id = parse_job_url(url)
-    posting = fetch_single(client, ats, token, external_id)  # first: a link that does not resolve adds no employer
+    if fetched is None:
+        posting = fetch_single(client, ats, token, external_id)  # first: a link that does not resolve adds no employer
+    else:
+        got = fetched.get(url)
+        if got is None:
+            raise Unfetched(url)
+        if isinstance(got, FetchError):
+            raise got
+        posting = got
     employer = _employer_row(ctx.store, ats, token)
     if employer is None:  # self-growing employer list, named after the company when the link came with one
         from careeros.discovery.saved import parent_for
         employer = _add_employer(ctx, employer_name or token, ats, token,
                                  parent=parent_for(employer_name, ctx.policy) if employer_name else None)
     _set_employer(ctx, employer, "verified")
-    result = ingest(ctx, dict(employer), [posting], source="manual_url", full_board=False)
-    job = ctx.store.one("SELECT job_id FROM jobs WHERE ats = ? AND employer_id = ? AND external_id = ?",
-                        (ats, employer["employer_id"], posting.external_id))
-    return posting, result, job["job_id"] if job else None
+    placed: dict = {}
+    result = ingest(ctx, dict(employer), [posting], source="manual_url", full_board=False, placed=placed, ahead=ahead,
+                    exclude=exclude, batch_created=created)
+    # the job written: the posting's job of record, which may be a job you pasted or saved first (batch 3, group A)
+    return posting, result, placed.get(f"{posting.ats}:{posting.board_token}:{posting.external_id}")
 
 
-def cmd_add_url(ctx: Context, paths, args) -> None:
+def cmd_add_url(ctx: Context, paths, args) -> str | None:
     if parse_job_url(args.url) and not args.text_file:
         client = HttpClient()
         try:
             posting, result, job_id = _ingest_board_link(ctx, client, args.url, args.employer)
+        except FetchError as exc:   # one line, never a traceback (the hand check's HC2)
+            sys.exit(f"Not added: {args.url} could not be read: {exc.code}")
         finally:
             client.close()
+            _withdraw_lost_handoffs(ctx, paths)   # this branch sweeps too, however it ends (the red team's gr1-saved-3)
         print(f"{posting.title} — " + " ".join(f"{k}={v}" for k, v in result.items()))
+        if args.location:
+            where = ctx.store.one("SELECT country FROM jobs WHERE job_id = ?", (job_id,)) if job_id else None
+            if where is not None and where["country"] != "US":   # its field leaves it unknown or abroad (part 4)
+                print(f"  --location not used: to settle this board posting's location, run careeros location {job_id} "
+                      f"\"{args.location}\"")
+            else:
+                print("  --location not used: a job board's posting keeps its board's location")
+        if not job_id or result.get("errors"):   # nothing stored: no lead linked (the red team before Codex Pass 11)
+            sys.exit("Not added: the posting could not be stored (recorded as an open exception on the review page)")
         _link_leads(ctx, job_id, "added")
-        return
-    if not (args.text_file and args.employer and args.title):
+        return job_id
+    from careeros.discovery.manual_intake import given
+    # a blank argument is not given, as its request reads it (request_of: "" and None are one value), so one request is
+    # never stored two ways: "   " for --location or --parent is no location and no parent (the owner's D201). Its
+    # ingest cuts none of them: RawPosting keeps each text field whole in the canonical form (normalize/posting.py),
+    # normalized_fields stores the title and location so, and the employer entry's name and parent are canonical
+    # (pipeline.employer_entry): the request's canonical arguments are what is stored
+    employer, title, location, parent = given(args.employer), given(args.title), given(args.location), given(args.parent)
+    if not (args.text_file and employer and title):
         sys.exit("For links that are not Greenhouse/Lever/Ashby/Workable, save the posting text to a file and pass "
                  "--text-file FILE --employer NAME --title TITLE [--location ...].")
     raw = Path(args.text_file).read_text(encoding="utf-8")
     text = html_to_text(raw) if "<" in raw and ">" in raw else clean_text(raw)
-    url = canonical_url(args.url) or args.url
-    slug = re.sub(r"[^a-z0-9]+", "-", args.employer.lower()).strip("-")
-    posting = RawPosting(ats="manual", board_token=slug, external_id=text_fingerprint(url)[:16], title=args.title,
-                         location=args.location or "", url=url, apply_url=url, description_text=text,
-                         raw={"url": url, "text": text, "employer": args.employer})
-    from careeros.discovery.saved import parent_for
-    result = ingest(ctx, {"employer_id": None, "name": args.employer, "parent": args.parent or parent_for(args.employer, ctx.policy)},
-                    [posting], source="manual_url", full_board=False)
-    print(f"{args.title} — " + " ".join(f"{k}={v}" for k, v in result.items()))
-    _link_leads(ctx, f"{posting.ats}:{posting.board_token}:{posting.external_id}", "added")
+    url = posting_link(args.url) or args.url   # the opening's own link, its "#" part kept (Codex H10, Pass 9)
+    # the manual id from the employer's canonical form, as its request binds it (a paste's comes from its kept company):
+    # a name typed with an accent composed (U+00E9) or combining (e, U+0301) is one request and one id (the
+    # coordinator's item after Codex Pass 17, D201)
+    slug = re.sub(r"[^a-z0-9]+", "-", clean_text(employer).lower()).strip("-")
+    from careeros.discovery.manual_intake import requisition_in
+    posting = RawPosting(ats="manual", board_token=slug, external_id=text_fingerprint(url)[:16], title=title,
+                         location=location or "", url=url, apply_url=url, description_text=text,
+                         requisition_id=requisition_in(text),
+                         raw={"url": url, "text": text, "employer": employer,
+                              "location_source": "argument" if location else "none"})
+    placed: dict = {}
+    from careeros.discovery.manual_intake import begin, complete, operation_for, recorded_job, request_of
+    from careeros.pipeline import employer_entry
+    # the operation is the request as stored: the link as add-url stores it, the text as its reader took it, and your
+    # arguments (the D190 design, section 6)
+    op = operation_for("add_url", "", request_of(url, text, employer=employer, parent=parent, title=title,
+                                                 location=location),
+                       separate=getattr(args, "separate", False), operation_id=getattr(args, "operation", None))
+    if op.separate:
+        print(f"operation {op.key} (to retry it after an interruption: careeros add-url ... --operation {op.key})")
+    state, recorded = recorded_job(ctx.store, op)
+    if state == "done" and recorded:
+        print(f"{title} — already recorded: {recorded} (operation {op.key})")
+        return recorded
+    begin(ctx.store, op)
+    generated = f"{posting.ats}:{posting.board_token}:{posting.external_id}"
+    from careeros.discovery.manual_intake import NotStored, not_stored
+    from careeros.pipeline import nested_ingest
+
+    def written(counts) -> None:   # the job and the operation's completion: one transaction (sections 6 and 7)
+        if generated not in placed:
+            raise NotStored(generated)
+        complete(ctx.store, op, placed[generated])
+    try:
+        result = nested_ingest(ctx, employer_entry(ctx, name=employer, parent=parent), [posting],
+                               placed=placed, after=written)
+    except NotStored as exc:   # refused or failed: rolled back whole, no lead linked (Codex H14, Pass 10)
+        not_stored(ctx.store, generated, "add-url", getattr(exc, "reasons", ()))
+        sys.exit("Not added: the posting could not be stored (recorded as an open exception on the review page)")
+    print(f"{title} — " + " ".join(f"{k}={v}" for k, v in result.items()))
+    _link_leads(ctx, placed[generated], "added")   # the job actually written (Codex H11, Pass 9)
+    _withdraw_lost_handoffs(ctx, paths)
+    return placed[generated]
 
 
 def _link_leads(ctx: Context, job_id: str | None, via: str) -> Counter:
@@ -606,11 +765,13 @@ def cmd_import(ctx: Context, paths, args) -> Counter:
     one reading of the private settings (D141)."""
     from careeros.core import private_sites
     with private_sites.run():
-        return _import_inbox(ctx, paths, args)
+        counts = _import_inbox(ctx, paths, args)
+    _withdraw_lost_handoffs(ctx, paths)
+    return counts
 
 
 def _import_inbox(ctx: Context, paths, args) -> Counter:
-    from careeros.discovery.saved import SavedPostingError, parent_for, parse_saved_file
+    from careeros.discovery.saved import SavedPostingError, parse_saved_file
     inbox = paths["inbox"]
     inbox.mkdir(parents=True, exist_ok=True)
     for stale in sorted(inbox.glob("*" + CLAIMED)):   # an import that stopped half-way: the email goes back for this one
@@ -631,17 +792,58 @@ def _import_inbox(ctx: Context, paths, args) -> Counter:
             continue
         try:
             posting, employer = parse_saved_file(path)
-        except (SavedPostingError, UnicodeError) as exc:
+        except Exception as exc:   # noqa: BLE001 - any file it can't read is kept in failed with the reason, and the
+            # files after it are still imported (a malformed link: the red team; an unexpected page shape: RT-33)
+            if not isinstance(exc, (SavedPostingError, UnicodeError, ValueError)):
+                exc = SavedPostingError(f"unreadable saved page ({type(exc).__name__}: {exc})")
             ctx.store.writer("discovery").exception("validation", "low", f"saved posting not imported ({path.name}): {exc}",
                                                     error_code="saved_posting_unreadable")
             _move(path, inbox / "failed" / day)
             counts["failed"] += 1
             print(f"  ! {path.name}: {exc}")
             continue
-        parent = parent_for(employer, ctx.policy)
-        result = ingest(ctx, {"employer_id": None, "name": employer, "parent": parent}, [posting], source="manual_url", full_board=False)
+        import hashlib
+
+        from careeros.discovery.manual_intake import begin, complete, operation_for, recorded_job
+        from careeros.pipeline import employer_entry
+        entry = employer_entry(ctx, name=employer)   # the one resolver (the D190 design)
+        parent = entry["parent"]
+        placed: dict = {}
+        generated = f"{posting.ats}:{posting.board_token}:{posting.external_id}"
+        # the operation is the saved file's bytes (the D190 design, section 6): an import interrupted after its job
+        # was written finds it, and writes nothing again
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        op = operation_for("import", digest, {"file": digest}, separate=getattr(args, "separate", False))
+        state, recorded = recorded_job(ctx.store, op)
+        if state == "done" and recorded:
+            _move(path, inbox / "imported" / day)
+            counts["already_recorded"] += 1
+            print(f"  {posting.title} | {employer} | already recorded: {recorded}")
+            continue
+        begin(ctx.store, op)
+        if op.separate:
+            print(f"  operation {op.key} ({path.name})")
+        from careeros.discovery.manual_intake import NotStored, not_stored
+        from careeros.pipeline import nested_ingest
+
+        def written(result, op=op, generated=generated, placed=placed) -> None:   # sections 6 and 7
+            if generated not in placed:
+                raise NotStored(generated)
+            complete(ctx.store, op, placed[generated])
+        try:
+            result = nested_ingest(ctx, entry, [posting], placed=placed, after=written)
+        except NotStored as exc:   # rolled back whole: the file is kept in failed below
+            not_stored(ctx.store, generated, "import", getattr(exc, "reasons", ()))
+            result = Counter(errors=1)
         counts.update(result)
-        counts.update(_link_leads(ctx, f"{posting.ats}:{posting.board_token}:{posting.external_id}", "imported"))
+        if generated not in placed:
+            # refused (no free id) or failed: nothing written, so no lead is linked and the file is kept in failed with
+            # the reason in the exceptions (Codex CR-2026-11-15-GATE-FIXES H14, Pass 10; the owner's choice, D178)
+            _move(path, inbox / "failed" / day)
+            counts["failed"] += 1
+            print(f"  ! {path.name}: not stored, kept in failed (recorded as an open exception on the review page)")
+            continue
+        counts.update(_link_leads(ctx, placed[generated], "imported"))   # the job written (H11, Pass 9)
         _move(path, inbox / "imported" / day)
         print(f"  {posting.title} | {employer}{' (' + parent + ')' if parent != employer else ''} | "
               + " ".join(f"{k}={v}" for k, v in result.items()))
@@ -682,10 +884,18 @@ def _import_alert(ctx: Context, path: Path, client: HttpClient, inbox: Path, day
                                                         "email is larger than 5 MB", error_code="alert_email_unreadable")
                 print(f"  ! {path.name}: email is larger than 5 MB")
                 return Counter(failed=1)
-            with ctx.store.tx():   # committed only under the run's unchanged settings (S2-02, D141)
+            try:
+                # one reading of the settings for the email, from its check through its fetch-only step (no transaction
+                # spans a network call: the D190 design, section 5) to its commit (S2-02, D141)
                 with private_sites.pinned():
                     _alert_config_check(ctx.store, enroll=False)   # the stop, under the reading the email is read with (S2-01)
-                    folder, counts, note = _decide_alert_file(ctx, path, data, client)
+                    prefetched = _prefetch_eml(ctx, data, client)
+                    with ctx.store.tx():
+                        folder, counts, note = _decide_alert_file(ctx, path, data, client, prefetched)
+                        private_sites.check()   # the reading still in force, just before the commit
+            except BatchAborted as exc:   # rolled back: the job it would have written is held, and the import stops
+                hold_aborted(ctx.store, exc)
+                raise
             archived = _move(claimed, inbox / folder / day, path.name)
     except _FileBusy:
         _return_claim(claimed, path)
@@ -708,7 +918,19 @@ def _import_alert(ctx: Context, path: Path, client: HttpClient, inbox: Path, day
     return counts
 
 
-def _decide_alert_file(ctx: Context, path: Path, data: bytes, client: HttpClient) -> tuple[str, Counter, str]:
+def _prefetch_eml(ctx: Context, data: bytes, client: HttpClient) -> dict | None:
+    """The fetch-only step for a saved alert email, before its transaction; None when it does not parse (its own pass
+    reports that)."""
+    from careeros.discovery.alerts import parse_eml_bytes
+    try:
+        alert = parse_eml_bytes(data)
+    except Exception:   # noqa: BLE001 - reported by the email's own pass
+        return None
+    return _prefetch_alert(ctx, alert, client)
+
+
+def _decide_alert_file(ctx: Context, path: Path, data: bytes, client: HttpClient,
+                       prefetched: dict | None = None) -> tuple[str, Counter, str]:
     """(folder, counts, line to print) for one saved alert email's bytes: read and recorded, held, or skipped."""
     from careeros.discovery.alerts import AlertEmailError, parse_eml_bytes
     try:
@@ -721,7 +943,7 @@ def _decide_alert_file(ctx: Context, path: Path, data: bytes, client: HttpClient
     if _skip_as_correspondence(alert):  # application / recruiter mail (L1-01, CR-AD-V2-11)
         return ("failed", Counter(correspondence_skipped=1),
                 f"  ! {path.name}: not a job alert (application or recruiter correspondence); skipped")
-    counts = _record_alert(ctx, alert, client)
+    counts = _record_alert(ctx, alert, client, prefetched=prefetched)
     if alert.digest_status and (alert.digest_status == "partial" or counts["lead_errors"]):
         # An agency digest read only in part: the cards it is sure of are saved; the file is not "imported" (2026-11-09).
         # Its identity is its bytes, so another email saved under the same name never closes this one (CR-AD-05).
@@ -731,6 +953,13 @@ def _decide_alert_file(ctx: Context, path: Path, data: bytes, client: HttpClient
                 "saved); open the email itself for the rest")
     if alert.digest_status:
         _release_digest(ctx, "alert_file", identity)
+    if counts["lead_errors"] or counts["lead_store_failed"] or counts["lead_fetch_retry"]:
+        # a line that could not be processed, stored or read now: the email is kept in failed, so importing it again
+        # retries that line (the others are seen before); never filed as imported with the line lost (the red team
+        # before Pass 11; Z2)
+        return ("failed", counts, f"  ! {path.name}: "
+                f"{counts['lead_errors'] + counts['lead_store_failed'] + counts['lead_fetch_retry']} link(s) not "
+                "processed; kept in failed to import again")
     return "imported", counts, f"  {path.name}: {len(alert.links)} links | " + " ".join(f"{k}={v}" for k, v in sorted(counts.items()))
 
 
@@ -761,6 +990,59 @@ def _held_key() -> str:
     again only when this changed since its last reading."""
     from careeros.core import private_sites
     return f"{private_sites.revision()}:{_reader_fingerprint()}:{_ACCESS.get()}"
+
+
+UNSTORED_LINE = "alert_line_unstored"
+
+
+def _hold_unstored(ctx: Context, message_id: str, retry_leads: list | None = None) -> None:
+    """A Gmail alert with a job line read but not stored: one open problem under its id, so every later pull reads it
+    again by that id, whatever the search window, until a pass stores the line (the red team after Codex Pass 12, RT4-6:
+    the retry ended when the email aged out of the search). `retry_leads`: the leads kept for its lines whose fetch
+    failed for a moment, which the problem lists, so its closing can say they will not be retried (BATCH_5 E2)."""
+    writer = ctx.store.writer("discovery")
+    row = ctx.store.one("SELECT exception_id, metadata_json FROM exceptions WHERE error_code = ? AND entity_type = "
+                        "'gmail_message' AND entity_id = ? AND status != 'resolved'", (UNSTORED_LINE, message_id))
+    if row is not None:
+        if retry_leads:
+            known = (json.loads(row["metadata_json"] or "{}") or {}).get("retry_leads") or []
+            writer.annotate_exception(row["exception_id"], {"retry_leads": sorted(set(known) | set(retry_leads))})
+        return
+    writer.exception(
+        "integration", "medium", "An alert email has a job line that was not processed, not stored or not read for a "
+        "moment; it is read again by its id on every pull until every line is stored. A line read but not stored, or not "
+        "read for a moment, is a lead on the review page meanwhile, with its link and title; a line not processed is an "
+        "alert_line_failed problem under careeros status.",
+        error_code=UNSTORED_LINE, entity_type="gmail_message", entity_id=message_id, retryable=True,
+        metadata={"retry_leads": sorted(set(retry_leads or []))})
+
+
+NOT_RETRIED = "will not be retried: the email is no longer read; open its link"
+
+
+def _close_retry_leads(ctx: Context, metadata_json: str | None) -> int:
+    """The leads an email's closed retry kept for its lines whose fetch failed for a moment: their mark says nothing
+    retries them now (BATCH_5 E2, the coordinator on 58126d5). Returns how many."""
+    try:
+        leads = (json.loads(metadata_json or "{}") or {}).get("retry_leads") or []
+    except ValueError:
+        leads = []
+    writer, closed = ctx.store.writer("discovery"), 0
+    for lid in leads:
+        lead = ctx.store.one("SELECT fetch_failure FROM leads WHERE lead_id = ? AND status = 'new' AND fetch_failure LIKE ?",
+                             (lid, RETRY_MARK + "%"))
+        if lead is not None and lead["fetch_failure"].endswith("will retry"):
+            writer.update("leads", {"fetch_failure": (lead["fetch_failure"][:-len("will retry")] + NOT_RETRIED)[:200]},
+                          "lead_id = ?", (lid,))
+            closed += 1
+    return closed
+
+
+def _settle_unstored(ctx: Context, message_id: str) -> None:
+    writer = ctx.store.writer("discovery")
+    for row in ctx.store.all("SELECT exception_id FROM exceptions WHERE error_code = ? AND entity_type = 'gmail_message' "
+                             "AND entity_id = ? AND status != 'resolved'", (UNSTORED_LINE, message_id)):
+        writer.resolve_exception(row["exception_id"], "every job line of the email was stored on a later pull")
 
 
 def _note_held_try(ctx: Context, message_id: str, value: str | None = None) -> None:
@@ -822,18 +1104,110 @@ def _release_digest(ctx: Context, entity_type: str, entity_id: str) -> None:
         _note_held_try(ctx, entity_id, "")
 
 
-def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None = None, profile: str = "primary") -> Counter:
+class Unfetched(Exception):
+    """A line's board posting was not fetched ahead of its email's transaction (the planning pass records the need; in
+    the email's own pass it means a line the plan did not foresee): never fetched inside a write transaction."""
+
+
+class _Planned(Exception):
+    pass
+
+
+RETRY_MARK = "its own link: fetch failed for a moment"
+
+
+def _keep_retry_lead(ctx: Context, row: dict, why: str, now: str) -> None:
+    """The lead of an alert line whose fetch failed for a moment (or was not made yet), with the card's link and title,
+    marked to be read again: the card's trace while its email stays unsettled, and after its retry record closes
+    (BATCH_5 E2). The retry reads it again (never "seen before") and updates it."""
+    mark = f"{RETRY_MARK} ({why}, {now[:10]}); will retry"[:200]
+    writer = ctx.store.writer("discovery")
+    with ctx.store.tx():
+        if ctx.store.one("SELECT 1 FROM leads WHERE lead_id = ?", (row["lead_id"],)):
+            writer.update("leads", {"fetch_failure": mark}, "lead_id = ?", (row["lead_id"],))
+        else:
+            writer.insert("leads", {**row, "status": "new", "job_id": None, "fetch_failure": mark})
+
+
+def _line_failure(exc: Exception) -> FetchError:
+    """Any exception from one alert line's fetch, as that line's failure (BATCH_5 E1): a timeout, a network error, a 5xx
+    or a rate limit may pass by itself (the line is read again, Z2); anything else (too many redirects, an answer that
+    cannot be decoded or has a shape the reader does not know) is definite, and the line is kept as a lead with it. The
+    rest of the email is applied either way."""
+    import httpx
+    if isinstance(exc, (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError)):
+        return FetchError(f"network:{type(exc).__name__}", retryable=True)
+    if isinstance(exc, httpx.HTTPStatusError) and (exc.response.status_code >= 500 or exc.response.status_code == 429):
+        return FetchError(f"http_{exc.response.status_code}", status=exc.response.status_code, retryable=True)
+    return FetchError(f"unreadable_answer:{type(exc).__name__}")
+
+
+def transient(exc: FetchError) -> bool:
+    """A fetch failure that may pass by itself (a timeout, a network error, a 5xx, a rate limit, the run's request budget):
+    the line stays unapplied and its email unsettled, and the next run retries it. Any other answer (not found,
+    unsupported, a source not allowed) is definite: the line is kept as a lead with its reason (Z2, the coordinator's
+    reading of section 5)."""
+    return bool(exc.retryable) or exc.code == "budget_exhausted"
+
+
+def _prefetch_alert(ctx: Context, alert, client: HttpClient, profile: str = "primary") -> dict:
+    """The fetch-only step (the D190 design, section 5; Codex Pass 2 H7): which lines need a board fetch is learned by a
+    pass over the email that keeps nothing it writes (rolled back), each such posting is fetched with no transaction
+    open, and a read_pending hold is committed on every existing job they resolve to, by the line's position (section 7,
+    Z1). Returns {"fetched": {link: posting or FetchError}, "ahead": {position: (hold_id, target)}}."""
+    from careeros.pipeline import target_of, write_ahead
+    needed: dict[int, str] = {}
+    try:
+        with ctx.store.tx():
+            _alert_lines(ctx, alert, client, profile=profile, needed=needed)
+            raise _Planned
+    except _Planned:
+        pass
+    except Exception:   # noqa: BLE001 - the email's own pass reports it; nothing is fetched ahead
+        needed = {}
+    fetched: dict = {}
+    for url in dict.fromkeys(needed.values()):
+        parsed = parse_job_url(url)
+        if parsed is None:
+            continue
+        try:
+            fetched[url] = fetch_single(client, *parsed)
+        except FetchError as exc:
+            fetched[url] = exc
+        except Exception as exc:   # noqa: BLE001 - one line's answer, never the whole email's (BATCH_5 E1)
+            fetched[url] = _line_failure(exc)
+    reads = []
+    for position, url in needed.items():
+        if isinstance(fetched.get(url), RawPosting):
+            try:
+                reads.append((position, target_of(ctx.store, None, fetched[url])[1]))
+            except Exception:   # noqa: BLE001 - which job it is could not be read: ingest reports it in the email
+                continue
+    return {"fetched": fetched, "ahead": write_ahead(ctx.store, reads)}
+
+
+def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None = None, profile: str = "primary",
+                  *, prefetched: dict | None = None) -> Counter:
+    """An alert's lines recorded (_alert_lines), with its board postings fetched ahead (`prefetched`)."""
+    return _alert_lines(ctx, alert, client, outcomes, profile, prefetched=prefetched)
+
+
+def _alert_lines(ctx: Context, alert, client: HttpClient, outcomes: list | None = None, profile: str = "primary",
+                 *, prefetched: dict | None = None, needed: dict | None = None) -> Counter:
     """Links on readable job boards are graded; every other job link becomes a lead for you to open yourself.
     `outcomes`, when given, receives (link, outcome) per link: graded / already_tracked / lead /
-    outside_target_families / seen_before / unreadable_kept_as_lead / no_title / not_a_job_link / suppressed /
-    malformed_row / row_error. One bad line never stops the others.
-    `profile` "night" judges relevance with the NIGHT title families and tags the leads as NIGHT."""
+    outside_target_families / seen_before / unreadable_kept_as_lead / kept_as_lead_other_posting / notice /
+    notice_seen_before / no_title / not_a_job_link / suppressed / malformed_row / row_error. One bad line never stops
+    the others. A card whose own link names no posting is a notice (part 3 of the owner's D192 build), never a lead.
+    `profile` "night" judges relevance with the NIGHT title families and tags the leads as NIGHT. `prefetched`: the
+    fetch-only step's postings and write-ahead holds (_prefetch_alert), so nothing is fetched inside the email's
+    transaction; `needed`, in the planning pass, receives each line that needs a board fetch."""
     def note(link, outcome):
         if outcomes is not None:
             outcomes.append((link, outcome))
 
     from careeros.discovery import sources
-    from careeros.discovery.alerts import agency_lead_id, greenhouse_candidate, is_local_link, lead_id
+    from careeros.discovery.alerts import agency_lead_id, is_local_link, kept_for_review, lead_id
     from careeros.normalize.posting import classify_family, excluded_term, norm
     from careeros.normalize.posting import contains_term
     from careeros.qualify.night import night_family
@@ -843,7 +1217,11 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
     families, excluded = ctx.policy.get("families", default={}), ctx.policy.get("title_exclude", default=[])
     blocked = [norm(e) for e in ctx.policy.get("gate", "excluded_employers", default=[]) or [] if norm(e)]
     writer, now = ctx.store.writer("discovery"), ctx.store.clock.now()
-    for link in alert.links:
+    identity_cache: dict = {}
+    planned = prefetched is not None or needed is not None   # the email's batch: fetched ahead, held ahead
+    batch = prefetched or {"fetched": {}, "ahead": {}}
+    batch_created: set = set()
+    for position, link in enumerate(alert.links):
         if link.site == "invalid":  # an inbox line whose link could not be read: reported, never stored
             note(link, "malformed_row")
             continue
@@ -865,10 +1243,30 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
                 continue
             tracker = is_local_link(link.url)   # an agency's tracking link, or a review link kept under a local one (D156)
             lid = agency_lead_id(link.url) if tracker else lead_id(link.url)   # the agency mark stays with the row (CR-AD-02)
-            if ctx.store.one("SELECT 1 FROM leads WHERE lead_id IN (?, ?)", (lid, agency_lead_id(link.url))):
-                counts["lead_seen_before"] += 1  # also: a stored agency card's link, whatever the settings say now (CR-AD-06)
+            from careeros.discovery.board_discovery import names_one_posting
+            # a link that names no single posting is a shared page, however job-like it looks ("/jobs/search",
+            # "#/jobs": the red team after Codex Pass 12, RT3-5): its card is a notice, never a lead (D190 rule 3; the
+            # D190 design, revision 3, section 5; part 3 of the owner's D192 build), one per occurrence, so no older
+            # card with the same link, title or stated identity hides it (Codex's D190 design review M4)
+            if not tracker and not names_one_posting(link.url) and not kept_for_review(link.url):
+                noticed = _record_notice(ctx, alert, link, position, title_norm, family, profile, identity_cache)
+                counts["notice_new" if noticed == "notice" else "notice_seen_before"] += 1
+                note(link, noticed)
+                continue
+            stalled = ctx.store.one("SELECT 1 FROM leads WHERE lead_id = ? AND status = 'new' AND fetch_failure LIKE ?",
+                                    (lid, "its own link: read but not stored%"))
+            # a lead kept for a line whose fetch failed for a moment is read again too, never "seen before" (BATCH_5 E2),
+            # by a card whose title is in a target family, which fetches it; any other card (one outside the families,
+            # another email's) is "seen before" and leaves the mark, so the line that needs the read keeps retrying (the
+            # fuzzer's seed 100081 on 51a8406)
+            retrying = bool(family) and ctx.store.one(
+                "SELECT 1 FROM leads WHERE lead_id = ? AND status = 'new' AND fetch_failure LIKE ?", (lid, RETRY_MARK + "%"))
+            if not stalled and not retrying and ctx.store.one("SELECT 1 FROM leads WHERE lead_id IN (?, ?)",
+                                                              (lid, agency_lead_id(link.url))):
+                counts["lead_seen_before"] += 1  # the same exact link; also a stored agency card's, whatever the settings say now (CR-AD-06)
                 note(link, "seen_before")
                 continue
+            # a stalled lead (read, not stored) is tried again under its own id (Codex CR-2026-11-15-GATE-FIXES H19, Pass 11)
             row = {"lead_id": lid, "url": link.url, "site": link.site, "title": link.text, "title_norm": title_norm, "family": family,
                    "context": link.context or None, "sender": alert.sender or None, "subject": alert.subject or None,
                    "received_at": alert.received_at, "first_seen_at": now, "status": "new", "job_id": None, "profile": profile}
@@ -876,7 +1274,8 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
                 counts["lead_suppressed"] += 1
                 note(link, "suppressed")
                 continue
-            if tracker and ctx.store.one("SELECT 1 FROM leads WHERE lead_id = ?", (lead_id(link.url),)):
+            if tracker and ctx.store.one("SELECT 1 FROM leads WHERE lead_id = ? OR (url = ? AND lead_id NOT LIKE 'lead:agency:%')",
+                                         (lead_id(link.url), link.url)):   # under any ordinary id (a shared page's too)
                 # The same personal link was stored earlier as an ordinary lead (the setting was missing then): a marked
                 # twin, closed, keeps every row with this link local from now on (CR-AD-06).
                 with ctx.store.tx():
@@ -885,46 +1284,80 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
                 counts["lead_seen_before"] += 1
                 note(link, "seen_before")
                 continue
-            if tracker and _agency_repeat(ctx, link):
-                # The same job number as an earlier lead, which stays the visible one. The card's personal link is still
-                # stored as a marked, closed twin, so it stays local whatever the settings say later (CR-AD-07).
-                with ctx.store.tx():
-                    writer.insert("leads", {**row, "status": "closed", "status_at": now,
-                                            "status_reason": "the same job number as an earlier lead: its link kept local"})
-                counts["lead_seen_before"] += 1
-                note(link, "seen_before")
-                continue
-            from careeros.discovery.alerts import kept_for_review
+            # the same agency and job number as an earlier lead, in either arrival order: a possible repeat shown beside
+            # it, never "seen" and never closed (Codex's D190 design review H8; part 3 of the owner's D192 build)
+            row["repeat_of"] = _agency_repeat(ctx, link, lid) if tracker else _agency_job(ctx, link, lid)
             review = kept_for_review(link.url)   # never matched or fetched: an open lead until you dismiss it (D140 F2)
             known = board_url = None
             if not tracker:   # an agency's tracking link is never matched or fetched either
-                known = None if review else _known_job(ctx, link.url)
-                parsed = parse_job_url(link.url)
-                board_url = None if review else (link.url if parsed else greenhouse_candidate(link.url))
+                known = None if review else _known_job(ctx, link.url, link.text, link.context)
+                # a line here names one posting by its own link: it is fetched by that link or not at all (a careers
+                # page's Greenhouse guess is a suggestion on its notice: part 3 of D192)
+                board_url = None if review or not parse_job_url(link.url) else link.url
             if board_url and sources.status(parse_job_url(board_url)[0]) != "allowed":
                 board_url = None  # the source is manual or blocked under the current site policy: list it, never fetch it
-            if not tracker and not known and not board_url:
-                known = _ledger_match(ctx, link, title_norm)
-                if not known and _ledger_lead(ctx, link, title_norm):
-                    counts["lead_seen_before"] += 1  # the same job already listed through another site or URL
-                    note(link, "seen_before")
-                    continue
+            if not tracker and not known and not board_url and _ledger_lead(ctx, link, title_norm):
+                counts["lead_seen_before"] += 1  # the same job already listed through another site or URL
+                note(link, "seen_before")
+                continue
             outcome = None
             if known:  # a job CareerOS already tracks (e.g. a careers-page link to a board posting it polls)
                 row.update(status="ingested", job_id=known)
                 outcome = "already_tracked"
             elif family and board_url:  # a public job board CareerOS may read: grade it like any posting
                 try:
-                    _, result, job_id = _ingest_board_link(ctx, client, board_url, _company_name(link.context))
-                    row.update(status="ingested", job_id=job_id)
+                    held = batch["ahead"]
+                    _, result, job_id = _ingest_board_link(
+                        ctx, client, board_url, _company_name(link.context),
+                        fetched=batch["fetched"] if planned else None,
+                        ahead=({0: held[position]} if position in held else {}) if planned else None,
+                        exclude=frozenset(h for at, (h, _) in held.items() if at != position), created=batch_created)
                     counts.update(result)
-                    outcome = "graded"
+                    if job_id and not result.get("errors") and not _fetched_agrees(ctx, link, job_id, board_url):
+                        # the posting read is not the line's: another title, employer or requisition (a guessed board
+                        # link), or another requisition (its own link). It is graded as any posting; the lead stays open
+                        # for you (Codex CR-2026-11-15-GATE-FIXES H35, Pass 14)
+                        counts["lead_other_posting"] += 1
+                        outcome = "kept_as_lead_other_posting"
+                    elif job_id and not result.get("errors"):
+                        row.update(status="ingested", job_id=job_id)
+                        outcome = "graded"
+                    else:   # read but not stored: the lead stays open, with why, for the next read (red team, Pass 11)
+                        row["fetch_failure"] = f"its own link: read but not stored ({now[:10]})"
+                        counts["lead_store_failed"] += 1
+                        outcome = "unreadable_kept_as_lead"
+                except Unfetched:
+                    # not fetched ahead (the planning pass records the need): the line is not applied, and its email
+                    # stays unsettled, so the next run reads it again (the D190 design, section 5)
+                    if needed is not None:
+                        needed[position] = board_url
+                    elif not stalled:   # the card's trace meanwhile: its lead, marked to be read again (BATCH_5 E2)
+                        _keep_retry_lead(ctx, row, "not fetched yet", now)
+                    counts["lead_fetch_retry"] += 1
+                    note(link, "fetch_retry")
+                    continue
                 except FetchError as exc:
+                    if transient(exc):
+                        # Z2: a failure that may pass by itself: the line is not applied and the email stays
+                        # unsettled; the next run retries this occurrence only (the others are seen before). Its lead
+                        # is kept meanwhile, marked to be read again, so the card is never stored nowhere; a lead read
+                        # but not stored keeps its own mark, and stays pending (H25) (BATCH_5 E2)
+                        if not stalled:
+                            _keep_retry_lead(ctx, row, exc.code, now)
+                        counts["lead_fetch_retry"] += 1
+                        note(link, "fetch_retry")
+                        print(f"    ! could not read {link.url} now: {exc.code} (read again next time; kept as a lead)")
+                        continue
                     counts["lead_fetch_failed"] += 1
                     outcome = "unreadable_kept_as_lead" if board_url == link.url else None  # a wrong board-name guess is just a lead
                     # the reason is kept with the lead (2026-11-02): shown on the review page and by careeros leads
                     row["fetch_failure"] = (f"{'its own link' if board_url == link.url else 'a guessed board link'}: {exc.code} "
                                             f"({now[:10]})")[:200]
+                    if stalled:
+                        # a retry of a line read but not stored: it stays pending, and so does its email, whatever this
+                        # fetch says; the next read tries again (Codex CR-2026-11-15-GATE-FIXES H25, Pass 12)
+                        row["fetch_failure"] = f"its own link: read but not stored ({now[:10]}); last try: {exc.code}"[:200]
+                        counts["lead_store_failed"] += 1
                     if outcome:
                         print(f"    ! could not read {link.url}: {exc.code} (kept as a lead)")
             from careeros.discovery.note import context_note
@@ -934,19 +1367,40 @@ def _record_alert(ctx: Context, alert, client: HttpClient, outcomes: list | None
             segments = (link.context or "").split(" · ")  # an agency card: "Agency · location · pay=...; req=..."
             location = segments[1] if tracker and len(segments) > 1 and "=" not in segments[1] else None
             with ctx.store.tx():
-                writer.insert("leads", row)
+                if stalled or retrying:   # the same lead, updated only now that the line is read again (H19; E2)
+                    writer.update("leads", {"status": row["status"], "job_id": row["job_id"],
+                                            "fetch_failure": row.get("fetch_failure")}, "lead_id = ?", (lid,))
+                else:
+                    writer.insert("leads", row)
                 record_observation(ctx.store, source_kind="recommendation" if from_inbox else "alert",
                                    evidence_level="recommendation" if from_inbox else "alert", job_id=row["job_id"], lead_id=lid,
                                    url=link.url, requisition_id=fields.get("req"), title=link.text, company=_company_name(link.context),
                                    location=location, pay_text=fields.get("pay"), published_at=None)
             counts["lead_ingested" if row["status"] == "ingested" else ("lead_new" if family else "lead_other_family")] += 1
             note(link, outcome or ("lead" if family else "outside_target_families"))
+        except (TransactionLost, BatchAborted):
+            # SQLite ended the email's whole transaction (a full disk), or a line resolved to a job not held ahead of
+            # the email: nothing of the email is kept, and no other card is written outside it; the email is read
+            # again next time (the D190 design, revision 4 and 8, section 7)
+            raise
         except Exception as exc:  # noqa: BLE001 - recorded for you to see in status
             writer.exception("data_quality", "medium", f"alert line not processed: {type(exc).__name__}: {exc}",
                              error_code="alert_line_failed")
             counts["lead_errors"] += 1
             note(link, "row_error")
     return counts
+
+
+def _fetched_agrees(ctx: Context, link, job_id: str, board_url: str) -> bool:
+    """Whether the posting fetched for an alert line is the line's, by the owner's D188 (2026-11-19, "Exact links
+    only"): only when it was fetched by the line's own link and is the posting that link names (board_discovery
+    job_identity). A posting fetched by a guessed board link (greenhouse_candidate) is graded as any posting, and the
+    line's lead stays open for you, whatever its title, employer or requisition say (Codex CR-2026-11-15-GATE-FIXES
+    H35, Pass 14: a fetch that succeeds proves only that the guessed posting exists)."""
+    from careeros.discovery import board_discovery as bd
+    job = ctx.store.one("SELECT * FROM jobs WHERE job_id = ?", (job_id,))
+    own = bd.posting_identity(link.url)
+    return job is not None and board_url == link.url and own is not None and own == bd.job_identity(job)
 
 
 def _company_name(context: str | None) -> str | None:
@@ -964,101 +1418,135 @@ def _company(context: str | None) -> str:
     return norm((context or "").split(" · ")[0])
 
 
-def _ledger_match(ctx: Context, link, title_norm: str) -> str | None:
-    """The tracked job an incoming alert or inbox line already is (prompts v2.2's cross-source check, requisition-aware
-    since v2.5). Since 2026-11-02 (Codex CR-2026-11-02-LEAD-RESOLUTION F2) by the lead-resolution rules, never the older,
-    looser ones: only a job on a board the daily scan admits (registry.scan_gate), at the employer that
-    employer_identity.resolve() makes of the line's company (a legal suffix aside; "Foo Health Services" is another
-    employer than "Foo Health"; an agency or a confidential client is none), matched with the line's own title
-    (`title_norm`), link, requisition and location by board_discovery.match_lead, and only when that says matched (a
-    different requisition under the same title is a different job). Anything less leaves the lead open: lead resolution
-    matches it again after the next scan of its employer's board. Your own paste or add is separate
-    (lead_resolution.link_same_posting)."""
+def _ledger_lead(ctx: Context, link, title_norm: str) -> bool:
+    """An earlier lead for the same posting reached through another link: by the owner's D188 (2026-11-19, "Exact
+    links only"), only when this line's link and the earlier lead's both name one posting, and it is the same posting
+    (board_discovery.posting_identity: "/jobs/view/123" and "/jobs/search?currentJobId=123" are one LinkedIn job). The
+    same company and title, a requisition, a place or a shared careers page never make a line "seen before": it is
+    stored as its own lead (the red team's fr1-identity-1). A link kept for review never counts (D127 B3). An agency's
+    job number never makes a line seen: it is a possible repeat on the lead (_agency_job, _agency_repeat: Codex's D190
+    design review H8, part 3 of D192). `title_norm` is no longer read."""
     from careeros.discovery import board_discovery as bd
     from careeros.discovery.alerts import kept_for_review
-    from careeros.discovery.lead_resolution import Resolver
-    if kept_for_review(link.url):   # a review link is never matched automatically (D140 F2)
-        return None
-    facts = bd.candidate_from_lead({"context": link.context, "url": link.url, "title": link.text, "sender": "", "lead_id": "",
-                                    "first_seen_at": None}, ctx.policy)
-    if facts is None or facts.relationship != "employer" or not title_norm:
-        return None
-    resolver = Resolver(ctx)
-    key = resolver.key(facts.employer_name)
-    if not key:
-        return None
-    postings = resolver.postings([board["employer_id"] for board in resolver.admitted_boards(key)])
-    match = bd.match_lead(facts, postings, ctx.policy, ctx.store.clock.now())
-    return match["posting"].key if match["decision"] == "matched" else None
-
-
-def _ledger_lead(ctx: Context, link, title_norm: str) -> bool:
-    """An earlier lead at the same employer reached through a different site or URL: the same requisition id, or the
-    same title when the requisition ids do not conflict."""
-    from careeros.discovery.alerts import kept_for_review
-    from careeros.discovery.note import requisition
-    from careeros.discovery.seen_index import norm_req
-    # a link kept for review (no single job ID: an unreadable or conflicting one, or none) never counts as an earlier
-    # lead's job either: it names a different ID or none, so it is kept as its own review lead; only the very same link
-    # (its lead_id) is dropped (CR-2026-11-09-INTAKE-HOTFIX Pass 3, CR-HF-01, D127 B3; checked first since D138 R3)
     if kept_for_review(link.url):
         return False
-    company = _company(link.context)
-    if not company:
-        return False
-    from careeros.discovery.alerts import is_agency_lead, local_only_urls
-    req = norm_req(requisition(link.context))
-    local = local_only_urls(ctx.store)
-    for r in ctx.store.all("SELECT lead_id, title_norm, context, url FROM leads WHERE context IS NOT NULL AND (title_norm = ? OR context LIKE ?)",
-                           (title_norm, "%req=%")):
-        # a lead kept only for review (no single job ID) never hides a later link: that one is stored as its own lead
-        # (CR-2026-11-09-INTAKE-HOTFIX Pass 2, CR-HF-01, D126)
-        if _company(r["context"]) != company or kept_for_review(r["url"]):
-            continue
-        other = norm_req(requisition(r["context"]))
-        if req and other:
-            if req == other:
+    mine = bd.posting_identity(link.url)
+    if mine is not None:
+        for r in ctx.store.all("SELECT lead_id, url FROM leads WHERE url IS NOT NULL AND url != ? ORDER BY first_seen_at, lead_id",
+                               (link.url,)):
+            if not kept_for_review(r["url"]) and bd.posting_identity(r["url"]) == mine:
                 return True
-        elif r["title_norm"] == title_norm and not is_agency_lead(r, local):
-            # An agency digest card never hides another lead on its title alone: the agency uses the same titles for
-            # different clients' jobs, so "Claims Analyst · <agency>" from LinkedIn may be another job (2026-11-09).
-            return True
     return False
 
 
-def _agency_repeat(ctx: Context, link) -> bool:
-    """An agency digest card whose job number is already listed: by an earlier card of the same agency (a later digest
-    can give the same job a new personal link), or by another site's lead that names the same agency and the same job
-    number, whichever arrived first (CR-AD-03, Pass 2; the earlier lead, often a public link, is kept). Without a job
-    number the exact link is the card's only identity; cards are never merged on their title, since the agency uses the
-    same titles for different clients' jobs."""
+def _agency_job(ctx: Context, link, own: str | None = None) -> str | None:
+    """The agency card an ordinary line naming an agency and that agency's own job number may repeat: the earliest agency
+    card with that agency and number (CR-AD-03), or None. Advice only: the line is stored as its own lead, with this
+    possible repeat beside it, in either arrival order (Codex's D190 design review H8; part 3 of the owner's D192 build).
+    Only an agency card counts: two other lines with one requisition are never one job (D188)."""
+    from careeros.discovery.alerts import is_agency_lead, local_only_urls
+    from careeros.discovery.board_discovery import lead_requisition
+    from careeros.discovery.note import requisition
+    from careeros.discovery.seen_index import norm_req
+    req, company = norm_req(lead_requisition(link.context)), _company(link.context)
+    if not req or not company:
+        return None
+    local = local_only_urls(ctx.store)
+    for r in ctx.store.all("SELECT lead_id, url, context FROM leads WHERE context LIKE ? ORDER BY first_seen_at, lead_id",
+                           ("%req=%",)):
+        if r["lead_id"] != own and is_agency_lead(r, local) and _company(r["context"]) == company \
+                and norm_req(requisition(r["context"])) == req:
+            return r["lead_id"]
+    return None
+
+
+def _agency_repeat(ctx: Context, link, own: str | None = None) -> str | None:
+    """The earlier lead an agency digest card's job number repeats: an earlier card of the same agency (a later digest
+    can give the same job a new personal link), or another site's lead naming the same agency and job number, the
+    earliest first (CR-AD-03), or None. Advice only: the card is stored as its own open lead with this possible repeat
+    beside it, never "seen" and never a closed twin (Codex's D190 design review H8; part 3 of the owner's D192 build).
+    Without a job number the exact link is the card's only identity; cards are never merged on their title."""
     from careeros.discovery.note import requisition
     from careeros.discovery.seen_index import norm_req
     req = norm_req(requisition(link.context))
     if not req:
-        return False
+        return None
     company = _company(link.context)
-    return any(norm_req(requisition(r["context"])) == req and (r["site"] == link.site or (company and _company(r["context"]) == company))
-               for r in ctx.store.all("SELECT site, context FROM leads WHERE context LIKE ?", ("%req=%",)))
-
-
-def _known_job(ctx: Context, url: str) -> str | None:
-    """The tracked job a link points to: same posting URL, or a careers-page link carrying a known Greenhouse job id.
-    Never called for a link kept for review (D140 F2), and never a job tracked at a review link (the owner's D142 R-b)."""
-    from urllib.parse import parse_qs, urlsplit
-
-    from careeros.discovery.alerts import kept_for_review
-
-    def definite(row) -> str | None:
-        return None if row is None or any(u and kept_for_review(u) for u in (row["url"], row["canonical_url"])) else row["job_id"]
-    found = definite(ctx.store.one("SELECT job_id, url, canonical_url FROM jobs WHERE url = ? OR canonical_url = ? LIMIT 1", (url, url)))
-    if found:
-        return found
-    gh_jid = (parse_qs(urlsplit(url).query).get("gh_jid") or [""])[0]
-    if gh_jid.isdigit():
-        return definite(ctx.store.one("SELECT job_id, url, canonical_url FROM jobs WHERE ats = 'greenhouse' AND external_id = ? LIMIT 1",
-                                      (gh_jid,)))
+    for r in ctx.store.all("SELECT lead_id, site, context FROM leads WHERE context LIKE ? ORDER BY first_seen_at, lead_id",
+                           ("%req=%",)):
+        if r["lead_id"] != own and norm_req(requisition(r["context"])) == req and \
+                (r["site"] == link.site or (company and _company(r["context"]) == company)):
+            return r["lead_id"]
     return None
+
+
+def _record_notice(ctx: Context, alert, link, position: int, title_norm: str, family: str | None, profile: str,
+                   cache: dict) -> str:
+    """A card whose own link names no posting, kept as a notice (alert_notices), never a lead: one row per card
+    occurrence (its email's key and its position), so reading the same email again adds nothing and no other card hides
+    it. The employer the card names is resolved for grouping (advice); a careers page's Greenhouse id is a suggestion on
+    it, never fetched (D190 rule 3; the D190 design, revision 3, section 5; part 3 of the owner's D192 build). Returns
+    "notice" or "notice_seen_before"."""
+    from careeros.discovery.alerts import greenhouse_candidate
+    store = ctx.store
+    # an alert built without keys (a caller outside the email readers): its position and the line itself
+    key = link.occurrence or (f"{getattr(alert, 'message_key', '') or _alert_key(alert)}#{position}."
+                              + text_fingerprint(f"{link.url}\n{link.text}\n{link.context}")[:12])
+    message_key, _, place = key.rpartition("#")
+    if store.one("SELECT 1 FROM alert_notices WHERE notice_id = ?", (key,)):
+        return "notice_seen_before"
+    employer = _company_name(link.context)
+    guess = None if "#" in (posting_link(link.url) or "") else greenhouse_candidate(link.url)
+    with store.tx():
+        store.writer("discovery").insert("alert_notices", {
+            "notice_id": key, "message_key": message_key, "position": place, "url": link.url, "site": link.site,
+            "title": link.text, "title_norm": title_norm, "family": family, "context": link.context or None,
+            "sender": alert.sender or None, "subject": alert.subject or None, "received_at": alert.received_at,
+            "suggested_employer": employer, "employer_key": _employer_key(ctx, employer, cache),
+            "suggestion_json": json.dumps({"greenhouse_posting": guess} if guess else {}, sort_keys=True),
+            "profile": profile, "first_seen_at": store.clock.now(), "state": "new"})
+    return "notice"
+
+
+def _alert_key(alert) -> str:
+    """A key for an alert built with none (a caller outside the email readers): its sender, subject and time."""
+    return "alert:" + text_fingerprint(f"{alert.sender}\n{alert.subject}\n{alert.received_at}")[:24]
+
+
+def _employer_key(ctx: Context, name: str | None, cache: dict) -> str | None:
+    """The employer a card names, when it resolves to one (employer_identity), for grouping notices: advice only."""
+    if not name:
+        return None
+    if "inputs" not in cache:
+        from careeros.review.submission import _identity_inputs
+        cache["inputs"] = _identity_inputs(ctx.store, ctx.policy)
+    from careeros.normalize.employer_identity import RESOLVED, resolve
+    found = resolve(name, None, ctx.policy.get("parents", default={}) or {}, **cache["inputs"])
+    return found.key if found.status == RESOLVED else None
+
+
+def _known_job(ctx: Context, url: str, title: str | None = None, context: str | None = None) -> str | None:
+    """The tracked job a link is, by the owner's D188 (2026-11-19, "Exact links only"): only when the link names one
+    posting (a board's posting link, a Workday requisition link, a job site's id) and exactly one tracked job is that
+    posting (board_discovery.job_identity: a board-scanned job by its own board id). A careers page, or a careers-page
+    link carrying a Greenhouse id, names no tracked job: its lead stays open for you. Never called for a link kept for
+    review (D140 F2), and never a job tracked at a review link (the owner's D142 R-b). `title` and `context` are no
+    longer read: what a line says never makes it a tracked job."""
+    from careeros.discovery import board_discovery as bd
+    from careeros.discovery.alerts import kept_for_review
+    found = set()
+    identity = bd.posting_identity(url)
+    for row in bd.jobs_with_identity(ctx.store, identity):
+        if row["current_state"] == "duplicate" and row["duplicate_of"]:
+            # a duplicate is its original's posting (D188) only when the original is that posting: one an older engine
+            # stored by requisition or text is the line's own job until the next processing run re-derives it (the
+            # red team's hr1-alerts-3)
+            original = ctx.store.one("SELECT * FROM jobs WHERE job_id = ?", (row["duplicate_of"],))
+            if original is not None and bd.job_identity(original) == identity:
+                row = original
+        if not any(u and kept_for_review(u) for u in (row["url"], row["canonical_url"])):
+            found.add(row["job_id"])
+    return found.pop() if len(found) == 1 else None
 
 
 def _gmail_pull(ctx: Context, client: HttpClient, query: str | None = None, credentials=None, gmail=None) -> Counter:
@@ -1119,6 +1607,11 @@ def _pull_gmail(ctx: Context, client: HttpClient, query: str | None, credentials
         held = [r["entity_id"] for r in ctx.store.all(
             "SELECT entity_id FROM exceptions WHERE error_code = ? AND entity_type = 'gmail_message' AND status != 'resolved' "
             "GROUP BY entity_id ORDER BY MIN(occurred_at)", (HELD_DIGEST,))]
+        # an alert with a line read but not stored: read again by its id, whatever the window, as an ordinary alert (the
+        # red team after Codex Pass 12, RT4-6); never a held digest
+        unstored = [r["entity_id"] for r in ctx.store.all(
+            "SELECT entity_id FROM exceptions WHERE error_code = ? AND entity_type = 'gmail_message' AND status != 'resolved' "
+            "GROUP BY entity_id ORDER BY MIN(occurred_at)", (UNSTORED_LINE,))]
         if getattr(gmail, "all_mail", True) is False:
             _once(ctx, "imap_inbox_only", "Gmail's All Mail is not shown over IMAP, so only the inbox is read: alert emails "
                   "archived or filed under a label are missed, and a held digest outside the inbox cannot be read again. Turn "
@@ -1135,28 +1628,35 @@ def _pull_gmail(ctx: Context, client: HttpClient, query: str | None, credentials
             raise GmailError(_setting_error_code(exc), f"alert emails not read: {exc}") from exc
         tried = {r["key"][len(HELD_TRY):]: r["value"] for r in ctx.store.all("SELECT key, value FROM meta WHERE key LIKE ?",
                                                                              (HELD_TRY + "%",))}
-        for message_id in dict.fromkeys(found + held):   # every held digest by its id, whatever the window (CR-AD-V2-10)
+        for message_id in dict.fromkeys(found + held + unstored):   # every held one by its id, whatever the window
             if ctx.store.one("SELECT 1 FROM alert_messages WHERE message_id = ?", (message_id,)):
                 continue   # read before; a hold is settled only by a full read or a dismiss, never by a receipt alone
             if message_id in held and tried.get(message_id) == held_key:   # Gmail never changes an email: only a change
                 counts["gmail_held_unchanged"] += 1                          # of the settings or the reader can matter
                 continue
             try:
-                with ctx.store.tx():   # the whole email in one transaction, committed only under unchanged settings (S2-02)
-                    with private_sites.pinned():   # the run's reading, checked again just before the commit (D141)
-                        try:   # checked again for each message: the settings file can change during a pull (L4-01)
-                            _alert_config_check(ctx.store, enroll=False)
-                        except ValueError as exc:
-                            raise GmailError(_setting_error_code(exc), f"alert emails not read: {exc}") from exc
+                # one reading of the settings for the email, from its check through its fetch-only step (no
+                # transaction spans a network call: the D190 design, section 5) to its commit (D141)
+                with private_sites.pinned():
+                    try:   # checked again for each message: the settings file can change during a pull (L4-01)
+                        _alert_config_check(ctx.store, enroll=False)
+                    except ValueError as exc:
+                        raise GmailError(_setting_error_code(exc), f"alert emails not read: {exc}") from exc
+                    fetched = _gmail_prefetch(ctx, gmail, message_id, client)
+                    with ctx.store.tx():   # the whole email in one transaction, committed only under unchanged settings
                         links = _gmail_message(ctx, gmail, message_id, client, counts, retry=message_id not in found,
-                                               held=message_id in held)
+                                               held=message_id in held, fetched=fetched)
                         if links is not None:   # None: held for a retry, or gone: no receipt. Inside the check (Pass 3)
                             writer.insert("alert_messages", {"message_id": message_id, "source": "gmail",
                                                               "processed_at": ctx.store.clock.now(), "links": links})
+                        private_sites.check()   # the reading still in force, just before the commit (S2-02)
                 if links is not None:
                     counts["gmail_messages"] += 1
             except private_sites.SettingsChanged as exc:   # nothing of the email is committed: read again next time
                 raise GmailError("private_sites_changed", f"alert emails not read: {exc}") from exc
+            except BatchAborted as exc:   # rolled back: the job it would have written is held, and the pull stops
+                hold_aborted(ctx.store, exc)
+                raise
             except ValueError as exc:   # the settings file unreadable when the email's reading began (S2-03)
                 if not _setting_refusal(exc):
                     raise
@@ -1177,8 +1677,24 @@ def _pull_gmail(ctx: Context, client: HttpClient, query: str | None, credentials
 CATCH_UP_LIMIT = 10_000   # alert emails the catch-up search after a stop may list (L4-02, CR-AD-V2-10)
 
 
+def _gmail_prefetch(ctx: Context, gmail, message_id: str, client: HttpClient) -> dict:
+    """The fetch-only step for one Gmail email (the D190 design, section 5): the email itself and its lines' board
+    postings, read before its transaction, which spans no network call. A failure to fetch the email is kept and
+    handled inside, as before."""
+    from careeros.discovery.alerts import parse_eml_bytes
+    try:
+        raw = gmail.raw(message_id)
+    except Exception as exc:   # noqa: BLE001 - handled in _gmail_message, as a failed fetch always was
+        return {"error": exc}
+    try:
+        alert = parse_eml_bytes(raw, message_key=f"gmail:{message_id}")
+    except Exception:   # noqa: BLE001 - reported by the email's own pass
+        return {"raw": raw}
+    return {"raw": raw, "prefetched": _prefetch_alert(ctx, alert, client)}
+
+
 def _gmail_message(ctx: Context, gmail, message_id: str, client: HttpClient, counts: Counter, *, retry: bool,
-                   held: bool = False) -> int | None:
+                   held: bool = False, fetched: dict | None = None) -> int | None:
     """One Gmail alert email read and recorded. The number of its links for its receipt, or None when it gets none: a
     held agency digest (read again after a change), or a held one that is no longer in Gmail. `retry`: a held digest
     fetched by its id rather than found by the search; `held`: one that is held now. A failure to fetch stops the pull
@@ -1188,16 +1704,24 @@ def _gmail_message(ctx: Context, gmail, message_id: str, client: HttpClient, cou
     from careeros.discovery.gmail import GmailError
     writer = ctx.store.writer("discovery")
     try:
-        raw = gmail.raw(message_id)
+        if fetched is None:
+            raw = gmail.raw(message_id)
+        elif fetched.get("error") is not None:
+            raise fetched["error"]
+        else:
+            raw = fetched["raw"]
     except GmailError as exc:
         if retry and exc.code in ("http_404", "message_gone") and _held_elsewhere(ctx, message_id):
             counts["gmail_held_not_reachable"] += 1   # held while another Gmail account was read: not gone, only not in
             _note_held_try(ctx, message_id)           # this one; read again once the reader changes (the red team)
             return None
         if retry and exc.code in ("http_404", "message_gone"):   # a held digest deleted from Gmail since
-            for row in ctx.store.all("SELECT exception_id FROM exceptions WHERE error_code = ? AND entity_type = 'gmail_message' "
-                                     "AND entity_id = ? AND status != 'resolved'", (HELD_DIGEST, message_id)):
+            for row in ctx.store.all("SELECT exception_id, error_code, metadata_json FROM exceptions WHERE error_code IN "
+                                     "(?, ?) AND entity_type = 'gmail_message' AND entity_id = ? AND status != 'resolved'",
+                                     (HELD_DIGEST, UNSTORED_LINE, message_id)):
                 writer.resolve_exception(row["exception_id"], "the held email is no longer in Gmail")
+                if row["error_code"] == UNSTORED_LINE:   # its kept leads: nothing retries them now (BATCH_5 E2)
+                    counts["leads_no_longer_retried"] += _close_retry_leads(ctx, row["metadata_json"])
             _note_held_try(ctx, message_id, "")
             counts["gmail_held_gone"] += 1
             return None
@@ -1214,7 +1738,7 @@ def _gmail_message(ctx: Context, gmail, message_id: str, client: HttpClient, cou
         raise GmailError("fetch_failed", f"an alert email could not be fetched ({type(exc).__name__}); the pull stopped "
                                          "and reads it next time") from exc
     try:
-        alert = parse_eml_bytes(raw)
+        alert = parse_eml_bytes(raw, message_key=f"gmail:{message_id}")   # its cards keyed by the message (part 3)
     except Exception as exc:  # noqa: BLE001 - one odd message never stops the others
         if held or raw_mentions_agency(raw):   # an agency's mail that cannot be read: held (L1-06)
             counts["gmail_digests_deferred"] += 1
@@ -1234,7 +1758,8 @@ def _gmail_message(ctx: Context, gmail, message_id: str, client: HttpClient, cou
     if _skip_as_correspondence(alert):  # e.g. an application update (L1-01, CR-AD-V2-11)
         counts["correspondence_skipped"] += 1
         return 0
-    result = _record_alert(ctx, alert, client)
+    outcomes: list = []
+    result = _record_alert(ctx, alert, client, outcomes, prefetched=(fetched or {}).get("prefetched") if fetched else None)
     counts.update(result)
     if alert.digest_status and (alert.digest_status == "partial" or result["lead_errors"]):
         counts["gmail_digests_deferred"] += 1
@@ -1242,6 +1767,12 @@ def _gmail_message(ctx: Context, gmail, message_id: str, client: HttpClient, cou
         return None  # a partial or unreadable digest must remain eligible for a retry
     if alert.digest_status:
         _release_digest(ctx, "gmail_message", message_id)   # read in full: its hold, if any, is settled
+    if result["lead_errors"] or result["lead_store_failed"] or result["lead_fetch_retry"]:
+        counts["gmail_lines_retried"] += 1
+        from careeros.discovery.alerts import lead_id
+        _hold_unstored(ctx, message_id, [lead_id(link.url) for link, outcome in outcomes if outcome == "fetch_retry"])
+        return None   # no receipt: the next pull reads it again, its other links seen before (the red team, Pass 11)
+    _settle_unstored(ctx, message_id)
     return len(alert.links)
 
 
@@ -1359,16 +1890,25 @@ def _pull_inbox(ctx: Context, client: HttpClient, repo: str, runner) -> Counter:
             print(f"  issue #{issue['number']} is a NIGHT issue: left open (NIGHT profile is off)")
             continue
         try:  # one unreadable issue never stops the others; it stays open and is retried next run
-            with ctx.store.tx():   # committed only under unchanged settings (S2-02)
-                with private_sites.pinned():   # the run's reading, checked again just before the commit (D141)
-                    _alert_config_check(ctx.store, enroll=False)
-                    alert, outcomes = inbox.issue_alert(issue), []
-                    counts.update(_record_alert(ctx, alert, client, outcomes, profile=profile))
+            alert, outcomes = inbox.issue_alert(issue), []
+            with private_sites.pinned():   # one reading, from the check through the fetch-only step to the commit (D141)
+                _alert_config_check(ctx.store, enroll=False)
+                prefetched = _prefetch_alert(ctx, alert, client, profile=profile)   # before its transaction (section 5)
+                with ctx.store.tx():   # committed only under unchanged settings (S2-02)
+                    result = _record_alert(ctx, alert, client, outcomes, profile=profile, prefetched=prefetched)
+                    counts.update(result)
+                    if result["lead_errors"] or result["lead_store_failed"] or result["lead_fetch_retry"]:
+                        # a line read but not stored: the issue stays open and is read again on the next pull, as an
+                        # email stays in failed (the red team after Codex Pass 12, RT4-5)
+                        counts["inbox_lines_retried"] += 1
+                        private_sites.check()   # just before the commit
+                        continue
                     gmail = inbox.gmail_status(issue.get("body") or "")
                     reply = inbox.reply_text(ctx.store.clock.now()[:10], outcomes, gmail)
                     writer.insert("inbox_issues", {"repo": repo, "number": issue["number"], "processed_at": ctx.store.clock.now(),
                                                    "links": len(alert.links), "reply": reply, "closed": 0,
                                                    "gmail_status": gmail, "profile": profile})
+                    private_sites.check()   # the reading still in force, just before the commit
         except ValueError as exc:   # the settings went missing or changed: every issue left stays open (CR-AD-V2-07)
             if not str(exc).startswith(("agency_setting_missing", "private_sites_")):
                 writer.exception("data_quality", "medium", f"inbox issue #{issue['number']} not processed: {type(exc).__name__}: "
@@ -1694,6 +2234,14 @@ def cmd_gmail(ctx: Context, paths, args) -> None:
 
 def cmd_process(ctx: Context, paths, args) -> Counter:
     counts = process(ctx)
+    from careeros.review.assist import withdraw_handoffs
+    # a handoff whose session lost its label, or was opened under standing preparation before an upgrade, is withdrawn
+    # at the first processing run (Codex CR-2026-11-15-GATE-FIXES H34, Pass 14)
+    withdrawn = withdraw_handoffs(ctx.store, ctx.policy, ctx.profile, paths["root"])
+    if withdrawn:
+        counts["handoffs_withdrawn"] += withdrawn
+    from careeros.discovery.lead_resolution import recheck_linked_leads
+    counts.update(recheck_linked_leads(ctx))   # every run: a lead link stands only by its own link or yours (D188)
     print("  " + " ".join(f"{k}={v}" for k, v in sorted(counts.items())))
     return counts
 
@@ -2074,9 +2622,54 @@ def cmd_review(ctx: Context, paths, args) -> None:
     serve(ctx.store, ctx.profile, ctx.policy, paths["lock"], port=args.port, open_browser=not args.no_browser)
 
 
+def _show_preview(ctx: Context, args, who: str) -> bool:
+    """Print the card an Apply or Stretch label would approve now, recorded as a preview, and how to confirm it (the
+    D190 design, section 3, "The preview"). False when the job offers no preview now."""
+    from careeros.review.labels import capture, preview_lines, write_preview
+    captured = capture(ctx.store, ctx.policy, ctx.profile, args.job_id, who)
+    for line in preview_lines(captured, ctx.store, ctx.store.clock.now()):
+        print(line)
+    if captured["waiting"]:
+        return False
+    preview_id = write_preview(ctx.store, captured)
+    print(f"To label it {args.label} as shown: careeros label {args.job_id} {args.label} --confirm {preview_id}"
+          + (" --night" if who == "night" else ""))
+    return True
+
+
 def cmd_label(ctx: Context, paths, args) -> None:
-    print(record_label(ctx.store, args.job_id, args.label, args.reason, key=f"cli:{secrets.token_hex(8)}",
-                       profile="night" if args.night else "primary"))
+    from careeros.review.labels import PreviewRefused
+    who = "night" if args.night else "primary"
+    args.confirm = getattr(args, "confirm", None)
+    if args.confirm and args.label == "skip":
+        sys.exit("Not labelled: Skip needs no preview; run it without --confirm")
+    if args.label in ("apply", "stretch") and not args.confirm:
+        # an Apply or Stretch label is given from a preview of what it approves: this prints one (the D190 design)
+        try:
+            shown = _show_preview(ctx, args, who)
+        except ValueError as exc:
+            sys.exit(f"Not labelled: {exc}")
+        if not shown:
+            sys.exit("Not labelled: no preview now")
+        return
+    try:
+        print(record_label(ctx.store, args.job_id, args.label, args.reason, key=f"cli:{secrets.token_hex(8)}",
+                           profile=who, preview=args.confirm, policy=ctx.policy, applicant=ctx.profile))
+    except PreviewRefused as exc:
+        print(f"Not labelled: {exc}")
+        try:   # refused with a fresh preview, when there is one
+            _show_preview(ctx, args, who)
+        except ValueError:
+            pass
+        sys.exit(2)
+    except ValueError as exc:
+        sys.exit(f"Not labelled: {exc}")
+    from careeros.review.assist import withdraw_handoffs
+    # a handoff never outlives the label it was issued under: a Skip withdraws it at once, not at the next run (the red
+    # team before Codex Pass 15, RT-01)
+    withdrawn = withdraw_handoffs(ctx.store, ctx.policy, ctx.profile, paths["root"]) if paths.get("root") else 0
+    if withdrawn:
+        print(f"  handoffs_withdrawn={withdrawn}")
 
 
 def cmd_applied(ctx: Context, paths, args) -> None:
@@ -2207,14 +2800,13 @@ def cmd_sources(ctx: Context, paths, args) -> None:
             print(f"  {m['mapping_id']:40} {m['verification_status']:21} {m['employer_name'][:28]:28} trust={m['board_trust_score']} "
                   f"health={m['board_health_score']} relevant={m['relevant_roles']}" + (f"  PAUSED: {m['paused_reason']}" if m["paused_reason"] else ""))
         # a board you (or a lead) named that does not exist: nothing is admitted, and you can see it here (the Functional
-        # MVP gate, 2026-11-15: it was only in the discovery_attempts table)
-        absent = store.all("SELECT employer_name, board_url, updated_at FROM discovery_queue WHERE board_url IS NOT NULL "
-                           "AND last_outcome = 'slug_absent' ORDER BY employer_name")
+        # MVP gate, 2026-11-15: it was only in the discovery_attempts table). Only a probe of exactly that board counts,
+        # dated by the probe, shown as the board's own address, never the link as stored (Codex CR-2026-11-15-GATE-FIXES F5)
+        absent = bd.absent_suggestions(store)
         if absent:
-            print("Suggested boards that do not exist (nothing admitted; correct or remove the suggestion):")
-            for suggestion in absent:
-                print(f"  {suggestion['employer_name'][:40]:40} {suggestion['board_url']}  "
-                      f"(checked {(suggestion['updated_at'] or '')[:10]})")
+            print("Suggested boards that do not exist (nothing admitted; suggest the right link with careeros sources suggest):")
+            for name, address, probed in absent:
+                print(f"  {name[:40]:40} {address}  (checked {probed[:10]})")
         return
     if action == "health":
         registry.sync_legacy(store)
@@ -2401,6 +2993,19 @@ def cmd_dismiss(ctx: Context, paths, args) -> None:
     except ValueError as exc:
         sys.exit(str(exc))
     print(f"{args.job_id}: dismissed ({args.reason})")
+    _withdraw_lost_handoffs(ctx, paths)   # every handoff file goes (browser Fill is paused, D191)
+
+
+def cmd_location(ctx: Context, paths, args) -> None:
+    """Set a pasted or added posting's location by naming the job (the owner's D180): the job is screened again."""
+    from careeros.discovery.manual_intake import set_location
+    try:
+        result = set_location(ctx, args.job_id, args.location)
+    except ValueError as exc:
+        sys.exit(f"Location not set: {exc}")
+    print(f"{result['job_id']}: location " + ("set; screened again now" if result["changed"] else "recorded as yours (unchanged)"))
+    counts = process(ctx)
+    print("  " + " ".join(f"{k}={v}" for k, v in sorted(counts.items()) if v))
 
 
 def cmd_paste(ctx: Context, paths, args) -> None:
@@ -2417,15 +3022,78 @@ def cmd_paste(ctx: Context, paths, args) -> None:
                               creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
     else:
         text = sys.stdin.read()
+    from careeros.db.store import IdempotencyCollision
+    from careeros.discovery.manual_intake import MAX_TEXT, operation_for, paste_request
+    request = paste_request(args.url, text, company=args.company, title=args.title, location=args.location)
+    op = operation_for("paste", "", request, separate=getattr(args, "separate", False),
+                       operation_id=getattr(args, "operation", None))
+    if op.separate:
+        print(f"operation {op.key} (to retry it after an interruption: careeros paste ... --operation {op.key})")
     try:
-        result = intake(ctx, text, args.url, company=args.company, title=args.title, location=args.location)
+        result = intake(ctx, text, args.url, company=args.company, title=args.title, location=args.location, operation=op)
     except ValueError as exc:
         sys.exit(f"Not added: {exc}")
+    except IdempotencyCollision:
+        # a retry by --operation of another request is refused, never answered with the recorded job (Codex H43)
+        sys.exit(f"Not added: operation {op.key} was recorded for another request: its link, its text, your arguments "
+                 f"(as typed, for one that runs past its limit), or whether its text runs past the {MAX_TEXT:,}-character "
+                 "limit differ. Paste it without --operation "
+                 "to take it in as a request of its own")
     print(f"{result['job_id']}: {result['status']}" + (f"; manual source recorded ({result['manual_source']})" if result["manual_source"] else ""))
+    if result.get("location_confirmed"):
+        print("  location confirmed" + ("; it is screened again now" if result.get("location_changed") else ""))
+    if result.get("location_note"):
+        print(f"  {result['location_note']}")
+    if result.get("id_collision"):
+        print(f"  tracked as its own job: {result['id_collision']} is another posting (linked as a possible duplicate)")
     _link_leads(ctx, result["job_id"], "pasted")
     counts = process(ctx)
     print("  " + " ".join(f"{k}={v}" for k, v in sorted(counts.items()) if v))
+    _withdraw_lost_handoffs(ctx, paths)
     cmd_report(ctx, paths, args)
+
+
+def cmd_notices(ctx: Context, paths, args) -> None:
+    """Alert notices (part 3 of the owner's D192 build): cards whose own link names no posting (a careers page), never
+    leads. List them grouped by the employer each names, dismiss one, or add its posting: by the posting's own link
+    (--url, through add-url), or the notice's link with the posting's text (--text-file)."""
+    from careeros.review import notices
+    store = ctx.store
+    if args.action == "list":
+        total, cache = 0, dict[str, object]()
+        for label, rows in notices.groups(store, ("new", "dismissed", "added") if args.all else ("new",)):
+            print(f"{label} ({len(rows)})")
+            for n in rows:
+                total += 1
+                print(f"  {n['notice_id']}  {n['state']:9} {(n['received_at'] or n['first_seen_at'])[:10]}  {n['site']:9} "
+                      f"{n['title'][:60]}")
+                print(f"    {n['url']}")
+                if n["context"]:
+                    print(f"    {n['context'][:160]}")
+                guess = json.loads(n["suggestion_json"] or "{}").get("greenhouse_posting")
+                if guess:
+                    print(f"    may be {guess} (a guess): careeros notices add {n['notice_id']} --url {guess}")
+                for job in notices.likely_postings(store, ctx.policy, n, cache):
+                    print(f"    a tracked posting with this title: {job['job_id']} ({job['location_raw'] or 'location unknown'})")
+        print(f"{total} notice(s)")
+        return
+    if not args.target:
+        sys.exit(f"Give the NOTICE_ID: careeros notices {args.action} NOTICE_ID")
+    notice = store.one("SELECT * FROM alert_notices WHERE notice_id = ?", (args.target,))
+    if notice is None:
+        sys.exit(f"Not done: unknown notice {args.target}")
+    key = f"cli:{secrets.token_hex(8)}"
+    if args.action == "dismiss":
+        notices.dismiss_notice(store, args.target, key=key)
+        print(f"{args.target}: dismissed")
+        return
+    from types import SimpleNamespace
+    job_id = cmd_add_url(ctx, paths, SimpleNamespace(
+        url=args.url or notice["url"], text_file=args.text_file, employer=args.employer or notice["suggested_employer"],
+        title=args.title or notice["title"], location=args.location, parent=None))
+    if job_id:
+        notices.mark_added(store, args.target, job_id, key=key)
+        print(f"{args.target}: added as {job_id}")
 
 
 def cmd_leads(ctx: Context, paths, args) -> None:
@@ -2448,6 +3116,8 @@ def cmd_leads(ctx: Context, paths, args) -> None:
                 print(f"    {lead['status_reason']}")
             if lead["fetch_failure"]:
                 print(f"    could not be read: {lead['fetch_failure']}")
+            if lead["repeat_of"]:   # the same agency and job number (H8, part 3 of D192): advice only
+                print(f"    possibly the same as {lead['repeat_of']} (the same job number)")
             item = waiting.get(lead["lead_id"])
             if item:
                 job = item["job"]
@@ -2520,8 +3190,14 @@ def cmd_package(ctx: Context, paths, args) -> None:
             rows = ctx.store.all("SELECT p.*, j.title, j.employer_name FROM packages p JOIN jobs j ON j.job_id = p.job_id "
                                  "WHERE p.version = (SELECT MAX(version) FROM packages q WHERE q.job_id = p.job_id) ORDER BY p.at DESC")
             for r in rows:
+                try:
+                    questions = packages.load_questions(root, r["job_id"])
+                except ValueError as exc:   # one job's unreadable file is shown on its line, never ends the list (RT-40)
+                    print(f"{r['package_id']}  v{r['version']}  {r['route']:<8}  {'questions unreadable':<24}  {r['job_id']}  "
+                          f"{r['title']} at {r['employer_name']}\n  {exc}")
+                    continue
                 ready = packages.readiness(ctx.store, ctx.policy, ctx.profile, r["job_id"], facts=facts, library=library,
-                                           vault_root=root, questions=packages.load_questions(root, r["job_id"]))
+                                           vault_root=root, questions=questions)
                 sessions = [s["state"] for s in assist.role_sessions(ctx.store, r["job_id"]) if s["state"] in ("open", "uncertain")]
                 state = ready["state"] + (f", session {sessions[-1]}" if sessions else "")
                 print(f"{r['package_id']}  v{r['version']}  {r['route']:<8}  {state:<24}  {r['job_id']}  {r['title']} at {r['employer_name']}")
@@ -2564,19 +3240,19 @@ def cmd_package(ctx: Context, paths, args) -> None:
         if args.action == "questions":
             from careeros.discovery.http import HttpClient
             from careeros.review.adapters import fetch_greenhouse_questions
-            found = fetch_greenhouse_questions(HttpClient(), args.target)
+            job = ctx.store.one("SELECT * FROM jobs WHERE job_id = ?", (args.target,))
+            endpoint = _posting_endpoint(ctx.store, job) if job is not None else None
+            if endpoint is None or endpoint[0] != "greenhouse":
+                raise ValueError("not_a_greenhouse_job" if job is not None else f"unknown_job: {args.target}")
+            # the posting's current board, never a token taken from the job id (the red team's hr1-identity-1)
+            found = fetch_greenhouse_questions(HttpClient(), args.target, endpoint=endpoint[1:])
             path = packages.save_questions(root, args.target, found, "greenhouse job-board API", ctx.store.clock.now())
             print(f"{len(found)} question(s) read into {path}")
             return
         facts, library = _package_inputs(paths)
         if args.action == "prepare" and args.standing:
-            picked = packages.standing_candidates(ctx.store, ctx.policy)
-            for job_id in picked:
-                out = packages.prepare(ctx.store, ctx.policy, ctx.profile, job_id, facts=facts, library=library, vault_root=root,
-                                       questions=packages.load_questions(root, job_id), actor="standing_policy")
-                print(("prepared" if out["new"] else "unchanged") + f" {job_id} v{out['version']} ({len(out['gaps'])} open item(s))")
-            print(f"{len(picked)} job(s) picked by the standing preparation policy" + ("" if packages.settings(ctx.policy)["enabled"]
-                                                                                      else " (it is off)"))
+            # standing preparation is off (the owner's D183): nothing is prepared without your label
+            print("0 job(s): standing preparation is off; label a job Apply or Stretch to prepare it")
             return
         questions = packages.load_questions(root, args.target)
         if args.action == "prepare":
@@ -2627,7 +3303,8 @@ def cmd_assist(ctx: Context, paths, args) -> None:
         out = assist.close_session(ctx.store, application_matrix(), ctx.policy, session_id, args.outcome,
                                    key=f"cli:{secrets.token_hex(8)}", evidence=args.evidence, minutes=args.minutes,
                                    corrections=args.corrections, custom_questions=args.custom_questions,
-                                   login_steps=args.login_steps, notes=args.notes, reapply=args.reapply, confirm=args.confirm)
+                                   login_steps=args.login_steps, notes=args.notes, reapply=args.reapply, confirm=args.confirm,
+                                   vault_root=paths.get("root"))
         print(f"closed {session_id}: {args.outcome}" + (f"; application {out['application_id']} recorded" if out["application_id"] else "")
               + ("; this reconciles an uncertain session" if out["reconciled"] else ""))
     except ApplicationHold as exc:
@@ -2729,7 +3406,21 @@ def cmd_status(ctx: Context, paths, args) -> None:
     print("tiers:", ", ".join(f"{r['tier']}={r['c']}" for r in tiers) or "none")
     backlog = label_backlog(store)
     print("label backlog:", backlog["text"] if backlog else "none")
-    print("open exceptions:", store.one("SELECT COUNT(*) c FROM exceptions WHERE status != 'resolved'")["c"])
+    # a hold stands until a board read lifts it or a label acknowledges it (the D190 design, section 7): counted apart
+    # from the exceptions that wait to be dealt with (build item Y1)
+    print("open exceptions:", store.all("SELECT COUNT(*) c FROM exceptions WHERE status != 'resolved' "
+                                         "AND COALESCE(error_code, '') NOT IN ('ingest_failed', 'read_pending')")[0]["c"])
+    print("standing holds:", store.all("SELECT COUNT(*) c FROM exceptions WHERE status != 'resolved' "
+                                        "AND error_code IN ('ingest_failed', 'read_pending')")[0]["c"])
+    from careeros.review.packages import every_job_holds, pending_file_problem
+    every = every_job_holds(store)
+    if every:   # Z8: each is on every card and holds every Apply and Stretch label it has not been acknowledged by
+        print(f"holds that reach every job: {len(every)} (a posting you added could not be stored, and CareerOS cannot "
+              f"tell which posting it was: {', '.join(sorted({r['occurred_at'][:10] for r in every}))}); each holds every "
+              "Apply and Stretch label until a label given from a card that shows it acknowledges it")
+    held_file = pending_file_problem(store)
+    if held_file:
+        print(f"holds kept beside the database: {held_file}. Every Apply and Stretch label waits until then")
     from careeros.discovery.alerts import agency_setting_problem
     stopped = agency_setting_problem(store, name_hosts=True)
     if stopped:
@@ -2777,7 +3468,8 @@ def cmd_verify(ctx: Context, paths, args) -> None:
 
 
 WRITES = {"init", "employers", "discover", "add-url", "import", "process", "run", "label", "applied", "app-status", "backup", "gmail", "inbox",
-          "sources", "audit", "dismiss", "paste", "draft", "metrics", "leads",
+          "location",   # it writes the job and screens it again: under the writer lock (the red team's fr1-faults-3)
+          "sources", "audit", "dismiss", "paste", "draft", "metrics", "leads", "notices",
           "seen-index", "release", "package", "assist",
           "export", "migrate", "offsite"}   # the export only reads, but takes the lock so it never reads a run half-way through
 
@@ -2808,8 +3500,12 @@ def main(argv=None) -> None:
     p.add_argument("--parent")
     p.add_argument("--title")
     p.add_argument("--location")
+    p.add_argument("--separate", action="store_true", help="with --text-file: take the same request in again as an "
+                   "operation of its own (its id is printed)")
+    p.add_argument("--operation", metavar="ID", help="with --text-file: retry the separate operation ID")
     sub.add_parser("process")
-    sub.add_parser("import", help="import postings you saved into vault\\inbox")
+    p = sub.add_parser("import", help="import postings you saved into vault\\inbox")
+    p.add_argument("--separate", action="store_true", help="take each saved file in again as an operation of its own")
     sub.add_parser("report")
     p = sub.add_parser("review")
     p.add_argument("--port", type=int, default=8790)
@@ -2819,6 +3515,8 @@ def main(argv=None) -> None:
     p.add_argument("label", choices=["apply", "stretch", "skip"])
     p.add_argument("--reason")
     p.add_argument("--night", action="store_true", help="a NIGHT-profile label (measured separately from PRIMARY)")
+    p.add_argument("--confirm", metavar="PREVIEW", help="record an Apply or Stretch label from the preview this command "
+                   "printed (without it, Apply and Stretch print a preview)")
     p = sub.add_parser("applied", help="record that you applied to a job")
     p.add_argument("job_id")
     p.add_argument("--channel", choices=["direct", "agency", "referral", "other"], required=True)
@@ -2919,7 +3617,13 @@ def main(argv=None) -> None:
     p.add_argument("--clipboard", action="store_true")
     p.add_argument("--company")
     p.add_argument("--title")
-    p.add_argument("--location")
+    p.add_argument("--location", help="a new posting's location; a tracked job's is set with careeros location")
+    p.add_argument("--separate", action="store_true", help="take the same request in again as an operation of its own "
+                   "(its id is printed; a plain rerun is the retry of the first)")
+    p.add_argument("--operation", metavar="ID", help="retry the separate operation ID after an interruption")
+    p = sub.add_parser("location", help="set a pasted or added posting's location by naming the job (it is screened again)")
+    p.add_argument("job_id")
+    p.add_argument("location")
     p = sub.add_parser("leads", help="your leads: the open ones and the likely matches waiting for you; confirm or reject one, "
                                      "or unlink a wrong link")
     p.add_argument("action", nargs="?", default="list", choices=["list", "confirm", "reject", "unlink"])
@@ -2930,6 +3634,17 @@ def main(argv=None) -> None:
                                     "wrong (required)")
     p.add_argument("--note", help="with confirm: a note kept with your confirmation (optional)")
     p.add_argument("--all", action="store_true", help="with list: every lead, not only the open ones")
+    p = sub.add_parser("notices", help="alert cards whose link names no posting (careers pages): list them, dismiss one, or "
+                                       "add its posting")
+    p.add_argument("action", nargs="?", default="list", choices=["list", "dismiss", "add"])
+    p.add_argument("target", nargs="?", help="NOTICE_ID (dismiss, add)")
+    p.add_argument("--all", action="store_true", help="with list: dismissed and added notices too")
+    p.add_argument("--url", help="with add: the posting's own link (a board's posting link); else the notice's link, with "
+                                 "--text-file")
+    p.add_argument("--text-file", help="with add: the posting's text, saved to a file")
+    p.add_argument("--employer", help="with add and --text-file: the employer (default: the one the card names)")
+    p.add_argument("--title", help="with add and --text-file: the title (default: the card's)")
+    p.add_argument("--location", help="with add and --text-file: the location, as you read it")
     sub.add_parser("shortlist", help="shortlisted openings with evidence, open questions and the next action")
     p = sub.add_parser("draft", help="an application brief from your approved profile (Apply/Stretch jobs only)")
     p.add_argument("job_id")
@@ -2965,6 +3680,7 @@ def main(argv=None) -> None:
     sub.add_parser("unlock")
     sub.add_parser("migrate", help="apply a pending schema migration, after a verified backup")
     args = parser.parse_args(argv)
+    _canonical_args(args)
 
     from careeros.demo import sandbox
     try:
@@ -2990,7 +3706,8 @@ def _held_run(paths) -> None:
         since = (hold(paths["lock"]) or ("an unknown time",))[0]
     except OSError:
         since = "an unknown time"
-    log.warning("daily run held: the writer lock left since %s belongs to a process that is gone; run careeros unlock", since)
+    log.warning("daily run held: the writer lock left since %s belongs to a process that is gone, or cannot be read; "
+                "run careeros unlock", since)
     if _notifications_on(paths):
         from careeros.ops.notify import problem
         problem("CareerOS: daily run held", "Run: careeros unlock")
@@ -3019,6 +3736,20 @@ def _mark_interrupted(paths) -> None:
     print(f"marked {count} interrupted run(s) as failed")
 
 
+# your own text arguments that become posting content, an id or provenance (the D190 design, section 3a, point 8)
+OWNER_TEXT_ARGS = ("location", "company", "employer", "title", "parent", "name")
+
+
+def _canonical_args(args) -> None:
+    """Your text arguments in the canonical form at argument parsing, before they make an id (the manual slug), are
+    stored or are recorded as provenance: a composed and a decomposed spelling are one (point 8)."""
+    from careeros.normalize.sanitize import canonical
+    for name in OWNER_TEXT_ARGS:
+        value = getattr(args, name, None)
+        if isinstance(value, str):
+            setattr(args, name, canonical(value))
+
+
 def _dispatch(args) -> None:
     from careeros.demo import sandbox
     if args.command == "demo":  # Demo Mode: synthetic world, throwaway vault, no credentials, no real network
@@ -3037,7 +3768,13 @@ def _dispatch(args) -> None:
     else:
         paths = vault_paths()
     if args.command == "unlock":
-        removed = force_unlock(paths["lock"])
+        try:
+            removed = force_unlock(paths["lock"])
+        except LockError as exc:   # said plainly, never a traceback (the red team before Codex Pass 15, RT-41)
+            if str(exc).startswith("lock_being_written"):
+                sys.exit("Not unlocked: a CareerOS command is taking the lock right now; try again in a minute")
+            sys.exit("Not unlocked: the CareerOS command that took the lock is still running; let it finish, then run "
+                     "careeros unlock only if a lock is left")
         print("removed stale lock" if removed else "no lock present")
         if paths["db"].exists():
             _mark_interrupted(paths)
@@ -3058,17 +3795,19 @@ def _dispatch(args) -> None:
                 "applied": cmd_applied, "app-status": cmd_app_status, "applications": cmd_applications, "funnel": cmd_funnel, "backup": cmd_backup, "gmail": cmd_gmail, "inbox": cmd_inbox,
                 "seen-index": cmd_seen_index, "agency-layout": cmd_agency_layout, "agency-hosts": cmd_agency_hosts,
                 "agency-held": cmd_agency_held, "sources": cmd_sources, "audit": cmd_audit, "dismiss": cmd_dismiss, "explain": cmd_explain,
-                "paste": cmd_paste, "shortlist": cmd_shortlist, "draft": cmd_draft, "metrics": cmd_metrics,
+                "paste": cmd_paste, "location": cmd_location, "shortlist": cmd_shortlist, "draft": cmd_draft, "metrics": cmd_metrics,
                 "status": cmd_status, "verify": cmd_verify, "export": cmd_export,
                 "certifications": cmd_certifications, "release": cmd_release, "package": cmd_package, "assist": cmd_assist,
-                "leads": cmd_leads, "migrate": cmd_migrate, "offsite": cmd_offsite}
+                "leads": cmd_leads, "notices": cmd_notices, "migrate": cmd_migrate, "offsite": cmd_offsite}
     read_only = ((args.command == "employers" and args.action == "list") or (args.command == "gmail" and args.action != "fetch")
                  or (args.command == "release" and not (args.hold or args.revoke))
                  or (args.command == "package" and args.action in ("show", "list", "gaps"))
                  or (args.command == "assist" and args.action in ("list", "report"))
-                 or (args.command == "leads" and args.action == "list"))
+                 or (args.command == "leads" and args.action == "list")
+                 or (args.command == "notices" and args.action == "list"))
     lock = SingleWriterLock(paths["lock"]) if args.command in WRITES and not read_only else None
     ctx = None
+    swept = False   # the command's start ran the handoff sweep: its end runs it again, in the finally below
     try:
         if lock:
             lock.acquire()
@@ -3081,6 +3820,8 @@ def _dispatch(args) -> None:
         with run:   # one reading of the private settings for the whole command (D141)
             if lock is not None and args.command not in ("init", "migrate", "backup", "offsite"):
                 _enroll_reading(ctx.store)
+                swept = True
+                _command_start(ctx, paths)
             handlers[args.command](ctx, paths, args)
     except CommandStopped as exc:   # the private settings changed during the command: nothing more was done (D153 R2)
         print(f"Stopped: {exc}", file=sys.stderr)
@@ -3096,8 +3837,10 @@ def _dispatch(args) -> None:
         sys.exit(2)
     except LockError as exc:
         print(f"CareerOS is busy: {exc}")
-        if args.command == "run" and str(exc).startswith("stale_lock_held"):
-            _held_run(paths)
+        if lock is not None and not lock.held:
+            _sweep_unlocked(paths, demo_clock)   # the handoffs still go (the coordinator's batch 3 condition 1)
+        if args.command == "run" and str(exc).startswith(("stale_lock_held", "lock_unreadable")):
+            _held_run(paths)   # an unreadable lock holds the run too, and says so (the red team's gr1-faults-3)
         sys.exit(1)
     except sandbox.DemoModeViolation:
         raise  # main() reports it in one line
@@ -3112,6 +3855,8 @@ def _dispatch(args) -> None:
                 pass
         raise
     finally:
+        if ctx is not None and swept and lock is not None and lock.held:
+            _command_end(ctx, paths)
         if ctx is not None:   # closed here, not when garbage-collected: Python 3.13+ warns of an unclosed database then
             ctx.store.close()
         if lock and lock.held:

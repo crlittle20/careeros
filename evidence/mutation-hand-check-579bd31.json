@@ -1,0 +1,2141 @@
+{
+ "what": "BATCH_5 (the red team's round p1 on f88715b) and the coordinator's follow-ups, built on codex-p1-gatefixes after the D190 P1 build: the end-of-series hand check, planted by hand in stages (D152) as in mutation-hand-check-90707df.json, each defect alone in a plain copy of the worktree at its stage's commit.",
+ "scope": "every defect whose anchor lies in a function or module statement of careeros/ that changed between f88715b and the stage's commit (scratchpad b5_scope.py), at three points of the series (58126d5, 51a8406, 579bd31), and the alert-retry defects at the E2 fix (045828d)",
+ "base": "f88715b",
+ "rev": "579bd31",
+ "python": "3.14.10",
+ "node_version": "v24.22.1",
+ "defined": 2451,
+ "checked": 296,
+ "caught": 291,
+ "stages": {
+  "stage 1": {
+   "rev": "58126d5",
+   "against": "the 14 related modules: tests.test_batch5 tests.test_p1 tests.test_alerts tests.test_gmail tests.test_d188 tests.test_d190 tests.test_d192 tests.test_intake_identity tests.test_v26_discovery tests.test_saved tests.test_pipeline tests.test_review_page tests.test_packages tests.test_batch3",
+   "defects": 251
+  },
+  "stage 2": {
+   "rev": "51a8406",
+   "against": "the other 47 test modules, failfast (stage 1's survivors)",
+   "defects": 28
+  },
+  "Z8 delta": {
+   "rev": "51a8406",
+   "against": "the 14 related modules (defects in functions Z8 changed)",
+   "defects": 23
+  },
+  "delta after 045828d": {
+   "rev": "579bd31",
+   "against": "the 14 related modules (defects in functions 88b7a56, 1ef20b0 and 579bd31 changed)",
+   "defects": 56
+  }
+ },
+ "survived_pre_existing": [
+  {
+   "mutation": "F2: a country read better on an unchanged rescan is never re-screened",
+   "file": "careeros/pipeline.py",
+   "on_f88715b": "Ran 2029 tests in 669.297s; OK (skipped=8)",
+   "why": "in pipeline.ingest's branch for an unchanged read of a job no board reads (\"the same record: nothing of it is written\"): since P1 a board read takes the same-read branch, whose `refreshed` writes these values, so the older tests no longer reach this branch; for a copy these inputs are board-only (absent), and refresh_derived_fields re-derives the country at each processing run"
+  },
+  {
+   "mutation": "F2: an unchanged rescan leaves an older country beside the new remote scope",
+   "file": "careeros/pipeline.py",
+   "on_f88715b": "Ran 2029 tests in 681.927s; OK (skipped=8)",
+   "why": "in pipeline.ingest's branch for an unchanged read of a job no board reads (\"the same record: nothing of it is written\"): since P1 a board read takes the same-read branch, whose `refreshed` writes these values, so the older tests no longer reach this branch; for a copy these inputs are board-only (absent), and refresh_derived_fields re-derives the country at each processing run"
+  },
+  {
+   "mutation": "red team after Pass 12 (RT3-3): a paste at a shared page is offered careeros location for another job",
+   "file": "careeros/discovery/manual_intake.py",
+   "on_f88715b": "Ran 2029 tests in 634.754s; OK (skipped=8)",
+   "why": "since D188 a paste at a page that names no posting never reaches an existing job, so the RT3-3 test's third paste is added and never reaches manual_intake._same_link_match's guarded line"
+  },
+  {
+   "mutation": "batch 3 A.2 (gr1-boards-0): a renamed board's listing leaves the job under the old board, never closed",
+   "file": "careeros/pipeline.py",
+   "on_f88715b": "Ran 2029 tests in 607.744s; OK (skipped=8)",
+   "why": "in pipeline.ingest's branch for an unchanged read of a job no board reads (\"the same record: nothing of it is written\"): since P1 a board read takes the same-read branch, whose `refreshed` writes these values, so the older tests no longer reach this branch; for a copy these inputs are board-only (absent), and refresh_derived_fields re-derives the country at each processing run"
+  },
+  {
+   "mutation": "016: an unchanged read never fills the board's own workplace hint and pay",
+   "file": "careeros/pipeline.py",
+   "on_f88715b": "Ran 2029 tests in 607.864s; OK (skipped=8)",
+   "why": "in pipeline.ingest's branch for an unchanged read of a job no board reads (\"the same record: nothing of it is written\"): since P1 a board read takes the same-read branch, whose `refreshed` writes these values, so the older tests no longer reach this branch; for a copy these inputs are board-only (absent), and refresh_derived_fields re-derives the country at each processing run"
+  }
+ ],
+ "note": "the tool records each defect's verdict (CAUGHT when the planted copy's run fails), not the failing tests' names; a later stage on newer code settles a defect run twice; the series' commits each ran their own new and re-anchored defects at the commit, every one caught",
+ "previous": "evidence/mutation-hand-check-90707df.json",
+ "results": [
+  {
+   "mutation": "stale stored fields never refreshed",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "delisted jobs never closed",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "NIGHT settings re-evaluate every PRIMARY job",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "pay read better recorded as a change the employer made",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "links on non-allowed sources fetched",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "alert links on non-board sites fetched",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "duplicate leads across sites kept",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "recommended jobs CareerOS already tracks fetched again as new",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "a malformed inbox line stored as a lead",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "leads from excluded employers kept",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "one missed scan closes a posting",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "NIGHT-only jobs shown in PRIMARY rejections",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "a pasted posting is not deduplicated",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "a reappearing closed posting stays closed",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "new boards named after their URL slug",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "cosmetic edits counted as meaningful changes",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "submission settings re-judging every job",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "a finished application hides the re-application form",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "a lead's failed fetch keeps no reason",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "review card: the submission hold not shown",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "alert links skipped as search pages or unreadable are not counted",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "an added posting never links its lead (careeros add-url)",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "likely matches never shown on the review page",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "an agency card stored without its lasting agency mark",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "a stored agency card's link stored again as an ordinary lead when the setting is off",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "an agency digest's cards stored though its site is blocked",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "an earlier ordinary copy of an agency card's link left exportable",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "held agency digests not shown on the review page",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "L3-02: the review page says nothing while alert intake is stopped",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "a review link's board hint is fetched as a board posting",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "L3-02: careeros status says nothing while alert intake is stopped",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "D156: a review link kept under a local link (on a site CareerOS does not name) stored as an ordinary lead",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "F2: a country read better on an unchanged rescan is never re-screened",
+   "file": "careeros/pipeline.py",
+   "result": "SURVIVED",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "merge: an agency card matched to a tracked job or fetched as a board link",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 5 F1: a paste takes its location field from a phrase in its prose ('Previously advertised as Remote - US')",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "F2: an unchanged rescan leaves an older country beside the new remote scope",
+   "file": "careeros/pipeline.py",
+   "result": "SURVIVED",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "Pass 7 H2: a saved text file's Location header is not recorded as the file's own",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 7 H3: a saved text file's Location header runs on past a line-ending control",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 7 H2: a saved page's own location field is not recorded as the file's",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 7 H2: add-url's --location is not recorded as yours",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 9 H10: a saved text file drops the part after '#' from the opening's link",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 9 H10: a saved page drops the part after '#' from the opening's link",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 8 H8: a posting given its own id is not linked to the job it collided with",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 9 H10: add-url --text-file drops the part after '#' from the opening's link and generated id",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 10 H14: add-url carries on after a refused or failed write",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "Pass 10 H14: a paste that could not be stored is reported as added",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 9 H8: a saved-file posting given its own id is not linked to the job it collided with",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 10 H14: a posting whose write failed is reported as written",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "red team (D179): add-url with a board link carries on after the posting was not stored",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "red team (D179): an alert's board link not stored marks its lead ingested with no job",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "red team (D179): a saved text file drops a link that is not a full address",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "red team (D179): a saved page's relative link is not read against the page's own address",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 11 H19: an alert line read again is inserted as a second lead (and fails)",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "E2 fix",
+   "rev": "045828d"
+  },
+  {
+   "mutation": "Pass 11 H19: an alert line not stored is counted as seen before when the email is read again",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "E2 fix",
+   "rev": "045828d"
+  },
+  {
+   "mutation": "red team (D179): a saved text file's requisition is not read",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "red team (D179): add-url --text-file does not read the requisition",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 12 H25: a failed retry finalizes the alert and drops the retry mark",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 12 H21: the board's next scan never restores standing to a location it lists",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "red team (D181): add-url with a board link drops --location silently",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "red team (D181): a paste of a board posting with --location suggests careeros location, which refuses it",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "Pass 14 H35: a guessed fetch links a lead the conflict check refused",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "red team after Pass 12 (RT3-5): a card at a job-like shared page is a lead, not a notice",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "red team after Pass 12 (RT3-3): a paste at a shared page is offered careeros location for another job",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "SURVIVED",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "red team after Pass 12 (RT1-1): a listing scan that could not store the posting keeps the earlier scan's authority",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "RT-28: a paste's location is cut at 120 characters",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "RT-26: a job site's section heading is taken as the title",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "RT-08: a byte-order mark hides a saved file's URL line",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "RT-26: the first line is cut at ' at ' though a Company line names the employer",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "RT-10: a saved text file's other header lines (its requisition) are dropped",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "RT-32: a page naming no employer is imported as 'Unknown employer'",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "RT-32: an employer named by reference is not read",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "RT-29: a saved text file keeps only its last Location line",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "D187: the re-derivation re-opens a real duplicate",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D187: the re-derivation moves a duplicate back with no reason recorded",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "RT-35: duplicates are re-derived at no processing run",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "RT-35: a duplicate an older engine made stays one after the upgrade",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "fr1-faults-3: careeros location writes without the single-writer lock",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "fr1-saved-6: a saved page holding two job postings is imported as one of them",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D188: one board posting under another board name in its link is another posting",
+   "file": "careeros/discovery/board_discovery.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "fr1-saved-4: a saved file's 'Work Location:' header line is dropped",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "rtw_fr1upgrade_7: one Workday requisition under two location segments is one posting",
+   "file": "careeros/discovery/board_discovery.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D188: a new posting of a closed role is not linked for your review as a possible repost",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D188: a copy of a posting at its exact link writes over the location you set",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D188: a variant or repost an older engine stored stays one after the upgrade",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 A.2 (gr1-boards-1): a closed posting read open at its own link stays closed",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 A.1 (gr1-paste-0): a board's read of a posting you pasted first is not written into your job",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 A.1: a board's read written into your pasted job replaces its link, so it is no longer that posting",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 A.1: a copy you save of a posting a board has written is written over the board's data",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 A.4 (gr1-identity-3): two jobs that are one posting stay two",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 A.2: an unlisted posting in a board's listing data is admitted as a new job",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 A.2 (gr1-boards-0): a renamed board's listing leaves the job under the old board, never closed",
+   "file": "careeros/pipeline.py",
+   "result": "SURVIVED",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "batch 3 A.2 (gr1-boards-3): a posting first read by its own link is never closed by its board's absence",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 D (gr1-saved-4): a saved page's requisition in its text is never read",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 B.5 (gr1-faults-0): a posting read but not stored leaves the label routing",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "batch 3 B.3 (gr1-saved-3): add-url's board branch never sweeps",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 B.5: a hold for a read not stored is never lifted",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 condition 4: twins whose decisions differ are joined, one decision lost",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 D (gr1-saved-5): an unreadable posting block is skipped and another posting imported",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 D (gr1-alerts-1): words above a card's title are the previous card's",
+   "file": "careeros/discovery/alerts.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 D (gr1-alerts-1): a link inside a card ends the title link's context",
+   "file": "careeros/discovery/alerts.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "hr1-routes-0: a scan whose job-of-record lookup failed counts that job absent",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "batch 3 condition 4: a join keeps the twin without your decisions as the job of record",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "016: an unchanged read never fills the board's own workplace hint and pay",
+   "file": "careeros/pipeline.py",
+   "result": "SURVIVED",
+   "stage": "stage 2",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "fuzzer seed 68: a copy that states no location erases the job's location field",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "hr1-saved-3: a nested JobPosting is skipped, so a sibling is imported under the page",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "hr1-routes-0: a hold kept beside the database is never recorded",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "part 4 (H6): another field from the board never supersedes the location you settled",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "part 4 (H6): the board's next read writes over the location you settled",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "part 3: the review page leaves notices out",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "part 4: a paste with --location of a board job its field leaves unknown never says how to settle it",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "part 3 (H8): a line after an agency card with its job number shows no possible repeat",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "part 3 (H8): an agency card repeating an earlier job number shows no possible repeat",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 rev 4 s7: the hold of a posting whose transaction was lost names no cause",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "part 3: a link kept for review is a notice, not a lead",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 rev 4 s7: a posting whose email's transaction was lost holds no label",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 rev 4 s7: ingest nested in an email counts a lost transaction as one bad posting and carries on",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 3a: an input the title rescue reads is left out of the source record as bookkeeping",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 rev 4 s7: an alert card whose email's transaction was lost is one bad line, and the email carries on",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 1: a paste's company makes its id as typed",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 1 (Codex Pass 5): a saved text file's requisition is read from its raw body",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 3a: a job write stores no source record",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 3a (gate check R4): a pasted job's source record names the board's link it does not keep",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 3a: the saved-file reader version that places a location is left out of the source record",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 3a (Codex H19): the employer entry is left out of the source record",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 3a: a paste's entry is not resolved by the one resolver",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 3b: a value a reader derives better on the same read is never written",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 (the hand check after part 8): a pasted job's read whose source record changed keeps its screen",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 3a: add-url --text-file drops your --parent",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 3b (Codex H12): a board read's unchanged branch is decided by the content fingerprint",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 3b: a retained field's binding is not recorded",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 3b: a value derived better on the same read is not screened again",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 3b: every board read is written as a change",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 4 (Codex H20): ingest writes a read to a job the resolver never named",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 6a (Codex H10, H11): a label is recorded from a preview that no longer shows what the job is",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 3c: the processing run never resolves an employer entry again",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 4 (the owner's V1): a stale duplicate sends a read into another posting",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 6a (part c): a preview is offered while the job waits for screening",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 6a: a preview shows stored values its source record no longer gives",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 6a: one job's or profile's preview confirms another's label",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 6a: a preview used for one label confirms another",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 6a (part d): a new job's read is not a sighting",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 6a (part d): a paste found already tracked records no sighting",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 6a (section 7): two file holds at one clock reading share a hold_id",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 6a: the review page keeps no preview, so its Apply never records",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 6a (part d): a copy of a board-written posting records no sighting",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 6b (part a): a label routes for a posting that changed after its preview",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "D190 P1 part 6b (part b): a label routes after a reader update changed a value its card showed",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "D190 P1 part 6a: careeros label JOB apply records no preview to confirm",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 6b (part c): a label routes while the job waits for screening",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "D190 P1 part 6b (part d): a label routes past a copy that says something else, recorded after it",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "D190 P1 part 6b (Codex H25): a label routes past a hold its preview never showed",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "D190 P1 part 7a (Codex M5): a paste of a tracked job records no receipt with its sighting",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 6b (part c): a label routes after the screening's flags changed from those its card showed",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "D190 P1 part 6b: a label is checked with no applicant profile, its screening never shown current",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "D190 P1 part 7a (Codex M5): a new paste records no receipt with its job",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 7a (Codex M5): a paste's retry is taken in again",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 7b (section 7, step 3): a posting that resolves to a job not held ahead of its batch is written",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 7a (Codex M5): add-url --text-file's retry is taken in again",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 7b (section 7): the pending-holds file is rewritten inside an open transaction",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 7b (section 7): a file hold cleared by a committed transaction is never pruned",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 5: the fetch-only step fetches nothing, so no alert line is ever applied",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 7b (Codex H21): a copy of a board-written posting lifts its holds",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 7b (Y1): careeros status counts standing holds as open exceptions",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "D190 P1 part 7b (section 6): a paste whose posting was not written commits without it",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 8 (Codex Pass 6): a record rebuilt from columns states what they cannot give",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 5 (section 7): an alert line's write-ahead hold is never cleared by its write",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 8 (Y2; the gate session's rev 8 check D1): an older engine's hold never reaches the job of record",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "D190 P1 part 5 (section 7; Codex H18): an alert email writes no hold ahead of its tracked postings",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 8 (Codex Pass 5): an older title key is kept, so the screen passes a title a fresh intake excludes",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 8: a parent you gave an older job is replaced by the policy's",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 8: a board job's record is rebuilt from columns that lack its board's own fields",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 8 (W1): a board job CareerOS may not read now waits for a board read for good",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 A1: an unreadable pending-holds file is not a problem",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "D190 P1 part 8: the upgrade pass never marks itself done",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "BATCH_5 A1/A2: a pending-holds file that cannot be read in full holds no label",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "D190 P1 part 8: no command runs the upgrade pass",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "BATCH_5 A2: recording the pending holds drops a line that is not a hold",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 A2: a line of the pending-holds file that is not a hold is not a problem",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 A2: a rewrite of the pending-holds file drops a line that is not a hold",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 A2: a hold appended after a line cut short is glued onto it",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 B2: the join picks another job of record than the one reads are written to",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 A2: pruning the pending holds drops a line that is not a hold",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 B1: a legacy hold on a board posting whose job was never created reaches nothing",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "BATCH_5 A: the review page does not say the pending-holds file holds every label",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 C4: a label surface shows only the first eight flags its preview binds",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 B2: twins whose decisions differ send a read to whichever was decided first",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 B4: a read of a closed job that stores nothing lifts the posting's holds",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 C2: the excluded states a preview binds are never shown",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 B3: a joined twin's differing copy is never recorded as a sighting",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 C1: a pay with one end is shown as a range made from it",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 C2: the time zone a preview binds is never shown",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 C2: a label surface names a differing copy but not what it says",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 C1: a label surface shows every pay as yearly dollars",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 C2: the apply link a preview binds is never shown",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 C2: a label surface does not show the holds its preview acknowledges",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 C1: the card's pay names no currency",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 C2: the deadline a preview binds is never shown",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 C: the CLI preview shows part of what the label approves",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 C1: the card's pay makes a range from one end",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 D1: a saved page's pay in months, weeks or days is read as a year",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 C: the review page's card shows part of what its label approves",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 C4: the card lists only the first eight screening flags",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 C3: the shortlist card offers a label though it does not show what the label approves",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 D1: a saved page that states no location records its location as the page's own",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 C3: a shortlisted job whose card a cap left out has no card on the page",
+   "file": "careeros/review/report.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 D1: a pay period the saved page leaves out is recorded as stated",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 D1: one stated amount is recorded as a stated range",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 D1: a paste's title taken from its first line is recorded as stated",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 D1: a currency the saved page leaves out is recorded as stated",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 D1: a saved text file that states no location records its location as the file's own",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 D1: a paste's company read from a Workday link's host is recorded as stated",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 D1: a label surface does not say what CareerOS read by heuristic",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 D1: a saved page's list of employment types keeps only its first item",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 D1: a paste's value cut to length is recorded as stated",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 D1: a paste's posting drops what its reader inferred or cut",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 E1: a non-FetchError from one line's prefetch escapes the email",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 D1: a source record drops what its reader marked as filled in or cut",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 D2: a rebuilt location the current rules do not hold as declared places the job",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 D2: a copy that states no location drops where the stored one came from",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 E2: a line whose fetch failed for a moment keeps no lead",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "E2 fix",
+   "rev": "045828d"
+  },
+  {
+   "mutation": "BATCH_5 E1: a timeout or network error in the prefetch is a definite failure",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 D2: a rebuilt location with no record of where it came from places the job",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 E1: an unreadable answer is retried at every run, never kept as a lead with its reason",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 E2: a lead kept for a moment is inserted again when its line is read",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "E2 fix",
+   "rev": "045828d"
+  },
+  {
+   "mutation": "BATCH_5 E2: a lead read but not stored loses its mark (and H25's pending) on a failure for a moment",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "E2 fix",
+   "rev": "045828d"
+  },
+  {
+   "mutation": "BATCH_5 E1: a rate limit in the prefetch is a definite failure",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 E2: a lead kept for a moment is seen before, never read again",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "E2 fix",
+   "rev": "045828d"
+  },
+  {
+   "mutation": "BATCH_5 G1: the upgrade is marked done with a job left for the clock",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "BATCH_5 E2: a line not fetched ahead keeps no lead",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 E2: a second failure for a moment writes the kept lead again",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "E2 fix",
+   "rev": "045828d"
+  },
+  {
+   "mutation": "BATCH_5 G1: a clock behind a job's last state change refuses every writing command",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "BATCH_5 G2: W1 is decided only at the upgrade, never when a board is forbidden later",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 E2: the retry record says a lead is on the review page for a line with none",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 G1: command start does not say a job was left for the clock",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "BATCH_5 G2: W1 reads the job's ats, not its posting's boards",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 G2: the card of a job waiting on a forbidden board advises add-url, which the site policy refuses",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 G2: a posting's boards leave out the board its own link names",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 G1: a processing run's W1 rebuild with the clock behind stops the run",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 G2: a posting is forbidden when one of its boards may not be read, though another may",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 F3: a card whose only link is a button stays untitled and is dropped",
+   "file": "careeros/discovery/alerts.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 G2: a W1 rebuild says a location a board's read wrote came from the paste's Location line",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 G2: a posting's boards leave out the boards whose reads were written into it",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 F2: a board field read as null where the record holds blank is written, and re-screens the job",
+   "file": "careeros/pipeline.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "HC1: a paste reaching its job through another form of the posting's link is told it matched by title only",
+   "file": "careeros/discovery/manual_intake.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 F1: a used preview confirmed again after a later label says replay, as if its label stood",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 F3: a button-only card's title stays in its context, so its employer is read as the title",
+   "file": "careeros/discovery/alerts.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 F3: a button after a linked title takes the previous card's text as its title",
+   "file": "careeros/discovery/alerts.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "HC2: careeros add-url for a posting that cannot be read ends with a traceback",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "BATCH_5 F3: a link with its own title takes the words before it as its title",
+   "file": "careeros/discovery/alerts.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "HC3: a LinkedIn id with more after its digits names the posting of its digits",
+   "file": "careeros/discovery/board_discovery.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "HC3: a javascript:// or ftp:// form of a board's link names its posting",
+   "file": "careeros/discovery/board_discovery.py",
+   "result": "CAUGHT",
+   "stage": "stage 1",
+   "rev": "58126d5"
+  },
+  {
+   "mutation": "hr1-routes-0: a hold recorded for the posting under another id never reaches its job of record",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "hr1-routes-0: a hold kept beside the database holds nothing",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "B.5: this engine's own failure is dropped once the job's last read is no older",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "D190 P1 part 7b (Codex H18): a write-ahead hold holds nothing",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "D190 P1 part 7b (section 7): a file hold its read's committed transaction cleared still holds",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "Z8: a legacy hold whose posting cannot be read reaches no job",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "Z8: a hold reaching every job keeps reaching every job once a job has its id",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "Z8: the upgrade stamps a hold naming no posting as reaching nothing",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "Z8: a hold reaching every job is shown on another job's card as that job's own failed read",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "Z8: a resumed upgrade stamps and counts a hold again",
+   "file": "careeros/upgrade.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "Z8: the upgrade report leaves out the holds that reach every job",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "Z8: careeros status leaves out the holds that reach every job",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "Z8: status lists a hold that reaches one job as reaching every job",
+   "file": "careeros/review/packages.py",
+   "result": "CAUGHT",
+   "stage": "Z8 delta",
+   "rev": "51a8406"
+  },
+  {
+   "mutation": "a held digest's problem left open after it is read in full",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "a Gmail digest read in part held back without telling you",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "application mail from an alert sender read for jobs",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "held digests: a held digest gone from Gmail keeps its last reading",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "CR-AD-V2-10: a held digest deleted from Gmail stops every pull",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "L1-06: an agency email that cannot be read marked read with its jobs lost",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "red team FU-03: a held digest read again as correspondence is settled as read",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "red team I3-01: a failure to fetch an email records it as read",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "red team FU-02: a held digest outside the only mailbox IMAP could open stops every pull",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "Pass 3 CR-AD-V2-10: a held digest that fails to decode stops every pull",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "Pass 3 CR-AD-V2-10: a held digest Gmail answers with an error stops every pull",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "red team before Pass 4: a held digest the search still lists reported as a new email",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "red team after Pass 12 (RT4-6): an unstored alert's problem stays open once stored",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "red team after Pass 12 (RT4-6): a Gmail line not stored is retried only while the search lists its email",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "D190 P1 part 6a (Codex H25): a hold that reaches the job after the preview leaves its digest unchanged",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "D190 P1 part 6a (part d): a differing copy recorded after the preview leaves its digest unchanged",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 B3: a joined twin's copy is shown as the job of record's own",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 C: the card leaves out each value a differing copy states otherwise",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 C: a differing copy is captured as an observation id, so a surface shows no value",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 C: a differing copy's values are captured without the card facts it states otherwise",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 D1: a saved page's unit other than the five bare words is read as no unit",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 C: a differing copy's long text is shown by its first characters, not where it differs",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 B3: a held label names the job of record, not the twin whose copy holds it",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 D1: a saved page's BI-WEEKLY or SEMI_MONTHLY is read as no unit",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 D1: a saved page's yearly, biweekly or semimonthly pay is read as no unit",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 D1: a saved page's PER_HOUR or PER_YEAR is read as no unit",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 E2: a kept lead keeps \"will retry\" for good after its email's retry closes",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 D1: a saved page's unit CareerOS does not understand is recorded as a stated year",
+   "file": "careeros/discovery/saved.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 D1: the card does not say a pay unit was stated but not understood",
+   "file": "careeros/review/labels.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 E2: an email's retry record lists none of the leads it kept",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 E2: a later pass's kept leads never join the email's open retry record",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "delta after 045828d",
+   "rev": "579bd31"
+  },
+  {
+   "mutation": "BATCH_5 E2: a card outside the target families reads a kept lead again and clears its mark unread",
+   "file": "careeros/cli.py",
+   "result": "CAUGHT",
+   "stage": "E2 fix",
+   "rev": "045828d"
+  }
+ ]
+}

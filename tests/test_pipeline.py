@@ -20,12 +20,12 @@ from careeros.discovery.http import FetchError, HttpClient
 from careeros.paths import CONFIG_DIR, ENGINE_ROOT
 from careeros.pipeline import Context, ingest, process
 from careeros.qualify.profile import load_profile
-from careeros.review.labels import agreement, record_label
+from careeros.review.labels import agreement
 from careeros.review.report import build_report
 from careeros.review.server import make_handler
 
 from tests import postings
-from tests.helpers import JOB_MATRIX
+from tests.helpers import JOB_MATRIX, give_label
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -72,7 +72,9 @@ class PipelineTests(unittest.TestCase):
         self.board = Board([
             gh_job(101, "Senior Business Systems Analyst - Pharmacy Benefits", postings.GOOD_FIT, req="R-1"),
             gh_job(102, "Business Analyst", postings.HARD_FAIL, req="R-2", location="Remote"),
-            gh_job(103, "Senior Business Systems Analyst - Pharmacy Benefits (copy)", postings.GOOD_FIT, req="R-1"),
+            # the same requisition and title listed twice (a retitled copy is another opening since the red team before
+            # Codex Pass 15, RT-16: titles_agree says it is another title)
+            gh_job(103, "Senior Business Systems Analyst - Pharmacy Benefits", postings.GOOD_FIT, req="R-1"),
             gh_job(104, "Business Systems Analyst", "Short posting. Apply now."),
             gh_job(106, "Senior Business Systems Analyst - Pharmacy Benefits", postings.GOOD_FIT, req="R-1", location="Austin, TX"),
             gh_job(107, "Business Systems Analyst (Bangladesh)", postings.GOOD_FIT, req="R-7", location="Dhaka, Bangladesh"),
@@ -95,6 +97,108 @@ class PipelineTests(unittest.TestCase):
         for row in self.store.all("SELECT job_id FROM jobs"):
             self.assertEqual(self.store.verify_job_consistency(JOB_MATRIX, row["job_id"]), set(), row["job_id"])
 
+    def test_a_foreign_opening_keeps_its_location_question_through_the_pipeline(self):
+        """Codex CR-2026-11-15-GATE-FIXES Pass 2, F1, through ingest and processing: a Calgary opening labelled "Remote"
+        stays unplaced and keeps its location question whatever US wording sits beside it. Since Pass 4 (the owner's
+        choice) the text never places a posting: a sentence about this role is a hint shown with the question, which
+        stays open (the second value: whether the question quotes the text's US hint)."""
+        from careeros.pipeline import job_view
+        from careeros.qualify.facts import decisive_unknowns, eligibility_facts
+        from careeros.qualify.gate import GateResult
+        base = "Claims Analyst. You will review pharmacy claims and reconcile reports in SQL. "
+        cases = {301: ("This opening is based in Calgary.", "unknown"),
+                 302: ("This opening is based in Calgary. Not open to remote United States applicants.", "unknown"),
+                 303: ("This opening is based in Calgary. This team provides remote U.S. support to customers.", "unknown"),
+                 304: ("This opening is based in Calgary. For a US-based remote role, see our other openings.", "unknown"),
+                 305: ("This role is remote in the U.S. and pays well.", "hint"),
+                 # Codex Pass 3, F1 (the owner's whole-text veto): a conflict anywhere in the text, however late
+                 306: ("This role is remote in the US. Candidates must reside in Calgary.", "unknown"),
+                 307: ("This role is remote in the US and candidates in the US are ineligible.", "unknown"),
+                 308: ("This role is remote in the US. This opening is based in Calgary and does not require travel.", "unknown"),
+                 309: ("This role is remote in the US." + " Paid time off and health coverage." * 100 +
+                       " Applicants must reside in Canada.", "unknown"),
+                 310: ("This role is remote in the US." + " Paid time off and health coverage." * 100, "hint"),
+                 # Codex Pass 4, F1: wordings that beat every text rule; none is placed, the question stays
+                 311: ("This role is remote in the US. The work will be performed only in Calgary.", "hint"),
+                 312: ("This role is remote in the US or Calgary.", "hint"),
+                 313: ("This role is remote in the US. Applicants must be Calgary residents.", "hint")}
+        self.board.jobs = [gh_job(n, "Claims Analyst", base + line, req=f"R-{n}", location="Remote") for n, (line, _) in cases.items()]
+        self.poll()
+        process(self.ctx)
+        for n, (line, hint) in cases.items():
+            with self.subTest(line=line[:60]):
+                row = self.store.one("SELECT * FROM jobs WHERE job_id = ?", (f"greenhouse:synth:{n}",))
+                self.assertEqual(row["country"], "unknown")
+                self.assertNotEqual(row["remote_scope"], "US_unspecified")
+                facts = eligibility_facts(job_view(row), [], GateResult("eligible"), self.ctx.policy)
+                location = [f for f in decisive_unknowns(facts) if f["facet"] == "location_state"]
+                self.assertEqual(len(location), 1)   # the question stays open, so standing preparation waits for you
+                self.assertEqual("the text says the role is in the US" in location[0]["detail"], hint == "hint")
+                if hint == "hint":
+                    self.assertIn("This role is remote in the US", location[0]["evidence"])
+
+    def test_a_job_placed_by_its_text_under_an_older_rule_is_re_screened_with_the_question_open(self):
+        """Codex CR-2026-11-15-GATE-FIXES F1, Pass 4: a job the older rule placed in the US from its text, and never
+        rescanned (a paste, an alert, a board not read again), is re-derived by the next processing pass."""
+        from careeros.pipeline import job_view
+        from careeros.qualify.facts import decisive_unknowns, eligibility_facts
+        from careeros.qualify.gate import GateResult
+        job_id = "greenhouse:synth:203"
+        text = "Business systems analyst for pharmacy claims. Write SQL and lead UAT. This role is remote in the US."   # no state list
+        self.board.jobs = [gh_job(203, "Business Systems Analyst", text, req="R-9", location="Remote")]
+        self.poll()
+        process(self.ctx)
+        self.assertEqual(self.store.one("SELECT country FROM jobs WHERE job_id = ?", (job_id,))["country"], "unknown")
+        # what the older rule stored
+        self.store.writer("discovery").update("jobs", {"country": "US", "remote_scope": "US_unspecified"}, "job_id = ?", (job_id,))
+        process(self.ctx)
+        row = self.store.one("SELECT * FROM jobs WHERE job_id = ?", (job_id,))
+        self.assertEqual((row["country"], row["remote_scope"]), ("unknown", "unknown"))
+        refreshed = self.store.one("SELECT 1 FROM transitions WHERE entity_id = ? AND reason_code = 'derived_fields_refreshed'", (job_id,))
+        self.assertTrue(refreshed)
+        facts = eligibility_facts(job_view(row), [], GateResult("eligible"), self.ctx.policy)
+        question = [f for f in decisive_unknowns(facts) if f["facet"] == "location_state"]
+        self.assertEqual(len(question), 1)
+        self.assertIn("This role is remote in the US", question[0]["evidence"])
+        # the control: once re-derived, another pass changes nothing
+        before = self.store.one("SELECT COUNT(*) AS n FROM transitions WHERE entity_id = ?", (job_id,))["n"]
+        process(self.ctx)
+        self.assertEqual(self.store.one("SELECT COUNT(*) AS n FROM transitions WHERE entity_id = ?", (job_id,))["n"], before)
+
+    def test_a_country_read_better_on_unchanged_text_is_stored_with_the_scope_and_re_screens(self):
+        """Codex CR-2026-11-15-GATE-FIXES F2: an identical rescan wrote remote_scope US_unspecified and kept the country
+        an older parser stored, so the export said US remote while the review path still had the location open."""
+        job_id = "greenhouse:synth:202"
+        text = postings.GOOD_FIT   # the country from the location field (since Pass 4 the text never places a posting)
+        self.board.jobs = [gh_job(202, "Business Systems Analyst", text, req="R-8", location="Remote - US")]
+        self.poll()
+        process(self.ctx)
+        row = self.store.one("SELECT country, remote_scope FROM jobs WHERE job_id = ?", (job_id,))
+        scope = row["remote_scope"]
+        self.assertEqual(row["country"], "US")
+        # what the older parser stored: no country, so no scope
+        self.store.writer("discovery").update("jobs", {"country": "unknown", "remote_scope": "unknown"}, "job_id = ?", (job_id,))
+
+        def transitions():
+            return self.store.one("SELECT COUNT(*) AS n FROM transitions WHERE entity_id = ?", (job_id,))["n"]
+
+        def changes():
+            return self.store.one("SELECT COUNT(*) AS n FROM job_changes WHERE job_id = ?", (job_id,))["n"]
+        before, edits = transitions(), changes()
+        counts = self.poll()   # the same text again
+        self.assertEqual(counts["unchanged"], 1)
+        row = self.store.one("SELECT country, remote_scope, current_state FROM jobs WHERE job_id = ?", (job_id,))
+        self.assertEqual((row["country"], row["remote_scope"], row["current_state"]), ("US", scope, "normalized"))
+        last = self.store.one("SELECT reason_code FROM transitions WHERE entity_id = ? ORDER BY sequence DESC", (job_id,))
+        self.assertEqual(last["reason_code"], "derived_fields_refreshed")
+        self.assertEqual(changes(), edits)   # not an employer's edit
+        # the control: an unchanged rescan whose country did not change re-screens nothing
+        process(self.ctx)
+        before = transitions()
+        self.assertEqual(self.poll()["unchanged"], 1)
+        self.assertEqual(transitions(), before)
+        self.assert_all_consistent()
+
     def test_pay_read_better_is_not_a_change_the_employer_made(self):
         """2026-11-04: the same words re-read with cents get their pay without a job_changes row; an edit still has one."""
         from careeros.normalize.posting import content_fingerprint
@@ -104,26 +208,54 @@ class PipelineTests(unittest.TestCase):
         self.poll()
         row = self.store.one("SELECT * FROM jobs WHERE job_id = ?", (job_id,))
         self.assertEqual((row["comp_min"], row["comp_max"], row["comp_period"]), (95000, 120000, "year"))
+        process(self.ctx)   # screened once
         old = {**dict(row), "comp_min": None, "comp_max": None, "comp_period": None}   # what the older reader stored
         self.store.writer("discovery").update("jobs", {"comp_min": None, "comp_max": None, "comp_period": None,
                                                        "content_fingerprint": content_fingerprint(old)}, "job_id = ?", (job_id,))
-        self.clock.advance(minutes=1)
-        process(self.ctx)
 
         def changes():
             return self.store.one("SELECT COUNT(*) AS n FROM job_changes WHERE job_id = ?", (job_id,))["n"]
-        before = changes()
-        counts = self.poll()
-        self.assertEqual((counts["pay_reread"], counts["changed"]), (1, 0))
+
+        def reasons():
+            return [r["reason_code"] for r in self.store.all("SELECT reason_code FROM transitions WHERE entity_id = ? "
+                                                             "ORDER BY sequence", (job_id,))]
+        before, earlier = changes(), len(reasons())
+        self.clock.advance(minutes=1)
+        process(self.ctx)   # the one derivation reads the same words better (the D190 design, section 3a)
         self.assertEqual(self.store.one("SELECT comp_max FROM jobs WHERE job_id = ?", (job_id,))["comp_max"], 120000)
-        self.assertEqual(changes(), before)
-        last = self.store.one("SELECT reason_code FROM transitions WHERE entity_id = ? ORDER BY sequence DESC", (job_id,))
-        self.assertEqual(last["reason_code"], "derived_fields_refreshed")
+        self.assertEqual(changes(), before)   # not a change the employer made
+        self.assertIn("derived_fields_refreshed", reasons()[earlier:])
+        counts = self.poll()   # the next read is the same read
+        self.assertEqual((counts["pay_reread"], counts["changed"], counts["unchanged"]), (0, 0, 1))
         self.board.jobs = [gh_job(201, "Business Systems Analyst", cents.replace("$120,000.00", "$125,000.00"), req="R-9")]
         counts = self.poll()   # the employer changed the pay line: a change
         self.assertEqual((counts["pay_reread"], counts["changed"]), (0, 1))
         self.assertEqual(changes(), before + 1)
         self.assert_all_consistent()
+
+    def test_pay_read_better_on_a_pasted_jobs_read_is_not_a_change_the_employer_made(self):
+        """The same for a read no board makes (its link names the posting: D188): the same words, read better before
+        any processing run refreshed them, are written and screened again without a job_changes row."""
+        from careeros.normalize.posting import RawPosting, content_fingerprint
+        from careeros.pipeline import employer_entry
+        cents = postings.GOOD_FIT.replace("$95,000 - $120,000", "$95,000.00 - $120,000.00")
+        link = "https://job-boards.greenhouse.io/synth/jobs/301"
+        posting = RawPosting(ats="manual", board_token="synthetic-health", external_id="r-301", title="Business Systems Analyst",
+                             location="Remote - US", url=link, apply_url=link, description_text=cents,
+                             raw={"location_source": "argument"})
+        entry = employer_entry(self.ctx, name="Synthetic Health")
+        ingest(self.ctx, entry, [posting], source="manual_url", full_board=False)
+        job_id = "manual:synthetic-health:r-301"
+        process(self.ctx)
+        row = self.store.one("SELECT * FROM jobs WHERE job_id = ?", (job_id,))
+        old = {**dict(row), "comp_min": None, "comp_max": None, "comp_period": None}   # what the older reader stored
+        self.store.writer("discovery").update("jobs", {"comp_min": None, "comp_max": None, "comp_period": None,
+                                                       "content_fingerprint": content_fingerprint(old)}, "job_id = ?", (job_id,))
+        before = self.store.one("SELECT COUNT(*) AS n FROM job_changes WHERE job_id = ?", (job_id,))["n"]
+        counts = ingest(self.ctx, entry, [posting], source="manual_url", full_board=False)
+        self.assertEqual((counts["pay_reread"], counts["changed"]), (1, 0))
+        self.assertEqual(self.store.one("SELECT comp_max FROM jobs WHERE job_id = ?", (job_id,))["comp_max"], 120000)
+        self.assertEqual(self.store.one("SELECT COUNT(*) AS n FROM job_changes WHERE job_id = ?", (job_id,))["n"], before)
 
     def test_the_pay_stored_is_your_states_tier(self):
         """2026-11-04: normalization passes your home state (the synthetic policy: FL) to the pay reader. D155 (F6): a
@@ -163,10 +295,13 @@ class PipelineTests(unittest.TestCase):
 
     def test_full_flow(self):
         counts = self.poll()
-        self.assertEqual((counts["new"], counts["duplicate"], counts["variant"]), (5, 1, 1))
-        self.assertEqual(self.state("greenhouse:synth:103"), "duplicate")  # same requisition, same place
+        # since the owner's D188 (2026-11-19) another board posting id is another job, whatever its requisition and
+        # place say: 103 (same requisition, same place) and 106 (same requisition, other place) are linked for your review
+        self.assertEqual((counts["new"], counts["duplicate"], counts["variant"]), (6, 0, 0))
+        self.assertEqual(self.state("greenhouse:synth:103"), "normalized")
         variant = self.store.one("SELECT variant_of, current_state FROM jobs WHERE job_id = 'greenhouse:synth:106'")
-        self.assertEqual(tuple(variant), ("greenhouse:synth:101", "normalized"))  # same requisition, other place: kept
+        self.assertEqual(tuple(variant), (None, "normalized"))
+        self.assertTrue(self.store.one("SELECT 1 FROM opening_links WHERE job_id = 'greenhouse:synth:103' AND relation = 'possible_duplicate'"))
         self.assertEqual(len(list(Path(self.tmp.name).rglob("*.json"))), 6)  # raw snapshots kept in the vault
 
         self.clock.advance(minutes=1)
@@ -280,9 +415,11 @@ class PipelineTests(unittest.TestCase):
         self.assertNotIn("<script>alert", page)
         self.assertIn("&lt;script&gt;", page)
 
-        record_label(self.store, "greenhouse:synth:101", "apply", "great fit", key="k1")
-        self.assertEqual(record_label(self.store, "greenhouse:synth:101", "apply", "great fit", key="k1"), "replay")
-        record_label(self.store, "greenhouse:synth:102", "apply", "I think I qualify", key="k2")
+        give_label(self.store, self.ctx.policy, self.ctx.profile, "greenhouse:synth:101", "apply", "great fit", key="k1")
+        self.assertEqual(give_label(self.store, self.ctx.policy, self.ctx.profile, "greenhouse:synth:101", "apply",
+                                    "great fit", key="k1"), "replay")
+        give_label(self.store, self.ctx.policy, self.ctx.profile, "greenhouse:synth:102", "apply", "I think I qualify",
+                   key="k2")
         result = agreement(self.store)
         self.assertEqual(result["false_reject_jobs"], ["greenhouse:synth:102"])
         self.assertEqual(result["unexplained_rejections"], 0)
@@ -291,7 +428,7 @@ class PipelineTests(unittest.TestCase):
         self.poll()
         process(self.ctx)
         self.store.conn.execute("UPDATE jobs SET exclude_from_kpi = 1 WHERE job_id = 'greenhouse:synth:102'")
-        record_label(self.store, "greenhouse:synth:102", "apply", None, key="k3")
+        give_label(self.store, self.ctx.policy, self.ctx.profile, "greenhouse:synth:102", "apply", None, key="k3")
         self.assertEqual(agreement(self.store)["labelled"], 0)
 
 

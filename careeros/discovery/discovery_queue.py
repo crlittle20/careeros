@@ -50,6 +50,17 @@ def enqueue(store, candidate: bd.Candidate, priority: float) -> str:
                   "priority": max(existing["priority"], priority), "updated_at": now,
                   "official_domain": existing["official_domain"] or candidate.official_domain,
                   "board_url": existing["board_url"] or candidate.board_url}
+        if candidate.board_url and existing["board_url"] and candidate.board_url != existing["board_url"] and \
+                bd.readable_board(candidate.board_url) and \
+                (bd.probed_absent(store, existing["board_url"]) or
+                 (bd.parse_board_url(existing["board_url"]) and not bd.readable_board(existing["board_url"]))):
+            # a corrected link for a board that does not exist replaces it and is checked again (Codex
+            # CR-2026-11-15-GATE-FIXES F5: the broken link was kept and the correction ignored). Only a link discovery
+            # would probe corrects it, a plain board name on a system read automatically: a careers page, a mangled board
+            # name or a blocked system would leave nothing a later correction could replace (Pass 2 and 3). A stored board
+            # link that fails those checks itself is replaced by one that passes them (Pass 3)
+            evidence["board_url"] = candidate.board_url
+            values.update(board_url=candidate.board_url, evidence_json=json.dumps(evidence), state="pending", next_attempt_at=None)
         if existing["state"] in ("done", "skipped") and (candidate.board_url or candidate.official_domain) and not existing["board_url"]:
             values.update(state="pending", next_attempt_at=None)  # credible new evidence: reconsider
         writer.update("discovery_queue", values, "employer_norm = ?", (key,))
